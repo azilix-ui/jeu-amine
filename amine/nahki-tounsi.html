@@ -147,6 +147,12 @@ h1 small{display:block;font-weight:400;font-size:16px;color:var(--soft);margin-t
 .rbtn:disabled{opacity:.3;cursor:default}
 .rbtn input{display:none}
 @keyframes pulse{50%{transform:scale(1.12)}}
+.cloud-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.cloud-form input[type=password]{font:inherit;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:var(--wall);color:var(--ink);min-width:0;flex:1 1 180px}
+.cloud-form label{display:flex;gap:6px;align-items:center;font-size:15px}
+.cloud-msg{font-weight:700;margin-top:8px;color:var(--ink)}
+.cloud-msg.err{color:var(--flag)}
+.rec-txt .st{font-size:13px;color:var(--soft);flex-basis:100%}
 @media (max-width:480px){.rec-row{flex-wrap:wrap}.rec-act{width:100%;justify-content:flex-end}}
 
 /* Bravo */
@@ -290,10 +296,12 @@ const BRAVO_AR = ['يعطيك الصحّة', 'برافو', 'مزيان برشا'
 const REC = new Map(); // mot arabe -> son enregistré (URL)
 let arVoice = null, frVoice = null, arKind = 'none';
 function updateVoiceInfo(){
-  const mine = REC.size ? ` · 🎙️ <b>ta voix : ${REC.size} mots</b>` : '';
+  const n = new Set([...REC.keys(), ...SERVER.keys()]).size;
+  const mine = n ? ` · 🎙️ <b>ta voix : ${n} mots</b>` : '';
   $('#voiceInfo').innerHTML = (arKind === 'tn' ? '🇹🇳 Voix tunisienne' : arKind === 'ar' ? 'Voix arabe standard' : '🔇 Pas de voix arabe') + mine;
 }
-const hasAr = t => REC.has(t) || arKind !== 'none';
+const SERVER = new Map(); // mot arabe -> son en ligne (URL)
+const hasAr = t => REC.has(t) || SERVER.has(t) || arKind !== 'none';
 function pickVoices(){
   try{
     const vs = speechSynthesis.getVoices();
@@ -315,8 +323,8 @@ function stopAll(){
 function playOne(t, lang){
   return new Promise(res => {
     let done = false; const fin = () => { if(!done){ done = true; res(); } };
-    if(lang === 'ar' && REC.has(t)){ // ta voix d'abord
-      const a = new Audio(REC.get(t)); curAudio = a;
+    if(lang === 'ar' && (REC.has(t) || SERVER.has(t))){ // ta voix d'abord
+      const a = new Audio(REC.get(t) || SERVER.get(t)); curAudio = a;
       a.onended = fin; a.onerror = fin; a.play().catch(fin); setTimeout(fin, 8000); return;
     }
     if(!hasTTS || (lang === 'ar' && arKind === 'none')) return fin();
@@ -530,6 +538,97 @@ async function delRec(key){
 }
 loadRecs();
 
+/* ---------- Voix en ligne (serveur du site, protégé par le mot de passe parent) ---------- */
+const API = 'voix/api.php';
+const cloud = { ok:false, setup:false, pass:null };
+try{ cloud.pass = localStorage.getItem('nahki-pass'); }catch(e){}
+const playUrl = (k, v) => `${API}?action=play&k=${encodeURIComponent(k)}&v=${v}`;
+async function loadServer(){
+  if(!/^https?:$/.test(location.protocol)) return;
+  try{
+    const r = await fetch(`${API}?action=list&t=${Date.now()}`, {cache:'no-store'});
+    if(!r.ok) return;
+    const j = await r.json();
+    cloud.ok = true; cloud.setup = !!j.setup;
+    SERVER.clear();
+    for(const [k, v] of Object.entries(j.voix || {})) SERVER.set(k, playUrl(k, v));
+    updateVoiceInfo(); refreshAllRows(); renderCloud();
+  }catch(e){}
+}
+async function api(action, fields, file){
+  const fd = new FormData(); fd.append('action', action);
+  if(cloud.pass) fd.append('pass', cloud.pass);
+  for(const [k, v] of Object.entries(fields || {})) fd.append(k, v);
+  if(file) fd.append('audio', file, 'voix');
+  const r = await fetch(API, {method:'POST', body:fd});
+  let j = {}; try{ j = await r.json(); }catch(e){}
+  if(!r.ok){ const err = new Error(j.error || `Erreur du serveur (${r.status}).`); err.status = r.status; throw err; }
+  return j;
+}
+async function cloudSave(k, blob){
+  const j = await api('save', {k}, blob);
+  SERVER.set(k, playUrl(k, j.v)); updateVoiceInfo();
+}
+async function cloudDelete(k){ await api('delete', {k}); SERVER.delete(k); updateVoiceInfo(); }
+function refreshAllRows(){ if(!$('#game').hidden) stage.querySelectorAll('.rec-row').forEach(refreshRow); }
+function cloudMsg(text, isErr){ const m = $('#cloudMsg'); if(m){ m.textContent = text; m.className = 'cloud-msg' + (isErr ? ' err' : ''); } }
+function forget(){ cloud.pass = null; try{ localStorage.removeItem('nahki-pass'); }catch(e){} }
+async function pushOne(row, blob){
+  if(!cloud.ok || !cloud.pass) return;
+  try{ await cloudSave(row.dataset.k, blob); refreshRow(row); }
+  catch(err){ if(err.status === 403) forget(); renderCloud(); cloudMsg(err.message, true); }
+}
+function renderCloud(){
+  const box = $('#cloudBox'); if(!box) return;
+  if(!cloud.ok){
+    box.innerHTML = `<p><strong>☁️ Enregistrement en ligne indisponible ici.</strong> Ouvre le jeu sur missaoui-family.com pour que ta voix soit gardée en ligne, sur tous les appareils.</p>`;
+    return;
+  }
+  if(cloud.setup){
+    box.innerHTML = `<p><strong>☁️ Première fois : choisis le mot de passe parent.</strong> Il protège tes enregistrements en ligne : seule une personne qui le connaît peut ajouter ou effacer des sons. Amine, lui, entend ta voix sans mot de passe.</p>
+      <form class="cloud-form" id="setupForm"><input type="password" id="np1" placeholder="Mot de passe (6 caractères min.)" autocomplete="new-password"><input type="password" id="np2" placeholder="Encore une fois" autocomplete="new-password">
+      <label><input type="checkbox" id="remember" checked> Se souvenir sur cet appareil</label><button class="btn sun" type="submit">Créer le mot de passe</button></form><div class="cloud-msg" id="cloudMsg"></div>`;
+    $('#setupForm').onsubmit = async e => {
+      e.preventDefault();
+      const a = $('#np1').value, b = $('#np2').value;
+      if(a.length < 6) return cloudMsg('Au moins 6 caractères.', true);
+      if(a !== b) return cloudMsg('Les deux mots de passe ne sont pas pareils.', true);
+      try{ await api('setup', {newpass:a}); cloud.setup = false; cloud.pass = a;
+        if($('#remember').checked) try{ localStorage.setItem('nahki-pass', a); }catch(err){}
+        renderCloud(); cloudMsg('Mot de passe créé. Tes enregistrements partent maintenant en ligne.');
+      }catch(err){ cloudMsg(err.message, true); }
+    };
+    return;
+  }
+  if(!cloud.pass){
+    box.innerHTML = `<p><strong>☁️ Connecte-toi pour enregistrer en ligne.</strong> Sans connexion, les sons restent seulement sur cet appareil.</p>
+      <form class="cloud-form" id="loginForm"><input type="password" id="lp" placeholder="Mot de passe parent" autocomplete="current-password">
+      <label><input type="checkbox" id="remember" checked> Se souvenir sur cet appareil</label><button class="btn sun" type="submit">Se connecter</button></form><div class="cloud-msg" id="cloudMsg"></div>`;
+    $('#loginForm').onsubmit = async e => {
+      e.preventDefault();
+      cloud.pass = $('#lp').value;
+      try{ await api('login'); if($('#remember').checked) try{ localStorage.setItem('nahki-pass', cloud.pass); }catch(err){}
+        renderCloud(); cloudMsg('Connectée.');
+      }catch(err){ cloud.pass = null; cloudMsg(err.message, true); }
+    };
+    return;
+  }
+  const localOnly = [...REC.keys()].filter(k => !SERVER.has(k));
+  box.innerHTML = `<p><strong>☁️ Connectée.</strong> Chaque son que tu enregistres part en ligne : Amine l'entendra sur tous les appareils.</p>
+    <div class="cloud-form">${localOnly.length ? `<button class="btn sun" id="pushAll">Envoyer en ligne les ${localOnly.length} sons de cet appareil</button>` : ''}<button class="btn" id="logout">Se déconnecter</button></div><div class="cloud-msg" id="cloudMsg"></div>`;
+  $('#logout').onclick = () => { forget(); renderCloud(); };
+  const pa = $('#pushAll');
+  if(pa) pa.onclick = async () => {
+    pa.disabled = true; let done = 0;
+    for(const k of localOnly){
+      try{ const blob = await (await fetch(REC.get(k))).blob(); await cloudSave(k, blob); done++; cloudMsg(`Envoi… ${done} / ${localOnly.length}`); }
+      catch(err){ if(err.status === 403) forget(); cloudMsg(err.message, true); break; }
+    }
+    refreshAllRows(); renderCloud(); cloudMsg(`${done} sons envoyés en ligne.`);
+  };
+}
+loadServer();
+
 const EXTRA = [
   {id:'nombres', fr:'Les nombres', words: NUMS.slice(1).map((n,i) => ({...n, e:String(i+1), fr:String(i+1)}))},
   {id:'bravo', fr:'Encouragements et questions', words:[
@@ -548,11 +647,14 @@ async function getMic(){
   return mic;
 }
 function refreshRow(row){
-  const has = REC.has(row.dataset.k);
+  const k = row.dataset.k, has = REC.has(k) || SERVER.has(k);
+  const st = row.querySelector('.st');
+  if(st) st.textContent = SERVER.has(k) ? '☁️ en ligne, sur tous les appareils' : REC.has(k) ? (cloud.ok ? '📱 sur cet appareil seulement' : '📱 sur cet appareil') : '';
   row.classList.toggle('has', has);
   row.querySelector('.play').disabled = !has; row.querySelector('.del').disabled = !has;
-  const total = stage.querySelectorAll('.rec-row').length, n = stage.querySelectorAll('.rec-row.has').length;
-  const pr = $('#recProgress'); if(pr) pr.textContent = `${n} / ${total} mots enregistrés avec ta voix`;
+  const rows = [...stage.querySelectorAll('.rec-row')], total = rows.length, n = rows.filter(r => r.classList.contains('has')).length;
+  const online = rows.filter(r => SERVER.has(r.dataset.k)).length;
+  const pr = $('#recProgress'); if(pr) pr.textContent = `${n} / ${total} mots enregistrés avec ta voix` + (cloud.ok ? ` · ${online} en ligne` : '');
 }
 async function toggleRec(row){
   const btn = row.querySelector('.mic');
@@ -565,7 +667,7 @@ async function toggleRec(row){
     clearTimeout(recTimer); btn.classList.remove('live'); btn.textContent = '🎙️'; btn.setAttribute('aria-label','Enregistrer');
     if(recRow === row) recRow = null;
     const blob = new Blob(chunks, {type: r.mimeType || 'audio/webm'});
-    if(blob.size > 0){ await saveRec(row.dataset.k, blob); refreshRow(row); playOne(row.dataset.k, 'ar'); }
+    if(blob.size > 0){ await saveRec(row.dataset.k, blob); refreshRow(row); playOne(row.dataset.k, 'ar'); await pushOne(row, blob); }
   };
   r.start(); btn.classList.add('live'); btn.textContent = '⏹'; btn.setAttribute('aria-label','Arrêter');
   recTimer = setTimeout(() => { if(r.state === 'recording') r.stop(); }, 4000);
@@ -575,9 +677,10 @@ function record(){
   stage.innerHTML = `
     <div class="rec-intro">
       <p><strong>Enregistre chaque mot avec ton accent.</strong> Touche 🎙️, dis le mot, puis touche ⏹ (ça s'arrête tout seul après 4 secondes). Tu entends ton enregistrement tout de suite ; s'il ne te plaît pas, recommence. Ensuite, tous les jeux utilisent ta voix.</p>
-      <p>Tu peux aussi enregistrer les mots avec ton téléphone et les ajouter un par un avec 📁. Les sons sont gardés dans ce navigateur, sur cet appareil.</p>
+      <p>Tu peux aussi enregistrer les mots avec ton téléphone et les ajouter un par un avec 📁.</p>
       <div class="progress" id="recProgress"></div>
     </div>
+    <div class="rec-intro" id="cloudBox"></div>
     <div class="rec-intro rec-help" id="micHelp" hidden>
       <p><strong>Le micro n'est pas disponible.</strong> Le navigateur a peut-être bloqué le micro : clique sur le cadenas 🔒 à gauche de l'adresse du site, autorise le <em>Microphone</em>, puis recharge la page.</p>
       <p>Tu peux aussi utiliser le bouton 📁 avec des sons enregistrés sur ton téléphone.</p>
@@ -585,7 +688,7 @@ function record(){
     ${groups.map(g => `<section class="rec-group"><h2>${g.fr}</h2>${g.words.map(w => `
       <div class="rec-row" data-k="${w.ar}">
         ${vis(w)}
-        <div class="rec-txt"><span class="ar" lang="ar">${w.ar}</span><span class="tr">${w.tr}</span><span class="fr">${w.fr}</span></div>
+        <div class="rec-txt"><span class="ar" lang="ar">${w.ar}</span><span class="tr">${w.tr}</span><span class="fr">${w.fr}</span><span class="st"></span></div>
         <div class="rec-act">
           <button class="rbtn mic" aria-label="Enregistrer">🎙️</button>
           <button class="rbtn play" aria-label="Écouter">▶</button>
@@ -594,14 +697,22 @@ function record(){
         </div>
       </div>`).join('')}</section>`).join('')}`;
   setInstr('Ma voix : enregistre les mots', () => say([['Touche le micro, et dis le mot en tunisien.','fr']]));
+  renderCloud();
   stage.querySelectorAll('.rec-row').forEach(row => {
     const k = row.dataset.k;
     row.querySelector('.mic').onclick = () => toggleRec(row);
     row.querySelector('.play').onclick = () => say([[k,'ar']]);
-    row.querySelector('.del').onclick = async () => { await delRec(k); refreshRow(row); };
+    row.querySelector('.del').onclick = async () => {
+      await delRec(k);
+      if(SERVER.has(k)){
+        if(cloud.pass){ try{ await cloudDelete(k); }catch(err){ cloudMsg(err.message, true); } }
+        else cloudMsg("Connecte-toi pour effacer aussi la version en ligne.", true);
+      }
+      refreshRow(row);
+    };
     row.querySelector('input').onchange = async e => {
       const f = e.target.files && e.target.files[0]; if(!f) return;
-      await saveRec(k, f); refreshRow(row); say([[k,'ar']]); e.target.value = '';
+      await saveRec(k, f); refreshRow(row); say([[k,'ar']]); e.target.value = ''; await pushOne(row, f);
     };
     refreshRow(row);
   });
