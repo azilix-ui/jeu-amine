@@ -1,5 +1,5 @@
 # Cache les fichiers techniques : seuls les cours et les jeux sont visibles en ligne.
-<FilesMatch "^(README\.md|package\.json|build\.js|\.gitignore)$">
+<FilesMatch "^(README\.md|CLAUDE\.md|package\.json|build\.js|\.gitignore)$">
   Require all denied
 </FilesMatch>
 
