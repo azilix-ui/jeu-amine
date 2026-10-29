@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="fr"><head>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%83%3C/text%3E%3C/svg%3E"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>Nahki Tounsi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;800&display=swap">
+<style>
+/* Layout: Sidi Bou Saïd — murs blancs, portes bleues en arche (les tuiles d'accueil), soleil jaune. Une seule police ronde arabe + latine. Clair et sombre. */
+:root{
+  --wall:#fbf8f1; --card:#ffffff; --line:#d9e3ef;
+  --door:#1d5fa5; --door-deep:#123d6e; --sun:#f2b632; --sun-deep:#c98c0c; --flag:#d7322f; --leaf:#3f9b5a;
+  --ink:#16243a; --soft:#5a6b84;
+  --font:'Baloo Bhaijaan 2','Arial Rounded MT Bold','Segoe UI',Tahoma,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --wall:#0f1b2e; --card:#172a47; --line:#26406a; --door:#5d9be0; --door-deep:#2c5c99; --sun:#f5c24f; --sun-deep:#b07c08; --flag:#ff6b66; --leaf:#6cc488;
+  --ink:#f3f1ea; --soft:#a7b6cc; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --wall:#0f1b2e; --card:#172a47; --line:#26406a; --door:#5d9be0; --door-deep:#2c5c99; --sun:#f5c24f; --sun-deep:#b07c08; --flag:#ff6b66; --leaf:#6cc488;
+  --ink:#f3f1ea; --soft:#a7b6cc; color-scheme:dark }
+html,body{min-height:100%}
+body{background:var(--wall);color:var(--ink);font-family:var(--font);font-size:18px;line-height:1.45}
+.wrap{max-width:960px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px;display:flex;flex-direction:column;gap:22px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:4px solid var(--sun);outline-offset:3px}
+[lang="ar"]{direction:rtl;unicode-bidi:isolate}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.sun{width:54px;height:54px;border-radius:50%;background:radial-gradient(circle,var(--sun) 0 55%,transparent 56%),repeating-conic-gradient(var(--sun) 0 10deg,transparent 10deg 30deg);flex:none}
+h1{margin:0;font-weight:800;font-size:clamp(30px,6vw,44px);line-height:1;color:var(--door)}
+h1 span[lang]{font-size:.75em;color:var(--sun-deep);margin-inline-start:.3em}
+h1 small{display:block;font-weight:400;font-size:16px;color:var(--soft);margin-top:6px}
+.hud{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:600;font-variant-numeric:tabular-nums}
+.pill.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.25)}}
+.voice{font-size:14px;color:var(--soft)}
+.voice b{color:var(--ink)}
+
+/* Accueil : portes */
+.doors{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.doors{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.door{background:var(--door);color:#fff;border-radius:999px 999px 18px 18px/140px 140px 18px 18px;padding:34px 12px 20px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;box-shadow:inset 0 0 0 6px var(--door-deep),0 6px 0 var(--door-deep);position:relative;transition:transform .15s}
+.door::after{content:"";position:absolute;inset:auto 18% 14px;height:8px;background:radial-gradient(circle,rgba(255,255,255,.55) 0 2.5px,transparent 3px) 0 0/16px 8px repeat-x}
+.door:hover{transform:translateY(-3px)}
+.door:active{transform:translateY(4px);box-shadow:inset 0 0 0 6px var(--door-deep),0 2px 0 var(--door-deep)}
+.door .big{font-size:clamp(46px,9vw,64px);line-height:1.1}
+.door b{font-size:clamp(20px,3.4vw,26px);font-weight:800;line-height:1.1}
+.door span[lang]{font-size:20px;color:var(--sun)}
+.door .what{font-size:14px;opacity:.85;padding-bottom:14px}
+.parents{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px 20px;font-size:15px;color:var(--soft);max-width:70ch}
+.parents strong{color:var(--ink)}
+.parents p{margin:0 0 8px}
+.parents p:last-child{margin:0}
+.parents code{font-family:inherit;font-weight:800;color:var(--door)}
+
+/* Écran de jeu */
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:8px 18px;font-weight:600}
+.btn.sun{background:var(--sun);border-color:var(--sun);color:#1b1404;box-shadow:0 4px 0 var(--sun-deep);width:auto;height:auto}
+.btn.sun:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sun-deep)}
+.instr{flex:1 1 240px;min-width:0;font-weight:800;font-size:clamp(22px,4.4vw,30px);color:var(--door);text-wrap:balance}
+.stage{display:flex;flex-direction:column;gap:18px;align-items:center}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:600;color:var(--soft)}
+.chip[aria-pressed="true"]{background:var(--door);border-color:var(--door);color:#fff}
+
+/* Visuels */
+.vis{line-height:1;display:grid;place-items:center}
+.dot{display:block;border-radius:50%;width:1em;height:1em;background:var(--c);box-shadow:inset 0 -.08em 0 rgba(0,0,0,.18),0 0 0 2px var(--line)}
+
+/* Imagier */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;width:100%}
+.word{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:16px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .15s}
+.word:hover{border-color:var(--door)}
+.word.on{border-color:var(--sun);transform:scale(1.04)}
+.word .vis{font-size:56px;height:64px}
+.word .ar{font-size:30px;font-weight:800;color:var(--door);line-height:1.3}
+.word .tr{font-size:20px;font-weight:600}
+.word .fr{font-size:15px;color:var(--soft)}
+
+/* Écoute et trouve */
+.prompt{display:flex;flex-direction:column;align-items:center;gap:10px}
+.speaker{width:110px;height:110px;border-radius:50%;background:var(--sun);font-size:50px;box-shadow:0 6px 0 var(--sun-deep)}
+.speaker:active{transform:translateY(4px);box-shadow:0 2px 0 var(--sun-deep)}
+.reveal{min-height:44px;display:flex;align-items:center;gap:10px;font-size:26px;font-weight:800}
+.reveal .ar{color:var(--door)}
+.choices{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.choice{background:var(--card);border:3px solid var(--line);border-radius:26px;width:clamp(96px,26vw,140px);aspect-ratio:1;font-size:clamp(50px,12vw,72px)}
+.choice.good{border-color:var(--leaf);background:color-mix(in srgb,var(--leaf) 22%,var(--card))}
+.choice:disabled{opacity:.35}
+.choice.good:disabled{opacity:1}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* Mémoire */
+.mem{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;max-width:560px}
+@media (max-width:440px){.mem{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.mcard{aspect-ratio:3/4;max-width:100%;perspective:600px;position:relative}
+.mcard .in{position:absolute;inset:0;transition:transform .45s;transform-style:preserve-3d}
+.mcard.up .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:16px;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:6px}
+.back{background:var(--door);box-shadow:inset 0 0 0 5px var(--door-deep);border-radius:999px 999px 16px 16px/60px 60px 16px 16px;color:var(--sun);font-size:32px;font-weight:800}
+.front{background:var(--card);border:3px solid var(--line);transform:rotateY(180deg);text-align:center;align-content:center}
+.front .vis{font-size:clamp(38px,9vw,56px)}
+.front .ar{font-size:clamp(20px,5vw,28px);font-weight:800;color:var(--door);line-height:1.2}
+.front .tr{font-size:clamp(14px,3.4vw,18px);font-weight:600}
+.mcard.done .front{border-color:var(--leaf);background:color-mix(in srgb,var(--leaf) 20%,var(--card))}
+
+/* Compter */
+.field{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;background:var(--card);border:2px solid var(--line);border-radius:26px;padding:16px;width:100%;max-width:640px}
+.thing{position:relative;font-size:clamp(40px,9vw,56px);line-height:1;padding:5px;border-radius:16px}
+.thing.counted{background:color-mix(in srgb,var(--sun) 30%,transparent)}
+.thing .n{position:absolute;top:-8px;right:-8px;background:var(--door);color:#fff;font-size:14px;font-weight:600;border-radius:999px;padding:0 7px;line-height:22px;white-space:nowrap}
+.answers{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.ans{background:var(--card);border:3px solid var(--door);border-radius:24px;width:clamp(96px,24vw,120px);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.ans b{font-size:clamp(40px,9vw,52px);color:var(--door)}
+.ans small{font-size:16px;font-weight:600}
+.ans.good{border-color:var(--leaf);background:color-mix(in srgb,var(--leaf) 22%,var(--card))}
+.ans:disabled{opacity:.35}
+.ans.good:disabled{opacity:1}
+
+/* Ma voix */
+.recbtn{background:var(--flag);border-color:var(--flag);color:#fff}
+.rec-intro{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:14px 18px;font-size:16px;color:var(--soft);max-width:70ch;width:100%}
+.rec-intro strong{color:var(--ink)}
+.rec-intro p{margin:0 0 6px}.rec-intro p:last-child{margin:0}
+.rec-help{border-color:var(--flag)}
+.progress{font-weight:800;font-size:20px;color:var(--leaf)}
+.rec-group{width:100%;display:flex;flex-direction:column;gap:8px}
+.rec-group h2{font-size:22px;color:var(--door);margin:10px 0 0}
+.rec-row{display:flex;align-items:center;gap:12px;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:8px 12px}
+.rec-row.has{border-color:var(--leaf)}
+.rec-row .vis{font-size:32px;width:44px;flex:none;font-weight:800;color:var(--door)}
+.rec-txt{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px}
+.rec-txt .ar{font-size:24px;font-weight:800;color:var(--door)}
+.rec-txt .tr{font-weight:600}
+.rec-txt .fr{color:var(--soft);font-size:15px}
+.rec-act{display:flex;gap:6px;flex:none}
+.rbtn{width:46px;height:46px;border-radius:50%;background:var(--wall);border:2px solid var(--line);display:grid;place-items:center;font-size:20px;cursor:pointer}
+.rbtn.mic{background:var(--sun);border-color:var(--sun)}
+.rbtn.live{background:var(--flag);border-color:var(--flag);animation:pulse 1s infinite}
+.rbtn:disabled{opacity:.3;cursor:default}
+.rbtn input{display:none}
+@keyframes pulse{50%{transform:scale(1.12)}}
+@media (max-width:480px){.rec-row{flex-wrap:wrap}.rec-act{width:100%;justify-content:flex-end}}
+
+/* Bravo */
+.yay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(10,20,40,.55);z-index:20;padding:20px}
+.yay .boxx{background:var(--card);border:4px solid var(--sun);border-radius:30px;padding:26px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;max-width:420px;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+.yay .em{font-size:64px;line-height:1}
+.yay h2{margin:0;font-size:clamp(28px,6vw,40px);color:var(--door);line-height:1.2}
+.yay p{margin:0;color:var(--soft)}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+.float{position:fixed;font-size:38px;pointer-events:none;z-index:21;animation:rise 1.6s ease-out forwards}
+@keyframes rise{to{transform:translateY(-60vh) rotate(25deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <a href="./" style="align-self:flex-start;color:inherit;opacity:.75;font-weight:600;text-decoration:none;font-size:16px">← Tous les jeux</a>
+  <header>
+    <div class="brand">
+      <div class="sun" aria-hidden="true"></div>
+      <h1>Nahki Tounsi <span lang="ar">نحكي تونسي</span><small>Amine apprend à parler tunisien</small></h1>
+    </div>
+    <div class="hud">
+      <div class="voice" id="voiceInfo">Recherche d'une voix…</div>
+      <button class="pill recbtn" id="recBtn">🎙️ Ma voix</button>
+      <div class="pill" id="basket" aria-label="Étoiles gagnées">🌟 <span id="count">0</span></div>
+    </div>
+  </header>
+
+  <section id="home">
+    <div class="doors">
+      <button class="door" data-game="learn"><span class="big">📚</span><b>Les mots</b><span lang="ar">الكلمات</span><span class="what">Touche, écoute, répète</span></button>
+      <button class="door" data-game="listen"><span class="big">👂</span><b>Écoute et trouve</b><span lang="ar">اسمع ولقى</span><span class="what">Quelle image ?</span></button>
+      <button class="door" data-game="memory"><span class="big">🃏</span><b>Mémoire</b><span lang="ar">الذاكرة</span><span class="what">L'image et son mot</span></button>
+      <button class="door" data-game="count"><span class="big">🔢</span><b>Qaddech ?</b><span lang="ar">قدّاش؟</span><span class="what">Compter jusqu'à 10</span></button>
+    </div>
+  </section>
+
+  <section id="game" hidden>
+    <div class="bar">
+      <button class="btn" id="homeBtn">🏠 Accueil</button>
+      <div class="instr" id="instr"></div>
+      <button class="btn sun" id="listenBtn">🔊 Écouter</button>
+    </div>
+    <div class="stage" id="stage"></div>
+  </section>
+
+  <aside class="parents" id="parents">
+    <p><strong>Pour les parents.</strong> Le jeu apprend la <strong>derja</strong> tunisienne (pas l'arabe littéraire) : <em>3aslema</em> pour dire bonjour, <em>zouz</em> pour deux, <em>ak7al</em> pour noir, <em>qattous</em> pour chat… 56 mots en 7 thèmes, avec l'image, l'écriture arabe et la prononciation.</p>
+    <p><strong>La voix.</strong> Les voix des navigateurs ne parlent pas vraiment la derja. Le mieux : touchez <strong>🎙️ Ma voix</strong> et enregistrez chaque mot avec votre accent. Le jeu utilisera alors votre voix partout, et la voix de synthèse seulement pour les mots pas encore enregistrés.</p>
+    <p><strong>Lire la prononciation :</strong> <code>3</code> = ع, <code>7</code> = ح (h soufflé), <code>kh</code> = خ (comme la jota espagnole), <code>q</code> = ق, <code>dh</code> = ض/ظ, <code>é</code> = un a qui tire vers le è, comme on le dit à Tunis. Les mots peuvent changer un peu selon la région : n'hésitez pas à dire à Amine la version de la famille.</p>
+  </aside>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const stage = $('#stage');
+const rand = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+/* ---------- Vocabulaire (derja tunisienne) ---------- */
+const CATS = [
+  {id:'salut', fr:'Bonjour !', ar:'السلام', words:[
+    {e:'🤗', ar:'عسلامة', tr:'3aslema', fr:'bonjour'},
+    {e:'🙏', ar:'يعيشك', tr:'y3aychek', fr:'merci'},
+    {e:'👍', ar:'إيه', tr:'ih', fr:'oui'},
+    {e:'👎', ar:'لا', tr:'lé', fr:'non'},
+    {e:'😊', ar:'لاباس', tr:'lébés', fr:'ça va'},
+    {e:'👋', ar:'بالسلامة', tr:'bislema', fr:'au revoir'},
+    {e:'🥺', ar:'بربّي', tr:'birabbi', fr:"s'il te plaît"},
+    {e:'😴', ar:'تصبح على خير', tr:'tosba7 3la khir', fr:'bonne nuit'}
+  ]},
+  {id:'famille', fr:'La famille', ar:'العايلة', words:[
+    {e:'👩', ar:'أمّي', tr:'ommi', fr:'maman'},
+    {e:'👨', ar:'بابا', tr:'baba', fr:'papa'},
+    {e:'👴', ar:'جدّي', tr:'jeddi', fr:'grand-père'},
+    {e:'👵', ar:'ميمتي', tr:'mémti', fr:'grand-mère'},
+    {e:'👦', ar:'خويا', tr:'khouya', fr:'mon frère'},
+    {e:'👧', ar:'أختي', tr:'okhti', fr:'ma sœur'},
+    {e:'👶', ar:'بيبي', tr:'bébé', fr:'bébé'},
+    {e:'🏠', ar:'دار', tr:'dar', fr:'maison'}
+  ]},
+  {id:'animaux', fr:'Les animaux', ar:'الحيوانات', words:[
+    {e:'🐈', ar:'قطّوس', tr:'qattous', fr:'chat'},
+    {e:'🐕', ar:'كلب', tr:'kalb', fr:'chien'},
+    {e:'🐑', ar:'علّوش', tr:'3allouch', fr:'mouton'},
+    {e:'🐔', ar:'دجاجة', tr:'djéja', fr:'poule'},
+    {e:'🐟', ar:'حوتة', tr:'7outa', fr:'poisson'},
+    {e:'🐦', ar:'عصفور', tr:'3asfour', fr:'oiseau'},
+    {e:'🐎', ar:'عود', tr:'3oud', fr:'cheval'},
+    {e:'🐄', ar:'بقرة', tr:'bagra', fr:'vache'}
+  ]},
+  {id:'couleurs', fr:'Les couleurs', ar:'الألوان', words:[
+    {c:'#e8443a', ar:'أحمر', tr:'a7mar', fr:'rouge'},
+    {c:'#2f7ad8', ar:'أزرق', tr:'azraq', fr:'bleu'},
+    {c:'#f5d02a', ar:'أصفر', tr:'asfar', fr:'jaune'},
+    {c:'#3fae5a', ar:'أخضر', tr:'akhdhar', fr:'vert'},
+    {c:'#ffffff', ar:'أبيض', tr:'abyadh', fr:'blanc'},
+    {c:'#1b1b1b', ar:'أكحل', tr:'ak7al', fr:'noir'},
+    {c:'#ff8c1a', ar:'برتقالي', tr:'bordgéni', fr:'orange'},
+    {c:'#8a5a2b', ar:'قهوي', tr:'qahwi', fr:'marron'}
+  ]},
+  {id:'manger', fr:'À manger', ar:'الماكلة', words:[
+    {e:'🍞', ar:'خبز', tr:'khobz', fr:'pain'},
+    {e:'💧', ar:'ماء', tr:'mé', fr:'eau'},
+    {e:'🥛', ar:'حليب', tr:'7lib', fr:'lait'},
+    {e:'🍎', ar:'تفّاحة', tr:'teffé7a', fr:'pomme'},
+    {e:'🍊', ar:'برتقانة', tr:'bordgéna', fr:'orange (le fruit)'},
+    {e:'🍌', ar:'بانان', tr:'banén', fr:'banane'},
+    {e:'🍲', ar:'كسكسي', tr:'kosksi', fr:'couscous'},
+    {e:'🍰', ar:'قاطو', tr:'gâto', fr:'gâteau'}
+  ]},
+  {id:'corps', fr:'Le corps', ar:'البدن', words:[
+    {e:'👁️', ar:'عين', tr:'3in', fr:'œil'},
+    {e:'👃', ar:'منخار', tr:'mankhar', fr:'nez'},
+    {e:'👄', ar:'فم', tr:'fomm', fr:'bouche'},
+    {e:'👂', ar:'وذن', tr:'wdhen', fr:'oreille'},
+    {e:'✋', ar:'يد', tr:'yed', fr:'main'},
+    {e:'🦶', ar:'ساق', tr:'séq', fr:'pied'},
+    {e:'🦷', ar:'سنّة', tr:'senna', fr:'dent'},
+    {e:'💇', ar:'شعر', tr:'cha3r', fr:'cheveux'}
+  ]},
+  {id:'halloween', fr:'Halloween', ar:'هالوين', words:[
+    {e:'🎃', ar:'قرعة', tr:'qar3a', fr:'citrouille'},
+    {e:'🌙', ar:'قمرة', tr:'gamra', fr:'lune'},
+    {e:'⭐', ar:'نجمة', tr:'njma', fr:'étoile'},
+    {e:'🕷️', ar:'عنكبوت', tr:'3ankbout', fr:'araignée'},
+    {e:'🍬', ar:'حلو', tr:'7low', fr:'bonbons'},
+    {e:'🌃', ar:'ليل', tr:'lil', fr:'la nuit'},
+    {e:'🐈‍⬛', ar:'قطّوس أكحل', tr:'qattous ak7al', fr:'chat noir'},
+    {e:'😱', ar:'خايف', tr:'khéyef', fr:"j'ai peur"}
+  ]}
+];
+const ALL = CATS.flatMap(c => c.words.map(w => ({...w, cat:c.id})));
+const NUMS = [null,
+  {ar:'واحد', tr:'wé7ed'}, {ar:'زوز', tr:'zouz'}, {ar:'ثلاثة', tr:'thléthé'}, {ar:'أربعة', tr:'arb3a'}, {ar:'خمسة', tr:'khamsa'},
+  {ar:'ستّة', tr:'setta'}, {ar:'سبعة', tr:'seb3a'}, {ar:'ثمنية', tr:'thmanya'}, {ar:'تسعة', tr:'tes3a'}, {ar:'عشرة', tr:'3achra'}];
+const BRAVO_AR = ['يعطيك الصحّة', 'برافو', 'مزيان برشا'];
+
+/* ---------- Voix ---------- */
+const REC = new Map(); // mot arabe -> son enregistré (URL)
+let arVoice = null, frVoice = null, arKind = 'none';
+function updateVoiceInfo(){
+  const mine = REC.size ? ` · 🎙️ <b>ta voix : ${REC.size} mots</b>` : '';
+  $('#voiceInfo').innerHTML = (arKind === 'tn' ? '🇹🇳 Voix tunisienne' : arKind === 'ar' ? 'Voix arabe standard' : '🔇 Pas de voix arabe') + mine;
+}
+const hasAr = t => REC.has(t) || arKind !== 'none';
+function pickVoices(){
+  try{
+    const vs = speechSynthesis.getVoices();
+    const tn = vs.find(v => /^ar[-_]TN/i.test(v.lang) && /natural|online/i.test(v.name)) || vs.find(v => /^ar[-_]TN/i.test(v.lang));
+    const ar = vs.find(v => /^ar/i.test(v.lang));
+    arVoice = tn || ar || null; arKind = tn ? 'tn' : ar ? 'ar' : 'none';
+    frVoice = vs.find(v => /^fr[-_]FR/i.test(v.lang)) || vs.find(v => /^fr/i.test(v.lang)) || null;
+  }catch(e){}
+  updateVoiceInfo();
+}
+const hasTTS = 'speechSynthesis' in window;
+if(hasTTS){ pickVoices(); speechSynthesis.onvoiceschanged = pickVoices; setTimeout(pickVoices, 800); } else pickVoices();
+let sayToken = 0, curAudio = null;
+function stopAll(){
+  sayToken++;
+  try{ if(hasTTS) speechSynthesis.cancel(); }catch(e){}
+  if(curAudio){ try{ curAudio.pause(); }catch(e){} curAudio = null; }
+}
+function playOne(t, lang){
+  return new Promise(res => {
+    let done = false; const fin = () => { if(!done){ done = true; res(); } };
+    if(lang === 'ar' && REC.has(t)){ // ta voix d'abord
+      const a = new Audio(REC.get(t)); curAudio = a;
+      a.onended = fin; a.onerror = fin; a.play().catch(fin); setTimeout(fin, 8000); return;
+    }
+    if(!hasTTS || (lang === 'ar' && arKind === 'none')) return fin();
+    try{
+      const u = new SpeechSynthesisUtterance(t);
+      if(lang === 'ar'){ u.lang = arVoice ? arVoice.lang : 'ar-TN'; if(arVoice) u.voice = arVoice; u.rate = .8; }
+      else { u.lang = 'fr-FR'; if(frVoice) u.voice = frVoice; u.rate = .95; u.pitch = 1.05; }
+      u.onend = fin; u.onerror = fin; speechSynthesis.speak(u); setTimeout(fin, 9000);
+    }catch(e){ fin(); }
+  });
+}
+async function say(parts){ // parts: [[texte, 'ar'|'fr'], ...] lus à la suite
+  stopAll(); const my = sayToken;
+  for(const [t, lang] of parts){ if(my !== sayToken) return; await playOne(t, lang); }
+}
+const sayAr = t => say([[t,'ar']]);
+
+/* ---------- Sons ---------- */
+let ac = null;
+function tone(f,d,t=0,type='sine',vol=.14){
+  try{
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(), g=ac.createGain(), s=ac.currentTime+t;
+    o.type=type; o.frequency.value=f; g.gain.setValueAtTime(vol,s); g.gain.exponentialRampToValueAtTime(.001,s+d);
+    o.connect(g); g.connect(ac.destination); o.start(s); o.stop(s+d+.02);
+  }catch(e){}
+}
+const sfx = {
+  ok(){ [587,740,880,1175].forEach((f,i)=>tone(f,.25,i*.09,'triangle')); },
+  no(){ tone(220,.3,0,'sine',.12); tone(175,.35,.15,'sine',.1); },
+  tap(){ tone(880,.08,0,'triangle',.07); }
+};
+
+/* ---------- Étoiles ---------- */
+let stars = 0;
+try{ stars = parseInt(localStorage.getItem('amine-tounsi-etoiles'),10) || 0; }catch(e){}
+$('#count').textContent = stars;
+function addStar(){
+  stars++; try{ localStorage.setItem('amine-tounsi-etoiles', stars); }catch(e){}
+  $('#count').textContent = stars;
+  const b = $('#basket'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+}
+function confetti(){
+  for(let i=0;i<9;i++){
+    const s=document.createElement('span'); s.className='float'; s.textContent=pick(['🌟','🌼','🇹🇳','⭐','🎉']);
+    s.style.left=rand(5,90)+'vw'; s.style.top=rand(55,90)+'vh'; s.style.animationDelay=(i*60)+'ms';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),2000);
+  }
+}
+function bravo(extraAr){ sfx.ok(); addStar(); confetti(); const b = pick(BRAVO_AR); say([[b,'ar'], ...(extraAr?[[extraAr,'ar']]:[])]); }
+function wrongFx(b){ sfx.no(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+
+/* ---------- Visuels ---------- */
+const vis = w => w.c ? `<span class="vis"><span class="dot" style="--c:${w.c}"></span></span>` : `<span class="vis">${w.e}</span>`;
+const label = w => w.c ? `la couleur ${w.fr}` : w.fr;
+
+/* ---------- Navigation ---------- */
+let replay = () => {}, timer = null;
+function setInstr(text, onListen){ $('#instr').textContent = text; replay = onListen || (()=>{}); }
+$('#listenBtn').onclick = () => replay();
+function later(fn, ms){ clearTimeout(timer); timer = setTimeout(fn, ms); }
+function showHome(){
+  clearTimeout(timer); document.querySelectorAll('.yay').forEach(x=>x.remove());
+  $('#game').hidden = true; $('#home').hidden = false; $('#parents').hidden = false;
+  stopAll(); stopRec();
+}
+function startGame(id){
+  clearTimeout(timer);
+  $('#home').hidden = true; $('#parents').hidden = true; $('#game').hidden = false;
+  window.scrollTo(0,0); GAMES[id]();
+}
+$('#homeBtn').onclick = showHome;
+document.querySelectorAll('.door').forEach(d => d.onclick = () => startGame(d.dataset.game));
+
+function catChips(current, onPick, withAll){
+  const list = (withAll ? [{id:'all', fr:'Tout'}] : []).concat(CATS);
+  return `<div class="chips" role="group" aria-label="Thème">${list.map(c=>`<button class="chip" data-c="${c.id}" aria-pressed="${c.id===current}">${c.fr}</button>`).join('')}</div>`;
+}
+function wireChips(onPick){ stage.querySelectorAll('.chip').forEach(b => b.onclick = () => onPick(b.dataset.c)); }
+
+/* ---------- 1. Les mots ---------- */
+let learnCat = 'salut';
+function learn(){
+  const cat = CATS.find(c => c.id === learnCat);
+  stage.innerHTML = catChips(learnCat) + `<div class="grid">${cat.words.map((w,i)=>`
+    <button class="word" data-i="${i}" aria-label="${w.fr}">${vis(w)}<span class="ar" lang="ar">${w.ar}</span><span class="tr">${w.tr}</span><span class="fr">${w.fr}</span></button>`).join('')}</div>`;
+  wireChips(c => { learnCat = c; learn(); });
+  setInstr(`${cat.fr} : touche un mot et répète !`, () => say([['Touche une image, écoute, et répète après moi !','fr']]));
+  say([[cat.fr, 'fr'], ['Touche une image et répète après moi !','fr']]);
+  stage.querySelectorAll('.word').forEach(b => b.onclick = () => {
+    const w = cat.words[+b.dataset.i];
+    stage.querySelectorAll('.word.on').forEach(x => x.classList.remove('on')); b.classList.add('on');
+    sfx.tap();
+    if(!hasAr(w.ar)) say([[`${w.fr}. Demande à papa ou maman de te dire : ${w.tr}`,'fr']]);
+    else say([[w.ar,'ar'], [w.ar,'ar']]); // dit deux fois, pour répéter
+  });
+}
+
+/* ---------- 2. Écoute et trouve ---------- */
+let listenCat = 'all', lastTarget = null;
+function listen(){
+  const pool = listenCat === 'all' ? ALL : ALL.filter(w => w.cat === listenCat);
+  let target = pick(pool); if(target === lastTarget) target = pick(pool); lastTarget = target;
+  const sameCat = shuffle(ALL.filter(w => w.cat === target.cat && w !== target)).slice(0,2);
+  const opts = shuffle([target, ...sameCat]);
+  const showWord = !hasAr(target.ar);
+  stage.innerHTML = catChips(listenCat, null, true) + `
+    <div class="prompt">
+      <button class="speaker" id="spk" aria-label="Réécouter le mot">🔊</button>
+      <div class="reveal" id="rev">${showWord ? `<span class="ar" lang="ar">${target.ar}</span><span>${target.tr}</span>` : `<button class="btn" id="peek">👀 Voir le mot</button>`}</div>
+    </div>
+    <div class="choices">${opts.map((w,i)=>`<button class="choice" data-i="${i}" aria-label="${label(w)}">${vis(w)}</button>`).join('')}</div>`;
+  wireChips(c => { listenCat = c; clearTimeout(timer); listen(); });
+  const play = () => showWord ? say([['Papa ou maman va te dire un mot. Trouve la bonne image !','fr']]) : say([['Écoute, et trouve la bonne image.','fr'], [target.ar,'ar']]);
+  setInstr('Écoute le mot et trouve la bonne image !', play);
+  $('#spk').onclick = () => showWord ? play() : sayAr(target.ar);
+  const peek = $('#peek'); if(peek) peek.onclick = () => { $('#rev').innerHTML = `<span class="ar" lang="ar">${target.ar}</span><span>${target.tr}</span>`; };
+  play();
+  stage.querySelectorAll('.choice').forEach(b => b.onclick = () => {
+    const w = opts[+b.dataset.i];
+    if(w === target){
+      b.classList.add('good'); stage.querySelectorAll('.choice').forEach(x => x.disabled = x !== b);
+      $('#rev').innerHTML = `<span class="ar" lang="ar">${target.ar}</span><span>${target.tr}</span><span style="color:var(--soft);font-size:18px">· ${target.fr}</span>`;
+      bravo(target.ar); later(listen, 3200);
+    } else {
+      wrongFx(b); b.disabled = true;
+      if(!hasAr(target.ar)) say([[`Non, ça c'est ${label(w)}. Essaie encore !`,'fr']]);
+      else say([['Non, ça, c\'est','fr'], [w.ar,'ar'], ['Écoute encore :','fr'], [target.ar,'ar']]);
+    }
+  });
+}
+
+/* ---------- 3. Mémoire ---------- */
+let memCat = 'animaux';
+function memory(){
+  const words = shuffle(CATS.find(c => c.id === memCat).words.slice()).slice(0,6);
+  const deck = shuffle(words.flatMap((w,k) => [{w,k,kind:'img'},{w,k,kind:'mot'}]));
+  stage.innerHTML = catChips(memCat) + `<div class="mem">${deck.map((d,i)=>`
+    <button class="mcard" data-i="${i}" aria-label="Carte cachée"><div class="in"><div class="face back">★</div>
+    <div class="face front">${d.kind==='img' ? vis(d.w) : `<div><div class="ar" lang="ar">${d.w.ar}</div><div class="tr">${d.w.tr}</div></div>`}</div></div></button>`).join('')}</div>`;
+  wireChips(c => { memCat = c; memory(); });
+  setInstr("Trouve l'image et son mot !", () => say([['Retourne deux cartes. Trouve une image et le mot qui va avec !','fr']]));
+  replay();
+  let open = [], lock = false, found = 0;
+  stage.querySelectorAll('.mcard').forEach(card => card.onclick = () => {
+    const d = deck[+card.dataset.i];
+    if(lock || card.classList.contains('up')) return;
+    card.classList.add('up'); card.setAttribute('aria-label', d.kind==='img' ? label(d.w) : d.w.tr);
+    sfx.tap(); sayAr(d.w.ar);
+    open.push(card); if(open.length < 2) return;
+    lock = true;
+    const [a,b] = open.map(c => deck[+c.dataset.i]);
+    if(a.k === b.k){
+      setTimeout(() => {
+        open.forEach(c => c.classList.add('done')); bravo(a.w.ar); found++; open = []; lock = false;
+        if(found === 6) later(() => {
+          say([['Bravo Amine ! Tu as trouvé toutes les paires !','fr'], ['يعطيك الصحّة','ar']]);
+          confetti();
+          const el = document.createElement('div'); el.className = 'yay';
+          el.innerHTML = `<div class="boxx"><div class="em">🏆</div><h2 lang="ar">يعطيك الصحّة</h2><p><b>ya3tik essa77a</b> : bravo Amine, toutes les paires sont trouvées !</p><button class="btn sun" id="again">Rejouer</button></div>`;
+          document.body.appendChild(el); el.querySelector('#again').onclick = () => { el.remove(); memory(); };
+        }, 1400);
+      }, 450);
+    } else setTimeout(() => { open.forEach(c => { c.classList.remove('up'); c.setAttribute('aria-label','Carte cachée'); }); open = []; lock = false; }, 1300);
+  });
+}
+
+/* ---------- 4. Qaddech ? ---------- */
+function count(){
+  const pool = ALL.filter(w => w.e && ['animaux','manger','halloween'].includes(w.cat) && w.e.length <= 2);
+  const m = pick(pool), n = rand(1,10);
+  const opts = new Set([n]); while(opts.size < 3) opts.add(Math.max(1, Math.min(10, n + pick([-2,-1,1,2]))));
+  const options = shuffle([...opts]);
+  stage.innerHTML = `<div class="field">${Array.from({length:n},()=>`<button class="thing" aria-label="${m.fr}">${m.e}</button>`).join('')}</div>
+    <div class="answers">${options.map(o=>`<button class="ans" data-v="${o}"><b>${o}</b><small>${NUMS[o].tr}</small></button>`).join('')}</div>`;
+  const ask = () => say([['قدّاش؟','ar'], ['Combien ? Touche-les pour compter en tunisien !','fr']]);
+  setInstr(`Qaddech ? Compte en tunisien !`, ask); ask();
+  let c = 0;
+  stage.querySelectorAll('.thing').forEach(t => t.onclick = () => {
+    if(t.classList.contains('counted')) return;
+    c++; t.classList.add('counted'); t.insertAdjacentHTML('beforeend', `<span class="n">${NUMS[c].tr}</span>`);
+    sfx.tap();
+    if(!hasAr(NUMS[c].ar)) say([[NUMS[c].tr,'fr']]); else sayAr(NUMS[c].ar);
+  });
+  stage.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const v = +b.dataset.v;
+    if(v === n){ b.classList.add('good'); stage.querySelectorAll('.ans').forEach(x => x.disabled = x !== b); bravo(NUMS[n].ar); later(count, 3000); }
+    else { wrongFx(b); b.disabled = true; say([['Pas tout à fait. Touche-les un par un pour compter !','fr']]); }
+  });
+}
+
+/* ---------- 5. Ma voix (pour les parents) ---------- */
+const DB_NAME = 'nahki-tounsi-voix';
+function idb(){ return new Promise((res, rej) => { const r = indexedDB.open(DB_NAME, 1); r.onupgradeneeded = () => r.result.createObjectStore('voix'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbWrite(fn){ const db = await idb(); return new Promise((res, rej) => { const tx = db.transaction('voix', 'readwrite'); fn(tx.objectStore('voix')); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }
+async function loadRecs(){
+  try{
+    const db = await idb(); const req = db.transaction('voix').objectStore('voix').openCursor();
+    req.onsuccess = () => { const c = req.result; if(c){ REC.set(c.key, URL.createObjectURL(c.value)); c.continue(); } else updateVoiceInfo(); };
+  }catch(e){}
+}
+async function saveRec(key, blob){
+  try{ await idbWrite(st => st.put(blob, key)); }catch(e){}
+  if(REC.has(key)) URL.revokeObjectURL(REC.get(key));
+  REC.set(key, URL.createObjectURL(blob)); updateVoiceInfo();
+}
+async function delRec(key){
+  try{ await idbWrite(st => st.delete(key)); }catch(e){}
+  if(REC.has(key)) URL.revokeObjectURL(REC.get(key));
+  REC.delete(key); updateVoiceInfo();
+}
+loadRecs();
+
+const EXTRA = [
+  {id:'nombres', fr:'Les nombres', words: NUMS.slice(1).map((n,i) => ({...n, e:String(i+1), fr:String(i+1)}))},
+  {id:'bravo', fr:'Encouragements et questions', words:[
+    {e:'🏆', ar:'يعطيك الصحّة', tr:'ya3tik essa77a', fr:'bravo, bien joué'},
+    {e:'👏', ar:'برافو', tr:'brabo', fr:'bravo'},
+    {e:'🌟', ar:'مزيان برشا', tr:'mezyén barcha', fr:'très bien'},
+    {e:'❓', ar:'قدّاش؟', tr:'qaddech ?', fr:'combien ?'}
+  ]}
+];
+let mic = null, rec = null, recTimer = null, recRow = null;
+function stopRec(){ if(rec && rec.state === 'recording') rec.stop(); }
+async function getMic(){
+  if(mic) return mic;
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) throw new Error('micro indisponible');
+  mic = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}});
+  return mic;
+}
+function refreshRow(row){
+  const has = REC.has(row.dataset.k);
+  row.classList.toggle('has', has);
+  row.querySelector('.play').disabled = !has; row.querySelector('.del').disabled = !has;
+  const total = stage.querySelectorAll('.rec-row').length, n = stage.querySelectorAll('.rec-row.has').length;
+  const pr = $('#recProgress'); if(pr) pr.textContent = `${n} / ${total} mots enregistrés avec ta voix`;
+}
+async function toggleRec(row){
+  const btn = row.querySelector('.mic');
+  if(rec && rec.state === 'recording'){ const same = recRow === row; stopRec(); if(same) return; }
+  let s; try{ s = await getMic(); }catch(e){ $('#micHelp').hidden = false; $('#micHelp').scrollIntoView({behavior:'smooth', block:'center'}); return; }
+  stopAll();
+  const chunks = [], r = new MediaRecorder(s); rec = r; recRow = row;
+  r.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+  r.onstop = async () => {
+    clearTimeout(recTimer); btn.classList.remove('live'); btn.textContent = '🎙️'; btn.setAttribute('aria-label','Enregistrer');
+    if(recRow === row) recRow = null;
+    const blob = new Blob(chunks, {type: r.mimeType || 'audio/webm'});
+    if(blob.size > 0){ await saveRec(row.dataset.k, blob); refreshRow(row); playOne(row.dataset.k, 'ar'); }
+  };
+  r.start(); btn.classList.add('live'); btn.textContent = '⏹'; btn.setAttribute('aria-label','Arrêter');
+  recTimer = setTimeout(() => { if(r.state === 'recording') r.stop(); }, 4000);
+}
+function record(){
+  const groups = CATS.concat(EXTRA);
+  stage.innerHTML = `
+    <div class="rec-intro">
+      <p><strong>Enregistre chaque mot avec ton accent.</strong> Touche 🎙️, dis le mot, puis touche ⏹ (ça s'arrête tout seul après 4 secondes). Tu entends ton enregistrement tout de suite ; s'il ne te plaît pas, recommence. Ensuite, tous les jeux utilisent ta voix.</p>
+      <p>Tu peux aussi enregistrer les mots avec ton téléphone et les ajouter un par un avec 📁. Les sons sont gardés dans ce navigateur, sur cet appareil.</p>
+      <div class="progress" id="recProgress"></div>
+    </div>
+    <div class="rec-intro rec-help" id="micHelp" hidden>
+      <p><strong>Le micro n'est pas disponible.</strong> Le navigateur a peut-être bloqué le micro : clique sur le cadenas 🔒 à gauche de l'adresse du site, autorise le <em>Microphone</em>, puis recharge la page.</p>
+      <p>Tu peux aussi utiliser le bouton 📁 avec des sons enregistrés sur ton téléphone.</p>
+    </div>
+    ${groups.map(g => `<section class="rec-group"><h2>${g.fr}</h2>${g.words.map(w => `
+      <div class="rec-row" data-k="${w.ar}">
+        ${vis(w)}
+        <div class="rec-txt"><span class="ar" lang="ar">${w.ar}</span><span class="tr">${w.tr}</span><span class="fr">${w.fr}</span></div>
+        <div class="rec-act">
+          <button class="rbtn mic" aria-label="Enregistrer">🎙️</button>
+          <button class="rbtn play" aria-label="Écouter">▶</button>
+          <label class="rbtn file" aria-label="Choisir un fichier son">📁<input type="file" accept="audio/*"></label>
+          <button class="rbtn del" aria-label="Effacer">🗑</button>
+        </div>
+      </div>`).join('')}</section>`).join('')}`;
+  setInstr('Ma voix : enregistre les mots', () => say([['Touche le micro, et dis le mot en tunisien.','fr']]));
+  stage.querySelectorAll('.rec-row').forEach(row => {
+    const k = row.dataset.k;
+    row.querySelector('.mic').onclick = () => toggleRec(row);
+    row.querySelector('.play').onclick = () => say([[k,'ar']]);
+    row.querySelector('.del').onclick = async () => { await delRec(k); refreshRow(row); };
+    row.querySelector('input').onchange = async e => {
+      const f = e.target.files && e.target.files[0]; if(!f) return;
+      await saveRec(k, f); refreshRow(row); say([[k,'ar']]); e.target.value = '';
+    };
+    refreshRow(row);
+  });
+}
+$('#recBtn').onclick = () => startGame('record');
+
+const GAMES = { learn, listen, memory, count, record };
+</script>
+
+</html>

@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="fr"><head>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%83%3C/text%3E%3C/svg%3E"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>La Nuit d'Amine 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Fredoka:wght@400;500;600&display=swap">
+<style>
+/* Layout: suite de La Nuit d'Amine — accueil en 3 grandes tuiles (Mémoire, Compter, Histoire), écrans de jeu pleins, histoire en pages avec défis. Thème unique (nuit) volontaire. */
+:root{
+  --night:#16122a; --dusk:#241c44; --card:#30265a; --card-hi:#3c3070;
+  --pumpkin:#ff8c1a; --pumpkin-deep:#c95a08; --moon:#fff1bf; --slime:#8be08f; --ghost:#e9e4ff;
+  --ink:#fbf3e4; --mist:#b6aad6; --rose:#ff7eb6;
+  --display:'Sniglet','Fredoka',ui-rounded,'Arial Rounded MT Bold',system-ui,sans-serif;
+  --body:'Fredoka',ui-rounded,system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{
+  background:
+    radial-gradient(circle at 88% 6%, var(--moon) 0 38px, rgba(255,241,191,.18) 39px 70px, transparent 71px),
+    radial-gradient(1.5px 1.5px at 12% 20%, var(--ink) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 35% 8%, var(--ink) 50%, transparent 51%),
+    radial-gradient(1px 1px at 60% 15%, var(--ink) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 72% 30%, var(--ink) 50%, transparent 51%),
+    radial-gradient(1px 1px at 22% 40%, var(--ink) 50%, transparent 51%),
+    linear-gradient(180deg, var(--dusk), var(--night) 60%);
+  background-attachment:fixed; background-color:var(--night);
+  color:var(--ink); font-family:var(--body); font-size:18px; line-height:1.4;
+}
+.wrap{max-width:960px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px;display:flex;flex-direction:column;gap:22px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:4px solid var(--moon);outline-offset:3px}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,6vw,48px);line-height:1;margin:0;color:var(--pumpkin);text-shadow:0 3px 0 var(--pumpkin-deep);text-wrap:balance}
+h1 .two{display:inline-grid;place-items:center;background:var(--moon);color:var(--night);text-shadow:none;border-radius:50%;width:1.1em;height:1.1em;font-size:.8em;vertical-align:.12em;margin-left:.15em}
+h1 small{display:block;font-family:var(--body);font-weight:500;font-size:16px;color:var(--mist);text-shadow:none;margin-top:8px}
+.hud{display:flex;gap:10px;align-items:center}
+.pill{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:999px;padding:8px 16px;font-weight:600;font-variant-numeric:tabular-nums;font-size:20px}
+.pill.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.25)}}
+.iconbtn{background:var(--card);border-radius:999px;padding:8px 14px;font-size:20px;font-weight:600}
+.iconbtn[aria-pressed="false"]{opacity:.55}
+
+/* Accueil */
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:620px){.tiles{grid-template-columns:1fr}.tile{flex-direction:row!important;justify-content:flex-start;text-align:left;padding:16px 20px!important;gap:16px!important}.tile .txt{align-items:flex-start!important}}
+.tile{background:var(--card);border-radius:28px;padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;border:4px solid var(--c);box-shadow:0 6px 0 var(--c);transition:transform .15s;text-align:center}
+.tile:hover{transform:translateY(-3px)}
+.tile:active{transform:translateY(4px);box-shadow:0 2px 0 var(--c)}
+.tile .big{font-size:clamp(52px,10vw,76px);line-height:1.1}
+.tile .txt{display:flex;flex-direction:column;align-items:center;gap:2px}
+.tile b{font-family:var(--display);font-size:clamp(22px,3.6vw,28px);font-weight:800}
+.tile span.skill{font-size:15px;color:var(--mist)}
+.tile .new{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--c);color:var(--night);border-radius:999px;padding:2px 10px}
+.parents{background:rgba(48,38,90,.6);border-radius:20px;padding:16px 20px;font-size:15px;color:var(--mist);max-width:68ch}
+.parents strong{color:var(--ink)}
+.parents ul{margin:8px 0 0;padding-left:20px;display:grid;gap:4px}
+
+/* Écran de jeu */
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bar .home{background:var(--card);border-radius:999px;padding:10px 18px;font-size:18px;font-weight:600}
+.instr{flex:1 1 260px;min-width:0;font-family:var(--display);font-size:clamp(22px,4.6vw,32px);font-weight:800;text-wrap:balance;color:var(--moon)}
+.listen{background:var(--pumpkin);color:var(--night);border-radius:999px;padding:10px 18px;font-weight:600;font-size:18px;box-shadow:0 4px 0 var(--pumpkin-deep)}
+.listen:active{transform:translateY(3px);box-shadow:0 1px 0 var(--pumpkin-deep)}
+.stage{display:flex;flex-direction:column;gap:20px;align-items:center}
+
+.seg{display:flex;gap:6px;background:var(--card);padding:6px;border-radius:999px;flex-wrap:wrap;justify-content:center}
+.seg button{padding:8px 16px;border-radius:999px;font-weight:600;color:var(--mist)}
+.seg button[aria-pressed="true"]{background:var(--moon);color:var(--night)}
+.stats{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.stats span{background:var(--card);border-radius:999px;padding:6px 14px;font-size:16px;color:var(--mist);font-variant-numeric:tabular-nums}
+.stats b{color:var(--ink)}
+
+/* Mémoire */
+.mem{display:grid;gap:10px;width:100%;grid-template-columns:repeat(var(--cols),minmax(0,1fr));max-width:calc(var(--cols) * 130px)}
+.mcard{aspect-ratio:3/4;max-width:100%;perspective:600px;position:relative}
+.mcard .in{position:absolute;inset:0;transition:transform .45s;transform-style:preserve-3d}
+.mcard.up .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:16px;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.back{background:repeating-linear-gradient(45deg,var(--card) 0 10px,var(--card-hi) 10px 20px);border:3px solid var(--pumpkin);font-family:var(--display);font-size:clamp(24px,5vw,38px);color:var(--pumpkin);font-weight:800}
+.front{background:var(--ghost);transform:rotateY(180deg);font-size:clamp(32px,7.5vw,56px)}
+.mcard.done .front{background:var(--slime);animation:bump .5s}
+
+/* Compter */
+.field{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:8px;background:rgba(48,38,90,.55);border-radius:28px;padding:16px;width:100%;max-width:680px;min-width:0}
+.thing{position:relative;font-size:clamp(34px,8vw,52px);line-height:1;padding:5px;border-radius:16px}
+.thing.counted{background:rgba(139,224,143,.25)}
+.thing .n{position:absolute;top:-6px;right:-6px;background:var(--slime);color:var(--night);font-weight:600;font-size:15px;border-radius:999px;min-width:24px;height:24px;padding:0 4px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.duo{display:flex;align-items:center;gap:12px;width:100%;max-width:760px}
+.duo .field{flex:1 1 0}
+.duo .op{font-family:var(--display);font-weight:800;font-size:44px;color:var(--pumpkin)}
+@media (max-width:560px){.duo{flex-direction:column}}
+button.field{border:4px solid transparent;transition:transform .15s}
+button.field:hover{border-color:var(--mist)}
+button.field.good{border-color:var(--slime);background:rgba(139,224,143,.25)}
+button.field .thing{pointer-events:none}
+.answers{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.ans{background:var(--moon);color:var(--night);font-family:var(--display);font-weight:800;font-size:clamp(38px,9vw,54px);width:clamp(84px,22vw,108px);aspect-ratio:1;border-radius:26px;box-shadow:0 6px 0 #c9b97a;font-variant-numeric:tabular-nums}
+.ans:active{transform:translateY(4px);box-shadow:0 2px 0 #c9b97a}
+.ans:disabled,.opt:disabled,.candy:disabled,.box:disabled{opacity:.3}
+.ans.good{background:var(--slime);box-shadow:0 6px 0 #4f9e54;opacity:1}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* Pièces partagées (histoire) */
+.candies{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;width:100%;max-width:560px}
+@media (max-width:480px){.candies{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.candy{background:rgba(48,38,90,.55);border-radius:24px;padding:22px 0;display:grid;place-items:center}
+.candy i{position:relative;display:block;width:clamp(54px,12vw,72px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.65) 0 12%,transparent 13%),var(--c);box-shadow:inset 0 -6px 0 rgba(0,0,0,.18)}
+.candy i::before,.candy i::after{content:"";position:absolute;top:50%;width:34%;height:60%;background:var(--c);filter:brightness(.85);transform:translateY(-50%)}
+.candy i::before{right:96%;clip-path:polygon(100% 50%,0 0,0 100%)}
+.candy i::after{left:96%;clip-path:polygon(0 50%,100% 0,100% 100%)}
+.candy.good{background:rgba(139,224,143,.35);opacity:1}
+.seq{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.seq span{font-size:clamp(30px,7vw,46px);width:clamp(46px,10vw,66px);aspect-ratio:1;display:grid;place-items:center;background:var(--card);border-radius:14px}
+.seq span.hole{border:3px dashed var(--pumpkin);background:transparent;color:var(--pumpkin);font-family:var(--display);font-weight:800}
+.seq span.filled{background:var(--slime);animation:bump .5s}
+.opts{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.opt{font-size:clamp(42px,10vw,58px);background:var(--ghost);border-radius:24px;width:clamp(86px,22vw,112px);aspect-ratio:1;display:grid;place-items:center;box-shadow:0 6px 0 var(--mist)}
+.opt:active{transform:translateY(4px);box-shadow:0 2px 0 var(--mist)}
+.opt.good{background:var(--slime);opacity:1}
+.boxes{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.box{font-size:clamp(56px,13vw,80px);background:rgba(48,38,90,.55);border-radius:24px;width:clamp(100px,26vw,130px);aspect-ratio:1;display:grid;place-items:center}
+.box.found{background:rgba(139,224,143,.35);animation:bump .5s;opacity:1}
+
+/* Histoire */
+.book{width:100%;max-width:760px;display:flex;flex-direction:column;gap:18px}
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.dots i{width:12px;height:12px;border-radius:50%;background:var(--card-hi)}
+.dots i.done{background:var(--pumpkin)}
+.dots i.now{background:var(--moon);transform:scale(1.3)}
+.scene{background:linear-gradient(180deg,#2b2152,#3a2a5e);border-radius:28px;min-height:170px;display:flex;align-items:flex-end;justify-content:center;gap:clamp(6px,3vw,24px);padding:22px 16px;flex-wrap:wrap;position:relative;overflow:hidden}
+.scene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:26px;background:#1d1838;border-radius:50% 50% 0 0/100% 100% 0 0}
+.scene span{position:relative;z-index:1;line-height:1;animation:bob 3s ease-in-out infinite}
+.scene span:nth-child(2n){animation-delay:-1.5s}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.page-text{font-size:clamp(20px,3.8vw,25px);line-height:1.5;margin:0;max-width:62ch;align-self:center;text-wrap:pretty}
+.page-text q{color:var(--moon)}
+.challenge{display:flex;flex-direction:column;gap:16px;align-items:center}
+.challenge .ask{font-family:var(--display);font-weight:800;font-size:clamp(20px,4vw,26px);color:var(--pumpkin);text-align:center}
+.nav{display:flex;gap:12px;justify-content:space-between;align-items:center}
+.nav .prev{background:var(--card);border-radius:999px;padding:12px 18px;font-weight:600}
+.nav .next{background:var(--slime);color:var(--night);border-radius:999px;padding:14px 28px;font-family:var(--display);font-weight:800;font-size:24px;box-shadow:0 5px 0 #4f9e54}
+.nav .next:active{transform:translateY(4px);box-shadow:0 1px 0 #4f9e54}
+.nav .next:disabled{opacity:.25}
+
+/* Bravo */
+.yay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(22,18,42,.72);z-index:20;padding:20px}
+.yay .boxx{background:var(--card);border:4px solid var(--pumpkin);border-radius:32px;padding:28px 26px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;animation:pop .45s cubic-bezier(.2,1.6,.4,1);max-width:420px}
+.yay .em{font-size:72px;line-height:1}
+.yay h2{font-family:var(--display);font-weight:800;font-size:clamp(30px,7vw,44px);margin:0;color:var(--moon)}
+.yay p{margin:0;color:var(--mist)}
+.yay .again{background:var(--pumpkin);color:var(--night);border-radius:999px;padding:12px 26px;font-weight:600;font-size:20px;box-shadow:0 5px 0 var(--pumpkin-deep)}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+.float{position:fixed;font-size:40px;pointer-events:none;z-index:21;animation:rise 1.6s ease-out forwards}
+@keyframes rise{to{transform:translateY(-60vh) rotate(30deg);opacity:0}}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <a href="./" style="align-self:flex-start;color:inherit;opacity:.75;font-weight:600;text-decoration:none;font-size:16px">← Tous les jeux</a>
+  <header>
+    <h1>La Nuit d'Amine<span class="two">2</span><small>Plus de personnages, plus de calcul, et une histoire à vivre</small></h1>
+    <div class="hud">
+      <button class="iconbtn" id="voiceBtn" aria-pressed="true" aria-label="Voix activée">🔊 Voix</button>
+      <div class="pill" id="basket" aria-label="Bonbons gagnés">🍬 <span id="count">0</span></div>
+    </div>
+  </header>
+
+  <section id="home">
+    <div class="tiles">
+      <button class="tile" style="--c:var(--pumpkin)" data-game="memory"><span class="big">🧛</span><span class="txt"><b>Mémoire</b><span class="skill">18 personnages, jusqu'à 10 paires</span></span></button>
+      <button class="tile" style="--c:var(--slime)" data-game="count"><span class="big">🔢</span><span class="txt"><b>Compter</b><span class="skill">Jusqu'à 20, additions, le plus</span></span></button>
+      <button class="tile" style="--c:var(--rose)" data-game="story"><span class="big">📖</span><span class="txt"><b>L'histoire</b><span class="skill">Où est passé Minuit, le chat noir ?</span><span class="new">Nouveau</span></span></button>
+    </div>
+  </section>
+
+  <section id="game" hidden>
+    <div class="bar">
+      <button class="home" id="homeBtn">🏠 Accueil</button>
+      <div class="instr" id="instr"></div>
+      <button class="listen" id="listenBtn">🔊 Écouter</button>
+    </div>
+    <div class="stage" id="stage"></div>
+  </section>
+
+  <aside class="parents" id="parents">
+    <strong>Pour les parents.</strong> Cette version monte d'un cran par rapport à la première. Touchez « Écouter » pour faire répéter une consigne. Les bonbons 🍬 gagnés s'ajoutent à la cagnotte.
+    <ul>
+      <li><strong>Mémoire</strong> : 3 niveaux (6, 8, 10 paires) avec des personnages qui se ressemblent (vampire et zombie, bonbon et sucette). Le compteur d'essais permet de chercher à faire mieux.</li>
+      <li><strong>Compter</strong> : dénombrer jusqu'à 20, premières additions (deux paniers à réunir) et comparer deux quantités (« où y en a-t-il le plus ? »).</li>
+      <li><strong>L'histoire</strong> : 12 pages lues à voix haute, avec 4 défis (compter, couleurs, suite logique, cache-cache) et 2 questions de compréhension à la fin.</li>
+    </ul>
+  </aside>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const stage = $('#stage');
+const rand = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+const MON = [
+  {e:'🎃', s:'citrouille', pl:'citrouilles', n:'la citrouille'},
+  {e:'👻', s:'fantôme', pl:'fantômes', n:'le fantôme'},
+  {e:'🦇', s:'chauve-souris', pl:'chauves-souris', n:'la chauve-souris'},
+  {e:'🕷️', s:'araignée', pl:'araignées', n:"l'araignée"},
+  {e:'🍬', s:'bonbon', pl:'bonbons', n:'le bonbon'},
+  {e:'🍭', s:'sucette', pl:'sucettes', n:'la sucette'},
+  {e:'🍫', s:'chocolat', pl:'chocolats', n:'le chocolat'},
+  {e:'🧙', s:'sorcière', pl:'sorcières', n:'la sorcière'},
+  {e:'🧛', s:'vampire', pl:'vampires', n:'le vampire'},
+  {e:'🧟', s:'zombie', pl:'zombies', n:'le zombie'},
+  {e:'💀', s:'squelette', pl:'squelettes', n:'le squelette'},
+  {e:'🌙', s:'lune', pl:'lunes', n:'la lune'},
+  {e:'🐈‍⬛', s:'chat noir', pl:'chats noirs', n:'le chat noir'},
+  {e:'🦉', s:'hibou', pl:'hiboux', n:'le hibou'},
+  {e:'🕸️', s:'toile', pl:"toiles d'araignée", n:"la toile d'araignée"},
+  {e:'🧹', s:'balai', pl:'balais', n:'le balai de sorcière'},
+  {e:'🔮', s:'boule magique', pl:'boules magiques', n:'la boule magique'},
+  {e:'🏚️', s:'maison hantée', pl:'maisons hantées', n:'la maison hantée'}
+];
+const COUNTABLE = MON.filter(m => ['🎃','👻','🦇','🕷️','🍬','🍭','🍫','💀','🦉','🧹'].includes(m.e));
+const NUM = ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf','vingt'];
+const COLORS = [
+  {n:'rouge', c:'#e8443a'}, {n:'bleu', c:'#3a86e8'}, {n:'jaune', c:'#f5d02a'}, {n:'vert', c:'#3fbf5a'},
+  {n:'orange', c:'#ff8c1a'}, {n:'violet', c:'#9b59d6'}, {n:'rose', c:'#ff7eb6'}, {n:'blanc', c:'#f4f4f4'}
+];
+const PRAISE = ['Bravo Amine !','Super !','Génial !','Trop fort !','Excellent !','Champion !'];
+
+/* ---------- Voix ---------- */
+let voiceOn = true, frVoice = null;
+function pickVoice(){ try{ const vs = speechSynthesis.getVoices(); frVoice = vs.find(v=>/^fr[-_]FR/i.test(v.lang)) || vs.find(v=>/^fr/i.test(v.lang)) || null; }catch(e){} }
+if ('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(t){
+  if(!voiceOn || !('speechSynthesis' in window)) return;
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t.replace(/[«»]/g,'')); u.lang='fr-FR'; if(frVoice) u.voice=frVoice; u.rate=.9; u.pitch=1.1; speechSynthesis.speak(u); }catch(e){}
+}
+$('#voiceBtn').onclick = e => {
+  voiceOn = !voiceOn;
+  e.currentTarget.setAttribute('aria-pressed', voiceOn);
+  e.currentTarget.textContent = voiceOn ? '🔊 Voix' : '🔇 Voix';
+  if(!voiceOn) try{ speechSynthesis.cancel(); }catch(err){}
+};
+
+/* ---------- Sons ---------- */
+let ac = null;
+function tone(f,d,t=0,type='sine',vol=.15){
+  try{
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(), g=ac.createGain(), s=ac.currentTime+t;
+    o.type=type; o.frequency.value=f; g.gain.setValueAtTime(vol,s); g.gain.exponentialRampToValueAtTime(.001,s+d);
+    o.connect(g); g.connect(ac.destination); o.start(s); o.stop(s+d+.02);
+  }catch(e){}
+}
+const sfx = {
+  ok(){ [523,659,784,1047].forEach((f,i)=>tone(f,.25,i*.09,'triangle')); },
+  no(){ tone(220,.3,0,'sine',.12); tone(175,.35,.15,'sine',.1); },
+  flip(){ tone(700,.07,0,'square',.04); },
+  tap(){ tone(880,.08,0,'triangle',.08); },
+  page(){ tone(440,.12,0,'triangle',.06); tone(660,.12,.08,'triangle',.06); }
+};
+
+/* ---------- Bonbons ---------- */
+let candies = 0;
+try{ candies = parseInt(localStorage.getItem('amine-bonbons'),10) || 0; }catch(e){}
+$('#count').textContent = candies;
+function addCandy(){
+  candies++;
+  try{ localStorage.setItem('amine-bonbons', candies); }catch(e){}
+  $('#count').textContent = candies;
+  const b = $('#basket'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+}
+
+/* ---------- Bravo ---------- */
+function confetti(){
+  const set = ['🍬','🎃','⭐','🍭','👻'];
+  for(let i=0;i<10;i++){
+    const s=document.createElement('span'); s.className='float'; s.textContent=pick(set);
+    s.style.left = rand(5,90)+'vw'; s.style.top = rand(55,90)+'vh'; s.style.animationDelay = (i*60)+'ms';
+    document.body.appendChild(s); setTimeout(()=>s.remove(), 2000);
+  }
+}
+function yay(em, msg, sub, label, onAgain){
+  confetti();
+  const el=document.createElement('div'); el.className='yay';
+  el.innerHTML = `<div class="boxx"><div class="em">${em}</div><h2>${msg}</h2><p>${sub}</p><button class="again">${label}</button></div>`;
+  document.body.appendChild(el);
+  el.querySelector('.again').onclick = () => { el.remove(); onAgain(); };
+}
+function wrong(b){ sfx.no(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+
+/* ---------- Navigation ---------- */
+let instrSpoken = '', timer = null;
+function setInstr(text, spoken, silent){ $('#instr').textContent = text; instrSpoken = spoken || text; if(!silent) speak(instrSpoken); }
+$('#listenBtn').onclick = () => speak(instrSpoken);
+function later(fn, ms){ clearTimeout(timer); timer = setTimeout(fn, ms); }
+function showHome(){
+  clearTimeout(timer);
+  document.querySelectorAll('.yay').forEach(x=>x.remove());
+  $('#game').hidden = true; $('#home').hidden = false; $('#parents').hidden = false;
+  try{ speechSynthesis.cancel(); }catch(e){}
+}
+function startGame(id){
+  clearTimeout(timer);
+  $('#home').hidden = true; $('#parents').hidden = true; $('#game').hidden = false;
+  window.scrollTo(0,0);
+  GAMES[id]();
+}
+$('#homeBtn').onclick = showHome;
+document.querySelectorAll('.tile').forEach(t => t.onclick = () => startGame(t.dataset.game));
+
+/* Comptage par toucher, réutilisé partout */
+function countable(container, onTap){
+  let c = 0;
+  container.querySelectorAll('.thing').forEach(t => t.onclick = () => {
+    if(t.classList.contains('counted')) return;
+    c++; t.classList.add('counted');
+    t.insertAdjacentHTML('beforeend', `<span class="n">${c}</span>`);
+    sfx.tap(); speak(NUM[c] || String(c)); if(onTap) onTap(c);
+  });
+}
+const things = (m, n) => Array.from({length:n}, () => `<button class="thing" aria-label="${m.s}">${m.e}</button>`).join('');
+function numberOptions(n, lo, hi){
+  const s = new Set([n]);
+  while(s.size < 3){ const d = Math.max(lo, Math.min(hi, n + pick([-3,-2,-1,1,2,3]))); s.add(d); }
+  return shuffle([...s]);
+}
+
+/* ---------- 1. Mémoire ---------- */
+let memLevel = 6;
+const COLS = {6:4, 8:4, 10:5};
+function memory(){
+  // On mélange en gardant ensemble des personnages qui se ressemblent, pour plus de difficulté.
+  const pairs = shuffle(MON.slice()).slice(0, memLevel);
+  const deck = shuffle([...pairs, ...pairs]);
+  const cols = window.innerWidth < 520 ? 4 : COLS[memLevel];
+  stage.innerHTML = `<div class="seg" role="group" aria-label="Niveau">
+      ${[6,8,10].map(l=>`<button data-l="${l}" aria-pressed="${memLevel===l}">${l} paires</button>`).join('')}</div>
+    <div class="stats"><span>Paires trouvées : <b id="mFound">0</b> / ${memLevel}</span><span>Essais : <b id="mTries">0</b></span></div>
+    <div class="mem" style="--cols:${cols}">${deck.map((m,i)=>`<button class="mcard" data-i="${i}" aria-label="Carte cachée"><div class="in"><div class="face back">?</div><div class="face front">${m.e}</div></div></button>`).join('')}</div>`;
+  stage.querySelectorAll('.seg button').forEach(b => b.onclick = () => { memLevel = +b.dataset.l; memory(); });
+  setInstr('Retrouve toutes les paires !', `Retourne deux cartes. Trouve les ${memLevel} paires de personnages pareils !`);
+  let open = [], lock = false, found = 0, tries = 0;
+  stage.querySelectorAll('.mcard').forEach(card => card.onclick = () => {
+    const m = deck[+card.dataset.i];
+    if(lock || card.classList.contains('up')) return;
+    card.classList.add('up'); card.setAttribute('aria-label', m.s); sfx.flip(); speak(m.n);
+    open.push(card);
+    if(open.length < 2) return;
+    lock = true; tries++; $('#mTries').textContent = tries;
+    const [a,b] = open, ma = deck[+a.dataset.i], mb = deck[+b.dataset.i];
+    if(ma === mb){
+      setTimeout(() => {
+        a.classList.add('done'); b.classList.add('done'); sfx.ok(); addCandy(); found++;
+        $('#mFound').textContent = found;
+        speak('Bravo ! Deux ' + ma.pl + ' !');
+        open = []; lock = false;
+        if(found === memLevel){
+          const stars = tries <= memLevel + 3 ? '⭐⭐⭐' : tries <= memLevel * 2 ? '⭐⭐' : '⭐';
+          later(() => {
+            speak(`Bravo Amine ! Tu as trouvé les ${memLevel} paires en ${tries} essais !`);
+            yay(stars, 'Bravo Amine !', `${memLevel} paires trouvées en ${tries} essais.`, 'Rejouer', memory);
+          }, 900);
+        }
+      }, 450);
+    } else {
+      setTimeout(() => { [a,b].forEach(x => { x.classList.remove('up'); x.setAttribute('aria-label','Carte cachée'); }); open = []; lock = false; }, 1300);
+    }
+  });
+}
+
+/* ---------- 2. Compter ---------- */
+let countMode = 'big';
+function counting(){
+  const modes = {big:'Jusqu\'à 20', add:'Additions', more:'Le plus'};
+  stage.innerHTML = `<div class="seg" role="group" aria-label="Type de jeu">
+      ${Object.entries(modes).map(([k,v])=>`<button data-m="${k}" aria-pressed="${countMode===k}">${v}</button>`).join('')}</div>
+    <div id="cArea" class="stage" style="width:100%"></div>`;
+  stage.querySelectorAll('.seg button').forEach(b => b.onclick = () => { countMode = b.dataset.m; clearTimeout(timer); counting(); });
+  ({big: countBig, add: countAdd, more: countMore})[countMode]();
+}
+function answerRow(area, n, sayGood, again){
+  const row = document.createElement('div'); row.className = 'answers';
+  row.innerHTML = numberOptions(n, 1, 20).map(o=>`<button class="ans" data-v="${o}">${o}</button>`).join('');
+  area.appendChild(row);
+  row.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    if(+b.dataset.v === n){
+      b.classList.add('good'); sfx.ok(); addCandy(); confetti();
+      row.querySelectorAll('.ans').forEach(x => x.disabled = x !== b);
+      speak(`${pick(PRAISE)} ${sayGood}`); later(again, 3000);
+    } else { wrong(b); b.disabled = true; speak('Pas tout à fait. Touche-les un par un pour compter !'); }
+  });
+}
+function countBig(){
+  const area = $('#cArea'), m = pick(COUNTABLE), n = rand(8,20);
+  area.innerHTML = `<div class="field">${things(m,n)}</div>`;
+  countable(area.querySelector('.field'));
+  setInstr(`Combien de ${m.pl} ?`, `Combien y a-t-il de ${m.pl} ? Touche-les un par un pour compter !`);
+  answerRow(area, n, `Il y a ${NUM[n]} ${m.pl}.`, countBig);
+}
+function countAdd(){
+  const area = $('#cArea'), m = pick(COUNTABLE), a = rand(1,5), b = rand(1,5), n = a + b;
+  area.innerHTML = `<div class="duo"><div class="field">${things(m,a)}</div><div class="op">+</div><div class="field">${things(m,b)}</div></div>`;
+  countable(area);
+  setInstr(`${a} + ${b} = ?`, `${NUM[a]} ${a>1?m.pl:m.s}, et encore ${NUM[b]} ${b>1?m.pl:m.s}. Ça fait combien en tout ?`);
+  answerRow(area, n, `${NUM[a]} plus ${NUM[b]}, ça fait ${NUM[n]} !`, countAdd);
+}
+function countMore(){
+  const area = $('#cArea'), m = pick(COUNTABLE);
+  let a = rand(3,12), b = rand(3,12); while(Math.abs(a-b) < 2) b = rand(3,12);
+  area.innerHTML = `<div class="duo"><button class="field" data-v="${a}" aria-label="Groupe de ${a}">${things(m,a).replace(/button/g,'span')}</button><div class="op">ou</div><button class="field" data-v="${b}" aria-label="Groupe de ${b}">${things(m,b).replace(/button/g,'span')}</button></div>`;
+  setInstr(`Où y a-t-il le plus de ${m.pl} ?`, `Regarde bien. De quel côté y a-t-il le plus de ${m.pl} ? Touche ce côté !`);
+  const max = Math.max(a,b), min = Math.min(a,b);
+  area.querySelectorAll('button.field').forEach(f => f.onclick = () => {
+    if(+f.dataset.v === max){
+      f.classList.add('good'); sfx.ok(); addCandy(); confetti();
+      area.querySelectorAll('button.field').forEach(x => x.disabled = true);
+      speak(`${pick(PRAISE)} ${NUM[max]}, c'est plus que ${NUM[min]}.`); later(countMore, 3000);
+    } else { wrong(f); speak(`Hum, de ce côté il y en a ${NUM[min]}. Regarde l'autre côté !`); }
+  });
+}
+
+/* ---------- 3. L'histoire ---------- */
+const STORY = [
+  {scene:['🌙','🏡','🎃','🧛','🎃'], text:"C'est le soir d'Halloween. Amine a mis son costume de petit vampire. Dans le jardin, les citrouilles brillent de toutes leurs bougies."},
+  {scene:['🧛','❓','🏮'], text:"Mais où est Minuit, le chat noir d'Amine ? Il a disparu ! Amine prend sa lanterne et part le chercher dans la nuit."},
+  {scene:['🌳','🦇','🌙','🦇','🌳'], text:"Sur le chemin, des chauves-souris volent. Elles disent : « Compte-nous, et on te laisse passer ! »",
+   challenge:'count'},
+  {scene:['🏚️','🧙','🔮','🧹'], text:"Amine arrive devant la petite maison de Mirabelle, la gentille sorcière. Elle prépare une potion qui sent bon le chocolat."},
+  {scene:['🧙','🍬','🍭'], text:"Mirabelle dit : « J'ai vu Minuit ! Mais d'abord, aide-moi : il me faut un bonbon violet pour ma potion. »",
+   challenge:'color'},
+  {scene:['🧙','✨','🏚️'], text:"« Merci Amine ! » dit Mirabelle. « Minuit est parti vers le vieux grenier, avec Boubou le fantôme. »"},
+  {scene:['🚪','🔒','🎃','👻'], text:"La porte du grenier est fermée par une serrure magique. Pour l'ouvrir, il faut trouver ce qui vient après dans la suite.",
+   challenge:'pattern'},
+  {scene:['👻','😄','🕸️','📦'], text:"Dans le grenier, Boubou le fantôme rigole. Il n'est pas méchant du tout ! Il jouait à cache-cache avec Minuit."},
+  {scene:['📦','📦','📦'], text:"Minuit s'est caché dans un des cartons. Touche les cartons pour le retrouver !",
+   challenge:'hide'},
+  {scene:['🐈‍⬛','🧛','👻','🧙','🍬'], text:"Minuit ronronne : miaou ! Amine, Boubou et Mirabelle rentrent à la maison et partagent les bonbons. Joyeux Halloween !"},
+  {scene:['❓'], text:"As-tu bien écouté l'histoire ? Qui avait disparu ?",
+   challenge:'quiz', q:{opts:[['🐈‍⬛','le chat noir'],['🦉','le hibou'],['🕷️',"l'araignée"]], good:0, say:"Oui ! C'était Minuit, le chat noir."}},
+  {scene:['❓'], text:"Et où était caché Minuit ?",
+   challenge:'quiz', q:{opts:[['🎃','dans une citrouille'],['📦','dans un carton'],['🌙','sur la lune']], good:1, say:"Oui ! Il était caché dans un carton du grenier."}}
+];
+let page = 0, solved = new Set();
+function story(){ page = 0; solved = new Set(); renderPage(); }
+function renderPage(){
+  const p = STORY[page];
+  const needs = !!p.challenge && !solved.has(page);
+  stage.innerHTML = `<div class="book">
+      <div class="dots" aria-label="Page ${page+1} sur ${STORY.length}">${STORY.map((_,i)=>`<i class="${i<page?'done':i===page?'now':''}"></i>`).join('')}</div>
+      <div class="scene">${p.scene.map((e,i)=>`<span style="font-size:${i%2?'clamp(40px,9vw,64px)':'clamp(52px,12vw,84px)'}">${e}</span>`).join('')}</div>
+      <p class="page-text">${p.text.replace(/«([^»]*)»/g,'<q>$1</q>')}</p>
+      <div class="challenge" id="chal"></div>
+      <div class="nav">
+        <button class="prev" id="prev" ${page===0?'disabled style="visibility:hidden"':''}>◀ Retour</button>
+        <button class="next" id="next" ${needs?'disabled':''}>${page===STORY.length-1?'Fin 🎉':'Suivant ▶'}</button>
+      </div></div>`;
+  setInstr(`L'histoire · page ${page+1}`, p.text, true);
+  speak(p.text);
+  $('#prev').onclick = () => { if(page>0){ page--; sfx.page(); renderPage(); } };
+  $('#next').onclick = () => {
+    if(page < STORY.length-1){ page++; sfx.page(); renderPage(); window.scrollTo({top:0}); }
+    else { speak("Fin de l'histoire. Bravo Amine, tu as retrouvé Minuit !"); yay('🐈‍⬛','Fin !','Tu as aidé Amine à retrouver Minuit, le chat noir.','Relire l\'histoire', story); }
+  };
+  if(p.challenge && !solved.has(page)) CHAL[p.challenge]($('#chal'), p);
+}
+function solve(msg){
+  solved.add(page); sfx.ok(); addCandy(); confetti(); speak(`${pick(PRAISE)} ${msg}`);
+  const n = $('#next'); n.disabled = false; n.classList.add('bump-once');
+}
+const CHAL = {
+  count(el){
+    const n = rand(5,9), bat = MON.find(m=>m.e==='🦇');
+    el.innerHTML = `<div class="ask">Combien de chauves-souris ?</div><div class="field">${things(bat,n)}</div><div class="answers">${numberOptions(n,1,12).map(o=>`<button class="ans" data-v="${o}">${o}</button>`).join('')}</div>`;
+    countable(el.querySelector('.field'));
+    el.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+      if(+b.dataset.v === n){ b.classList.add('good'); el.querySelectorAll('.ans').forEach(x=>x.disabled = x!==b); solve(`Il y a ${NUM[n]} chauves-souris. Elles te laissent passer !`); }
+      else { wrong(b); b.disabled = true; speak('Touche les chauves-souris une par une pour les compter !'); }
+    });
+  },
+  color(el){
+    const four = shuffle(COLORS.filter(c=>c.n!=='violet')).slice(0,3).concat(COLORS.find(c=>c.n==='violet'));
+    shuffle(four);
+    el.innerHTML = `<div class="ask">Donne le bonbon violet à Mirabelle</div><div class="candies">${four.map(c=>`<button class="candy" data-n="${c.n}" aria-label="bonbon ${c.n}"><i style="--c:${c.c}"></i></button>`).join('')}</div>`;
+    el.querySelectorAll('.candy').forEach(b => b.onclick = () => {
+      if(b.dataset.n === 'violet'){ b.classList.add('good'); el.querySelectorAll('.candy').forEach(x=>x.disabled = x!==b); solve('La potion est prête !'); }
+      else { wrong(b); speak(`Celui-là est ${b.dataset.n}. Cherche le bonbon violet !`); }
+    });
+  },
+  pattern(el){
+    const seq = ['🎃','👻','👻','🎃','👻','👻','🎃'];
+    const opts = shuffle([['👻','le fantôme'],['🎃','la citrouille'],['🦇','la chauve-souris']]);
+    el.innerHTML = `<div class="ask">Qu'est-ce qui vient après ?</div><div class="seq">${seq.map(e=>`<span>${e}</span>`).join('')}<span class="hole" id="hole">?</span></div>
+      <div class="opts">${opts.map(([e,n])=>`<button class="opt" data-e="${e}" aria-label="${n}">${e}</button>`).join('')}</div>`;
+    el.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+      if(b.dataset.e === '👻'){
+        const h = $('#hole'); h.textContent = '👻'; h.classList.remove('hole'); h.classList.add('filled');
+        b.classList.add('good'); el.querySelectorAll('.opt').forEach(x=>x.disabled = x!==b);
+        solve('Citrouille, fantôme, fantôme. La porte s\'ouvre !');
+      } else { wrong(b); b.disabled = true; speak('Écoute bien : citrouille, fantôme, fantôme, citrouille, fantôme, fantôme, citrouille… et après ?'); }
+    });
+  },
+  hide(el){
+    const cat = rand(0,2), empty = shuffle(['🧦','🕸️','🧸']);
+    el.innerHTML = `<div class="boxes">${[0,1,2].map(i=>`<button class="box" data-i="${i}" aria-label="Carton ${i+1}">📦</button>`).join('')}</div>`;
+    el.querySelectorAll('.box').forEach(b => b.onclick = () => {
+      const i = +b.dataset.i;
+      if(i === cat){ b.textContent = '🐈‍⬛'; b.classList.add('found'); el.querySelectorAll('.box').forEach(x=>x.disabled = x!==b); solve('Tu as trouvé Minuit !'); }
+      else { b.textContent = empty[i]; b.disabled = true; sfx.no(); speak('Pas ici ! Essaie un autre carton.'); }
+    });
+  },
+  quiz(el, p){
+    el.innerHTML = `<div class="opts">${p.q.opts.map(([e,n],i)=>`<button class="opt" data-i="${i}" aria-label="${n}">${e}</button>`).join('')}</div>`;
+    el.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+      const i = +b.dataset.i;
+      if(i === p.q.good){ b.classList.add('good'); el.querySelectorAll('.opt').forEach(x=>x.disabled = x!==b); solve(p.q.say); }
+      else { wrong(b); b.disabled = true; speak(`Non, ce n'est pas ${p.q.opts[i][1]}. Essaie encore !`); }
+    });
+  }
+};
+
+const GAMES = { memory, count: counting, story };
+</script>
+
+</html>

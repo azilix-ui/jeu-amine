@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="fr"><head>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%83%3C/text%3E%3C/svg%3E"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>La Nuit d'Amine</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Fredoka:wght@400;500;600&display=swap">
+<style>
+/* Layout: une nuit d'Halloween douce — accueil en 4 grandes tuiles, puis un écran de jeu plein, gros boutons pour petits doigts. Thème unique (nuit) volontaire. */
+:root{
+  --night:#16122a; --dusk:#241c44; --card:#30265a; --card-hi:#3c3070;
+  --pumpkin:#ff8c1a; --pumpkin-deep:#c95a08; --moon:#fff1bf; --slime:#8be08f; --ghost:#e9e4ff;
+  --ink:#fbf3e4; --mist:#b6aad6; --bad:#ff6b6b;
+  --display:'Sniglet','Fredoka',ui-rounded,'Arial Rounded MT Bold',system-ui,sans-serif;
+  --body:'Fredoka',ui-rounded,system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{
+  background:
+    radial-gradient(circle at 88% 6%, var(--moon) 0 38px, rgba(255,241,191,.18) 39px 70px, transparent 71px),
+    radial-gradient(1.5px 1.5px at 12% 20%, var(--ink) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 35% 8%, var(--ink) 50%, transparent 51%),
+    radial-gradient(1px 1px at 60% 15%, var(--ink) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 72% 30%, var(--ink) 50%, transparent 51%),
+    radial-gradient(1px 1px at 22% 40%, var(--ink) 50%, transparent 51%),
+    linear-gradient(180deg, var(--dusk), var(--night) 60%);
+  background-attachment:fixed;
+  background-color:var(--night);
+  color:var(--ink); font-family:var(--body); font-size:18px; line-height:1.4;
+}
+.wrap{max-width:920px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px;display:flex;flex-direction:column;gap:22px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:4px solid var(--moon);outline-offset:3px}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,6vw,48px);line-height:1;margin:0;color:var(--pumpkin);text-shadow:0 3px 0 var(--pumpkin-deep);text-wrap:balance}
+h1 small{display:block;font-family:var(--body);font-weight:500;font-size:16px;color:var(--mist);text-shadow:none;margin-top:8px}
+.hud{display:flex;gap:10px;align-items:center}
+.pill{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:999px;padding:8px 16px;font-weight:600;font-variant-numeric:tabular-nums;font-size:20px}
+.pill.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.25)}}
+.iconbtn{background:var(--card);border-radius:999px;padding:8px 14px;font-size:20px;font-weight:600}
+.iconbtn[aria-pressed="false"]{opacity:.55}
+
+/* Accueil */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.tile{background:var(--card);border-radius:28px;padding:22px 16px;display:flex;flex-direction:column;align-items:center;gap:6px;border:4px solid var(--c);box-shadow:0 6px 0 var(--c);transition:transform .15s}
+.tile:hover{transform:translateY(-3px)}
+.tile:active{transform:translateY(4px);box-shadow:0 2px 0 var(--c)}
+.tile .big{font-size:clamp(48px,11vw,72px);line-height:1.1}
+.tile b{font-family:var(--display);font-size:clamp(20px,4.4vw,28px);font-weight:800}
+.tile span.skill{font-size:15px;color:var(--mist)}
+.parents{background:rgba(48,38,90,.6);border-radius:20px;padding:16px 20px;font-size:15px;color:var(--mist);max-width:65ch}
+.parents strong{color:var(--ink)}
+.parents ul{margin:8px 0 0;padding-left:20px;display:grid;gap:4px}
+
+/* Écran de jeu */
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bar .home{background:var(--card);border-radius:999px;padding:10px 18px;font-size:18px;font-weight:600}
+.instr{flex:1 1 260px;min-width:0;font-family:var(--display);font-size:clamp(22px,4.6vw,32px);font-weight:800;text-wrap:balance;color:var(--moon)}
+.listen{background:var(--pumpkin);color:var(--night);border-radius:999px;padding:10px 18px;font-weight:600;font-size:18px;box-shadow:0 4px 0 var(--pumpkin-deep)}
+.listen:active{transform:translateY(3px);box-shadow:0 1px 0 var(--pumpkin-deep)}
+.stage{display:flex;flex-direction:column;gap:20px;align-items:center}
+
+.seg{display:flex;gap:8px;background:var(--card);padding:6px;border-radius:999px}
+.seg button{padding:8px 16px;border-radius:999px;font-weight:600;color:var(--mist)}
+.seg button[aria-pressed="true"]{background:var(--moon);color:var(--night)}
+
+/* Mémoire */
+.mem{display:grid;gap:12px;width:100%;max-width:640px}
+.mem.n3{grid-template-columns:repeat(3,minmax(0,1fr));max-width:480px}
+.mem.n6{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:480px){.mem.n6{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.mcard{aspect-ratio:3/4;max-width:100%;perspective:600px;position:relative}
+.mcard .in{position:absolute;inset:0;transition:transform .45s;transform-style:preserve-3d}
+.mcard.up .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:18px;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.back{background:repeating-linear-gradient(45deg,var(--card) 0 12px,var(--card-hi) 12px 24px);border:3px solid var(--pumpkin);font-family:var(--display);font-size:clamp(28px,7vw,44px);color:var(--pumpkin);font-weight:800}
+.front{background:var(--ghost);transform:rotateY(180deg);font-size:clamp(40px,10vw,64px)}
+.mcard.done .front{background:var(--slime);animation:bump .5s}
+
+/* Compter */
+.field{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;background:rgba(48,38,90,.55);border-radius:28px;padding:18px;width:100%;max-width:640px}
+.thing{position:relative;font-size:clamp(42px,10vw,60px);line-height:1;padding:6px;border-radius:18px;transition:transform .15s}
+.thing.counted{background:rgba(139,224,143,.25)}
+.thing .n{position:absolute;top:-6px;right:-6px;background:var(--slime);color:var(--night);font-weight:600;font-size:16px;border-radius:999px;min-width:26px;height:26px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.answers{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.ans{background:var(--moon);color:var(--night);font-family:var(--display);font-weight:800;font-size:clamp(40px,9vw,56px);width:clamp(84px,22vw,110px);aspect-ratio:1;border-radius:26px;box-shadow:0 6px 0 #c9b97a}
+.ans:active{transform:translateY(4px);box-shadow:0 2px 0 #c9b97a}
+.ans:disabled{opacity:.3}
+.ans.good{background:var(--slime);box-shadow:0 6px 0 #4f9e54}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* Couleurs */
+.candies{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;width:100%;max-width:520px}
+.candy{background:rgba(48,38,90,.55);border-radius:28px;padding:26px 0;display:grid;place-items:center}
+.candy i{position:relative;display:block;width:clamp(70px,18vw,100px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.65) 0 12%,transparent 13%),var(--c);box-shadow:inset 0 -8px 0 rgba(0,0,0,.18)}
+.candy i::before,.candy i::after{content:"";position:absolute;top:50%;width:34%;height:60%;background:var(--c);filter:brightness(.85);transform:translateY(-50%)}
+.candy i::before{right:96%;clip-path:polygon(100% 50%,0 0,0 100%)}
+.candy i::after{left:96%;clip-path:polygon(0 50%,100% 0,100% 100%)}
+.candy.good{background:rgba(139,224,143,.35)}
+.candy:disabled{opacity:.3}
+
+/* Suite logique */
+.seq{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;background:rgba(48,38,90,.55);border-radius:28px;padding:18px;width:100%;max-width:700px}
+.seq span{font-size:clamp(34px,8vw,54px);width:clamp(48px,11vw,74px);aspect-ratio:1;display:grid;place-items:center;background:var(--card);border-radius:16px}
+.seq span.hole{border:3px dashed var(--pumpkin);background:transparent;color:var(--pumpkin);font-family:var(--display);font-weight:800}
+.seq span.filled{background:var(--slime);animation:bump .5s}
+.opts{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.opt{font-size:clamp(46px,11vw,64px);background:var(--ghost);border-radius:24px;width:clamp(90px,24vw,120px);aspect-ratio:1;display:grid;place-items:center;box-shadow:0 6px 0 var(--mist)}
+.opt:active{transform:translateY(4px);box-shadow:0 2px 0 var(--mist)}
+.opt:disabled{opacity:.3}
+.opt.good{background:var(--slime)}
+
+/* Bravo */
+.yay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(22,18,42,.72);z-index:20;padding:20px}
+.yay .box{background:var(--card);border:4px solid var(--pumpkin);border-radius:32px;padding:28px 26px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+.yay .em{font-size:72px;line-height:1}
+.yay h2{font-family:var(--display);font-weight:800;font-size:clamp(30px,7vw,44px);margin:0;color:var(--moon)}
+.yay p{margin:0;color:var(--mist)}
+.yay .again{background:var(--pumpkin);color:var(--night);border-radius:999px;padding:12px 26px;font-weight:600;font-size:20px;box-shadow:0 5px 0 var(--pumpkin-deep)}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+.float{position:fixed;font-size:40px;pointer-events:none;z-index:21;animation:rise 1.6s ease-out forwards}
+@keyframes rise{to{transform:translateY(-60vh) rotate(30deg);opacity:0}}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <a href="./" style="align-self:flex-start;color:inherit;opacity:.75;font-weight:600;text-decoration:none;font-size:16px">← Tous les jeux</a>
+  <header>
+    <h1>La Nuit d'Amine<small>Petits jeux d'Halloween pour apprendre en s'amusant</small></h1>
+    <div class="hud">
+      <button class="iconbtn" id="voiceBtn" aria-pressed="true" aria-label="Voix activée">🔊 Voix</button>
+      <div class="pill" id="basket" aria-label="Bonbons gagnés">🍬 <span id="count">0</span></div>
+    </div>
+  </header>
+
+  <section id="home">
+    <div class="tiles">
+      <button class="tile" style="--c:var(--pumpkin)" data-game="memory"><span class="big">🃏</span><b>Mémoire</b><span class="skill">Retrouve les paires</span></button>
+      <button class="tile" style="--c:var(--slime)" data-game="count"><span class="big">🎃</span><b>Compter</b><span class="skill">Combien y en a-t-il ?</span></button>
+      <button class="tile" style="--c:#ff7eb6" data-game="colors"><span class="big">🍭</span><b>Couleurs</b><span class="skill">Trouve le bon bonbon</span></button>
+      <button class="tile" style="--c:var(--mist)" data-game="pattern"><span class="big">👻</span><b>La suite</b><span class="skill">Qu'est-ce qui vient après ?</span></button>
+    </div>
+  </section>
+
+  <section id="game" hidden>
+    <div class="bar">
+      <button class="home" id="homeBtn">🏠 Accueil</button>
+      <div class="instr" id="instr"></div>
+      <button class="listen" id="listenBtn">🔊 Écouter</button>
+    </div>
+    <div class="stage" id="stage"></div>
+  </section>
+
+  <aside class="parents" id="parents">
+    <strong>Pour les parents.</strong> Les consignes sont lues à voix haute : montez le son et touchez « Écouter » pour les répéter. Chaque bonne réponse rapporte un bonbon 🍬. Ce qu'on travaille, en lien avec la grande section :
+    <ul>
+      <li><strong>Mémoire</strong> : mémoire visuelle et vocabulaire (le nom de chaque carte est dit à voix haute).</li>
+      <li><strong>Compter</strong> : dénombrer jusqu'à 10 en touchant chaque objet une seule fois.</li>
+      <li><strong>Couleurs</strong> : reconnaître et nommer 8 couleurs.</li>
+      <li><strong>La suite</strong> : continuer un algorithme (rythme AB, AAB, ABC…).</li>
+    </ul>
+  </aside>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const stage = $('#stage');
+const rand = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+const MON = [
+  {e:'🎃', s:'citrouille', pl:'citrouilles', n:'la citrouille'},
+  {e:'👻', s:'fantôme', pl:'fantômes', n:'le fantôme'},
+  {e:'🦇', s:'chauve-souris', pl:'chauves-souris', n:'la chauve-souris'},
+  {e:'🕷️', s:'araignée', pl:'araignées', n:"l'araignée"},
+  {e:'🍬', s:'bonbon', pl:'bonbons', n:'le bonbon'},
+  {e:'🧙', s:'sorcière', pl:'sorcières', n:'la sorcière'},
+  {e:'🌙', s:'lune', pl:'lunes', n:'la lune'},
+  {e:'🐈‍⬛', s:'chat noir', pl:'chats noirs', n:'le chat noir'},
+  {e:'🦉', s:'hibou', pl:'hiboux', n:'le hibou'},
+  {e:'💀', s:'squelette', pl:'squelettes', n:'le squelette'}
+];
+const NUM = ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix'];
+const COLORS = [
+  {n:'rouge', c:'#e8443a'}, {n:'bleu', c:'#3a86e8'}, {n:'jaune', c:'#f5d02a'}, {n:'vert', c:'#3fbf5a'},
+  {n:'orange', c:'#ff8c1a'}, {n:'violet', c:'#9b59d6'}, {n:'rose', c:'#ff7eb6'}, {n:'blanc', c:'#f4f4f4'}
+];
+const PRAISE = ['Bravo Amine !','Super !','Génial !','Trop fort !','Excellent !'];
+
+/* ---------- Voix ---------- */
+let voiceOn = true, frVoice = null;
+function pickVoice(){ try{ const vs = speechSynthesis.getVoices(); frVoice = vs.find(v=>/^fr[-_]FR/i.test(v.lang)) || vs.find(v=>/^fr/i.test(v.lang)) || null; }catch(e){} }
+if ('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(t){
+  if(!voiceOn || !('speechSynthesis' in window)) return;
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='fr-FR'; if(frVoice) u.voice=frVoice; u.rate=.9; u.pitch=1.1; speechSynthesis.speak(u); }catch(e){}
+}
+$('#voiceBtn').onclick = e => {
+  voiceOn = !voiceOn;
+  e.currentTarget.setAttribute('aria-pressed', voiceOn);
+  e.currentTarget.textContent = voiceOn ? '🔊 Voix' : '🔇 Voix';
+  if(!voiceOn) try{ speechSynthesis.cancel(); }catch(err){}
+};
+
+/* ---------- Sons ---------- */
+let ac = null;
+function tone(f,d,t=0,type='sine',vol=.15){
+  try{
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(), g=ac.createGain(), s=ac.currentTime+t;
+    o.type=type; o.frequency.value=f; g.gain.setValueAtTime(vol,s); g.gain.exponentialRampToValueAtTime(.001,s+d);
+    o.connect(g); g.connect(ac.destination); o.start(s); o.stop(s+d+.02);
+  }catch(e){}
+}
+const sfx = {
+  ok(){ [523,659,784,1047].forEach((f,i)=>tone(f,.25,i*.09,'triangle')); },
+  no(){ tone(220,.3,0,'sine',.12); tone(175,.35,.15,'sine',.1); },
+  flip(){ tone(700,.07,0,'square',.04); },
+  tap(){ tone(880,.08,0,'triangle',.08); }
+};
+
+/* ---------- Bonbons ---------- */
+let candies = 0;
+try{ candies = parseInt(localStorage.getItem('amine-bonbons'),10) || 0; }catch(e){}
+$('#count').textContent = candies;
+function addCandy(){
+  candies++;
+  try{ localStorage.setItem('amine-bonbons', candies); }catch(e){}
+  $('#count').textContent = candies;
+  const b = $('#basket'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+}
+
+/* ---------- Bravo ---------- */
+function confetti(){
+  const set = ['🍬','🎃','⭐','🍭','👻'];
+  for(let i=0;i<10;i++){
+    const s=document.createElement('span'); s.className='float'; s.textContent=pick(set);
+    s.style.left = rand(5,90)+'vw'; s.style.top = rand(55,90)+'vh'; s.style.animationDelay = (i*60)+'ms';
+    document.body.appendChild(s); setTimeout(()=>s.remove(), 2000);
+  }
+}
+function yay(msg, sub, onAgain){
+  confetti();
+  const el=document.createElement('div'); el.className='yay';
+  el.innerHTML = `<div class="box"><div class="em">🏆</div><h2>${msg}</h2><p>${sub}</p><button class="again">Rejouer</button></div>`;
+  document.body.appendChild(el);
+  el.querySelector('.again').onclick = () => { el.remove(); onAgain(); };
+}
+
+/* ---------- Navigation ---------- */
+let current = null, instrSpoken = '', timer = null;
+function setInstr(text, spoken){ $('#instr').textContent = text; instrSpoken = spoken || text; speak(instrSpoken); }
+$('#listenBtn').onclick = () => speak(instrSpoken);
+function later(fn, ms){ clearTimeout(timer); timer = setTimeout(fn, ms); }
+function showHome(){
+  clearTimeout(timer); current=null;
+  document.querySelectorAll('.yay').forEach(x=>x.remove());
+  $('#game').hidden = true; $('#home').hidden = false; $('#parents').hidden = false;
+  try{ speechSynthesis.cancel(); }catch(e){}
+}
+function startGame(id){
+  current = id; $('#home').hidden = true; $('#parents').hidden = true; $('#game').hidden = false;
+  window.scrollTo(0,0);
+  GAMES[id]();
+}
+$('#homeBtn').onclick = showHome;
+document.querySelectorAll('.tile').forEach(t => t.onclick = () => startGame(t.dataset.game));
+
+/* ---------- 1. Mémoire ---------- */
+let memLevel = 3;
+function memory(){
+  const pairs = shuffle(MON.slice()).slice(0, memLevel);
+  const deck = shuffle([...pairs, ...pairs]);
+  stage.innerHTML = `<div class="seg" role="group" aria-label="Niveau">
+      <button data-l="3" aria-pressed="${memLevel===3}">3 paires</button>
+      <button data-l="6" aria-pressed="${memLevel===6}">6 paires</button></div>
+    <div class="mem n${memLevel}">${deck.map((m,i)=>`<button class="mcard" data-i="${i}" aria-label="Carte cachée"><div class="in"><div class="face back">?</div><div class="face front">${m.e}</div></div></button>`).join('')}</div>`;
+  stage.querySelectorAll('.seg button').forEach(b => b.onclick = () => { memLevel = +b.dataset.l; memory(); });
+  setInstr('Retrouve les paires !', 'Retourne deux cartes. Trouve les images qui sont pareilles !');
+  let open = [], lock = false, found = 0;
+  stage.querySelectorAll('.mcard').forEach(card => card.onclick = () => {
+    const i = +card.dataset.i, m = deck[i];
+    if(lock || card.classList.contains('up')) return;
+    card.classList.add('up'); card.setAttribute('aria-label', m.s); sfx.flip(); speak(m.n);
+    open.push(card);
+    if(open.length < 2) return;
+    lock = true;
+    const [a,b] = open, ma = deck[a.dataset.i], mb = deck[b.dataset.i];
+    if(ma.e === mb.e){
+      setTimeout(() => {
+        a.classList.add('done'); b.classList.add('done'); sfx.ok(); addCandy(); found++;
+        speak('Bravo ! Deux ' + ma.pl + ' !');
+        open = []; lock = false;
+        if(found === memLevel) later(() => { speak('Bravo Amine ! Tu as trouvé toutes les paires !'); yay('Bravo Amine !', 'Tu as trouvé toutes les paires.', memory); }, 900);
+      }, 450);
+    } else {
+      setTimeout(() => { a.classList.remove('up'); b.classList.remove('up'); a.setAttribute('aria-label','Carte cachée'); b.setAttribute('aria-label','Carte cachée'); open = []; lock = false; }, 1200);
+    }
+  });
+}
+
+/* ---------- 2. Compter ---------- */
+function counting(){
+  const m = pick(MON.filter(x => x.e !== '🐈‍⬛')), n = rand(1,10);
+  const opts = new Set([n]); while(opts.size < 3){ const d = Math.max(1, Math.min(10, n + pick([-3,-2,-1,1,2,3]))); opts.add(d); }
+  const options = shuffle([...opts]);
+  stage.innerHTML = `<div class="field">${Array.from({length:n},(_,i)=>`<button class="thing" data-i="${i}" aria-label="${m.s}">${m.e}</button>`).join('')}</div>
+    <div class="answers">${options.map(o=>`<button class="ans" data-v="${o}">${o}</button>`).join('')}</div>`;
+  setInstr(`Combien de ${m.pl} ?`, `Combien y a-t-il de ${m.pl} ? Touche-les pour les compter !`);
+  let counted = 0;
+  stage.querySelectorAll('.thing').forEach(t => t.onclick = () => {
+    if(t.classList.contains('counted')) return;
+    counted++; t.classList.add('counted');
+    t.insertAdjacentHTML('beforeend', `<span class="n">${counted}</span>`);
+    sfx.tap(); speak(NUM[counted]);
+  });
+  stage.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const v = +b.dataset.v;
+    if(v === n){
+      b.classList.add('good'); sfx.ok(); addCandy(); confetti();
+      stage.querySelectorAll('.ans').forEach(x => x.disabled = x !== b);
+      speak(`${pick(PRAISE)} Il y a ${NUM[n]} ${n > 1 ? m.pl : m.s}.`);
+      later(counting, 2800);
+    } else {
+      sfx.no(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); b.disabled = true;
+      speak(`Pas tout à fait. Touche les ${m.pl} une par une pour compter !`);
+    }
+  });
+}
+
+/* ---------- 3. Couleurs ---------- */
+let lastColor = null;
+function colors(){
+  const four = shuffle(COLORS.slice()).slice(0,4);
+  let target = pick(four); if(target === lastColor) target = four.find(c => c !== lastColor); lastColor = target;
+  stage.innerHTML = `<div class="candies">${four.map(c=>`<button class="candy" data-n="${c.n}" aria-label="bonbon ${c.n}"><i style="--c:${c.c}"></i></button>`).join('')}</div>`;
+  setInstr(`Touche le bonbon ${target.n}`, `Touche le bonbon ${target.n} !`);
+  stage.querySelectorAll('.candy').forEach(b => b.onclick = () => {
+    if(b.dataset.n === target.n){
+      b.classList.add('good'); sfx.ok(); addCandy(); confetti();
+      stage.querySelectorAll('.candy').forEach(x => x.disabled = x !== b);
+      speak(`${pick(PRAISE)} C'est le bonbon ${target.n}.`);
+      later(colors, 2300);
+    } else {
+      sfx.no(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+      speak(`Celui-là est ${b.dataset.n}. Cherche le bonbon ${target.n} !`);
+    }
+  });
+}
+
+/* ---------- 4. La suite ---------- */
+function pattern(){
+  const kind = pick([[0,1],[0,1],[0,0,1],[0,1,1],[0,1,2]]);
+  const syms = shuffle(MON.slice()).slice(0,3);
+  const len = kind.length === 2 ? 5 : 6;
+  const seq = Array.from({length:len}, (_,i) => syms[kind[i % kind.length]]);
+  const answer = syms[kind[len % kind.length]];
+  const opts = [answer]; for(const m of shuffle(MON.slice())){ if(opts.length >= 3) break; if(!opts.includes(m)) opts.push(m); }
+  shuffle(opts);
+  stage.innerHTML = `<div class="seq">${seq.map(m=>`<span aria-label="${m.s}">${m.e}</span>`).join('')}<span class="hole" id="hole">?</span></div>
+    <div class="opts">${opts.map((m,i)=>`<button class="opt" data-i="${i}" aria-label="${m.s}">${m.e}</button>`).join('')}</div>`;
+  setInstr(`Qu'est-ce qui vient après ?`, `Regarde bien la suite. Qu'est-ce qui vient après ?`);
+  stage.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+    const m = opts[+b.dataset.i];
+    if(m === answer){
+      const h = $('#hole'); h.textContent = m.e; h.classList.remove('hole'); h.classList.add('filled');
+      b.classList.add('good'); sfx.ok(); addCandy(); confetti();
+      stage.querySelectorAll('.opt').forEach(x => x.disabled = x !== b);
+      speak(`${pick(PRAISE)} C'est ${m.n} !`);
+      later(pattern, 2500);
+    } else {
+      sfx.no(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); b.disabled = true;
+      speak('Essaie encore ! Regarde ce qui se répète.');
+    }
+  });
+}
+
+const GAMES = { memory, count: counting, colors, pattern };
+</script>
+
+</html>
