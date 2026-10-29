@@ -1,0 +1,4 @@
+# Cache les fichiers techniques : seuls les jeux sont visibles en ligne.
+<FilesMatch "^(README\.md|package\.json|build\.js|\.gitignore)$">
+  Require all denied
+</FilesMatch>
