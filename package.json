@@ -1,0 +1,11 @@
+{
+  "name": "jeux-amine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Les jeux d'Amine : site statique (HTML uniquement)",
+  "scripts": {
+    "build": "node build.js",
+    "start": "node build.js"
+  },
+  "engines": { "node": ">=18" }
+}
