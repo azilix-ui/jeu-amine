@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deutsch Express</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: single column (max 860px). Home = a route of stops (units); unit = grid of activities; activity = top bar + question card + answers. */
+/* Deutsch Express: station-sign blue, signal red rail line, gold for progress. Single deliberate light look. */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --ink:#14213d; --muted:#56627c; --line:#d3d9e4;
+  --accent:#d7262f; --accent-ink:#ffffff; --accent2:#12357a; --gold:#f2b705;
+  --ok:#1b7f50; --ok-soft:#dcf2e6; --bad:#c62828; --bad-soft:#fde3e3;
+  --m:#1d5fc4; --f:#d7262f; --n:#1b7f50; --sel:#e6edfb; --card-back:#f5f8ff;
+  --display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --r:10px; color-scheme:light;
+}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:56px;height:56px;flex:none;border-radius:10px;background:var(--accent);color:#fff;font-family:var(--display);font-weight:900;font-size:24px;display:flex;align-items:center;justify-content:center;font-stretch:115%}
+.brand h1{font-size:clamp(32px,6vw,52px);font-weight:900;font-stretch:80%;letter-spacing:-.01em;text-transform:uppercase;color:var(--accent2)}
+.brand p{margin:2px 0 0;color:var(--muted)}
+.route{padding-left:26px}
+.route::before{content:"";position:absolute;left:8px;top:18px;bottom:18px;width:6px;border-radius:3px;background:var(--accent)}
+.route li{position:relative}
+.route li::before{content:"";position:absolute;left:-25px;top:50%;width:14px;height:14px;margin-top:-10px;border-radius:50%;background:#fff;border:3px solid var(--accent)}
+.stop{background:var(--accent2);color:#fff;box-shadow:0 3px 0 #0a2257}
+.stop:hover{filter:brightness(1.12)}
+.stop small{color:#c9d6f2}
+.stop-tag{color:var(--gold)}
+.stop-main b{font-stretch:90%;font-weight:800}
+.stop.is-next{outline:3px solid var(--gold);outline-offset:3px}
+.stop.is-done .stop-prog{color:var(--gold)}
+.uhead .stop-tag{color:var(--accent)}
+.uhead h2,.lex h2,.res h2{font-weight:900;font-stretch:85%;color:var(--accent2)}
+.prompt{font-weight:800;font-stretch:90%}
+
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:18px 56px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent2);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;text-wrap:balance}
+small{color:var(--muted)}
+.icon{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line);font-size:20px;flex:none}
+.btn{border-radius:var(--r);padding:12px 18px;font-weight:700;background:var(--surface);border:1px solid var(--line)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.good{background:var(--ok);color:#fff;border-color:transparent}
+.btn.bad{background:var(--surface);color:var(--bad);border-color:var(--bad)}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+/* header */
+.hdr{display:flex;flex-direction:column;gap:14px}
+.who{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.who>div{flex:1;min-width:0}
+.lvl{font-family:var(--display);font-weight:700;font-size:20px}
+.xpbar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin:6px 0 4px}
+.xpbar i{display:block;height:100%;background:var(--gold);border-radius:99px}
+.nexthint{margin:0;color:var(--muted)}
+.nexthint b{color:var(--ink)}
+.foot{font-size:14px;color:var(--muted);margin:8px 0 0}
+
+/* route */
+.route{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;position:relative}
+.stop{width:100%;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"ic tag prog" "ic main prog";column-gap:14px;align-items:center;text-align:left;padding:12px 16px;border-radius:var(--r)}
+.stop-ic{grid-area:ic;font-size:30px}
+.stop-tag{grid-area:tag;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.stop-main{grid-area:main;display:flex;flex-direction:column;min-width:0}
+.stop-main b{font-family:var(--display);font-size:21px;line-height:1.15}
+.stop-prog{grid-area:prog;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* unit */
+.back{align-self:flex-start;font-weight:700;color:var(--muted);padding:6px 0}
+.uhead{display:flex;flex-direction:column;gap:4px}
+.uhead h2{font-size:clamp(28px,5vw,40px)}
+.modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.mode{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ic name" "ic desc" "ic st";column-gap:12px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;transition:transform .12s,border-color .12s}
+.mode:hover{transform:translateY(-2px);border-color:var(--accent)}
+.mode.first{border:2px solid var(--accent)}
+.mode-ic{grid-area:ic;font-size:28px}
+.mode b{grid-area:name;font-family:var(--display);font-size:19px}
+.mode small{grid-area:desc}
+.mstars{grid-area:st;color:var(--gold);letter-spacing:2px;margin-top:4px}
+
+/* game */
+.gtop{display:flex;align-items:center;gap:12px}
+.prog{flex:1;height:12px;background:var(--line);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .3s}
+.pts{font-weight:700;font-variant-numeric:tabular-nums}
+.combo{min-width:58px;font-weight:800;color:var(--accent)}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:26px 20px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.kicker{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.prompt{font-family:var(--display);font-size:clamp(28px,5.5vw,44px);line-height:1.15;overflow-wrap:anywhere}
+.prompt.sm{font-family:var(--body);font-size:clamp(19px,3vw,24px);font-weight:700}
+.prompt i{font-style:italic}
+.sub{color:var(--muted)}
+.say{border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-weight:700;background:var(--bg)}
+.pron{color:var(--accent2)}
+.blank{color:var(--muted)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px}
+.opts.fixed{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:14px;font-weight:700;font-size:18px;min-width:0}
+.opt span{min-width:0;overflow-wrap:anywhere}
+.opt kbd{font-family:var(--body);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px;flex:none}
+.opt:hover:not(:disabled){border-color:var(--accent2)}
+.opt.ok{background:var(--ok-soft);border-color:var(--ok)}
+.opt.bad{background:var(--bad-soft);border-color:var(--bad);animation:shake .35s}
+.opt:disabled{cursor:default}
+.opts.fixed .opt{justify-content:center;font-family:var(--display);font-size:24px}
+.art-m{color:var(--m)}.art-f{color:var(--f)}.art-n{color:var(--n)}
+@keyframes shake{25%,75%{transform:translateX(-6px)}50%{transform:translateX(6px)}}
+.fb{display:flex;flex-direction:column;gap:12px;align-items:center;min-height:10px}
+.fbmsg{width:100%;box-sizing:border-box;border-radius:var(--r);padding:12px 16px;font-weight:700;text-align:center}
+.fbmsg p{font-weight:400;margin:6px 0 0}
+.fbmsg.good{background:var(--ok-soft);color:var(--ok)}
+.fbmsg.oops{background:var(--bad-soft);color:var(--ink)}
+.typein{display:flex;gap:10px}
+.typein input{flex:1;min-width:0;font:inherit;font-size:22px;padding:12px 14px;border-radius:var(--r);border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.chars{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.ch{width:46px;height:42px;border-radius:8px;background:var(--surface);border:1px solid var(--line);font-size:20px;font-weight:700}
+
+/* flashcards */
+.flipwrap{perspective:1200px}
+.flip{position:relative;width:100%;height:240px;transform-style:preserve-3d;transition:transform .45s}
+.flip.on{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;box-sizing:border-box}
+.face.back{transform:rotateY(180deg);background:var(--card-back)}
+.face b{font-family:var(--display);font-size:clamp(26px,5vw,40px);line-height:1.15;overflow-wrap:anywhere;text-align:center}
+.face em{font-style:normal;color:var(--muted);font-size:14px}
+.face small{text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.left{text-align:center;color:var(--muted);margin:0}
+
+/* match */
+.match{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.mt{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:12px;font-weight:700;min-height:56px;overflow-wrap:anywhere}
+.mt.l{font-family:var(--display);font-size:19px}
+.mt.sel{border-color:var(--accent2);background:var(--sel)}
+.mt.done{opacity:.25;border-style:dashed}
+.mt.bad{border-color:var(--bad);animation:shake .35s}
+.kick2{margin:0;text-align:center;color:var(--muted)}
+.kick2 span{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* lexicon */
+.lex{display:flex;flex-direction:column;gap:16px}
+.lex h2{font-size:clamp(26px,4.5vw,36px)}
+.note{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:var(--r);padding:14px 16px;max-width:70ch}
+.note p{margin:0 0 8px}.note p:last-child{margin:0}
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;background:var(--surface);border-radius:var(--r);overflow:hidden;border:1px solid var(--line)}
+td,th{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+.tw{font-family:var(--display);font-weight:700;font-size:18px}
+.g-m{color:var(--m)}.g-f,.g-pl{color:var(--f)}.g-n{color:var(--n)}
+.mini{width:34px;height:34px;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+.tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+.tbl h3{font-size:20px;margin-bottom:6px}
+.tbl h3 small{font-family:var(--body);font-size:15px;font-weight:400}
+.tbl td b{color:var(--accent)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-weight:700;font-size:15px}
+
+/* results */
+.res{display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px 18px}
+.res-st{font-size:48px;color:var(--gold);letter-spacing:6px}
+.dim{color:var(--line)}
+.res h2{font-size:clamp(26px,5vw,36px)}
+.lvlup{background:var(--gold);color:#1b1b1b;border-radius:99px;padding:8px 18px;font-weight:800}
+.miss{width:100%;max-width:560px;text-align:left}
+.miss h3{font-size:18px;margin-bottom:6px}
+.miss ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+/* sentence building */
+.bline{min-height:62px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px;border-radius:var(--r);border:2px dashed var(--line);background:var(--surface)}
+.bline.good{border-style:solid;border-color:var(--ok);background:var(--ok-soft)}
+.bline.oops{border-style:solid;border-color:var(--bad);background:var(--bad-soft)}
+.bhint{color:var(--muted)}
+.bpool{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:50px}
+.tile{font-family:var(--display);font-weight:700;font-size:20px;padding:9px 14px;border-radius:8px;background:var(--surface);border:2px solid var(--line);box-shadow:0 2px 0 var(--line)}
+.tile.on{border-color:var(--accent2)}
+/* profile card in questions */
+.steck{display:inline-grid;grid-template-columns:auto auto;gap:2px 14px;text-align:left;font-size:17px;font-weight:400;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;margin-bottom:6px}
+.steck b{font-weight:700}
+@media (max-width:520px){.opts.fixed .opt{font-size:20px;padding:12px 6px}.match{gap:8px}.mt{padding:10px 8px;font-size:15px}.mt.l{font-size:16px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<a href="./" class="mf-back" aria-label="Retour à l'espace Essil" style="position:fixed;z-index:9999;top:calc(env(safe-area-inset-top,0px) + 8px);left:max(8px,env(safe-area-inset-left,0px));background:#1f3c88;color:#fff;font:600 13px/1 system-ui,-apple-system,'Segoe UI',sans-serif;text-decoration:none;padding:7px 11px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);opacity:.9">← Essil</a>
+
+<canvas id="confetti"></canvas>
+<div class="wrap" id="app"></div>
+<script>
+const C = {
+key:"essil-deutsch",
+voiceLangs:["de-DE","de"], rate:.9, lemma:false,
+chars:["ä","ö","ü","ß","Ä","Ö","Ü"],
+caseTip:"Attention aux majuscules : en allemand, tous les noms commencent par une majuscule (der Hund, die Schule).",
+langLabel:"Deutsch", langShort:"DE",
+qcmA:"Que veut dire… ?", qcmB:"Comment dit-on en allemand… ?",
+typeKicker:"Écris en allemand", typePh:"Ta réponse en allemand…",
+homeLabel:"Plan du réseau",
+nextLabel:"Nächster Halt — prochain arrêt :",
+perfect:"Wunderbar !",
+pronouns:["ich","du","er / sie / es","wir","ihr","sie / Sie"],
+pronSay:["ich","du","er","wir","ihr","sie"],
+praise:["Super!","Richtig!","Sehr gut!","Toll!","Genau!","Prima!","Klasse!"],
+resTitles:["Weiter üben ! — continue à t'entraîner","Gut gemacht ! — bien joué","Ausgezeichnet ! — excellent"],
+confetti:["#d7262f","#f2b705","#12357a","#1f8a5a","#14213d"],
+levels:[[0,"Anfängerin · débutante"],[300,"Entdeckerin · exploratrice"],[800,"Reisende · voyageuse"],[1600,"Kennerin · connaisseuse"],[2800,"Profi · pro"],[4500,"Expertin · experte"],[7000,"Deutsch-Star"]],
+genderLegend:'<span class="g-m">der = masculin</span><span class="g-f">die = féminin / pluriel</span><span class="g-n">das = neutre</span>',
+modes:{
+ lex:["Lexique & cours","Les mots, la règle et le son","📖"],
+ flash:["Karteikarten","Cartes à retourner : je savais / à revoir","🃏"],
+ qcm:["Quiz express","Reconnaître et comprendre les mots","⚡"],
+ type:["Schreib es!","Écris le mot en allemand (ä ö ü ß)","⌨️"],
+ match:["Paires chrono","Associe vite chaque mot à sa traduction","⏱️"],
+ article:["der · die · das","Trouve le bon article","🎨"],
+ conj:["Konjugation","Conjugue les verbes au présent","⚙️"],
+ quiz:["Défis","Phrases à compléter et petits pièges","🏆"],
+ build:["Satzbau","Remets les mots dans l'ordre","🧩"]
+},
+headerHTML:'<div class="brand"><span class="logo">DE</span><div><h1>Deutsch Express</h1><p>Essils Reise durch die deutsche Sprache · le voyage d\'Essil</p></div></div>',
+footHTML:'Conseil : commence chaque gare par « Lexique & cours », puis fais les épreuves. Vise 3 étoiles partout avant de changer de gare. Clavier : touches 1-4 pour répondre, Entrée pour continuer, Espace pour retourner une carte.',
+units:[
+{id:"ich",tag:"Dijon-Ville · ton cours",icon:"🙋‍♀️",name:"Das bin ich",fr:"Me présenter (cours du 9 octobre)",
+ note:"<p><b>Mon portrait en 4 phrases :</b><br><i>Ich heiße Essil. Ich bin zwölf Jahre alt. Ich wohne <b>in</b> Dijon. Ich komme <b>aus</b> Frankreich.</i></p><p><b>Mon caractère :</b> <i>Ich bin sportlich.</i> Pour dire le contraire, on ajoute <b>nicht</b> après le verbe : <i>Ich bin <b>nicht</b> sportlich.</i></p><p><b>Ce que j'aime :</b> <i>Ich mag Fußball. Ich mag Reiten.</i> (mögen → ich <b>mag</b>)</p><p>⚠️ <i>in</i> Dijon (pas « im ») · zw<b>ö</b>lf avec un Umlaut · heißen s'écrit avec <b>ß</b>.</p>",
+ cards:[["Wie heißt du?","Comment t'appelles-tu ?"],["Ich heiße Essil.","Je m'appelle Essil."],["Wie alt bist du?","Quel âge as-tu ?"],["Ich bin zwölf Jahre alt.","J'ai douze ans."],["Wo wohnst du?","Où habites-tu ?"],["Ich wohne in Dijon.","J'habite à Dijon."],["Woher kommst du?","D'où viens-tu ?"],["Ich komme aus Frankreich.","Je viens de France."],["sportlich","sportive"],["clever","maligne, futée"],["musikalisch","musicienne"],["organisiert","organisée"],["offen","ouverte"],["sympathisch","sympathique"],["nicht","ne… pas"],["Ich bin nicht sportlich.","Je ne suis pas sportive."],["Ich mag Fußball.","J'aime le foot."],["Ich mag Handball.","J'aime le handball."],["Ich mag Reiten.","J'aime l'équitation."]],
+ sentences:[["Ich heiße Essil.","Je m'appelle Essil."],["Ich bin zwölf Jahre alt.","J'ai douze ans."],["Ich wohne in Dijon.","J'habite à Dijon."],["Ich komme aus Frankreich.","Je viens de France."],["Ich bin sportlich und clever.","Je suis sportive et maligne."],["Ich bin nicht organisiert.","Je ne suis pas organisée."],["Ich mag Handball und Reiten.","J'aime le handball et l'équitation."],["Wie alt bist du?","Quel âge as-tu ?"],["Woher kommst du?","D'où viens-tu ?"]],
+ buildTip:"Rappel : le verbe conjugué est toujours en 2e position, et <i>nicht</i> se place après « bin ».",
+ quiz:[
+  {q:"Complète : Ich wohne ___ Dijon.",a:"in",w:["im","aus","an"],ex:"Devant un nom de ville : <b>in</b> Dijon, <b>in</b> Köln. (« im » = in dem, devant un nom masculin ou neutre : im Haus.)"},
+  {q:"Complète : Ich komme ___ Frankreich.",a:"aus",w:["in","im","von"]},
+  {q:"Complète : Ich ___ zwölf Jahre alt.",a:"bin",w:["habe","heiße","ist"],ex:"En allemand on « est » 12 ans : ich <b>bin</b> zwölf Jahre alt."},
+  {q:"Comment dit-on « Je ne suis pas musicienne » ?",a:"Ich bin nicht musikalisch.",w:["Ich nicht bin musikalisch.","Ich bin musikalisch nicht.","Nicht ich bin musikalisch."]},
+  {q:"« Ich mag Reiten » veut dire…",a:"J'aime l'équitation.",w:["J'aime lire.","J'aime voyager.","J'aime courir."]},
+  {q:"« organisiert » veut dire…",a:"organisée",w:["originale","orgueilleuse","orange"]},
+  {q:"Pour demander « D'où viens-tu ? », on dit…",a:"Woher kommst du?",w:["Wo wohnst du?","Wie heißt du?","Wie alt bist du?"]},
+  {q:"Comment s'écrit 12 en lettres ?",a:"zwölf",w:["zwolf","zwölv","zwelf"]},
+  {q:"Complète : Ich ___ Fußball.",a:"mag",w:["mage","magst","mögen"],ex:"mögen est irrégulier : ich <b>mag</b>, du magst, er mag."}
+ ]},
+{id:"steckbrief",tag:"Köln · Dortmund · Düsseldorf",icon:"🪪",name:"Er heißt Mike",fr:"Présenter quelqu'un (er / sie)",
+ note:"<p>Pour parler de quelqu'un d'autre, on utilise <b>er</b> (il) ou <b>sie</b> (elle), et le verbe se termine en <b>-t</b> :</p><p><i>Er heiß<b>t</b> Mike. Er <b>ist</b> 17 Jahre alt. Er wohn<b>t</b> in Köln.</i><br><i>Sie heiß<b>t</b> Jule. Sie <b>ist</b> 12 Jahre alt. Sie wohn<b>t</b> in Dortmund.</i><br><i>Er heiß<b>t</b> Jonas. Er <b>ist</b> 13 Jahre alt. Er wohn<b>t</b> in Düsseldorf. Er komm<b>t</b> aus <b>der</b> Schweiz.</i></p><p>⚠️ N'oublie pas <b>ist</b> avec l'âge. Au milieu d'une phrase, <i>sie</i> (elle) prend une minuscule : <i>Sie</i> avec une majuscule, c'est « vous ».</p><p>Vocabulaire de la fiche : <b>der Name</b> (le nom), <b>das Alter</b> (l'âge), <b>der Wohnort</b> (le lieu d'habitation).</p>",
+ cards:[["Er heißt Mike.","Il s'appelle Mike."],["Er ist siebzehn Jahre alt.","Il a dix-sept ans."],["Er wohnt in Köln.","Il habite à Cologne."],["Sie heißt Jule.","Elle s'appelle Jule."],["Sie ist zwölf Jahre alt.","Elle a douze ans."],["Sie wohnt in Dortmund.","Elle habite à Dortmund."],["Er heißt Jonas.","Il s'appelle Jonas."],["Er ist dreizehn Jahre alt.","Il a treize ans."],["Er wohnt in Düsseldorf.","Il habite à Düsseldorf."],["Er kommt aus der Schweiz.","Il vient de Suisse."],["der Name","le nom",{g:"m"}],["das Alter","l'âge",{g:"n"}],["der Wohnort","le lieu d'habitation",{g:"m"}],["Wie heißt er?","Comment s'appelle-t-il ?"],["Wie alt ist sie?","Quel âge a-t-elle ?"],["Wo wohnt er?","Où habite-t-il ?"]],
+ conj:[
+  {inf:"heißen",fr:"s'appeler",stem:"heiß",forms:["heiße","heißt","heißt","heißen","heißt","heißen"]},
+  {inf:"sein",fr:"être",forms:["bin","bist","ist","sind","seid","sind"]},
+  {inf:"wohnen",fr:"habiter",stem:"wohn",forms:["wohne","wohnst","wohnt","wohnen","wohnt","wohnen"]},
+  {inf:"kommen",fr:"venir",stem:"komm",forms:["komme","kommst","kommt","kommen","kommt","kommen"]}
+ ],
+ sentences:[["Er heißt Mike.","Il s'appelle Mike."],["Er ist siebzehn Jahre alt.","Il a dix-sept ans."],["Sie wohnt in Dortmund.","Elle habite à Dortmund."],["Er kommt aus der Schweiz.","Il vient de Suisse."],["Sie heißt Jule und sie ist zwölf.","Elle s'appelle Jule et elle a douze ans."],["Wo wohnt Jonas?","Où habite Jonas ?"],["Jonas wohnt in Düsseldorf.","Jonas habite à Düsseldorf."]],
+ quiz:[
+  {q:'<span class="steck"><span>Name</span><b>Mike</b><span>Alter</span><b>17</b><span>Wohnort</span><b>Köln</b></span><br>Wie alt ist Mike?',a:"Er ist siebzehn Jahre alt.",w:["Er ist siebzig Jahre alt.","Er hat siebzehn Jahre.","Er ist sieben Jahre alt."]},
+  {q:'<span class="steck"><span>Name</span><b>Jule</b><span>Alter</span><b>12</b><span>Wohnort</span><b>Dortmund</b></span><br>Wo wohnt Jule?',a:"Sie wohnt in Dortmund.",w:["Sie kommt aus Dortmund.","Er wohnt in Dortmund.","Sie wohnt aus Dortmund."]},
+  {q:'<span class="steck"><span>Name</span><b>Jonas</b><span>Alter</span><b>13</b><span>Wohnort</span><b>Düsseldorf</b><span>kommt aus</span><b>der Schweiz</b></span><br>Woher kommt Jonas?',a:"Er kommt aus der Schweiz.",w:["Er wohnt in der Schweiz.","Er kommt aus Düsseldorf.","Sie kommt aus der Schweiz."]},
+  {q:"Complète : Mike ___ 17 Jahre alt.",a:"ist",w:["bin","hat","heißt"]},
+  {q:"Complète : Jule ___ in Dortmund.",a:"wohnt",w:["wohne","wohnst","wohnen"]},
+  {q:"Complète : Jonas kommt aus ___ Schweiz.",a:"der",w:["die","das","—"],ex:"La Suisse a un article : <b>die</b> Schweiz. Après <i>aus</i>, il devient <b>der</b> : aus <b>der</b> Schweiz."},
+  {q:"Quelle phrase est correcte ?",a:"Sie heißt Jule, sie ist zwölf Jahre alt.",w:["Sie heißt Jule, Sie ist zwölf Jahre alt.","Sie heißt Jule, sie zwölf Jahre alt.","Sie heiße Jule, sie ist zwölf Jahre alt."]},
+  {q:"« der Wohnort » veut dire…",a:"le lieu d'habitation",w:["le métier","le pays d'origine","l'adresse e-mail"]},
+  {q:"Complète : ___ heißt Jonas. (il)",a:"Er",w:["Sie","Es","Ich"]}
+ ]},
+{id:"laender",tag:"Luxemburg · Bern · Wien",icon:"🗺️",name:"Länder & Hauptstädte",fr:"Les pays et leurs capitales",
+ note:"<p>On parle allemand en <b>Allemagne</b>, en <b>Autriche</b>, en <b>Suisse</b>, au <b>Luxembourg</b> et dans l'est de la <b>Belgique</b>.</p><p>La plupart des pays n'ont pas d'article : <i>Ich komme aus Deutschland.</i> Mais <b>die Schweiz</b> en a un : <i>Ich komme aus <b>der</b> Schweiz. Ich wohne in <b>der</b> Schweiz.</i></p><p>⚠️ <b>Wien</b> (Vienne) ≠ <b>Wein</b> (le vin) !</p>",
+ cards:[["Deutschland","l'Allemagne"],["Österreich","l'Autriche"],["die Schweiz","la Suisse",{alt:["Schweiz"]}],["Belgien","la Belgique"],["Luxemburg","le Luxembourg"],["Frankreich","la France"],["Berlin","capitale de l'Allemagne"],["Wien","capitale de l'Autriche (Vienne)"],["Bern","capitale de la Suisse (Berne)"],["Brüssel","capitale de la Belgique (Bruxelles)"],["Paris","capitale de la France"],["die Hauptstadt","la capitale",{g:"f"}],["das Land","le pays",{g:"n"}]],
+ sentences:[["Ich komme aus Frankreich.","Je viens de France."],["Er kommt aus der Schweiz.","Il vient de Suisse."],["Die Hauptstadt von Österreich ist Wien.","La capitale de l'Autriche est Vienne."],["Berlin ist die Hauptstadt von Deutschland.","Berlin est la capitale de l'Allemagne."],["Sie wohnt in Belgien.","Elle habite en Belgique."]],
+ quiz:[
+  {q:"Quelle est la capitale de l'Autriche (Österreich) ?",a:"Wien",w:["Wein","Bern","Berlin"],ex:"<b>Wien</b> = Vienne. Attention, <b>Wein</b> veut dire « le vin » 🍷 !"},
+  {q:"Quelle est la capitale de la Suisse ?",a:"Bern",w:["Zürich","Genf","Basel"],ex:"Piège classique : Zurich est la plus grande ville, mais la capitale fédérale est <b>Bern</b>."},
+  {q:"Quelle est la capitale de la Belgique ?",a:"Brüssel",w:["Luxemburg","Bern","Köln"]},
+  {q:"Quelle est la capitale de l'Allemagne ?",a:"Berlin",w:["Bonn","München","Hamburg"]},
+  {q:"Quelle est la capitale du Luxembourg ?",a:"Luxemburg",w:["Brüssel","Straßburg","Trier"]},
+  {q:"« Österreich » =",a:"l'Autriche",w:["l'Australie","l'est de l'Allemagne","la Hongrie"]},
+  {q:"Complète : Ich wohne in ___ Schweiz.",a:"der",w:["die","das","—"]},
+  {q:"Complète : Ich komme aus ___ Deutschland.",a:"— (rien)",w:["der","die","dem"],ex:"Pas d'article devant la plupart des pays : aus Deutschland, aus Frankreich."},
+  {q:"Dans quel pays ne parle-t-on PAS allemand ?",a:"en Espagne",w:["en Autriche","en Suisse","au Luxembourg"]}
+ ]},
+{id:"wetter",tag:"Dortmund",icon:"⛅",name:"Datum & Wetter",fr:"La date et la météo",
+ note:"<p><b>La date en haut de la page :</b> <i>Freitag, <b>den</b> 9. Oktober</i> · <i>Dienstag, <b>den</b> 13. Oktober</i>. Le point après le chiffre veut dire « -ième ».</p><p><b>La météo :</b> <i>Wie ist das Wetter?</i> — <i>Es ist sonnig und frisch.</i> · <i>Es ist bewölkt und windig.</i> · <i>Es regnet.</i> · <i>Es schneit.</i></p>",
+ cards:[["Wie ist das Wetter?","Quel temps fait-il ?"],["Es ist sonnig.","Il fait beau (ensoleillé)."],["Es ist bewölkt.","C'est nuageux."],["Es ist windig.","Il y a du vent."],["Es ist frisch.","Il fait frais."],["Es ist kalt.","Il fait froid."],["Es ist warm.","Il fait chaud (doux)."],["Es ist heiß.","Il fait très chaud."],["Es regnet.","Il pleut."],["Es schneit.","Il neige."],["Es ist neblig.","Il y a du brouillard."],["das Wetter","le temps (météo)",{g:"n"}],["die Sonne","le soleil",{g:"f"}],["der Regen","la pluie",{g:"m"}],["der Wind","le vent",{g:"m"}],["der Schnee","la neige",{g:"m"}]],
+ sentences:[["Freitag, den 9. Oktober","vendredi 9 octobre"],["Dienstag, den 13. Oktober","mardi 13 octobre"],["Es ist sonnig und frisch.","Il fait beau et frais."],["Es ist bewölkt und windig.","C'est nuageux et il y a du vent."],["Heute regnet es.","Aujourd'hui, il pleut."],["Wie ist das Wetter heute?","Quel temps fait-il aujourd'hui ?"]],
+ quiz:[
+  {q:"Comment écrire « mardi 13 octobre » en haut de ta page ?",a:"Dienstag, den 13. Oktober",w:["Dienstag, der 13 Oktober","Den Dienstag 13. Oktober","Dienstag, 13 den Oktober"]},
+  {q:"« Es ist bewölkt » veut dire…",a:"C'est nuageux.",w:["Il fait beau.","Il pleut.","Il fait froid."]},
+  {q:"Comment dit-on « il pleut » ?",a:"Es regnet.",w:["Es ist Regen.","Es schneit.","Es ist windig."]},
+  {q:"☀️ + 🌬️ fraîche =",a:"Es ist sonnig und frisch.",w:["Es ist bewölkt und warm.","Es regnet und es ist kalt.","Es schneit."]},
+  {q:"Quel mot est bien écrit ?",a:"bewölkt",w:["bewölk","bevölkt","bewolkt"]},
+  {q:"« Es schneit » =",a:"Il neige.",w:["Il fait chaud.","Il y a du vent.","C'est nuageux."]},
+  {q:"Comment demander le temps qu'il fait ?",a:"Wie ist das Wetter?",w:["Wie spät ist es?","Wie geht's?","Wo ist das Wetter?"]},
+  {q:"Que veut dire le point dans « den 9. Oktober » ?",a:"neuvième (un ordinal)",w:["fin de phrase","une abréviation de « neun »","rien"]}
+ ]},
+{id:"fehler",tag:"Fehlerjagd",icon:"🔎",name:"Fehlerjagd",fr:"La chasse aux fautes du cahier",
+ note:"<p>Toutes ces phrases viennent de ton cahier. Elles sont presque parfaites, il manque juste un petit détail ! Retrouve la version correcte. Ce sont les fautes que tout le monde fait au début : les repérer, c'est déjà les corriger.</p>",
+ quiz:[
+  {q:"Quelle phrase est correcte ?",a:"Ich wohne in Dijon.",w:["Ich wohne im Dijon.","Ich wohne an Dijon.","Ich wohnt in Dijon."],ex:"Devant une ville : <b>in</b>."},
+  {q:"Quelle phrase est correcte ?",a:"Er ist 17 Jahre alt.",w:["Er 17 Jahre alt.","Er hat 17 Jahre alt.","Er sind 17 Jahre alt."],ex:"Il faut le verbe <b>ist</b>."},
+  {q:"La capitale de l'Autriche s'écrit…",a:"Wien",w:["Wein","Wienn","Vien"],ex:"<b>Wein</b> = le vin 🍷. La ville, c'est <b>Wien</b>."},
+  {q:"Quelle phrase est correcte ?",a:"Er kommt aus der Schweiz.",w:["Er kommt aus Schweiz.","Er kommt aus die Schweiz.","Er kommt in der Schweiz."]},
+  {q:"Quelle phrase est correcte ?",a:"Ich bin zwölf Jahre alt.",w:["Ich bin zwolf Jahre alt.","Ich bin zwölf Jahre alte.","Ich bin zwölf Jahr alt."],ex:"zw<b>ö</b>lf avec un Umlaut, et <b>Jahre</b> au pluriel."},
+  {q:"Quelle phrase est correcte ?",a:"Es ist bewölkt.",w:["Es ist bewölk.","Es ist bewolkt.","Es bewölkt."]},
+  {q:"Quel mot est bien écrit ?",a:"organisiert",w:["organiziert","organisirt","orgenisiert"]},
+  {q:"Quel mot est bien écrit ?",a:"musikalisch",w:["musicalisch","musikalich","musikalisch-"]},
+  {q:"Quelle phrase est correcte ?",a:"Sie heißt Jule, sie ist 12 Jahre alt.",w:["Sie Heißt Jule, sie ist 12 Jahre alt.","Sie heißt Jule, sie 12 Jahre alt.","Sie heißt Jule, Sie ist 12 Jahre alt."],ex:"Le verbe prend une minuscule, il faut <b>ist</b>, et <i>sie</i> (elle) s'écrit en minuscule au milieu d'une phrase."},
+  {q:"Quel nom de ville est bien écrit ?",a:"Düsseldorf",w:["Dusseldorf","Düsseldorff","Düseldorf"]},
+  {q:"Quel nom de pays est bien écrit ?",a:"Österreich",w:["Osterreich","Österreisch","Östereich"]}
+ ]},
+{id:"hallo",tag:"Berlin Hbf",icon:"👋",name:"Hallo!",fr:"Saluer et se présenter",
+ note:"<p><b>du</b> = tu (copains, famille). <b>Sie</b> (majuscule) = vous de politesse (adultes, profs).</p><p>Le verbe conjugué est toujours en <b>2e position</b> : <i>Ich <b>wohne</b> in Frankreich. Heute <b>spiele</b> ich Tennis.</i></p>",
+ cards:[["Hallo!","Salut ! / Bonjour !"],["Guten Morgen!","Bonjour ! (le matin)"],["Guten Tag!","Bonjour ! (la journée)"],["Guten Abend!","Bonsoir !"],["Gute Nacht!","Bonne nuit !"],["Tschüss!","Salut ! (pour partir)"],["Auf Wiedersehen!","Au revoir ! (poli)"],["Wie geht's?","Comment ça va ?"],["Gut, danke!","Bien, merci !"],["Wie heißt du?","Comment t'appelles-tu ?"],["Ich heiße Essil.","Je m'appelle Essil."],["Wie alt bist du?","Quel âge as-tu ?"],["Ich bin zwölf Jahre alt.","J'ai douze ans."],["Woher kommst du?","D'où viens-tu ?"],["Ich komme aus Frankreich.","Je viens de France."],["Wo wohnst du?","Où habites-tu ?"],["Ich wohne in Frankreich.","J'habite en France."]],
+ quiz:[
+  {q:"Comment salues-tu ton professeur le matin ?",a:"Guten Morgen!",w:["Tschüss!","Gute Nacht!","Hallo, du!"]},
+  {q:"« Wie heißt du? » veut dire…",a:"Comment t'appelles-tu ?",w:["Où habites-tu ?","Quel âge as-tu ?","D'où viens-tu ?"]},
+  {q:"Complète : Ich ___ zwölf Jahre alt.",a:"bin",w:["bist","ist","habe"],ex:"Pour l'âge, on utilise <b>sein</b> (être) : ich <b>bin</b> zwölf Jahre alt. Pas « haben » comme en français !"},
+  {q:"Complète : Ich komme ___ Frankreich.",a:"aus",w:["in","von","nach"],ex:"<b>aus</b> = venir de (le pays d'origine)."},
+  {q:"Complète : Ich wohne ___ Frankreich.",a:"in",w:["aus","nach","bei"]},
+  {q:"« Sie » avec une majuscule, c'est…",a:"le vous de politesse",w:["elle","ils","tu"]},
+  {q:"Dans une phrase simple, le verbe conjugué est en…",a:"2e position",w:["1re position","dernière position","3e position"],ex:"Ich <b>spiele</b> Tennis. Heute <b>spiele</b> ich Tennis. Le sujet passe après le verbe si un autre mot commence la phrase."},
+  {q:"Comment dit-on « au revoir » poliment ?",a:"Auf Wiedersehen!",w:["Tschüss!","Guten Tag!","Wie geht's?"]},
+  {q:"On te demande « Wie geht's? ». Tu réponds :",a:"Gut, danke!",w:["Ich heiße Essil.","Aus Frankreich.","Zwölf."]}
+ ]},
+{id:"verben",tag:"Hamburg",icon:"⚙️",name:"Verben: sein & haben",fr:"Les pronoms et les verbes essentiels",
+ note:"<p>Terminaisons des verbes réguliers au présent : ich <b>-e</b>, du <b>-st</b>, er/sie/es <b>-t</b>, wir <b>-en</b>, ihr <b>-t</b>, sie/Sie <b>-en</b>.</p><p><b>sein</b> (être) et <b>haben</b> (avoir) sont irréguliers : à savoir par cœur. Après ß, pas de s en plus : du heißt.</p>",
+ cards:[["ich","je"],["du","tu"],["er","il"],["sie","elle"],["es","il / elle (neutre)"],["wir","nous"],["ihr","vous (plusieurs copains)"],["sie (Plural)","ils / elles",{alt:["sie"],say:"sie"}],["Sie","vous (politesse)"],["sein","être"],["haben","avoir"],["heißen","s'appeler"],["wohnen","habiter"],["kommen","venir"],["machen","faire"],["gehen","aller"],["spielen","jouer"],["lernen","apprendre"]],
+ conj:[
+  {inf:"sein",fr:"être",forms:["bin","bist","ist","sind","seid","sind"]},
+  {inf:"haben",fr:"avoir",forms:["habe","hast","hat","haben","habt","haben"]},
+  {inf:"heißen",fr:"s'appeler",stem:"heiß",forms:["heiße","heißt","heißt","heißen","heißt","heißen"]},
+  {inf:"wohnen",fr:"habiter",stem:"wohn",forms:["wohne","wohnst","wohnt","wohnen","wohnt","wohnen"]},
+  {inf:"kommen",fr:"venir",stem:"komm",forms:["komme","kommst","kommt","kommen","kommt","kommen"]},
+  {inf:"machen",fr:"faire",stem:"mach",forms:["mache","machst","macht","machen","macht","machen"]},
+  {inf:"gehen",fr:"aller",stem:"geh",forms:["gehe","gehst","geht","gehen","geht","gehen"]}
+ ],
+ quiz:[
+  {q:"Wir ___ in Frankreich.",a:"wohnen",w:["wohnt","wohne","wohnst"]},
+  {q:"Du ___ zwölf.",a:"bist",w:["bin","ist","seid"]},
+  {q:"Er ___ einen Bruder.",a:"hat",w:["habt","hast","haben"]},
+  {q:"___ ihr Geschwister ?",a:"Habt",w:["Hast","Hat","Haben"]},
+  {q:"Ich ___ Essil.",a:"heiße",w:["heißt","heißen","heiß"]},
+  {q:"Meine Schwester ___ nett.",a:"ist",w:["bin","sind","bist"],ex:"meine Schwester = sie (elle) → <b>ist</b>."},
+  {q:"Heute ___ ich Tennis.",a:"spiele",w:["spielst","spielen","spielt"],ex:"Inversion : <i>Heute</i> est en 1re position, donc le verbe vient en 2e et le sujet <i>ich</i> passe derrière."},
+  {q:"Ihr ___ Fußball.",a:"spielt",w:["spielen","spielst","spiele"]},
+  {q:"___ Sie Frau Müller ?",a:"Sind",w:["Ist","Bist","Seid"],ex:"Sie (vous de politesse) se conjugue comme sie (ils) : <b>Sind</b> Sie…?"},
+  {q:"Was ___ du heute ?",a:"machst",w:["macht","mache","machen"]}
+ ]},
+{id:"zahlen",tag:"Bremen",icon:"🔢",name:"Zahlen",fr:"Les nombres",
+ note:"<p>De 21 à 99, on dit l'<b>unité d'abord</b> : 21 = <i>einundzwanzig</i> (un-et-vingt), 35 = <i>fünfunddreißig</i>.</p><p>Pièges : <i>sechzehn</i>, <i>siebzehn</i> perdent des lettres ; 30 = <i>dreißig</i> s'écrit avec ß.</p>",
+ cards:[["eins","1"],["zwei","2"],["drei","3"],["vier","4"],["fünf","5"],["sechs","6"],["sieben","7"],["acht","8"],["neun","9"],["zehn","10"],["elf","11"],["zwölf","12"],["dreizehn","13"],["sechzehn","16"],["siebzehn","17"],["zwanzig","20"],["einundzwanzig","21"],["dreißig","30"],["fünfzig","50"],["hundert","100"]],
+ quiz:[
+  {q:"Comment dit-on 21 ?",a:"einundzwanzig",w:["zwanzigeins","zweiundzwanzig","einszwanzig"]},
+  {q:"Comment dit-on 16 ?",a:"sechzehn",w:["sechszehn","sechzig","sechsundzehn"],ex:"On perd le s : <b>sech</b>zehn (et sechzig pour 60)."},
+  {q:"« dreißig » =",a:"30",w:["13","3","33"]},
+  {q:"Comment dit-on 35 ?",a:"fünfunddreißig",w:["dreißigfünf","fünfzigdrei","dreiundfünfzig"]},
+  {q:"« siebzig » =",a:"70",w:["17","7","77"]},
+  {q:"« Wie alt bist du? » — Ich bin ___ Jahre alt. (12 ans)",a:"zwölf",w:["zwei","zwanzig","elf"]},
+  {q:"« hundert » =",a:"100",w:["1000","10","50"]},
+  {q:"Comment dit-on 48 ?",a:"achtundvierzig",w:["vierundachtzig","vierzigacht","achtvierzig"]}
+ ]},
+{id:"zeit",tag:"Hannover",icon:"📅",name:"Tage & Monate",fr:"Les jours et les mois",
+ note:"<p>Les jours, les mois et les saisons sont tous <b>masculins</b> : der Montag, der Mai.</p><p><i>am Montag</i> = lundi (ce lundi-là) · <i>im Mai</i> = en mai · <i>am Wochenende</i> = le week-end.</p>",
+ cards:[["der Montag","lundi",{g:"m"}],["der Dienstag","mardi",{g:"m"}],["der Mittwoch","mercredi",{g:"m"}],["der Donnerstag","jeudi",{g:"m"}],["der Freitag","vendredi",{g:"m"}],["der Samstag","samedi",{g:"m"}],["der Sonntag","dimanche",{g:"m"}],["der Januar","janvier",{g:"m"}],["der Februar","février",{g:"m"}],["der März","mars",{g:"m"}],["der April","avril",{g:"m"}],["der Mai","mai",{g:"m"}],["der Juni","juin",{g:"m"}],["der Juli","juillet",{g:"m"}],["der August","août",{g:"m"}],["der September","septembre",{g:"m"}],["der Oktober","octobre",{g:"m"}],["der November","novembre",{g:"m"}],["der Dezember","décembre",{g:"m"}],["das Wochenende","le week-end",{g:"n"}],["heute","aujourd'hui"],["morgen","demain"]],
+ quiz:[
+  {q:"Quel jour vient après Mittwoch ?",a:"Donnerstag",w:["Dienstag","Freitag","Montag"]},
+  {q:"« am Wochenende » veut dire…",a:"le week-end",w:["le lundi","en semaine","ce matin"]},
+  {q:"Le mois de mars s'écrit…",a:"März",w:["Mai","Mars","Merz"]},
+  {q:"Pour dire « en juillet » :",a:"im Juli",w:["am Juli","in Juli","um Juli"]},
+  {q:"Pour dire « lundi » (ce lundi-là) :",a:"am Montag",w:["im Montag","um Montag","in Montag"]},
+  {q:"Quel est le genre des jours et des mois ?",a:"masculin (der)",w:["féminin (die)","neutre (das)","ça dépend"]},
+  {q:"« Wann hast du Geburtstag? » veut dire…",a:"Quand est ton anniversaire ?",w:["Quel âge as-tu ?","Quel jour sommes-nous ?","As-tu un cadeau ?"]},
+  {q:"« Samstag » =",a:"samedi",w:["dimanche","vendredi","mardi"]}
+ ]},
+{id:"familie",tag:"Frankfurt",icon:"🐶",name:"Familie & Tiere",fr:"La famille et les animaux",
+ note:"<p><b class='g-m'>der</b> = masculin · <b class='g-f'>die</b> = féminin (et tous les pluriels) · <b class='g-n'>das</b> = neutre. Apprends toujours le nom <b>avec</b> son article !</p><p>Possessif : <i>mein</i> Vater, <i>meine</i> Mutter, <i>mein</i> Pferd. Après <i>Ich habe</i>, le masculin devient <b>einen</b> : Ich habe <b>einen</b> Hund.</p>",
+ cards:[["der Vater","le père",{g:"m"}],["die Mutter","la mère",{g:"f"}],["die Eltern","les parents",{g:"pl"}],["der Bruder","le frère",{g:"m"}],["die Schwester","la sœur",{g:"f"}],["die Geschwister","les frères et sœurs",{g:"pl"}],["der Opa","le papi",{g:"m"}],["die Oma","la mamie",{g:"f"}],["die Großeltern","les grands-parents",{g:"pl"}],["der Onkel","l'oncle",{g:"m"}],["die Tante","la tante",{g:"f"}],["das Haustier","l'animal domestique",{g:"n"}],["der Hund","le chien",{g:"m"}],["die Katze","le chat",{g:"f"}],["das Pferd","le cheval",{g:"n"}],["das Kaninchen","le lapin",{g:"n"}],["der Vogel","l'oiseau",{g:"m"}],["die Maus","la souris",{g:"f"}],["der Fisch","le poisson",{g:"m"}],["das Meerschweinchen","le cochon d'Inde",{g:"n"}]],
+ quiz:[
+  {q:"Complète : ___ Mutter heißt Anna.",a:"Meine",w:["Mein","Meinen","Meiner"],ex:"die Mutter → féminin → <b>meine</b>."},
+  {q:"Complète : ___ Vater ist nett.",a:"Mein",w:["Meine","Meinen","Meines"]},
+  {q:"Complète : Ich habe ___ Hund.",a:"einen",w:["ein","eine","einem"],ex:"Après <i>haben</i>, le masculin passe à l'accusatif : ein → <b>einen</b>."},
+  {q:"Complète : Ich habe ___ Katze.",a:"eine",w:["einen","ein","einer"]},
+  {q:"Complète : Ich habe ___ Pferd.",a:"ein",w:["einen","eine","einer"],ex:"Le neutre ne change pas à l'accusatif : ein Pferd."},
+  {q:"« die Geschwister » =",a:"les frères et sœurs",w:["les grands-parents","les cousins","les parents"]},
+  {q:"« Ich habe keine Haustiere » veut dire…",a:"Je n'ai pas d'animaux.",w:["J'ai des animaux.","J'ai un chien.","Je n'aime pas les animaux."]},
+  {q:"Le chat se dit…",a:"die Katze",w:["der Katze","das Katze","die Katz"]},
+  {q:"« Das ist mein Opa » =",a:"C'est mon papi.",w:["C'est mon oncle.","C'est mon papa.","C'est ma mamie."]}
+ ]},
+{id:"schule",tag:"Stuttgart",icon:"🎒",name:"Schule",fr:"L'école et les matières",
+ note:"<p>Les matières s'emploient sans article : <i>Ich habe Mathe. Mein Lieblingsfach ist Sport.</i></p><p><b>gern</b> = aimer faire : <i>Ich lerne <b>gern</b> Deutsch.</i></p>",
+ cards:[["die Schule","l'école",{g:"f"}],["die Klasse","la classe",{g:"f"}],["der Lehrer","le professeur",{g:"m"}],["die Lehrerin","la professeure",{g:"f"}],["das Heft","le cahier",{g:"n"}],["das Buch","le livre",{g:"n"}],["der Bleistift","le crayon",{g:"m"}],["der Kuli","le stylo à bille",{g:"m"}],["das Lineal","la règle",{g:"n"}],["der Radiergummi","la gomme",{g:"m"}],["die Schultasche","le cartable",{g:"f"}],["die Schere","les ciseaux",{g:"f"}],["das Lieblingsfach","la matière préférée",{g:"n"}],["Mathe","les maths"],["Deutsch","l'allemand"],["Englisch","l'anglais"],["Französisch","le français"],["Erdkunde","la géographie"],["Kunst","les arts plastiques"],["Sport","le sport"]],
+ quiz:[
+  {q:"« Mein Lieblingsfach ist Kunst » =",a:"Ma matière préférée, ce sont les arts plastiques.",w:["Je n'aime pas les arts plastiques.","J'ai art aujourd'hui.","Mon professeur d'art est gentil."]},
+  {q:"Le stylo à bille se dit…",a:"der Kuli",w:["das Heft","die Schere","der Radiergummi"]},
+  {q:"« Ich lerne gern Deutsch » =",a:"J'aime apprendre l'allemand.",w:["J'apprends l'allemand demain.","Je parle bien allemand.","Je n'aime pas l'allemand."]},
+  {q:"Complète : Wir ___ Mathe am Montag.",a:"haben",w:["hat","habe","hast"]},
+  {q:"Quel est l'article de « Buch » ?",a:"das",w:["der","die"]},
+  {q:"« die Lehrerin » est…",a:"une professeure",w:["un professeur","une élève","la classe"]},
+  {q:"Was ist das ? — Das ist ___ Heft.",a:"ein",w:["eine","einen","einer"]},
+  {q:"Les ciseaux se disent…",a:"die Schere",w:["der Schere","das Lineal","die Schultasche"]}
+ ]},
+{id:"freizeit",tag:"Zürich",icon:"⚽",name:"Freizeit",fr:"Les loisirs",
+ note:"<p><b>gern</b> se place juste après le verbe : <i>Ich lese <b>gern</b>.</i> · <i>nicht gern</i> = ne pas aimer · <i>am liebsten</i> = ce que je préfère.</p><p>Certains verbes changent de voyelle avec <i>du</i> et <i>er/sie/es</i> : lesen → du l<b>ie</b>st, fahren → du f<b>ä</b>hrst.</p>",
+ cards:[["Fußball spielen","jouer au foot"],["Tennis spielen","jouer au tennis"],["Klavier spielen","jouer du piano"],["Gitarre spielen","jouer de la guitare"],["schwimmen","nager"],["lesen","lire"],["tanzen","danser"],["reiten","faire du cheval"],["Rad fahren","faire du vélo"],["Musik hören","écouter de la musique"],["zeichnen","dessiner"],["singen","chanter"],["fernsehen","regarder la télé"],["ins Kino gehen","aller au cinéma"],["Freunde treffen","voir des amis"],["Was machst du gern?","Qu'est-ce que tu aimes faire ?"],["Ich tanze gern.","J'aime danser."],["am liebsten","ce que je préfère"]],
+ conj:[
+  {inf:"spielen",fr:"jouer",stem:"spiel",forms:["spiele","spielst","spielt","spielen","spielt","spielen"]},
+  {inf:"lesen",fr:"lire",forms:["lese","liest","liest","lesen","lest","lesen"]},
+  {inf:"fahren",fr:"aller (en véhicule)",forms:["fahre","fährst","fährt","fahren","fahrt","fahren"]},
+  {inf:"tanzen",fr:"danser",stem:"tanz",forms:["tanze","tanzt","tanzt","tanzen","tanzt","tanzen"]}
+ ],
+ quiz:[
+  {q:"« Ich lese gern » =",a:"J'aime lire.",w:["Je lis vite.","Je lis un livre.","Je n'aime pas lire."]},
+  {q:"Complète : Er ___ gern Rad.",a:"fährt",w:["fahrt","fahre","fährst"],ex:"fahren → er f<b>ä</b>hrt (la voyelle prend un Umlaut)."},
+  {q:"Complète : Du ___ gern Comics.",a:"liest",w:["lest","lesen","lese"]},
+  {q:"Où se place « gern » ?",a:"juste après le verbe conjugué",w:["au début de la phrase","toujours à la fin","avant le sujet"]},
+  {q:"« Ich spiele nicht gern Fußball » =",a:"Je n'aime pas jouer au foot.",w:["J'aime jouer au foot.","Je ne joue jamais au foot.","Je joue au foot avec des amis."]},
+  {q:"Comment dit-on « faire du cheval » ?",a:"reiten",w:["reisen","rennen","rechnen"]},
+  {q:"« Am liebsten schwimme ich » =",a:"Ce que je préfère, c'est nager.",w:["Je nage le matin.","Je n'aime pas nager.","Je nage souvent avec mes amis."]},
+  {q:"Complète : Wir ___ ins Kino.",a:"gehen",w:["geht","gehe","gehst"]}
+ ]},
+{id:"essen",tag:"München",icon:"🥨",name:"Essen & Trinken",fr:"Manger et boire",
+ note:"<p><i>Ich esse gern Pizza.</i> · <i>Ich mag Schokolade.</i> · <i>Ich habe Hunger / Durst.</i> (j'ai faim / soif)</p><p>Attention : essen → du <b>isst</b>, er <b>isst</b>. mögen est irrégulier : ich <b>mag</b>, du <b>magst</b>, er <b>mag</b>.</p>",
+ cards:[["das Brot","le pain",{g:"n"}],["das Brötchen","le petit pain",{g:"n"}],["die Butter","le beurre",{g:"f"}],["der Käse","le fromage",{g:"m"}],["die Wurst","la saucisse",{g:"f"}],["das Ei","l'œuf",{g:"n"}],["der Apfel","la pomme",{g:"m"}],["die Banane","la banane",{g:"f"}],["die Erdbeere","la fraise",{g:"f"}],["der Kuchen","le gâteau",{g:"m"}],["die Schokolade","le chocolat",{g:"f"}],["das Eis","la glace",{g:"n"}],["die Milch","le lait",{g:"f"}],["das Wasser","l'eau",{g:"n"}],["der Saft","le jus",{g:"m"}],["der Tee","le thé",{g:"m"}],["das Frühstück","le petit-déjeuner",{g:"n"}],["das Mittagessen","le déjeuner",{g:"n"}],["das Abendessen","le dîner",{g:"n"}],["Ich habe Hunger.","J'ai faim."],["Ich habe Durst.","J'ai soif."],["Das schmeckt lecker!","C'est délicieux !"]],
+ conj:[
+  {inf:"essen",fr:"manger",forms:["esse","isst","isst","essen","esst","essen"]},
+  {inf:"trinken",fr:"boire",stem:"trink",forms:["trinke","trinkst","trinkt","trinken","trinkt","trinken"]},
+  {inf:"mögen",fr:"aimer (bien)",forms:["mag","magst","mag","mögen","mögt","mögen"]}
+ ],
+ quiz:[
+  {q:"« Ich habe Hunger » =",a:"J'ai faim.",w:["J'ai soif.","J'ai chaud.","Je suis pressée."]},
+  {q:"Complète : Du ___ gern Pizza.",a:"isst",w:["esst","esse","essen"]},
+  {q:"Complète : Ich ___ Schokolade.",a:"mag",w:["mögt","magst","möge"]},
+  {q:"« Das schmeckt lecker! » =",a:"C'est délicieux !",w:["C'est trop chaud !","J'ai encore faim !","Bon appétit !"]},
+  {q:"Quel article pour « Wasser » ?",a:"das",w:["der","die"]},
+  {q:"Le petit-déjeuner se dit…",a:"das Frühstück",w:["das Mittagessen","das Abendessen","der Kuchen"]},
+  {q:"Complète : Wir ___ Orangensaft.",a:"trinken",w:["trinkt","trinke","trinkst"]},
+  {q:"Spécialité de Munich, en forme de nœud :",a:"die Brezel",w:["der Strudel","die Wurst","das Brötchen"],ex:"La <i>Brezel</i> (bretzel), symbole de la Bavière !"}
+ ]},
+{id:"farben",tag:"Wien",icon:"👕",name:"Farben & Kleidung",fr:"Les couleurs et les vêtements",
+ note:"<p><i>Welche Farbe hat der Pullover? — Er ist blau.</i> (Les couleurs après « ist » ne s'accordent pas.)</p><p><b>tragen</b> = porter : ich trage, du tr<b>ä</b>gst, er tr<b>ä</b>gt. <i>Ich trage <b>einen</b> Pullover.</i></p>",
+ cards:[["rot","rouge"],["blau","bleu"],["grün","vert"],["gelb","jaune"],["schwarz","noir"],["weiß","blanc"],["grau","gris"],["braun","marron"],["rosa","rose"],["lila","violet"],["der Pullover","le pull",{g:"m"}],["die Hose","le pantalon",{g:"f"}],["das T-Shirt","le tee-shirt",{g:"n"}],["die Jacke","la veste",{g:"f"}],["das Kleid","la robe",{g:"n"}],["der Rock","la jupe",{g:"m"}],["die Schuhe","les chaussures",{g:"pl"}],["die Mütze","le bonnet",{g:"f"}],["der Schal","l'écharpe",{g:"m"}]],
+ conj:[{inf:"tragen",fr:"porter",forms:["trage","trägst","trägt","tragen","tragt","tragen"]}],
+ quiz:[
+  {q:"« Die Hose ist blau » =",a:"Le pantalon est bleu.",w:["La veste est bleue.","La robe est bleue.","Le pull est bleu."]},
+  {q:"Complète : Ich trage ___ Pullover.",a:"einen",w:["ein","eine","einem"]},
+  {q:"Welche Farbe hat der Schnee ? (la neige)",a:"weiß",w:["schwarz","grün","rot"]},
+  {q:"« schwarz » =",a:"noir",w:["blanc","gris","marron"]},
+  {q:"« der Rock » est…",a:"la jupe",w:["le rock (musique)","la robe","le pull"]},
+  {q:"Complète : Sie ___ eine Mütze.",a:"trägt",w:["tragt","trage","trägst"]},
+  {q:"Comment dit-on « violet » ?",a:"lila",w:["rosa","grau","braun"]},
+  {q:"Vienne (Wien) est la capitale…",a:"de l'Autriche",w:["de l'Allemagne","de la Suisse","de la Bavière"]}
+ ]}
+]}
+;
+</script>
+<script>
+/* ===== utils ===== */
+const $=s=>document.querySelector(s);
+const app=$("#app");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.random()*a.length|0];
+const uniq=a=>[...new Set(a)];
+function norm(s){return String(s).toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+  .normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[.,!?;:'"«»()\-–…¿¡]/g," ").replace(/\s+/g," ").trim()}
+
+/* ===== storage ===== */
+let store={xp:0,best:{},times:{}};
+try{Object.assign(store,JSON.parse(localStorage.getItem(C.key)||"{}"))}catch(e){}
+function save(){try{localStorage.setItem(C.key,JSON.stringify(store))}catch(e){}}
+function level(xp){let cur=C.levels[0],next=C.levels[1]||null;C.levels.forEach((l,i)=>{if(xp>=l[0]){cur=l;next=C.levels[i+1]||null}});return{cur,next}}
+
+/* ===== audio ===== */
+let audioOn=true;try{audioOn=localStorage.getItem(C.key+"-audio")!=="0"}catch(e){}
+const synth=window.speechSynthesis;let voices=[];
+function lv(){if(synth)voices=synth.getVoices()}
+if(synth){lv();synth.onvoiceschanged=lv}
+function voice(){for(const p of C.voiceLangs){const l=voices.filter(v=>v.lang.replace("_","-").toLowerCase().startsWith(p.toLowerCase()));const n=l.find(v=>/google|natural|online|premium|enhanced/i.test(v.name));if(n||l[0])return n||l[0]}return null}
+function speak(t,rate){if(!audioOn||!synth||!t)return;synth.cancel();const u=new SpeechSynthesisUtterance(t);const v=voice();if(v)u.voice=v;u.lang=C.voiceLangs[0];u.rate=rate||C.rate;synth.speak(u)}
+function hush(){if(synth)synth.cancel()}
+let ac;
+function actx(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==="suspended")ac.resume();return ac}
+function tone(f,t0,d,type="sine",g=.12,f2){const a=actx();if(!a||!audioOn)return;const o=a.createOscillator(),gn=a.createGain();o.type=type;o.frequency.setValueAtTime(f,a.currentTime+t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,a.currentTime+t0+d);gn.gain.setValueAtTime(g,a.currentTime+t0);gn.gain.exponentialRampToValueAtTime(.001,a.currentTime+t0+d);o.connect(gn).connect(a.destination);o.start(a.currentTime+t0);o.stop(a.currentTime+t0+d+.05)}
+const sfx={good(){tone(660,0,.12);tone(990,.09,.2)},bad(){tone(220,0,.22,"triangle",.12,150)},flip(){tone(500,0,.06,"triangle",.08,720)},combo(){tone(1320,0,.12,"triangle",.08)},win(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.12,.28,"triangle",.12))},tap(){tone(700,0,.05,"triangle",.06)}};
+
+/* ===== confetti ===== */
+const cv=$("#confetti"),cx=cv.getContext("2d");let parts=[],raf=null;
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function confetti(n=140){if(reduce)return;cv.width=innerWidth;cv.height=innerHeight;for(let i=0;i<n;i++)parts.push({x:innerWidth/2+(Math.random()-.5)*240,y:innerHeight*.35,vx:(Math.random()-.5)*13,vy:-Math.random()*13-4,r:Math.random()*6+4,c:C.confetti[i%C.confetti.length],a:Math.random()*6,l:130});if(!raf)stepC()}
+function stepC(){cx.clearRect(0,0,cv.width,cv.height);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.42;p.a+=.2;p.l--;cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.fillStyle=p.c;cx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);cx.restore()});parts=parts.filter(p=>p.l>0&&p.y<cv.height+20);raf=parts.length?requestAnimationFrame(stepC):(cx.clearRect(0,0,cv.width,cv.height),null)}
+
+/* ===== data prep ===== */
+const stripArt=t=>t.replace(/^(der|die|das)\s+/i,"");
+C.units.forEach((u,ui)=>{u.idx=ui;u.cards=(u.cards||[]).map(c=>{const[t,fr,o={}]=c;const base=o.key||(C.lemma?t.split(",")[0].trim():t);return{t,fr,g:o.g,say:o.say||base.replace(/\s*\(.*?\)\s*/g," ").trim(),ans:[base,...(o.alt||[])],noun:o.g?stripArt(t):null}})});
+const missH=c=>`<b>${esc(c.t)}</b> — ${esc(c.fr)}`;
+
+/* ===== navigation ===== */
+let keyH=null,timers=[];
+document.addEventListener("keydown",e=>{if(keyH)keyH(e)});
+function nav(fn){timers.forEach(t=>{clearTimeout(t);clearInterval(t)});timers=[];keyH=null;hush();fn();window.scrollTo(0,0)}
+
+const MODES={
+  lex:u=>true,
+  flash:u=>u.cards.length>=4,
+  qcm:u=>u.cards.length>=4,
+  type:u=>u.cards.length>=4,
+  match:u=>u.cards.length>=6,
+  article:u=>u.cards.filter(c=>c.g).length>=5,
+  conj:u=>!!u.conj,
+  decl:u=>!!u.decl,
+  quiz:u=>!!u.quiz,
+  roman:u=>!!u.roman,
+  build:u=>!!u.sentences,
+};
+const avail=u=>Object.keys(MODES).filter(k=>MODES[k](u));
+const scored=u=>avail(u).filter(k=>k!=="lex");
+const doneCount=u=>scored(u).filter(k=>store.best[u.id+":"+k]).length;
+
+/* ===== screens ===== */
+function home(){
+  const{cur,next}=level(store.xp);
+  const pct=next?Math.round((store.xp-cur[0])/(next[0]-cur[0])*100):100;
+  const nextU=C.units.find(u=>doneCount(u)<scored(u).length)||C.units[C.units.length-1];
+  app.innerHTML=`<header class="hdr">${C.headerHTML}
+    <div class="who"><div><div class="lvl">${esc(cur[1])}</div><div class="xpbar"><i style="width:${pct}%"></i></div>
+    <small>${store.xp} XP${next?` · prochain grade : ${esc(next[1])} à ${next[0]} XP`:" · grade maximum !"}</small></div>
+    <button class="icon" id="snd" aria-label="Son">${audioOn?"🔊":"🔇"}</button></div></header>
+    <p class="nexthint">${C.nextLabel} <b>${esc(nextU.name)}</b></p>
+    <ol class="route">${C.units.map(u=>{const d=doneCount(u),t=scored(u).length;return `<li><button class="stop${u===nextU?" is-next":""}${d===t?" is-done":""}" data-u="${u.idx}">
+      <span class="stop-ic">${u.icon}</span><span class="stop-tag">${esc(u.tag)}</span>
+      <span class="stop-main"><b>${esc(u.name)}</b><small>${esc(u.fr)}</small></span>
+      <span class="stop-prog">${d===t?"✓ ":""}${d}/${t}</span></button></li>`}).join("")}</ol>
+    <p class="foot">${C.footHTML}</p>`;
+  $("#snd").onclick=e=>{audioOn=!audioOn;try{localStorage.setItem(C.key+"-audio",audioOn?"1":"0")}catch(_){}e.currentTarget.textContent=audioOn?"🔊":"🔇";if(audioOn){actx();sfx.tap()}else hush()};
+  app.querySelectorAll(".stop").forEach(b=>b.onclick=()=>{actx();sfx.tap();nav(()=>unitView(C.units[b.dataset.u]))});
+}
+
+function unitView(u){
+  app.innerHTML=`<button class="back" id="bk">← ${C.homeLabel}</button>
+   <div class="uhead"><span class="stop-tag">${esc(u.tag)}</span><h2>${u.icon} ${esc(u.name)}</h2><small>${esc(u.fr)}</small></div>
+   <div class="modes">${avail(u).map(k=>{const m=C.modes[k];const b=store.best[u.id+":"+k]||0;
+     return `<button class="mode${k==="lex"?" first":""}" data-k="${k}"><span class="mode-ic">${m[2]}</span><b>${esc(m[0])}</b><small>${esc(m[1])}</small>
+     <span class="mstars">${k==="lex"?"<small>Commence ici</small>":"★".repeat(b)+'<span class="dim">'+"★".repeat(3-b)+"</span>"}</span></button>`}).join("")}</div>`;
+  $("#bk").onclick=()=>nav(home);
+  app.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{actx();sfx.tap();nav(()=>RUN[b.dataset.k](u))});
+}
+
+function lexique(u){
+  const cases=C.cases||[];
+  const hl=(f,stem)=>stem&&f.startsWith(stem)?`${esc(stem)}<b>${esc(f.slice(stem.length))}</b>`:`<b>${esc(f)}</b>`;
+  app.innerHTML=`<button class="back" id="bk">← ${esc(u.name)}</button>
+  <article class="lex"><h2>${u.icon} ${esc(u.name)}</h2>
+   ${u.note?`<div class="note">${u.note}</div>`:""}
+   ${u.cards.some(c=>c.g)&&C.genderLegend?`<div class="legend">${C.genderLegend}</div>`:""}
+   ${u.cards.length?`<div class="tblwrap"><table><tbody>${u.cards.map((c,i)=>`<tr><td style="width:44px"><button class="mini" data-s="${i}" aria-label="Écouter">🔊</button></td><td class="tw ${c.g?"g-"+c.g:""}">${esc(c.t)}</td><td>${esc(c.fr)}</td></tr>`).join("")}</tbody></table></div>`:""}
+   ${u.conj?`<div class="tables">${u.conj.map(v=>`<div class="tbl"><h3>${esc(v.inf)} <small>${esc(v.fr)}</small></h3><table>${v.forms.map((f,p)=>`<tr><td><small>${esc(C.pronouns[p])}</small></td><td>${hl(f,v.stem)}</td></tr>`).join("")}</table></div>`).join("")}</div>`:""}
+   ${u.decl?`<div class="tables">${u.decl.map(d=>`<div class="tbl"><h3>${esc(d.lemma)}</h3><div class="tblwrap"><table><tr><th>cas</th><th>singulier</th><th>pluriel</th></tr>${cases.map((cs,i)=>`<tr><td><small>${cs}</small></td><td>${hl(d.sg[i],d.stem)}</td><td>${hl(d.pl[i],d.stem)}</td></tr>`).join("")}</table></div></div>`).join("")}</div>`:""}
+  </article>
+  <div class="row"><button class="btn primary" id="go">C'est compris : aux épreuves →</button></div>`;
+  $("#bk").onclick=()=>nav(()=>unitView(u));
+  $("#go").onclick=()=>nav(()=>unitView(u));
+  app.querySelectorAll(".mini").forEach(b=>b.onclick=()=>speak(u.cards[b.dataset.s].say));
+  store.best[u.id+":lex"]=1;save();
+}
+
+/* ===== session ===== */
+function session(u,mode,total){
+  return{u,mode,total,n:0,right:0,pts:0,combo:0,missed:[],
+    mark(ok,miss,assisted){this.n++;if(ok){this.right++;if(assisted){this.combo=0;this.pts+=5}else{this.combo++;this.pts+=10+2*Math.min(this.combo,5);if(this.combo>=3)sfx.combo()}sfx.good()}else{this.combo=0;sfx.bad();if(miss&&!this.missed.includes(miss))this.missed.push(miss)}upd(this)}};
+}
+function upd(S){const pg=$("#pg"),pt=$("#pts"),cb=$("#cb");if(pg)pg.style.width=Math.min(100,S.n/S.total*100)+"%";if(pt)pt.textContent=S.pts;if(cb)cb.textContent=S.combo>=2?`×${Math.min(S.combo,5)} 🔥`:""}
+function stage(S,html){
+  app.innerHTML=`<div class="gtop"><button class="icon" id="quit" aria-label="Quitter">✕</button><div class="prog"><i id="pg"></i></div><span class="pts">⭐ <b id="pts">0</b></span><span class="combo" id="cb"></span></div>${html}`;
+  $("#quit").onclick=()=>nav(()=>unitView(S.u));upd(S);
+}
+function results(S,replay){
+  const acc=S.total?S.right/S.total:1,st=acc>=.9?3:acc>=.7?2:1;
+  const key=S.u.id+":"+S.mode,before=level(store.xp).cur;
+  store.best[key]=Math.max(store.best[key]||0,st);store.xp+=S.pts;save();
+  const after=level(store.xp).cur;
+  sfx.win();if(st===3)confetti();
+  app.innerHTML=`<div class="res"><div class="res-st">${"★".repeat(st)}<span class="dim">${"★".repeat(3-st)}</span></div>
+    <h2>${esc(C.resTitles[st-1])}</h2><p style="margin:0">${S.right} / ${S.total} réussies · <b>+${S.pts} XP</b>${S.extra?"<br>"+S.extra:""}</p>
+    ${after!==before?`<div class="lvlup">Nouveau grade : ${esc(after[1])} !</div>`:""}
+    ${S.missed.length?`<div class="miss"><h3>À revoir</h3><ul>${S.missed.map(m=>`<li>${m}</li>`).join("")}</ul></div>`:`<p style="margin:0">Aucune erreur. ${esc(C.perfect)}</p>`}
+    <div class="row"><button class="btn primary" id="ag">↻ Rejouer</button><button class="btn" id="un">Autres épreuves</button></div></div>`;
+  $("#ag").onclick=()=>nav(replay);$("#un").onclick=()=>nav(()=>unitView(S.u));
+  keyH=e=>{if(e.key==="Enter")nav(replay)};
+}
+
+/* ===== choice runner ===== */
+function runChoice(u,mode,gen){
+  const qs=gen(),S=session(u,mode,qs.length);let i=0;
+  function show(){
+    const q=qs[i];let done=false;
+    const opts=q.fixed?q.options:shuffle(q.options);
+    stage(S,`<div class="qcard">${q.kicker?`<div class="kicker">${q.kicker}</div>`:""}<div class="prompt${q.small?" sm":""}">${q.prompt}</div>${q.sub?`<div class="sub">${q.sub}</div>`:""}${q.say?`<button class="say" id="say">🔊 Écouter</button>`:""}</div>
+     <div class="opts${q.fixed?" fixed":""}">${opts.map((o,k)=>`<button class="opt ${q.cls?q.cls[o]||"":""}" data-k="${k}"><kbd>${k+1}</kbd><span>${esc(o)}</span></button>`).join("")}</div><div class="fb" id="fb"></div>`);
+    if(q.say){$("#say").onclick=()=>speak(q.say);if(q.autoSay)speak(q.say)}
+    const btns=[...app.querySelectorAll(".opt")];
+    let go=()=>{};
+    const choose=k=>{if(done)return;done=true;const ok=opts[k]===q.correct;
+      btns.forEach((b,j)=>{b.disabled=true;if(opts[j]===q.correct)b.classList.add("ok")});if(!ok)btns[k].classList.add("bad");
+      S.mark(ok,q.miss);if(q.after)speak(q.after);
+      $("#fb").innerHTML=`<div class="fbmsg ${ok?"good":"oops"}">${ok?esc(pick(C.praise)):"La bonne réponse : "+esc(q.correct)}${q.explain?`<p>${q.explain}</p>`:""}</div><button class="btn primary" id="nx">Suivant →</button>`;
+      go=()=>{i++;nav(()=>{}) ;i<qs.length?show():results(S,()=>runChoice(u,mode,gen))};
+      $("#nx").onclick=go;$("#nx").focus({preventScroll:true});
+      if(ok&&!q.explain)timers.push(setTimeout(go,q.after?1300:850));
+    };
+    btns.forEach((b,k)=>b.onclick=()=>choose(k));
+    keyH=e=>{if(!done&&/^[1-9]$/.test(e.key)&&+e.key<=btns.length)choose(+e.key-1)};
+  }
+  show();
+}
+
+/* ===== typing runner ===== */
+function runType(u,mode,gen){
+  const qs=gen(),S=session(u,mode,qs.length);let i=0;
+  function show(){
+    const c=qs[i];let done=false,hints=0;
+    stage(S,`<div class="qcard"><div class="kicker">${C.typeKicker}</div><div class="prompt">${esc(c.fr)}</div></div>
+     <form class="typein" id="tf" autocomplete="off"><input id="ti" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Ta réponse" placeholder="${esc(C.typePh)}"><button class="btn primary" type="submit">Valider</button></form>
+     ${C.chars.length?`<div class="chars">${C.chars.map(ch=>`<button type="button" class="ch" data-c="${ch}">${ch}</button>`).join("")}</div>`:""}
+     <div class="row"><button class="btn ghost" id="hint" type="button">💡 Indice</button><button class="btn ghost" id="skip" type="button">Je ne sais pas</button></div>
+     <div class="fb" id="fb"></div>`);
+    const inp=$("#ti");inp.focus();
+    app.querySelectorAll(".ch").forEach(b=>b.onclick=()=>{if(done)return;const s=inp.selectionStart??inp.value.length,e=inp.selectionEnd??s;inp.setRangeText(b.dataset.c,s,e,"end");inp.focus()});
+    $("#hint").onclick=()=>{if(done)return;hints++;const a=c.ans[0];inp.value=a.slice(0,Math.min(a.length-1,hints*2));inp.focus()};
+    const go=()=>{i++;nav(()=>{});i<qs.length?show():results(S,()=>runType(u,mode,gen))};
+    const check=val=>{
+      if(done)return;done=true;
+      const n=norm(val);const ok=n.length>0&&c.ans.some(a=>norm(a)===n);let tip="";
+      if(ok&&C.caseTip){const ty=val.trim().replace(/[.!?]+$/,""),ta=c.ans[0].replace(/[.!?]+$/,"");if(ty!==ta&&ty.toLowerCase()===ta.toLowerCase())tip=C.caseTip}
+      if(ok&&C.chars.length&&/[äöüß]/i.test(c.ans[0])&&!/[äöüß]/i.test(val))tip=(tip?tip+" ":"")+"Astuce : utilise les boutons ä ö ü ß.";
+      if(!ok&&c.noun&&norm(val)===norm(c.noun))tip="Presque ! Il manque l'article : on apprend toujours le nom avec der, die ou das.";
+      S.mark(ok,missH(c),hints>0);inp.disabled=true;speak(c.say);
+      $("#fb").innerHTML=`<div class="fbmsg ${ok?"good":"oops"}">${ok?esc(pick(C.praise))+(c.ans[0]!==val.trim()?` · ${esc(c.t)}`:""):"La bonne réponse : "+esc(c.t)}${tip?`<p>${tip}</p>`:""}</div><button class="btn primary" id="nx">Suivant →</button>`;
+      $("#nx").onclick=go;timers.push(setTimeout(()=>{keyH=e=>{if(e.key==="Enter"){e.preventDefault();go()}}},50));
+    };
+    $("#tf").onsubmit=e=>{e.preventDefault();check(inp.value)};
+    $("#skip").onclick=()=>check("");
+  }
+  show();
+}
+
+/* ===== flashcards ===== */
+function flash(u,dirArg){
+  let dir=dirArg||"t";const total=u.cards.length;let queue=shuffle(u.cards);const known=new Set(u.cards);
+  const S=session(u,"flash",total);
+  function show(){
+    if(!queue.length){S.right=known.size;S.n=total;results(S,()=>flash(u,dir));return}
+    const c=queue[0];let flipped=false;
+    const fT=dir==="t"?c.t:c.fr,bT=dir==="t"?c.fr:c.t;
+    stage(S,`<div class="flipwrap"><button class="flip" id="fc" aria-label="Retourner la carte"><span class="face front"><small>${dir==="t"?C.langLabel:"français"}</small><b>${esc(fT)}</b><em>Touche la carte (ou Espace) pour la retourner</em></span><span class="face back"><small>${dir==="t"?"français":C.langLabel}</small><b>${esc(bT)}</b></span></button></div>
+      <div class="row" id="judge" style="visibility:hidden"><button class="btn bad" id="no">✗ À revoir (←)</button><button class="btn good" id="yes">✓ Je savais (→)</button></div>
+      <div class="row"><button class="btn ghost" id="dir">⇄ Sens : ${dir==="t"?C.langShort+" → FR":"FR → "+C.langShort}</button><button class="btn ghost" id="sy">🔊 Écouter</button></div>
+      <p class="left">${queue.length} carte${queue.length>1?"s":""} restante${queue.length>1?"s":""}</p>`);
+    S.n=total-queue.length;upd(S);
+    if(dir==="t")speak(c.say);
+    const flip=()=>{flipped=!flipped;$("#fc").classList.toggle("on",flipped);$("#judge").style.visibility="visible";sfx.flip();if(dir!=="t"&&flipped)speak(c.say)};
+    const yes=()=>{if(!flipped)return;queue.shift();if(known.has(c))S.pts+=4;upd(S);show()};
+    const no=()=>{if(!flipped)return;known.delete(c);const m=missH(c);if(!S.missed.includes(m))S.missed.push(m);queue.shift();queue.splice(Math.min(3,queue.length),0,c);sfx.bad();show()};
+    $("#fc").onclick=flip;$("#yes").onclick=yes;$("#no").onclick=no;
+    $("#sy").onclick=()=>speak(c.say);
+    $("#dir").onclick=()=>nav(()=>flash(u,dir==="t"?"f":"t"));
+    keyH=e=>{if(e.key===" "){e.preventDefault();flip()}else if(e.key==="ArrowRight")yes();else if(e.key==="ArrowLeft")no()};
+  }
+  show();
+}
+
+/* ===== match ===== */
+function match(u){
+  const set=shuffle(u.cards).slice(0,6),S=session(u,"match",set.length);let sel=null,found=0,errs=0;const t0=performance.now();
+  const L=shuffle(set),R=shuffle(set);
+  stage(S,`<p class="kick2">Associe chaque mot à sa traduction · <span id="clock">0 s</span></p>
+    <div class="match"><div class="col">${L.map(c=>`<button class="mt l" data-i="${set.indexOf(c)}" data-s="l">${esc(c.t)}</button>`).join("")}</div>
+    <div class="col">${R.map(c=>`<button class="mt r" data-i="${set.indexOf(c)}" data-s="r">${esc(c.fr)}</button>`).join("")}</div></div>`);
+  timers.push(setInterval(()=>{const k=$("#clock");if(k)k.textContent=Math.round((performance.now()-t0)/1000)+" s"},500));
+  app.querySelectorAll(".mt").forEach(b=>b.onclick=()=>{
+    if(b.classList.contains("done"))return;
+    const side=b.dataset.s,i=+b.dataset.i;
+    if(side==="l")speak(set[i].say);
+    if(!sel||sel.side===side){if(sel)sel.el.classList.remove("sel");sel={side,i,el:b};b.classList.add("sel");return}
+    if(sel.i===i){[sel.el,b].forEach(x=>{x.classList.remove("sel");x.classList.add("done");x.disabled=true});found++;S.mark(true);S.n=found;upd(S);
+      if(found===set.length){const sec=Math.round((performance.now()-t0)/1000);const k=u.id;const rec=store.times[k];const isRec=!rec||sec<rec;if(isRec)store.times[k]=sec;save();
+        S.total=set.length+errs;S.right=found;S.extra=`Temps : ${sec} s${isRec?" · nouveau record !":` · record : ${rec} s`}`;timers.push(setTimeout(()=>results(S,()=>match(u)),500))}}
+    else{errs++;const li=sel.side==="l"?sel.i:i;S.mark(false,missH(set[li]));S.n=found;upd(S);const a=sel.el;[a,b].forEach(x=>{x.classList.remove("sel");x.classList.add("bad")});timers.push(setTimeout(()=>{a.classList.remove("bad");b.classList.remove("bad")},400))}
+    sel=null;
+  });
+}
+
+/* ===== generators ===== */
+function genQcm(u){const cs=shuffle(u.cards).slice(0,Math.min(10,u.cards.length));
+  return cs.map((c,i)=>{const o=shuffle(u.cards.filter(x=>x!==c));
+    if(i%2===0)return{kicker:C.qcmA,prompt:esc(c.t),say:c.say,autoSay:true,options:uniq([c.fr,...o.map(x=>x.fr)]).slice(0,4),correct:c.fr,miss:missH(c)};
+    return{kicker:C.qcmB,prompt:esc(c.fr),options:uniq([c.t,...o.map(x=>x.t)]).slice(0,4),correct:c.t,after:c.say,miss:missH(c)}})}
+function genType(u){return shuffle(u.cards).slice(0,Math.min(8,u.cards.length))}
+function genArticle(u){const A={m:"der",f:"die",n:"das",pl:"die"};
+  return shuffle(u.cards.filter(c=>c.g)).slice(0,10).map(c=>({kicker:"Quel article ?",prompt:esc(c.noun),sub:esc(c.fr),options:["der","die","das"],fixed:true,cls:{der:"art-m",die:"art-f",das:"art-n"},correct:A[c.g],after:c.t,explain:c.g==="pl"?"C'est un pluriel : au pluriel, l'article est toujours <b>die</b>.":"",miss:missH(c)}))}
+function genConj(u){const seen=new Set(),out=[];let guard=0;
+  while(out.length<10&&guard++<200){const v=pick(u.conj),p=Math.random()*6|0,k=v.inf+p;if(seen.has(k))continue;seen.add(k);const correct=v.forms[p];
+    let pool=uniq([correct,...shuffle(v.forms)]);if(pool.length<4)pool=uniq([...pool,...shuffle(u.conj.flatMap(x=>x.forms))]);
+    out.push({kicker:`${esc(v.inf)} — ${esc(v.fr)}`,prompt:`<span class="pron">${esc(C.pronouns[p])}</span> <span class="blank">…</span>`,options:pool.slice(0,4),correct,after:(C.pronSay?C.pronSay[p]+" ":"")+correct,miss:`<b>${esc(C.pronouns[p])} → ${esc(correct)}</b> (${esc(v.inf)})`})}
+  return out}
+function genDecl(u){const out=[],seen=new Set();let guard=0;
+  const lab=(n,c)=>`${C.cases[c]} ${n==="sg"?"singulier":"pluriel"}`;
+  while(out.length<10&&guard++<300){const d=pick(u.decl),num=Math.random()<.5?"sg":"pl",ci=Math.random()*6|0,k=d.lemma+num+ci;if(seen.has(k))continue;seen.add(k);
+    const form=d[num][ci],all=[...d.sg,...d.pl],cnt=all.filter(x=>x===form).length,name=d.lemma.split(",")[0];
+    if(Math.random()<.4&&cnt===1){const labels=[];["sg","pl"].forEach(n=>[0,1,2,3,4,5].forEach(c=>{if(d[n][c]!==form)labels.push(lab(n,c))}));
+      out.push({kicker:"Quel est le cas ?",prompt:`<i>${esc(form)}</i>`,sub:esc(d.lemma),options:[lab(num,ci),...shuffle(labels).slice(0,3)],correct:lab(num,ci),after:form,miss:`<i>${esc(form)}</i> = ${lab(num,ci)}`})}
+    else out.push({kicker:esc(d.lemma),prompt:`${esc(name)} → <span class="pron">${lab(num,ci)}</span>`,small:true,options:uniq([form,...shuffle(all)]).slice(0,4),correct:form,after:form,miss:`${esc(name)}, ${lab(num,ci)} : <b>${esc(form)}</b>`})}
+  return out}
+function genQuiz(u){return shuffle(u.quiz).slice(0,10).map(q=>({kicker:q.k||"Défi",prompt:q.q,small:true,options:uniq([q.a,...q.w]),correct:q.a,explain:q.ex||"",after:q.say||"",miss:`${q.q} → <b>${esc(q.a)}</b>`}))}
+function toRoman(n){const m=[[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];let s="";for(const[v,r]of m)while(n>=v){s+=r;n-=v}return s}
+function genRoman(){const out=[],years=[2026,1789,1515,800,476,1492,1999,2012,1610,1914];
+  for(let i=0;i<10;i++){const r=Math.random();const n=r<.6?1+(Math.random()*49|0):r<.85?51+(Math.random()*450|0):pick(years);
+    const near=uniq([n+1,n-1,n+4,n-4,n+5,n-5,n+9,n-9,n+10,n-10,n+40,n-40,n+90,n+100,n-100,n+1000].filter(x=>x>0&&x!==n));
+    const d=shuffle(near).slice(0,3);
+    if(i%2===0)out.push({kicker:"Écris en chiffres romains",prompt:String(n),options:[toRoman(n),...d.map(toRoman)],correct:toRoman(n),miss:`${n} = <b>${toRoman(n)}</b>`});
+    else out.push({kicker:"Combien vaut ce nombre ?",prompt:toRoman(n),options:[String(n),...d.map(String)],correct:String(n),miss:`${toRoman(n)} = <b>${n}</b>`})}
+  return out}
+
+const RUN={
+  lex:lexique,flash:u=>flash(u),match,
+  qcm:u=>runChoice(u,"qcm",()=>genQcm(u)),
+  type:u=>runType(u,"type",()=>genType(u)),
+  article:u=>runChoice(u,"article",()=>genArticle(u)),
+  conj:u=>runChoice(u,"conj",()=>genConj(u)),
+  decl:u=>runChoice(u,"decl",()=>genDecl(u)),
+  quiz:u=>runChoice(u,"quiz",()=>genQuiz(u)),
+  roman:u=>runChoice(u,"roman",genRoman),
+  build:u=>runBuild(u),
+};
+
+/* ===== sentence building ===== */
+function runBuild(u){
+  const qs=shuffle(u.sentences).slice(0,Math.min(7,u.sentences.length)),S=session(u,"build",qs.length);let i=0;
+  function show(){
+    const [de,fr]=qs[i];const words=de.trim().split(/\s+/);let placed=[],done=false;
+    let pool=shuffle(words.map((w,k)=>({w,k})));
+    if(pool.length>1&&pool.every((p,j)=>p.k===j))pool.reverse();
+    stage(S,`<div class="qcard"><div class="kicker">Remets les mots dans l'ordre</div><div class="prompt sm">${esc(fr)}</div></div>
+      <div class="bline" id="line" aria-label="Ta phrase"></div><div class="bpool" id="pool"></div>
+      <div class="row"><button class="btn ghost" id="clr" type="button">↺ Recommencer</button><button class="btn primary" id="ok" type="button" disabled>Valider</button></div><div class="fb" id="fb"></div>`);
+    const draw=()=>{
+      $("#line").innerHTML=placed.length?placed.map((p,j)=>`<button class="tile on" data-j="${j}">${esc(p.w)}</button>`).join(""):`<span class="bhint">Touche les mots dans le bon ordre…</span>`;
+      $("#pool").innerHTML=pool.map((p,j)=>`<button class="tile" data-j="${j}">${esc(p.w)}</button>`).join("");
+      $("#ok").disabled=done||pool.length>0;
+      if(done)return;
+      app.querySelectorAll("#pool .tile").forEach(b=>b.onclick=()=>{sfx.tap();placed.push(pool.splice(+b.dataset.j,1)[0]);draw()});
+      app.querySelectorAll("#line .tile").forEach(b=>b.onclick=()=>{pool.push(placed.splice(+b.dataset.j,1)[0]);draw()});
+    };
+    draw();
+    $("#clr").onclick=()=>{if(done)return;pool=pool.concat(placed);placed=[];draw()};
+    const go=()=>{i++;nav(()=>{});i<qs.length?show():results(S,()=>runBuild(u))};
+    $("#ok").onclick=()=>{if(done)return;done=true;const ans=placed.map(p=>p.w).join(" ");const ok=ans===words.join(" ");
+      S.mark(ok,`<b>${esc(de)}</b> — ${esc(fr)}`);speak(de);draw();
+      $("#line").classList.add(ok?"good":"oops");
+      $("#fb").innerHTML=`<div class="fbmsg ${ok?"good":"oops"}">${ok?esc(pick(C.praise)):"La bonne phrase : "+esc(de)}${!ok&&u.buildTip?`<p>${u.buildTip}</p>`:""}</div><button class="btn primary" id="nx">Suivant →</button>`;
+      $("#nx").onclick=go;timers.push(setTimeout(()=>{keyH=e=>{if(e.key==="Enter")go()}},50))};
+  }
+  show();
+}
+home();
+</script>
+
+</body></html>

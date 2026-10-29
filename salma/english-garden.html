@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Salma's English Garden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: one-screen game. Sky + grass world, Ollie the owl teacher on top, big tappable cards below. Single deliberate bright look. */
+:root{
+  --sky:#7cc8f2; --sky2:#b8e4fb; --grass:#5dbb63; --grass2:#3f9a48;
+  --card:#ffffff; --ink:#23324a; --soft:#5a6b85;
+  --coral:#ff6b5b; --sun:#ffc93c; --plum:#8a5cf6; --mint:#2ec4a6;
+  --display:"Baloo 2","Comic Sans MS","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Trebuchet MS",system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;font-family:var(--body);color:var(--ink);
+  background:linear-gradient(var(--sky) 0%,var(--sky2) 70%,var(--grass) 70%,var(--grass2) 100%) fixed;
+  background-color:var(--sky);overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:14px 40px;min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:16px}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit}
+button:focus-visible{outline:4px solid var(--plum);outline-offset:3px}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.back{background:var(--card);border-radius:999px;padding:10px 18px;font-weight:800;font-size:18px;box-shadow:0 4px 0 #0002}
+.starbox{margin-left:auto;background:var(--card);border-radius:999px;padding:8px 16px;font-family:var(--display);font-weight:800;font-size:22px;box-shadow:0 4px 0 #0002;font-variant-numeric:tabular-nums}
+.sound{background:var(--card);border-radius:999px;width:48px;height:48px;font-size:24px;box-shadow:0 4px 0 #0002}
+
+/* owl + speech */
+.teacher{display:flex;align-items:flex-end;gap:10px}
+.owl{width:110px;flex:none;transform-origin:50% 100%}
+.owl.talk{animation:bob .5s ease-in-out 2}
+@keyframes bob{50%{transform:translateY(-6px) rotate(-3deg)}}
+.bubble{position:relative;background:var(--card);border-radius:22px;padding:14px 18px;font-size:clamp(18px,2.6vw,24px);font-weight:800;box-shadow:0 5px 0 #0002;min-width:0;flex:1;max-width:640px}
+.bubble::before{content:"";position:absolute;left:-14px;bottom:22px;border:10px solid transparent;border-right:16px solid var(--card)}
+.bubble .en{color:var(--plum);font-family:var(--display);font-size:1.25em}
+
+h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,60px);line-height:1;margin:0;color:#fff;text-shadow:0 4px 0 #2a7fb4;text-wrap:balance}
+h2{font-family:var(--display);font-size:clamp(26px,4vw,36px);margin:0;color:#fff;text-shadow:0 3px 0 #2a7fb4}
+
+/* start screen */
+.start{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center}
+.start .owl{width:170px}
+.big{font-family:var(--display);font-weight:800;font-size:clamp(26px,5vw,38px);background:var(--coral);color:#fff;border-radius:28px;padding:16px 40px;box-shadow:0 8px 0 #c8473a;transition:transform .1s}
+.big:active{transform:translateY(6px);box-shadow:0 2px 0 #c8473a}
+
+/* theme tiles */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px}
+.tile{background:var(--card);border-radius:26px;padding:18px 12px 14px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 7px 0 var(--edge,#0002);transition:transform .12s}
+.tile:hover{transform:translateY(-4px) rotate(-1deg)}
+.tile:active{transform:translateY(4px)}
+.tile .pic{font-size:56px;line-height:1}
+.tile .name{font-family:var(--display);font-weight:800;font-size:24px;line-height:1.1}
+.tile .fr{color:var(--soft);font-size:15px}
+.tile .stars{font-size:18px;letter-spacing:2px;color:var(--sun);text-shadow:0 1px 0 #b98a00}
+
+/* mode buttons */
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.mode{border-radius:28px;padding:22px 18px;color:#fff;text-align:left;display:flex;flex-direction:column;gap:6px;transition:transform .12s}
+.mode:hover{transform:translateY(-4px)}
+.mode b{font-family:var(--display);font-size:30px;line-height:1}
+.mode span{font-size:17px;opacity:.95}
+.mode i{font-style:normal;font-size:44px}
+.m1{background:var(--mint);box-shadow:0 8px 0 #1e927b}
+.m2{background:var(--plum);box-shadow:0 8px 0 #6236c9}
+.m3{background:var(--coral);box-shadow:0 8px 0 #c8473a}
+.m4{background:#f39c32;box-shadow:0 8px 0 #c47414}
+.m5{background:#2f7de1;box-shadow:0 8px 0 #1c5bb0}
+
+/* calendar page (days, months) */
+.cal{display:inline-flex;flex-direction:column;align-items:center;width:1.25em;border-radius:.16em;background:#fff;box-shadow:0 0 0 2px #0001,0 3px 0 #0002;overflow:hidden;font-size:1em;line-height:1}
+.cal b{display:block;width:100%;background:var(--c);color:#fff;font-family:var(--body);font-size:.24em;padding:.2em 0;text-align:center;letter-spacing:.02em}
+.cal i{font-style:normal;font-size:.55em;padding:.12em 0 .18em;font-family:var(--display);font-weight:800;color:var(--c)}
+.choice .cal{font-size:84px}
+.bub .cal{font-size:52px}
+.mc .cal{font-size:44px}
+.wcard .cal{font-size:66px}
+.wcard .word{font-size:clamp(17px,2.4vw,24px);text-align:center;padding-inline:4px}
+
+/* in order */
+.line{display:flex;flex-wrap:wrap;gap:8px;min-height:46px;background:#ffffff55;border-radius:20px;padding:8px}
+.chip{background:var(--c);color:#fff;border-radius:999px;padding:6px 14px;font-family:var(--display);font-weight:800;font-size:19px;box-shadow:0 3px 0 #0002;animation:pulse .4s}
+.ocard.no{animation:shake .4s}
+
+/* talk with Ollie */
+.talk{display:flex;flex-direction:column;gap:12px;max-width:560px;width:100%;margin:0 auto}
+.answer{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:22px;padding:14px 20px;font-family:var(--display);font-weight:800;font-size:clamp(20px,3.4vw,28px);color:var(--plum);text-align:left;box-shadow:0 6px 0 #0002;transition:transform .12s}
+.answer:hover{transform:translateX(6px)}
+.answer .ae{font-size:1.5em;flex:none}
+.answer.ok{background:#d9f7e6;box-shadow:0 6px 0 var(--mint);animation:pulse .5s}
+.answer.no{animation:shake .4s;opacity:.45}
+
+/* word cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
+.wcard{background:var(--card);border-radius:24px;aspect-ratio:1/1.08;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 6px 0 #0002;position:relative;transition:transform .12s}
+.wcard:active{transform:scale(.95)}
+.wcard .vis{font-size:62px;line-height:1;display:flex;align-items:center;justify-content:center;min-height:72px}
+.wcard .word{font-family:var(--display);font-weight:800;font-size:26px;color:var(--plum);line-height:1;visibility:hidden}
+.wcard .tr{font-size:14px;color:var(--soft);visibility:hidden}
+.wcard.seen .word,.wcard.seen .tr{visibility:visible}
+.wcard.seen::after{content:"✓";position:absolute;top:8px;right:12px;color:var(--mint);font-weight:800;font-size:22px}
+.wcard.pulse{animation:pulse .5s}
+@keyframes pulse{40%{transform:scale(1.08) rotate(2deg)}}
+.blob{width:66px;height:66px;border-radius:46% 54% 50% 50%/55% 45% 55% 45%;box-shadow:inset 0 -6px 0 #0002,0 0 0 3px #0001}
+.num{font-family:var(--display);font-weight:800;font-size:60px;color:var(--coral)}
+.dots{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;max-width:90px}
+.dots u{width:10px;height:10px;border-radius:50%;background:var(--sun);text-decoration:none}
+
+/* quiz */
+.qhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.listen{background:var(--sun);border-radius:999px;padding:12px 22px;font-family:var(--display);font-weight:800;font-size:22px;box-shadow:0 6px 0 #c99a12}
+.progress{flex:1;min-width:140px;height:18px;background:#fff8;border-radius:999px;overflow:hidden}
+.progress div{height:100%;background:var(--mint);border-radius:999px;transition:width .4s}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:620px;width:100%;margin:0 auto}
+.choice{background:var(--card);border-radius:26px;aspect-ratio:1.3/1;display:flex;align-items:center;justify-content:center;box-shadow:0 7px 0 #0002;font-size:76px;transition:transform .12s}
+.choice .blob{width:90px;height:90px}
+.choice.ok{background:#d9f7e6;box-shadow:0 7px 0 var(--mint);animation:pulse .5s}
+.choice.no{animation:shake .4s;opacity:.45}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+
+/* bubbles */
+.pond{position:relative;height:min(60vh,520px);background:#ffffff33;border-radius:28px;overflow:hidden;border:4px dashed #ffffff99}
+.bub{position:absolute;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff 0 10%,#ffffffcc 11%,#d6f1ffcc 45%,#9bd9ffaa 100%);box-shadow:inset 0 0 0 3px #ffffffaa;display:flex;align-items:center;justify-content:center;font-size:46px;padding:0}
+.bub .blob{width:50px;height:50px}
+.bub .num{font-size:44px}
+.bub.pop{animation:popit .25s forwards}
+@keyframes popit{to{transform:scale(1.6);opacity:0}}
+.score{font-family:var(--display);font-weight:800;font-size:24px;color:#fff;text-shadow:0 2px 0 #2a7fb4}
+
+/* memory */
+.mem{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;max-width:640px;width:100%;margin:0 auto}
+.mc{aspect-ratio:1/1;border-radius:20px;background:var(--plum);box-shadow:0 6px 0 #6236c9;font-size:44px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--display);font-weight:800;padding:4px}
+.mc .face{display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.mc.open,.mc.done{background:var(--card);box-shadow:0 6px 0 #0002;color:var(--ink)}
+.mc.open .face,.mc.done .face{display:flex}
+.mc.open .q,.mc.done .q{display:none}
+.mc.done{opacity:.55}
+.mc .lbl{font-size:clamp(15px,3.2vw,22px);color:var(--plum);line-height:1;word-break:break-word;text-align:center}
+.mc .blob{width:44px;height:44px}
+.mc .num{font-size:40px}
+
+/* end overlay */
+.overlay{position:fixed;inset:0;background:#23324a99;display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.panel{background:var(--card);border-radius:32px;padding:28px 24px;text-align:center;max-width:420px;width:100%;display:flex;flex-direction:column;gap:14px;align-items:center;box-shadow:0 10px 0 #0003}
+.panel h3{font-family:var(--display);font-size:40px;margin:0;color:var(--coral);line-height:1}
+.panel .bigstars{font-size:54px;letter-spacing:6px}
+.panel .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.panel .row button{border-radius:20px;padding:12px 22px;font-weight:800;font-size:19px}
+.again{background:var(--mint);color:#fff;box-shadow:0 5px 0 #1e927b}
+.menu{background:#e8eef7;box-shadow:0 5px 0 #c5d0e0}
+.dim{color:#c9d3e2}
+
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+.hint{color:#fff;font-weight:800;text-shadow:0 2px 0 #2a7fb4;font-size:17px;margin:0}
+@media (max-width:520px){.owl{width:80px}.choice{font-size:58px}.mc{font-size:34px}.mem{gap:8px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<a href="./" class="mf-back" aria-label="Retour à l'espace Salma" style="position:fixed;z-index:9999;top:calc(env(safe-area-inset-top,0px) + 8px);left:max(8px,env(safe-area-inset-left,0px));background:#2e8b57;color:#fff;font:600 13px/1 system-ui,-apple-system,'Segoe UI',sans-serif;text-decoration:none;padding:7px 11px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);opacity:.9">← Salma</a>
+
+<canvas id="confetti"></canvas>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ---------- vocabulary ---------- */
+const THEMES = {
+  animals:{name:"Animals",fr:"Les animaux",pic:"🐶",edge:"#e3a33a",
+    ask:w=>`Where is the ${w}?`,
+    items:[["cat","le chat","🐱"],["dog","le chien","🐶"],["bird","l'oiseau","🐦"],["fish","le poisson","🐟"],["rabbit","le lapin","🐰"],["horse","le cheval","🐴"],["cow","la vache","🐮"],["lion","le lion","🦁"]]},
+  colors:{name:"Colours",fr:"Les couleurs",pic:"🎨",edge:"#8a5cf6",
+    ask:w=>`Where is ${w}?`,
+    items:[["red","rouge","#ef3b3b"],["blue","bleu","#2f7de1"],["green","vert","#3cb44b"],["yellow","jaune","#ffd60a"],["orange","orange","#ff8c1a"],["pink","rose","#ff7eb6"],["purple","violet","#8e44d6"],["brown","marron","#8b5a2b"],["black","noir","#1d1d1d"],["white","blanc","#ffffff"]]},
+  numbers:{name:"Numbers",fr:"Les nombres",pic:"🔢",edge:"#ff6b5b",
+    ask:w=>`Where is number ${w}?`,
+    items:[["one","un",1],["two","deux",2],["three","trois",3],["four","quatre",4],["five","cinq",5],["six","six",6],["seven","sept",7],["eight","huit",8],["nine","neuf",9],["ten","dix",10]]},
+  fruits:{name:"Fruits",fr:"Les fruits",pic:"🍓",edge:"#e0473a",
+    ask:w=>`Where is the ${w}?`,
+    items:[["apple","la pomme","🍎"],["banana","la banane","🍌"],["orange","l'orange","🍊"],["strawberry","la fraise","🍓"],["grapes","le raisin","🍇"],["pear","la poire","🍐"],["cherry","la cerise","🍒"],["lemon","le citron","🍋"]]},
+  family:{name:"Family",fr:"La famille",pic:"👨‍👩‍👧",edge:"#2ec4a6",
+    ask:w=>`Where is ${w}?`,
+    items:[["mum","maman","👩"],["dad","papa","👨"],["baby","le bébé","👶"],["sister","la sœur","👧"],["brother","le frère","👦"],["grandma","mamie","👵"],["grandpa","papi","👴"]]},
+  hello:{name:"Hello!",fr:"Se présenter",pic:"👋",edge:"#ffc93c",chat:true,
+    ask:w=>`Find... ${w}`,
+    items:[["Hello!","Bonjour ! / Salut !","👋"],["Goodbye!","Au revoir !","😘"],["Good morning!","Bonjour ! (le matin)","🌅"],["Good night!","Bonne nuit !","🌙"],["Thank you!","Merci !","🎁"],["Please","S'il te plaît","🙏"],["Yes","Oui","👍"],["No","Non","👎"],["I'm fine!","Je vais bien !","😊"],["My name is Salma.","Je m'appelle Salma.","📛"],["I am eight.","J'ai huit ans.","🎂"]]},
+  days:{name:"Days",fr:"Les jours",pic:"📅",edge:"#2f7de1",ordered:true,
+    ask:w=>`Where is ${w}?`,
+    items:[["Monday","lundi",["lun.","#ef3b3b","1"]],["Tuesday","mardi",["mar.","#ff8c1a","2"]],["Wednesday","mercredi",["mer.","#e6b800","3"]],["Thursday","jeudi",["jeu.","#3cb44b","4"]],["Friday","vendredi",["ven.","#2f7de1","5"]],["Saturday","samedi",["sam.","#8e44d6","6"]],["Sunday","dimanche",["dim.","#ff7eb6","7"]]]},
+  months:{name:"Months",fr:"Les mois",pic:"🗓️",edge:"#3cb44b",ordered:true,
+    ask:w=>`Where is ${w}?`,
+    items:[["January","janvier",["janv.","#2f7de1","⛄"]],["February","février",["févr.","#ff7eb6","💘"]],["March","mars",["mars","#3cb44b","🌱"]],["April","avril",["avr.","#2ec4a6","🌷"]],["May","mai",["mai","#8e44d6","🐝"]],["June","juin",["juin","#ffb000","🍓"]],["July","juillet",["juil.","#ff8c1a","☀️"]],["August","août",["août","#ef3b3b","🏖️"]],["September","septembre",["sept.","#8b5a2b","🎒"]],["October","octobre",["oct.","#e0661b","🎃"]],["November","novembre",["nov.","#6b5b4b","🍂"]],["December","décembre",["déc.","#1e6fd0","🎄"]]]},
+};
+for(const k in THEMES){THEMES[k].key=k;THEMES[k].items=THEMES[k].items.map(([en,fr,v],i)=>({en,fr,v,k,i}))}
+
+/* conversation with Ollie (theme Hello!) */
+const CHAT=[
+  {q:"Hello! What's your name?",fr:"Bonjour ! Comment tu t'appelles ?",ok:"My name is Salma.",opts:["My name is Salma.","I am eight.","Good night!"]},
+  {q:"How old are you?",fr:"Quel âge as-tu ?",ok:"I am eight.",opts:["Thank you!","I am eight.","My name is Salma."]},
+  {q:"How are you?",fr:"Comment vas-tu ?",ok:"I'm fine!",opts:["Goodbye!","No","I'm fine!"]},
+  {q:"Do you like English?",fr:"Tu aimes l'anglais ?",ok:"Yes",opts:["Yes","Good morning!","Please"]},
+  {q:"Here is a present for you!",fr:"Voici un cadeau pour toi !",ok:"Thank you!",opts:["Hello!","Thank you!","I am eight."]},
+  {q:"Goodbye, Salma!",fr:"Au revoir, Salma !",ok:"Goodbye!",opts:["Goodbye!","Good morning!","My name is Salma."]},
+];
+const findItem=en=>THEMES.hello.items.find(x=>x.en===en);
+
+function vis(it){
+  if(it.k==="days"||it.k==="months"){const [s,c,m]=it.v;return `<span class="cal" style="--c:${c}"><b>${s}</b><i>${m}</i></span>`}
+  if(it.k==="colors") return `<span class="blob" style="background:${it.v}"></span>`;
+  if(it.k==="numbers") return `<span class="num">${it.v}</span>`;
+  return it.v;
+}
+function visBig(it){
+  if(it.k==="numbers") return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><span class="num">${it.v}</span><span class="dots">${"<u></u>".repeat(it.v)}</span></div>`;
+  return vis(it);
+}
+
+/* ---------- storage (best stars) ---------- */
+let stars = {};
+try{stars = JSON.parse(localStorage.getItem("salma-stars")||"{}")||{}}catch(e){stars={}}
+function saveStar(key,n){
+  stars[key]=Math.max(stars[key]||0,n);
+  try{localStorage.setItem("salma-stars",JSON.stringify(stars))}catch(e){}
+}
+const totalStars=()=>Object.values(stars).reduce((a,b)=>a+b,0);
+const themeStars=k=>["learn","quiz","bubbles","memory","order","chat"].reduce((a,m)=>a+(stars[k+"-"+m]||0),0);
+
+/* ---------- voice ---------- */
+let muted=false, voices=[];
+const synth = window.speechSynthesis;
+function loadVoices(){ if(synth) voices = synth.getVoices(); }
+if(synth){ loadVoices(); synth.onvoiceschanged = loadVoices; }
+function pickVoice(lang){
+  const pref = lang==="en" ? ["en-GB","en-US","en"] : ["fr-FR","fr"];
+  for(const p of pref){
+    const list = voices.filter(v=>v.lang.replace("_","-").startsWith(p));
+    const nice = list.find(v=>/google|natural|samantha|daniel|amelie|thomas|female/i.test(v.name));
+    if(nice||list[0]) return nice||list[0];
+  }
+  return null;
+}
+function say(text,lang="en",rate){
+  return new Promise(res=>{
+    if(muted||!synth){res();return}
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickVoice(lang); if(v) u.voice=v;
+    u.lang = lang==="en"?"en-GB":"fr-FR";
+    u.rate = rate || (lang==="en"?0.8:1);
+    u.pitch = 1.1;
+    let done=false; const fin=()=>{if(!done){done=true;res()}};
+    u.onend=fin; u.onerror=fin; setTimeout(fin, 900+text.length*140);
+    synth.speak(u);
+    talk();
+  });
+}
+function hush(){ if(synth) synth.cancel(); }
+
+/* ---------- sound effects ---------- */
+let ac;
+function audio(){ if(!ac){ try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){} } if(ac&&ac.state==="suspended") ac.resume(); return ac; }
+function tone(f,t0,d,type="sine",g=.18,f2){
+  const a=audio(); if(!a||muted) return;
+  const o=a.createOscillator(), gn=a.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,a.currentTime+t0);
+  if(f2) o.frequency.exponentialRampToValueAtTime(f2,a.currentTime+t0+d);
+  gn.gain.setValueAtTime(g,a.currentTime+t0); gn.gain.exponentialRampToValueAtTime(.001,a.currentTime+t0+d);
+  o.connect(gn).connect(a.destination); o.start(a.currentTime+t0); o.stop(a.currentTime+t0+d+.05);
+}
+const sfx={
+  tap(){tone(660,0,.08,"triangle",.12)},
+  good(){tone(784,0,.15);tone(1047,.12,.25)},
+  bad(){tone(300,0,.25,"sawtooth",.08,140)},
+  pop(){tone(900,0,.07,"square",.06,1800)},
+  win(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.13,.3,"triangle",.16))},
+  flip(){tone(520,0,.06,"triangle",.1,700)}
+};
+
+/* ---------- confetti ---------- */
+const cv=document.getElementById("confetti"), cx=cv.getContext("2d");
+let parts=[], raf=null;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function confetti(n=120){
+  if(reduce) return;
+  cv.width=innerWidth; cv.height=innerHeight;
+  const cols=["#ff6b5b","#ffc93c","#8a5cf6","#2ec4a6","#2f7de1","#ff7eb6"];
+  for(let i=0;i<n;i++) parts.push({x:innerWidth/2+(Math.random()-.5)*200,y:innerHeight*.4,vx:(Math.random()-.5)*14,vy:-Math.random()*14-4,r:Math.random()*6+4,c:cols[i%cols.length],a:Math.random()*6,life:120});
+  if(!raf) step();
+}
+function step(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.45;p.vx*=.99;p.a+=.2;p.life--;
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.fillStyle=p.c;cx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);cx.restore()});
+  parts=parts.filter(p=>p.life>0&&p.y<cv.height+20);
+  raf = parts.length? requestAnimationFrame(step) : (cx.clearRect(0,0,cv.width,cv.height),null);
+}
+
+/* ---------- Ollie the owl ---------- */
+const OWL = `<svg class="owl" viewBox="0 0 120 130" aria-hidden="true">
+  <ellipse cx="60" cy="124" rx="38" ry="5" fill="#0002"/>
+  <path d="M22 40 L30 14 L46 32 Z M98 40 L90 14 L74 32 Z" fill="#7a4b2a"/>
+  <ellipse cx="60" cy="74" rx="42" ry="50" fill="#9a6236"/>
+  <ellipse cx="60" cy="88" rx="28" ry="32" fill="#f3d9b1"/>
+  <path d="M44 84 q4 4 8 0 M56 92 q4 4 8 0 M68 84 q4 4 8 0 M50 100 q4 4 8 0 M62 100 q4 4 8 0" stroke="#d8b585" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="42" cy="52" r="17" fill="#fff"/><circle cx="78" cy="52" r="17" fill="#fff"/>
+  <circle class="eye" cx="44" cy="54" r="8" fill="#23324a"/><circle class="eye" cx="76" cy="54" r="8" fill="#23324a"/>
+  <circle cx="47" cy="51" r="2.5" fill="#fff"/><circle cx="79" cy="51" r="2.5" fill="#fff"/>
+  <path d="M54 64 L66 64 L60 74 Z" fill="#ffb02e"/>
+  <rect x="26" y="34" width="68" height="7" rx="3" fill="#23324a"/><path d="M36 34 L84 34 L60 20 Z" fill="#23324a"/>
+  <path d="M84 37 q10 6 6 18" stroke="#ffc93c" stroke-width="3" fill="none"/><circle cx="90" cy="56" r="4" fill="#ffc93c"/>
+  <path d="M18 74 q-6 22 10 34 M102 74 q6 22 -10 34" stroke="#7a4b2a" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M48 120 l-4 6 M52 120 l0 6 M68 120 l0 6 M72 120 l4 6" stroke="#ffb02e" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+function talk(){ document.querySelectorAll(".owl").forEach(o=>{o.classList.remove("talk");void o.offsetWidth;o.classList.add("talk")}) }
+
+/* ---------- helpers ---------- */
+const app=document.getElementById("app");
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+let timers=[];
+function clearTimers(){timers.forEach(t=>{clearTimeout(t);clearInterval(t);cancelAnimationFrame(t)});timers=[]}
+function topbar(backFn){
+  return `<div class="top">
+    ${backFn?`<button class="back" id="back">← Retour</button>`:""}
+    <button class="sound" id="mute" aria-label="Son">${muted?"🔇":"🔊"}</button>
+    <div class="starbox">⭐ ${totalStars()}</div></div>`;
+}
+function wireTop(backFn){
+  const b=document.getElementById("back"); if(b) b.onclick=()=>{sfx.tap();hush();clearTimers();backFn()};
+  document.getElementById("mute").onclick=e=>{muted=!muted;e.currentTarget.textContent=muted?"🔇":"🔊";if(muted)hush()};
+}
+function teacher(html){ return `<div class="teacher">${OWL}<div class="bubble" id="say">${html}</div></div>` }
+function setSay(html){ const s=document.getElementById("say"); if(s) s.innerHTML=html }
+
+/* ---------- screens ---------- */
+function startScreen(){
+  app.innerHTML=`<div class="start">
+    ${OWL}
+    <h1>Salma's English Garden</h1>
+    <p class="hint">Le jardin anglais de Salma · avec Ollie la chouette</p>
+    <button class="big" id="go">▶ Let's go!</button>
+    <p class="hint">Mets le son 🔊</p></div>`;
+  document.getElementById("go").onclick=async()=>{
+    audio(); sfx.win(); loadVoices(); home(true);
+  };
+}
+
+async function home(greet){
+  clearTimers();
+  app.innerHTML = topbar(null) + teacher(`<span class="en">Hello Salma!</span> Je suis Ollie, ta prof d'anglais. Choisis un thème !`) +
+    `<div class="grid">${Object.values(THEMES).map(t=>{
+      const s=themeStars(t.key);
+      return `<button class="tile" data-k="${t.key}" style="--edge:${t.edge}">
+        <span class="pic">${t.pic}</span><span class="name">${t.name}</span><span class="fr">${t.fr}</span>
+        <span class="stars">${s?"⭐".repeat(Math.min(s,8)):"<span class='dim'>☆☆☆</span>"}</span></button>`}).join("")}</div>`;
+  wireTop(null);
+  app.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{sfx.tap();hush();const t=THEMES[b.dataset.k];say(t.name,"en");modes(t)});
+  if(greet){ await say("Hello Salma!","en"); await say("Je suis Ollie, ta prof d'anglais. Choisis un thème !","fr"); }
+}
+
+function modes(t){
+  app.innerHTML = topbar(home) + teacher(`<span class="en">${t.name}</span> — ${t.fr}. Que veux-tu faire ?`) +
+  `<div class="modes">
+    <button class="mode m1" data-m="learn"><i>👂</i><b>Learn</b><span>Découvre les mots : touche une image pour l'entendre.</span></button>
+    <button class="mode m2" data-m="quiz"><i>🎯</i><b>Listen & find</b><span>Écoute Ollie et trouve la bonne image.</span></button>
+    <button class="mode m3" data-m="bubbles"><i>🫧</i><b>Bubbles</b><span>Éclate la bonne bulle avant qu'elle s'envole !</span></button>
+    <button class="mode m4" data-m="memory"><i>🃏</i><b>Memory</b><span>Retrouve les paires image + mot.</span></button>
+    ${t.ordered?`<button class="mode m5" data-m="order"><i>🪜</i><b>In order!</b><span>Remets les ${t.key==="days"?"jours":"mois"} dans le bon ordre.</span></button>`:""}
+    ${t.chat?`<button class="mode m5" data-m="chat"><i>💬</i><b>Talk with Ollie</b><span>Réponds à Ollie comme une vraie Anglaise !</span></button>`:""}
+  </div>`;
+  wireTop(home);
+  app.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{sfx.tap();hush();({learn,quiz,bubbles,memory,order,chat})[b.dataset.m](t)});
+}
+
+/* --- In order (days, months) --- */
+function order(t){
+  let next=0, mistakes=0;
+  const cards=shuffle(t.items);
+  app.innerHTML = topbar(()=>modes(t)) + teacher(`Touche les ${t.key==="days"?"jours":"mois"} dans l'ordre, en commençant par <span class="en">${t.items[0].en}</span> !`) +
+    `<div class="line" id="line"></div>
+     <div class="cards" id="pile">${cards.map(it=>`<button class="wcard seen ocard" data-i="${it.i}"><span class="vis">${vis(it)}</span><span class="word">${it.en}</span></button>`).join("")}</div>`;
+  wireTop(()=>modes(t));
+  const line=document.getElementById("line");
+  say(`Touche les ${t.key==="days"?"jours":"mois"} dans l'ordre !`,"fr").then(()=>say(`${t.items[0].en}, ${t.items[1].en}, ${t.items[2].en}...`,"en"));
+  app.querySelectorAll(".ocard").forEach(b=>b.onclick=async()=>{
+    const it=t.items[b.dataset.i]; hush();
+    if(it.i===next){
+      sfx.good(); b.remove(); next++;
+      line.insertAdjacentHTML("beforeend",`<span class="chip" style="--c:${it.v[1]}">${it.en}</span>`);
+      setSay(`<span class="en">${it.en}</span> = ${it.fr}${next<t.items.length?` · Ensuite ?`:""}`);
+      await say(it.en,"en");
+      if(next===t.items.length){
+        const s=mistakes===0?3:mistakes<=3?2:1; saveStar(t.key+"-order",s);
+        await say(t.items.map(x=>x.en).join(", "),"en",0.9);
+        finish(t,s,`Tous les ${t.key==="days"?"jours":"mois"} sont dans l'ordre !`,()=>order(t));
+      }
+    }else{
+      mistakes++; sfx.bad(); b.classList.remove("no"); void b.offsetWidth; b.classList.add("no"); setTimeout(()=>b.classList.remove("no"),450);
+      setSay(`Ça c'est <span class="en">${it.en}</span> (${it.fr}). On cherche ce qui vient après !`);
+      await say(it.en,"en");
+    }
+  });
+}
+
+/* --- Talk with Ollie (Hello!) --- */
+function chat(t){
+  let step=0, mistakes=0;
+  app.innerHTML = topbar(()=>modes(t)) + teacher(`…`) +
+    `<p class="hint">Touche une réponse pour l'écouter. Si c'est la bonne, Ollie continue !</p>
+     <div class="talk" id="talk"></div>`;
+  wireTop(()=>modes(t));
+  async function turn(){
+    const c=CHAT[step], box=document.getElementById("talk"); let locked=false;
+    setSay(`<span class="en">${c.q}</span><br><small style="color:var(--soft)">${c.fr}</small>`);
+    box.innerHTML=c.opts.map((o,i)=>{const it=findItem(o);return `<button class="answer" data-i="${i}"><span class="ae">${it?it.v:"💬"}</span><span>${o}</span></button>`}).join("");
+    box.querySelectorAll(".answer").forEach(b=>b.onclick=async()=>{
+      if(locked) return; const o=c.opts[b.dataset.i]; hush();
+      if(o===c.ok){
+        locked=true; b.classList.add("ok"); sfx.good(); confetti(30);
+        await say(o,"en"); step++;
+        if(step<CHAT.length){ turn(); }
+        else{ const s=mistakes===0?3:mistakes<=2?2:1; saveStar(t.key+"-chat",s); finish(t,s,"Tu as parlé anglais avec Ollie !",()=>chat(t)); }
+      }else{
+        mistakes++; sfx.bad(); b.classList.add("no"); b.disabled=true;
+        await say(o,"en"); await say("Hmm... not this one!","en");
+      }
+    });
+    await say(c.q,"en"); await say(c.fr,"fr");
+  }
+  turn();
+}
+
+/* --- Learn --- */
+function learn(t){
+  const seen=new Set();
+  app.innerHTML = topbar(()=>modes(t)) + teacher(`Touche chaque image et <b>répète le mot à voix haute</b> !`) +
+    `<div class="cards">${t.items.map((it,i)=>`<button class="wcard" data-i="${i}" aria-label="${it.fr}">
+      <span class="vis">${visBig(it)}</span><span class="word">${it.en}</span><span class="tr">${it.fr}</span></button>`).join("")}</div>`;
+  wireTop(()=>modes(t));
+  say("Touche chaque image et répète le mot à voix haute !","fr");
+  app.querySelectorAll(".wcard").forEach(c=>c.onclick=async()=>{
+    const it=t.items[c.dataset.i]; hush(); sfx.flip();
+    c.classList.add("seen"); c.classList.remove("pulse"); void c.offsetWidth; c.classList.add("pulse");
+    setSay(`<span class="en">${it.en}</span> = ${it.fr}. Répète : <span class="en">${it.en}</span> !`);
+    seen.add(it.en);
+    await say(it.en,"en"); await say(it.en,"en",0.6);
+    if(seen.size===t.items.length && !c.dataset.done){
+      app.querySelectorAll(".wcard").forEach(x=>x.dataset.done=1);
+      saveStar(t.key+"-learn",1);
+      finish(t,1,"Tu connais tous les mots ! Essaie maintenant « Listen & find ».",()=>learn(t));
+    }
+  });
+}
+
+/* --- Quiz --- */
+function quiz(t){
+  const rounds=shuffle(t.items).slice(0,Math.min(8,t.items.length));
+  let r=0, mistakes=0;
+  app.innerHTML = topbar(()=>modes(t)) + teacher(`Écoute bien et touche la bonne image !`) +
+    `<div class="qhead"><button class="listen" id="rep">🔊 Encore</button><div class="progress"><div id="bar" style="width:0%"></div></div></div>
+     <div class="choices" id="ch"></div>`;
+  wireTop(()=>modes(t));
+  const ask=()=>say(t.ask(rounds[r].en),"en");
+  document.getElementById("rep").onclick=()=>{hush();ask()};
+  async function round(){
+    const target=rounds[r];
+    const opts=shuffle([target,...shuffle(t.items.filter(x=>x!==target)).slice(0,3)]);
+    const ch=document.getElementById("ch"); let locked=false;
+    ch.innerHTML=opts.map((o,i)=>`<button class="choice" data-i="${i}" aria-label="option ${i+1}">${vis(o)}</button>`).join("");
+    setSay(`<span class="en">${t.ask(target.en)}</span>`);
+    ch.querySelectorAll(".choice").forEach(b=>b.onclick=async()=>{
+      if(locked) return; const o=opts[b.dataset.i];
+      if(o===target){
+        locked=true; hush(); b.classList.add("ok"); sfx.good(); confetti(40);
+        setSay(`<span class="en">Yes! ${target.en}</span> = ${target.fr} 🎉`);
+        await say(["Great job!","Yes! Well done!","Super!","Excellent!"][r%4]+" "+target.en,"en");
+        r++; document.getElementById("bar").style.width=(r/rounds.length*100)+"%";
+        if(r<rounds.length){ round(); }
+        else{ const s=mistakes===0?3:mistakes<=2?2:1; saveStar(t.key+"-quiz",s); finish(t,s,`${rounds.length} bonnes réponses !`,()=>quiz(t)); }
+      }else{
+        mistakes++; b.classList.add("no"); b.disabled=true; sfx.bad();
+        setSay(`Non, ça c'est <span class="en">${o.en}</span>. Essaie encore !`);
+        hush(); await say(o.en,"en"); await say("Try again!","en");
+      }
+    });
+    await ask();
+  }
+  say("Écoute bien et touche la bonne image !","fr").then(round);
+}
+
+/* --- Bubbles --- */
+function bubbles(t){
+  const goal=8; let score=0, target=null, alive=[], running=true, speed=.9;
+  app.innerHTML = topbar(()=>{running=false;modes(t)}) + teacher(`Éclate la bulle qui correspond au mot !`) +
+    `<div class="qhead"><button class="listen" id="rep">🔊 Encore</button><span class="score" id="sc">🫧 0 / ${goal}</span></div>
+     <div class="pond" id="pond"></div>`;
+  wireTop(()=>{running=false;modes(t)});
+  const pond=document.getElementById("pond");
+  const newTarget=()=>{ target=t.items[Math.random()*t.items.length|0]; setSay(`Trouve : <span class="en">${target.en}</span>`); return say(target.en,"en"); };
+  document.getElementById("rep").onclick=()=>{hush();say(target.en,"en")};
+  function spawn(){
+    if(!running) return;
+    const it = Math.random()<.4 ? target : t.items[Math.random()*t.items.length|0];
+    const b=document.createElement("button"); b.className="bub"; b.innerHTML=vis(it); b.setAttribute("aria-label","bulle");
+    const W=pond.clientWidth, H=pond.clientHeight, size=96;
+    const o={el:b,it,x:Math.random()*(W-size),y:H,ph:Math.random()*6,v:speed*(0.8+Math.random()*.5)};
+    b.style.left=o.x+"px"; b.style.top=o.y+"px";
+    b.onclick=async()=>{
+      if(b.classList.contains("pop")) return;
+      b.classList.add("pop"); sfx.pop();
+      setTimeout(()=>b.remove(),260); alive=alive.filter(a=>a!==o);
+      if(it===target){
+        score++; sfx.good(); document.getElementById("sc").textContent=`🫧 ${score} / ${goal}`;
+        speed+=.08;
+        if(score>=goal){ running=false; saveStar(t.key+"-bubbles",3); hush(); finish(t,3,"Toutes les bulles éclatées !",()=>bubbles(t)); return; }
+        hush(); await say("Yes! "+it.en,"en"); newTarget();
+      }else{ sfx.bad(); hush(); say(it.en,"en"); }
+    };
+    pond.appendChild(b); alive.push(o);
+  }
+  let last=performance.now(), acc=0;
+  function loop(now){
+    if(!running) return;
+    const dt=Math.min(50,now-last); last=now; acc+=dt;
+    if(acc>1100){acc=0;spawn()}
+    alive.forEach(o=>{o.y-=o.v*dt/16; o.ph+=dt/500; o.el.style.top=o.y+"px"; o.el.style.left=(o.x+Math.sin(o.ph)*12)+"px";
+      if(o.y<-110){o.el.remove(); o.gone=true}});
+    alive=alive.filter(o=>!o.gone);
+    timers.push(requestAnimationFrame(loop));
+  }
+  say("Éclate la bulle qui correspond au mot !","fr").then(newTarget).then(()=>{last=performance.now();spawn();timers.push(requestAnimationFrame(loop))});
+}
+
+/* --- Memory --- */
+function memory(t){
+  const pick=shuffle(t.items).slice(0,6);
+  const deck=shuffle(pick.flatMap(it=>[{it,kind:"pic"},{it,kind:"word"}]));
+  let open=[], found=0, tries=0, busy=false;
+  app.innerHTML = topbar(()=>modes(t)) + teacher(`Retourne deux cartes : trouve l'image et son mot anglais !`) +
+    `<div class="mem" id="mem">${deck.map((c,i)=>`<button class="mc" data-i="${i}" aria-label="carte ${i+1}"><span class="q">?</span>
+      <span class="face">${c.kind==="pic"?vis(c.it):`<span class="lbl">${c.it.en}</span>`}</span></button>`).join("")}</div>`;
+  wireTop(()=>modes(t));
+  say("Retourne deux cartes : trouve l'image et son mot anglais !","fr");
+  app.querySelectorAll(".mc").forEach(b=>b.onclick=async()=>{
+    if(busy||b.classList.contains("open")||b.classList.contains("done")) return;
+    const c=deck[b.dataset.i]; b.classList.add("open"); sfx.flip(); hush(); say(c.it.en,"en");
+    open.push([b,c]);
+    if(open.length===2){
+      busy=true; tries++;
+      const [[b1,c1],[b2,c2]]=open; open=[];
+      if(c1.it===c2.it && c1.kind!==c2.kind){
+        await new Promise(r=>setTimeout(r,500));
+        b1.classList.add("done"); b2.classList.add("done"); sfx.good(); found++;
+        setSay(`<span class="en">${c1.it.en}</span> = ${c1.it.fr} ✓`);
+        busy=false;
+        if(found===pick.length){ const s=tries<=8?3:tries<=12?2:1; saveStar(t.key+"-memory",s); confetti(); finish(t,s,`Toutes les paires en ${tries} essais !`,()=>memory(t)); }
+      }else{
+        await new Promise(r=>setTimeout(r,1100));
+        b1.classList.remove("open"); b2.classList.remove("open"); busy=false;
+      }
+    }
+  });
+}
+
+/* --- end screen --- */
+async function finish(t,s,msg,again){
+  sfx.win(); confetti(160);
+  const ov=document.createElement("div"); ov.className="overlay";
+  ov.innerHTML=`<div class="panel">${OWL.replace('class="owl"','class="owl" style="width:100px"')}
+    <h3>Bravo Salma !</h3>
+    <div class="bigstars">${"⭐".repeat(s)}<span class="dim">${"☆".repeat(3-s)}</span></div>
+    <p style="margin:0;font-size:18px;font-weight:800">${msg}</p>
+    <div class="row"><button class="again" id="ag">↻ Rejouer</button><button class="menu" id="mn">Autres jeux</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.querySelector("#ag").onclick=()=>{sfx.tap();hush();ov.remove();clearTimers();again()};
+  ov.querySelector("#mn").onclick=()=>{sfx.tap();hush();ov.remove();clearTimers();modes(t)};
+  await say("Great job, Salma!","en"); await say("Bravo !","fr");
+}
+
+startScreen();
+</script>
+
+</body></html>

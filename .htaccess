@@ -1,4 +1,9 @@
-# Cache les fichiers techniques : seuls les jeux sont visibles en ligne.
+# Cache les fichiers techniques : seuls les cours et les jeux sont visibles en ligne.
 <FilesMatch "^(README\.md|package\.json|build\.js|\.gitignore)$">
   Require all denied
 </FilesMatch>
+
+# Les jeux d'Amine ont déménagé dans /amine/ : les anciens liens continuent de marcher.
+Redirect 301 /la-nuit-d-amine.html /amine/la-nuit-d-amine.html
+Redirect 301 /la-nuit-d-amine-2.html /amine/la-nuit-d-amine-2.html
+Redirect 301 /nahki-tounsi.html /amine/nahki-tounsi.html

@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Via Romana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Alegreya+Sans:ital,wght@0,400;0,700;0,800;1,400&display=swap">
+<style>
+/* Layout: single column (max 860px). Home = a route of stops (units); unit = grid of activities; activity = top bar + question card + answers. */
+/* Via Romana: weathered stone, Pompeian red, lapis blue, bronze. Inscriptional capitals for display. Single deliberate light look. */
+:root{
+  --bg:#e7e5e0; --surface:#f8f7f4; --ink:#2a2420; --muted:#6a6158; --line:#d2ccc2;
+  --accent:#9b2226; --accent-ink:#ffffff; --accent2:#1d3b6e; --gold:#b8892b;
+  --ok:#3a7437; --ok-soft:#e1eedc; --bad:#b3261e; --bad-soft:#f6dedb;
+  --m:#1d3b6e; --f:#9b2226; --n:#3a7437; --sel:#e3e8f2; --card-back:#f1eee8;
+  --display:"Cinzel","Trajan Pro","Times New Roman",serif;
+  --body:"Alegreya Sans","Segoe UI",system-ui,sans-serif;
+  --r:6px; color-scheme:light;
+}
+body{background-image:radial-gradient(#0000000a 1px,transparent 1px);background-size:6px 6px}
+.brand{display:flex;flex-direction:column;gap:2px;border-top:4px solid var(--accent);border-bottom:1px solid var(--line);padding-block:14px}
+.spqr{margin:0;color:var(--gold);font-family:var(--display);font-weight:700;letter-spacing:.3em}
+.brand h1{font-size:clamp(36px,7vw,60px);font-weight:700;letter-spacing:.06em;color:var(--accent)}
+.brand p{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.route{gap:0}
+.route li{position:relative;padding-left:28px;padding-block:6px}
+.route li::before{content:"";position:absolute;left:9px;top:0;bottom:0;width:8px;background:repeating-linear-gradient(#b9b1a4 0 10px,#cfc8bc 10px 14px);border-radius:2px}
+.stop{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--accent);box-shadow:0 2px 0 #0000000f}
+.stop:hover{border-left-color:var(--gold)}
+.stop-tag{font-family:var(--display);color:var(--accent);letter-spacing:.18em}
+.stop-main b{font-weight:700;letter-spacing:.02em}
+.stop-prog{color:var(--muted)}
+.stop.is-next{box-shadow:0 0 0 3px var(--gold)}
+.stop.is-done .stop-prog{color:var(--ok)}
+.uhead .stop-tag{font-family:var(--display);color:var(--accent)}
+.uhead h2,.lex h2,.res h2{color:var(--accent);font-weight:700}
+.prompt{font-weight:700}
+.prompt.sm i{font-family:var(--display);font-style:normal;color:var(--accent2)}
+.mode b{letter-spacing:.02em}
+
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:18px 56px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent2);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;text-wrap:balance}
+small{color:var(--muted)}
+.icon{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line);font-size:20px;flex:none}
+.btn{border-radius:var(--r);padding:12px 18px;font-weight:700;background:var(--surface);border:1px solid var(--line)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.good{background:var(--ok);color:#fff;border-color:transparent}
+.btn.bad{background:var(--surface);color:var(--bad);border-color:var(--bad)}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+/* header */
+.hdr{display:flex;flex-direction:column;gap:14px}
+.who{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.who>div{flex:1;min-width:0}
+.lvl{font-family:var(--display);font-weight:700;font-size:20px}
+.xpbar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin:6px 0 4px}
+.xpbar i{display:block;height:100%;background:var(--gold);border-radius:99px}
+.nexthint{margin:0;color:var(--muted)}
+.nexthint b{color:var(--ink)}
+.foot{font-size:14px;color:var(--muted);margin:8px 0 0}
+
+/* route */
+.route{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;position:relative}
+.stop{width:100%;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"ic tag prog" "ic main prog";column-gap:14px;align-items:center;text-align:left;padding:12px 16px;border-radius:var(--r)}
+.stop-ic{grid-area:ic;font-size:30px}
+.stop-tag{grid-area:tag;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.stop-main{grid-area:main;display:flex;flex-direction:column;min-width:0}
+.stop-main b{font-family:var(--display);font-size:21px;line-height:1.15}
+.stop-prog{grid-area:prog;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* unit */
+.back{align-self:flex-start;font-weight:700;color:var(--muted);padding:6px 0}
+.uhead{display:flex;flex-direction:column;gap:4px}
+.uhead h2{font-size:clamp(28px,5vw,40px)}
+.modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.mode{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ic name" "ic desc" "ic st";column-gap:12px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;transition:transform .12s,border-color .12s}
+.mode:hover{transform:translateY(-2px);border-color:var(--accent)}
+.mode.first{border:2px solid var(--accent)}
+.mode-ic{grid-area:ic;font-size:28px}
+.mode b{grid-area:name;font-family:var(--display);font-size:19px}
+.mode small{grid-area:desc}
+.mstars{grid-area:st;color:var(--gold);letter-spacing:2px;margin-top:4px}
+
+/* game */
+.gtop{display:flex;align-items:center;gap:12px}
+.prog{flex:1;height:12px;background:var(--line);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .3s}
+.pts{font-weight:700;font-variant-numeric:tabular-nums}
+.combo{min-width:58px;font-weight:800;color:var(--accent)}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:26px 20px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.kicker{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.prompt{font-family:var(--display);font-size:clamp(28px,5.5vw,44px);line-height:1.15;overflow-wrap:anywhere}
+.prompt.sm{font-family:var(--body);font-size:clamp(19px,3vw,24px);font-weight:700}
+.prompt i{font-style:italic}
+.sub{color:var(--muted)}
+.say{border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-weight:700;background:var(--bg)}
+.pron{color:var(--accent2)}
+.blank{color:var(--muted)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px}
+.opts.fixed{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:14px;font-weight:700;font-size:18px;min-width:0}
+.opt span{min-width:0;overflow-wrap:anywhere}
+.opt kbd{font-family:var(--body);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px;flex:none}
+.opt:hover:not(:disabled){border-color:var(--accent2)}
+.opt.ok{background:var(--ok-soft);border-color:var(--ok)}
+.opt.bad{background:var(--bad-soft);border-color:var(--bad);animation:shake .35s}
+.opt:disabled{cursor:default}
+.opts.fixed .opt{justify-content:center;font-family:var(--display);font-size:24px}
+.art-m{color:var(--m)}.art-f{color:var(--f)}.art-n{color:var(--n)}
+@keyframes shake{25%,75%{transform:translateX(-6px)}50%{transform:translateX(6px)}}
+.fb{display:flex;flex-direction:column;gap:12px;align-items:center;min-height:10px}
+.fbmsg{width:100%;box-sizing:border-box;border-radius:var(--r);padding:12px 16px;font-weight:700;text-align:center}
+.fbmsg p{font-weight:400;margin:6px 0 0}
+.fbmsg.good{background:var(--ok-soft);color:var(--ok)}
+.fbmsg.oops{background:var(--bad-soft);color:var(--ink)}
+.typein{display:flex;gap:10px}
+.typein input{flex:1;min-width:0;font:inherit;font-size:22px;padding:12px 14px;border-radius:var(--r);border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.chars{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.ch{width:46px;height:42px;border-radius:8px;background:var(--surface);border:1px solid var(--line);font-size:20px;font-weight:700}
+
+/* flashcards */
+.flipwrap{perspective:1200px}
+.flip{position:relative;width:100%;height:240px;transform-style:preserve-3d;transition:transform .45s}
+.flip.on{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;box-sizing:border-box}
+.face.back{transform:rotateY(180deg);background:var(--card-back)}
+.face b{font-family:var(--display);font-size:clamp(26px,5vw,40px);line-height:1.15;overflow-wrap:anywhere;text-align:center}
+.face em{font-style:normal;color:var(--muted);font-size:14px}
+.face small{text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.left{text-align:center;color:var(--muted);margin:0}
+
+/* match */
+.match{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.mt{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:12px;font-weight:700;min-height:56px;overflow-wrap:anywhere}
+.mt.l{font-family:var(--display);font-size:19px}
+.mt.sel{border-color:var(--accent2);background:var(--sel)}
+.mt.done{opacity:.25;border-style:dashed}
+.mt.bad{border-color:var(--bad);animation:shake .35s}
+.kick2{margin:0;text-align:center;color:var(--muted)}
+.kick2 span{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* lexicon */
+.lex{display:flex;flex-direction:column;gap:16px}
+.lex h2{font-size:clamp(26px,4.5vw,36px)}
+.note{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:var(--r);padding:14px 16px;max-width:70ch}
+.note p{margin:0 0 8px}.note p:last-child{margin:0}
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;background:var(--surface);border-radius:var(--r);overflow:hidden;border:1px solid var(--line)}
+td,th{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+.tw{font-family:var(--display);font-weight:700;font-size:18px}
+.g-m{color:var(--m)}.g-f,.g-pl{color:var(--f)}.g-n{color:var(--n)}
+.mini{width:34px;height:34px;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+.tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+.tbl h3{font-size:20px;margin-bottom:6px}
+.tbl h3 small{font-family:var(--body);font-size:15px;font-weight:400}
+.tbl td b{color:var(--accent)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-weight:700;font-size:15px}
+
+/* results */
+.res{display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px 18px}
+.res-st{font-size:48px;color:var(--gold);letter-spacing:6px}
+.dim{color:var(--line)}
+.res h2{font-size:clamp(26px,5vw,36px)}
+.lvlup{background:var(--gold);color:#1b1b1b;border-radius:99px;padding:8px 18px;font-weight:800}
+.miss{width:100%;max-width:560px;text-align:left}
+.miss h3{font-size:18px;margin-bottom:6px}
+.miss ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+@media (max-width:520px){.opts.fixed .opt{font-size:20px;padding:12px 6px}.match{gap:8px}.mt{padding:10px 8px;font-size:15px}.mt.l{font-size:16px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<a href="./" class="mf-back" aria-label="Retour à l'espace Essil" style="position:fixed;z-index:9999;top:calc(env(safe-area-inset-top,0px) + 8px);left:max(8px,env(safe-area-inset-left,0px));background:#1f3c88;color:#fff;font:600 13px/1 system-ui,-apple-system,'Segoe UI',sans-serif;text-decoration:none;padding:7px 11px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);opacity:.9">← Essil</a>
+
+<canvas id="confetti"></canvas>
+<div class="wrap" id="app"></div>
+<script>
+const C = {
+key:"essil-latin",
+voiceLangs:["it-IT","it"], rate:.85, lemma:true,
+chars:[], caseTip:"",
+langLabel:"Latine", langShort:"LA",
+qcmA:"Que veut dire… ?", qcmB:"Comment dit-on en latin… ?",
+typeKicker:"Écris le mot latin (la 1re forme du dictionnaire)", typePh:"Ta réponse en latin…",
+homeLabel:"La route",
+nextLabel:"Prochaine borne :",
+perfect:"Optime !",
+pronouns:["je (1re sg)","tu (2e sg)","il / elle (3e sg)","nous (1re pl)","vous (2e pl)","ils / elles (3e pl)"],
+cases:["nominatif","vocatif","accusatif","génitif","datif","ablatif"],
+praise:["Bene ! (bien)","Optime ! (très bien)","Recte ! (juste)","Euge ! (bravo)","Macte ! (bravo)"],
+resTitles:["Perge ! — continue","Bene fecisti ! — bien joué","Optime ! — excellent"],
+confetti:["#9b2226","#b8892b","#1d3b6e","#3d7a3a","#2b2118"],
+levels:[[0,"Tiro · recrue"],[300,"Miles · soldat"],[800,"Signifer · porte-enseigne"],[1600,"Centurio · centurion"],[2800,"Tribunus · tribun"],[4500,"Consul · consul"],[7000,"Imperator · général triomphant"]],
+modes:{
+ lex:["Lexique & leçon","Le vocabulaire et la règle","📜"],
+ flash:["Tabellae","Cartes à retourner : latin ↔ français","🃏"],
+ qcm:["Quiz","Reconnaître le sens des mots","⚡"],
+ type:["Scribe !","Écris le mot latin","✍️"],
+ match:["Paires chrono","Associe vite chaque mot à sa traduction","⏱️"],
+ conj:["Conjugaison","Le présent de l'indicatif","⚙️"],
+ decl:["Déclinaisons","Trouve la bonne forme ou le bon cas","🏛️"],
+ quiz:["Défis","Grammaire, traduction et culture","🏆"],
+ roman:["Numeri Romani","Lis et écris les chiffres romains","🔢"]
+},
+headerHTML:'<div class="brand"><p class="spqr">S · P · Q · R</p><h1>Via Romana</h1><p>La route d\'Essil jusqu\'à Rome : dix bornes, un grade de plus à chaque étape.</p></div>',
+footHTML:'Conseil : commence chaque borne par « Lexique & leçon », puis fais les épreuves. Clavier : touches 1-4 pour répondre, Entrée pour continuer, Espace pour retourner une carte.<br>Le son utilise une voix italienne, proche du latin d\'église. En classe, on prononce souvent à la romaine : <i>c</i> toujours comme « k » (<i>Cicero</i> = « Kikero ») et <i>v</i> comme « ou » (<i>veni</i> = « oueni »).',
+units:[
+{id:"salve",tag:"Miliarium I",icon:"👋",name:"Salve !",fr:"Premiers mots",
+ note:"<p>Le latin n'a <b>pas d'article</b> : <i>puella</i> = « la jeune fille » ou « une jeune fille ».</p><p>Dans le dictionnaire, un nom est donné avec son génitif et son genre : <i>puella, ae, f.</i> (f. = féminin, m. = masculin, n. = neutre).</p><p>Le verbe se place souvent <b>à la fin</b> : <i>Puella in schola <b>est</b>.</i></p>",
+ cards:[["salve","bonjour ! (à une personne)"],["salvete","bonjour ! (à plusieurs)"],["vale","au revoir ! (à une personne)"],["valete","au revoir ! (à plusieurs)"],["puella, ae, f.","la jeune fille"],["puer, pueri, m.","le garçon"],["magister, magistri, m.","le maître d'école"],["discipulus, i, m.","l'élève"],["schola, ae, f.","l'école"],["sed","mais"],["non","ne… pas"],["quis ?","qui ?"],["ubi ?","où ?"],["est","il / elle est"],["sunt","ils / elles sont"],["in","dans, sur (+ ablatif)"]],
+ quiz:[
+  {q:"Tu salues toute ta classe : tu dis…",a:"Salvete !",w:["Salve !","Vale !","Valete !"]},
+  {q:"<i>Puella in schola est.</i>",k:"Traduis",a:"La jeune fille est à l'école.",w:["Les jeunes filles sont à l'école.","Le garçon est à l'école.","L'école est à la jeune fille."]},
+  {q:"Dans <i>puella, ae, f.</i>, que signifie « f. » ?",a:"féminin",w:["facile","français","fille"]},
+  {q:"Le latin a-t-il des articles (le, la, un) ?",a:"Non, jamais",w:["Oui, comme le français","Seulement au pluriel","Seulement pour les noms masculins"]},
+  {q:"<i>Ubi est magister ?</i>",k:"Traduis",a:"Où est le maître ?",w:["Qui est le maître ?","Le maître est là.","Quand vient le maître ?"]},
+  {q:"<i>Puer non est in villa.</i>",k:"Traduis",a:"Le garçon n'est pas dans la villa.",w:["Le garçon est dans la villa.","La jeune fille n'est pas dans la villa.","Les garçons ne sont pas dans la villa."]},
+  {q:"Quelles langues viennent du latin ?",a:"français, italien, espagnol, portugais, roumain",w:["anglais, allemand, néerlandais","grec, russe, turc","arabe, hébreu, persan"],ex:"On les appelle les <b>langues romanes</b> (de <i>Roma</i>)."},
+  {q:"<i>Quis est ?</i>",k:"Traduis",a:"Qui est-ce ?",w:["Où est-il ?","Qu'est-ce que c'est ?","Comment va-t-il ?"]}
+ ]},
+{id:"familia",tag:"Miliarium II",icon:"🏠",name:"Familia",fr:"La famille et la maison",
+ note:"<p>À Rome, la <i>familia</i> regroupe tous ceux qui vivent sous l'autorité du <b>pater familias</b> : sa femme, ses enfants… et ses esclaves.</p><p>La <i>domus</i> est la maison en ville ; la <i>villa</i> est un grand domaine à la campagne.</p>",
+ cards:[["pater, patris, m.","le père"],["mater, matris, f.","la mère"],["filius, ii, m.","le fils"],["filia, ae, f.","la fille"],["frater, fratris, m.","le frère"],["soror, sororis, f.","la sœur"],["dominus, i, m.","le maître (de maison)"],["domina, ae, f.","la maîtresse (de maison)"],["servus, i, m.","l'esclave"],["ancilla, ae, f.","la servante"],["amicus, i, m.","l'ami"],["amica, ae, f.","l'amie"],["domus, us, f.","la maison"],["villa, ae, f.","la villa, la ferme"],["hortus, i, m.","le jardin"],["cena, ae, f.","le dîner"]],
+ quiz:[
+  {q:"Quel mot français vient de <i>pater</i> ?",a:"paternel",w:["pâtisserie","patiner","patience"]},
+  {q:"Comment dit-on « la servante » ?",a:"ancilla",w:["amica","domina","filia"]},
+  {q:"<i>Filius et filia</i>",k:"Traduis",a:"le fils et la fille",w:["le père et la mère","le frère et la sœur","l'ami et l'amie"]},
+  {q:"Le chef de la famille romaine s'appelle…",a:"le pater familias",w:["le magister","le consul","le servus"],ex:"Il a autorité sur toute la maisonnée : femme, enfants et esclaves."},
+  {q:"Un <i>servus</i> est…",a:"un esclave",w:["un soldat","un fils","un paysan"]},
+  {q:"La <i>bulla</i> que portent les enfants romains est…",a:"un pendentif porte-bonheur",w:["une bulle de savon","un jouet en bois","une pièce de monnaie"],ex:"Les garçons libres la portent jusqu'à environ 16 ans, quand ils prennent la toge des adultes."},
+  {q:"Quel mot français vient de <i>soror</i> ?",a:"sororité",w:["sorcière","sortir","sort"]},
+  {q:"Le repas principal des Romains, le soir, s'appelle…",a:"la cena",w:["le prandium","le forum","la villa"]}
+ ]},
+{id:"roma",tag:"Miliarium III",icon:"🏛️",name:"Roma",fr:"Rome et la vie romaine",
+ note:"<p>Selon la légende, <b>Romulus</b> fonde Rome en <b>753 av. J.-C.</b>, sur les bords du Tibre. La ville s'étend sur sept collines.</p><p>Au cœur de la ville : le <i>forum</i> (place publique, marchés, temples, politique).</p>",
+ cards:[["Roma, ae, f.","Rome"],["via, ae, f.","la route, la rue"],["forum, i, n.","le forum, la place publique"],["templum, i, n.","le temple"],["oppidum, i, n.","la ville fortifiée"],["bellum, i, n.","la guerre"],["gladius, ii, m.","le glaive (épée)"],["miles, militis, m.","le soldat"],["aqua, ae, f.","l'eau"],["insula, ae, f.","l'île ; l'immeuble"],["terra, ae, f.","la terre"],["deus, i, m.","le dieu"],["dea, ae, f.","la déesse"],["imperator, oris, m.","le général, l'empereur"],["populus, i, m.","le peuple"]],
+ quiz:[
+  {q:"Selon la légende, Rome est fondée en…",a:"753 av. J.-C.",w:["476 apr. J.-C.","52 av. J.-C.","1000 av. J.-C."]},
+  {q:"Le fondateur légendaire de Rome est…",a:"Romulus",w:["Remus","Jules César","Auguste"]},
+  {q:"Romulus et Remus ont été nourris par…",a:"une louve",w:["une ourse","une chèvre","une biche"]},
+  {q:"Rome est construite sur…",a:"sept collines",w:["trois montagnes","une île","deux volcans"]},
+  {q:"Le fleuve de Rome est…",a:"le Tibre",w:["le Pô","le Rhône","le Nil"]},
+  {q:"Les thermes sont…",a:"des bains publics",w:["des temples","des théâtres","des tombeaux"]},
+  {q:"Le Colisée servait surtout aux…",a:"combats de gladiateurs",w:["courses de chars","pièces de théâtre","réunions du Sénat"],ex:"Les courses de chars avaient lieu au <i>Circus Maximus</i>."},
+  {q:"Que signifie S.P.Q.R. ?",a:"Le Sénat et le peuple romain",w:["Seuls les plus quatre règnent","Sept peuples, quatre rois","Salut, paix, quiétude, Rome"],ex:"<i>Senatus Populusque Romanus</i>."},
+  {q:"Une <i>insula</i>, à Rome, c'est aussi…",a:"un immeuble de plusieurs étages",w:["une piscine","un jardin","un temple"]}
+ ]},
+{id:"decl1",tag:"Miliarium IV",icon:"🌹",name:"1re déclinaison",fr:"rosa, rosae : les noms en -a",
+ note:"<p>En latin, la <b>terminaison</b> d'un nom change selon sa <b>fonction</b> dans la phrase : c'est le <b>cas</b>.</p><p><b>nominatif</b> = sujet · <b>vocatif</b> = on appelle quelqu'un · <b>accusatif</b> = COD · <b>génitif</b> = complément du nom (« de ») · <b>datif</b> = COI, attribution (« à ») · <b>ablatif</b> = compléments circonstanciels (moyen, lieu…).</p><p>La 1re déclinaison : génitif en <b>-ae</b>, presque toujours féminin. Exceptions masculines : <i>agricola</i>, <i>nauta</i>, <i>poeta</i>. L'ablatif singulier a un <b>ā long</b>.</p>",
+ cards:[["rosa, ae, f.","la rose"],["silva, ae, f.","la forêt"],["fortuna, ae, f.","la chance, le sort"],["pecunia, ae, f.","l'argent"],["ira, ae, f.","la colère"],["Gallia, ae, f.","la Gaule"],["agricola, ae, m.","le paysan"],["nauta, ae, m.","le marin"],["poeta, ae, m.","le poète"],["regina, ae, f.","la reine"],["victoria, ae, f.","la victoire"],["stella, ae, f.","l'étoile"]],
+ decl:[
+  {lemma:"rosa, ae, f. — la rose",stem:"ros",sg:["rosa","rosa","rosam","rosae","rosae","rosā"],pl:["rosae","rosae","rosas","rosarum","rosis","rosis"]},
+  {lemma:"puella, ae, f. — la jeune fille",stem:"puell",sg:["puella","puella","puellam","puellae","puellae","puellā"],pl:["puellae","puellae","puellas","puellarum","puellis","puellis"]}
+ ],
+ quiz:[
+  {q:"Le sujet du verbe se met au…",a:"nominatif",w:["accusatif","génitif","datif"]},
+  {q:"Le COD se met à l'…",a:"accusatif",w:["ablatif","nominatif","vocatif"]},
+  {q:"Le complément du nom (« la rose <b>de la reine</b> ») se met au…",a:"génitif",w:["datif","accusatif","ablatif"]},
+  {q:"« Je donne une rose <b>à la jeune fille</b> » : quel cas ?",a:"datif",w:["génitif","accusatif","vocatif"]},
+  {q:"« Ô reine ! » : quand on appelle quelqu'un, on utilise le…",a:"vocatif",w:["nominatif","datif","ablatif"]},
+  {q:"Terminaison du génitif singulier de la 1re déclinaison :",a:"-ae",w:["-am","-is","-arum"]},
+  {q:"<i>agricola</i> (le paysan) est de genre…",a:"masculin",w:["féminin","neutre"],ex:"Quelques noms de métiers d'hommes en -a sont masculins : agricola, nauta, poeta."},
+  {q:"<i>Puella rosam amat.</i> Quel mot est le COD ?",a:"rosam",w:["puella","amat"],ex:"<i>rosam</i> est à l'accusatif (-am) : c'est le COD."},
+  {q:"<i>Rosae reginae</i> peut vouloir dire…",a:"les roses de la reine",w:["la reine des roses","la rose et la reine","les reines de la rose"]}
+ ]},
+{id:"decl2",tag:"Miliarium V",icon:"🛡️",name:"2e déclinaison",fr:"dominus, templum : les noms en -us et -um",
+ note:"<p>2e déclinaison : génitif en <b>-i</b>. Les noms en <b>-us</b> sont surtout masculins, les noms en <b>-um</b> sont <b>neutres</b>.</p><p>Règle d'or des neutres : <b>nominatif = vocatif = accusatif</b>, et au pluriel ils se terminent en <b>-a</b> (templum → templa).</p><p>Le vocatif des noms en -us est en <b>-e</b> : <i>domine !</i> (César à Brutus : « Et tu, Brute ? »).</p>",
+ cards:[["dominus, i, m.","le maître"],["servus, i, m.","l'esclave"],["amicus, i, m.","l'ami"],["equus, i, m.","le cheval"],["murus, i, m.","le mur"],["ludus, i, m.","le jeu ; l'école"],["oculus, i, m.","l'œil"],["puer, pueri, m.","le garçon"],["ager, agri, m.","le champ"],["templum, i, n.","le temple"],["bellum, i, n.","la guerre"],["donum, i, n.","le cadeau"],["verbum, i, n.","le mot"],["oppidum, i, n.","la ville fortifiée"]],
+ decl:[
+  {lemma:"dominus, i, m. — le maître",stem:"domin",sg:["dominus","domine","dominum","domini","domino","domino"],pl:["domini","domini","dominos","dominorum","dominis","dominis"]},
+  {lemma:"templum, i, n. — le temple",stem:"templ",sg:["templum","templum","templum","templi","templo","templo"],pl:["templa","templa","templa","templorum","templis","templis"]}
+ ],
+ quiz:[
+  {q:"Génitif singulier de la 2e déclinaison :",a:"-i",w:["-ae","-um","-is"]},
+  {q:"Pour un nom neutre, quels cas sont toujours identiques ?",a:"nominatif, vocatif et accusatif",w:["génitif et datif","datif et ablatif seulement","tous les cas"]},
+  {q:"Le nominatif pluriel d'un neutre se termine par…",a:"-a",w:["-i","-os","-ae"]},
+  {q:"Vocatif de <i>dominus</i> :",a:"domine",w:["dominus","domini","domino"]},
+  {q:"<i>servos</i> est à l'…",a:"accusatif pluriel",w:["accusatif singulier","nominatif pluriel","génitif pluriel"]},
+  {q:"<i>Dominus servum vocat.</i> Qui appelle ?",a:"le maître",w:["l'esclave","les deux","personne"]},
+  {q:"<i>Servum dominus vocat.</i> Qui appelle ?",a:"le maître",w:["l'esclave","on ne peut pas savoir"],ex:"L'ordre des mots ne compte pas : <i>dominus</i> est au nominatif (sujet), <i>servum</i> à l'accusatif (COD)."},
+  {q:"Accusatif singulier de <i>templum</i> :",a:"templum",w:["templi","templo","templa"]},
+  {q:"Quel mot français vient de <i>ludus</i> (jeu) ?",a:"ludique",w:["lumière","lunaire","luxe"]}
+ ]},
+{id:"verba",tag:"Miliarium VI",icon:"⚔️",name:"Verba",fr:"sum et le présent des 1re et 2e conjugaisons",
+ note:"<p>Pas besoin de pronom sujet : la <b>terminaison</b> indique la personne. Terminaisons du présent : <b>-o</b> (ou -m), <b>-s</b>, <b>-t</b>, <b>-mus</b>, <b>-tis</b>, <b>-nt</b>.</p><p>1re conjugaison : infinitif en <b>-are</b> (amo, amas, amare). 2e conjugaison : infinitif en <b>-ēre</b> (habeo, habes, habere). <i>sum</i> (être) est irrégulier.</p>",
+ cards:[["sum, es, esse","être"],["amo, as, are","aimer"],["laboro, as, are","travailler"],["ambulo, as, are","se promener"],["specto, as, are","regarder"],["canto, as, are","chanter"],["pugno, as, are","combattre"],["habito, as, are","habiter"],["voco, as, are","appeler"],["laudo, as, are","louer, faire l'éloge"],["habeo, es, ere","avoir"],["video, es, ere","voir"],["moneo, es, ere","avertir"],["timeo, es, ere","craindre"]],
+ conj:[
+  {inf:"sum, es, esse",fr:"être",forms:["sum","es","est","sumus","estis","sunt"]},
+  {inf:"amo, as, are",fr:"aimer",stem:"am",forms:["amo","amas","amat","amamus","amatis","amant"]},
+  {inf:"laboro, as, are",fr:"travailler",stem:"labor",forms:["laboro","laboras","laborat","laboramus","laboratis","laborant"]},
+  {inf:"habeo, es, ere",fr:"avoir",stem:"hab",forms:["habeo","habes","habet","habemus","habetis","habent"]},
+  {inf:"video, es, ere",fr:"voir",stem:"vid",forms:["video","vides","videt","videmus","videtis","vident"]}
+ ],
+ quiz:[
+  {q:"<i>Puellae in villa ___</i> (être).",a:"sunt",w:["est","sum","estis"]},
+  {q:"<i>Servus ___</i> (travailler).",a:"laborat",w:["laboras","laborant","laboro"]},
+  {q:"<i>ambulatis</i> =",a:"vous vous promenez",w:["nous nous promenons","ils se promènent","tu te promènes"]},
+  {q:"<i>video</i> =",a:"je vois",w:["tu vois","il voit","voir"]},
+  {q:"Terminaison de la 1re personne du pluriel (nous) :",a:"-mus",w:["-tis","-nt","-o"]},
+  {q:"<i>Amicos habemus.</i>",k:"Traduis",a:"Nous avons des amis.",w:["Ils ont des amis.","Nous aimons nos amis.","Vous avez un ami."]},
+  {q:"Pourquoi le latin n'a-t-il pas besoin de pronom sujet ?",a:"La terminaison du verbe indique la personne.",w:["Parce que le sujet est toujours à la fin.","Parce que le latin n'a pas de sujet.","Parce que les pronoms sont interdits."]},
+  {q:"<i>Poeta reginam laudat.</i>",k:"Traduis",a:"Le poète fait l'éloge de la reine.",w:["La reine fait l'éloge du poète.","Les poètes louent les reines.","Le poète appelle la reine."]}
+ ]},
+{id:"versio",tag:"Miliarium VII",icon:"🔍",name:"Versio",fr:"Traduire des phrases",
+ note:"<p><b>Méthode pour traduire :</b></p><p>1. Repère le <b>verbe</b> (souvent à la fin) et sa personne.</p><p>2. Cherche le <b>sujet</b> au nominatif (il s'accorde avec le verbe).</p><p>3. Cherche le <b>COD</b> à l'accusatif (-am, -um, -as, -os).</p><p>4. Traduis dans l'ordre du français : sujet + verbe + compléments.</p>",
+ quiz:[
+  {q:"<i>Puella rosam amat.</i>",k:"Traduis",a:"La jeune fille aime la rose.",w:["La rose aime la jeune fille.","Les jeunes filles aiment la rose.","La jeune fille aime les roses."]},
+  {q:"<i>Rosam puella amat.</i>",k:"Traduis",a:"La jeune fille aime la rose.",w:["La rose aime la jeune fille.","La rose de la jeune fille est belle.","La jeune fille est une rose."],ex:"Même sens que la phrase précédente : ce sont les terminaisons qui comptent, pas l'ordre."},
+  {q:"<i>Dominus servum vocat.</i>",k:"Traduis",a:"Le maître appelle l'esclave.",w:["L'esclave appelle le maître.","Les maîtres appellent les esclaves.","Le maître est un esclave."]},
+  {q:"<i>Servi in villa laborant.</i>",k:"Traduis",a:"Les esclaves travaillent dans la villa.",w:["L'esclave travaille dans la villa.","Les esclaves habitent la villa.","Le maître travaille dans la villa."]},
+  {q:"<i>Agricola filiam vocat.</i>",k:"Traduis",a:"Le paysan appelle sa fille.",w:["La fille appelle le paysan.","Les paysans appellent leurs filles.","Le paysan aime sa fille."]},
+  {q:"<i>Pueri in horto ambulant.</i>",k:"Traduis",a:"Les garçons se promènent dans le jardin.",w:["Le garçon se promène dans le jardin.","Les garçons regardent le jardin.","Les filles se promènent dans le jardin."]},
+  {q:"Dans <i>Servus dominam spectat</i>, quel mot est le sujet ?",a:"servus",w:["dominam","spectat"]},
+  {q:"Dans <i>Dominum puellae vident</i>, quel mot est le COD ?",a:"dominum",w:["puellae","vident"],ex:"<i>dominum</i> est à l'accusatif. <i>puellae</i> est un nominatif pluriel (sujet de <i>vident</i>, 3e pers. du pluriel) : « Les jeunes filles voient le maître. »"},
+  {q:"<i>Nautae stellas spectant.</i>",k:"Traduis",a:"Les marins regardent les étoiles.",w:["Le marin regarde l'étoile.","Les étoiles regardent les marins.","Les marins chantent sous les étoiles."]},
+  {q:"<i>Magister discipulos monet.</i>",k:"Traduis",a:"Le maître avertit les élèves.",w:["Les élèves avertissent le maître.","Le maître voit les élèves.","L'élève avertit le maître."]}
+ ]},
+{id:"dei",tag:"Miliarium VIII",icon:"⚡",name:"Dei & mythi",fr:"Les dieux et les mythes",
+ note:"<p>Les Romains ont repris beaucoup de dieux grecs en leur donnant un nom latin : <b>Zeus</b> devient <b>Jupiter</b>, Athéna devient Minerve…</p><p>Chaque dieu a son domaine et ses attributs (objets ou animaux qui permettent de le reconnaître).</p>",
+ cards:[["Iuppiter","Zeus · roi des dieux, la foudre",{alt:["Jupiter"]}],["Iuno","Héra · reine des dieux, le mariage",{alt:["Junon"]}],["Neptunus","Poséidon · la mer, le trident",{alt:["Neptune"]}],["Pluto","Hadès · les Enfers",{alt:["Pluton"]}],["Mars","Arès · la guerre"],["Venus","Aphrodite · l'amour, la beauté",{alt:["Vénus"]}],["Minerva","Athéna · la sagesse, la chouette",{alt:["Minerve"]}],["Apollo","Apollon · les arts, la lumière",{alt:["Apollon"]}],["Diana","Artémis · la chasse, la lune",{alt:["Diane"]}],["Mercurius","Hermès · le messager, le commerce",{alt:["Mercure"]}],["Vulcanus","Héphaïstos · le feu, la forge",{alt:["Vulcain"]}],["Ceres","Déméter · les moissons",{alt:["Cérès"]}],["Bacchus","Dionysos · la vigne, la fête"],["Vesta","Hestia · le foyer"]],
+ quiz:[
+  {q:"Quel dieu porte un trident ?",a:"Neptune",w:["Mars","Apollon","Vulcain"]},
+  {q:"La chouette est l'animal de…",a:"Minerve",w:["Junon","Diane","Vénus"]},
+  {q:"Qui porte des sandales ailées ?",a:"Mercure",w:["Jupiter","Mars","Pluton"]},
+  {q:"Minerve est née…",a:"tout armée de la tête de Jupiter",w:["de l'écume de la mer","d'un œuf d'or","dans une forêt de Gaule"]},
+  {q:"Selon la légende, Mars est le père de…",a:"Romulus et Remus",w:["Hercule","Énée","Jules César"]},
+  {q:"Quel dieu donne son nom au mois de mars ?",a:"Mars",w:["Mercure","Junon","Janus"],ex:"Et <i>Iunius</i> (juin) vient de Junon, <i>Ianuarius</i> (janvier) de Janus, le dieu aux deux visages."},
+  {q:"Le mot « volcan » vient de…",a:"Vulcain",w:["Vénus","Vesta","Bacchus"]},
+  {q:"Le mot « céréale » vient de…",a:"Cérès",w:["Cupidon","Mercure","Diane"]},
+  {q:"Énée, héros de Troie, est le fils de…",a:"Vénus",w:["Minerve","Junon","Diane"],ex:"Les Romains se disaient descendants d'Énée, donc de la déesse Vénus."}
+ ]},
+{id:"numeri",tag:"Miliarium IX",icon:"🔢",name:"Numeri",fr:"Les chiffres romains",roman:true,
+ note:"<p>Sept symboles : <b>I</b> = 1, <b>V</b> = 5, <b>X</b> = 10, <b>L</b> = 50, <b>C</b> = 100, <b>D</b> = 500, <b>M</b> = 1000.</p><p>Un symbole placé <b>après</b> un plus grand s'ajoute (VI = 6). Placé <b>avant</b>, il se retranche (IV = 4, IX = 9, XL = 40, XC = 90, CM = 900).</p><p>On ne répète jamais un symbole plus de <b>trois fois</b> : 40 = XL, pas XXXX. Les Romains n'avaient pas de zéro.</p>",
+ cards:[["I","1",{key:"I"}],["V","5",{key:"V"}],["X","10",{key:"X"}],["L","50",{key:"L"}],["C","100",{key:"C"}],["D","500",{key:"D"}],["M","1000",{key:"M"}],["IV","4",{key:"IV"}],["IX","9",{key:"IX"}],["XL","40",{key:"XL"}]],
+ quiz:[
+  {q:"IV =",a:"4",w:["6","5","3"],ex:"Un petit symbole avant un grand se retranche : IV = 5 − 1."},
+  {q:"On ne répète jamais un symbole plus de…",a:"3 fois",w:["2 fois","4 fois","5 fois"]},
+  {q:"L'année 2026 s'écrit…",a:"MMXXVI",w:["MMXXIV","MMXVI","MCMXXVI"]},
+  {q:"Comment écrit-on 9 ?",a:"IX",w:["VIIII","XI","VIV"]},
+  {q:"Les Romains avaient-ils un chiffre zéro ?",a:"Non",w:["Oui, c'était le O","Oui, c'était le N","Seulement pour les dates"]},
+  {q:"Où voit-on encore des chiffres romains ?",a:"horloges, siècles, noms de rois",w:["plaques d'immatriculation","numéros de téléphone","codes-barres"],ex:"Louis XIV, le XXIe siècle, le cadran de Big Ben…"},
+  {q:"Le XXIe siècle, c'est le…",a:"21e siècle",w:["19e siècle","12e siècle","20e siècle"]},
+  {q:"MDCCLXXXIX = (année de la Révolution française)",a:"1789",w:["1798","1689","1889"]}
+ ]},
+{id:"heres",tag:"Miliarium X",icon:"🔗",name:"Hereditas",fr:"Le latin dans le français",
+ note:"<p>Près de 80 % des mots français viennent du latin ! Connaître le latin aide à comprendre (et à écrire) des mots difficiles : <i>aqua</i> → aquarium, aquatique.</p><p>On utilise aussi des expressions latines telles quelles : <i>et cetera</i>, <i>post-scriptum</i>, <i>curriculum vitae</i>…</p>",
+ cards:[["Carpe diem","Cueille le jour (profite du moment présent)",{key:"Carpe diem"}],["Veni, vidi, vici","Je suis venu, j'ai vu, j'ai vaincu (César)",{key:"Veni, vidi, vici"}],["Alea iacta est","Le sort en est jeté (César)",{key:"Alea iacta est",alt:["Alea jacta est"]}],["Errare humanum est","L'erreur est humaine",{key:"Errare humanum est"}],["Mens sana in corpore sano","Un esprit sain dans un corps sain",{key:"Mens sana in corpore sano"}],["Et cetera","et les autres choses (etc.)",{key:"Et cetera"}],["Post scriptum","écrit après (P.-S.)",{key:"Post scriptum"}],["Curriculum vitae","le déroulement de la vie (CV)",{key:"Curriculum vitae"}],["Ex aequo","à égalité",{key:"Ex aequo"}],["Ave !","Salut ! (pour saluer)",{key:"Ave"}]],
+ quiz:[
+  {q:"Quel mot français vient de <i>aqua</i> (eau) ?",a:"aquarium",w:["acquérir","aquilin","acajou"],ex:"Aquarium, aquatique, aqueduc, aquarelle… (aquilin vient de <i>aquila</i>, l'aigle !)"},
+  {q:"Quel mot vient de <i>equus</i> (cheval) ?",a:"équitation",w:["équipe","équateur","équilibre"]},
+  {q:"Quel mot vient de <i>oculus</i> (œil) ?",a:"oculiste",w:["occulte","octobre","océan"]},
+  {q:"Quel mot vient de <i>schola</i> (école) ?",a:"scolaire",w:["scorpion","sculpture","scooter"]},
+  {q:"Quel mot vient de <i>terra</i> (terre) ?",a:"terrestre",w:["terrible","terminer","terreur"]},
+  {q:"Quel mot vient de <i>puer</i> (garçon, enfant) ?",a:"puéril",w:["pur","purée","pyramide"]},
+  {q:"Quel mot vient de <i>bellum</i> (guerre) ?",a:"belliqueux",w:["belle","belette","bélier"]},
+  {q:"Quel mot vient de <i>video</i> (je vois) ?",a:"vidéo",w:["vide","vider","vigne"]},
+  {q:"« Veni, vidi, vici » a été prononcé par…",a:"Jules César",w:["Romulus","Néron","Cicéron"]},
+  {q:"« Alea iacta est » veut dire…",a:"Le sort en est jeté.",w:["L'erreur est humaine.","Profite du jour.","Salut à toi."]}
+ ]}
+]}
+;
+</script>
+<script>
+/* ===== utils ===== */
+const $=s=>document.querySelector(s);
+const app=$("#app");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.random()*a.length|0];
+const uniq=a=>[...new Set(a)];
+function norm(s){return String(s).toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+  .normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[.,!?;:'"«»()\-–…¿¡]/g," ").replace(/\s+/g," ").trim()}
+
+/* ===== storage ===== */
+let store={xp:0,best:{},times:{}};
+try{Object.assign(store,JSON.parse(localStorage.getItem(C.key)||"{}"))}catch(e){}
+function save(){try{localStorage.setItem(C.key,JSON.stringify(store))}catch(e){}}
+function level(xp){let cur=C.levels[0],next=C.levels[1]||null;C.levels.forEach((l,i)=>{if(xp>=l[0]){cur=l;next=C.levels[i+1]||null}});return{cur,next}}
+
+/* ===== audio ===== */
+let audioOn=true;try{audioOn=localStorage.getItem(C.key+"-audio")!=="0"}catch(e){}
+const synth=window.speechSynthesis;let voices=[];
+function lv(){if(synth)voices=synth.getVoices()}
+if(synth){lv();synth.onvoiceschanged=lv}
+function voice(){for(const p of C.voiceLangs){const l=voices.filter(v=>v.lang.replace("_","-").toLowerCase().startsWith(p.toLowerCase()));const n=l.find(v=>/google|natural|online|premium|enhanced/i.test(v.name));if(n||l[0])return n||l[0]}return null}
+function speak(t,rate){if(!audioOn||!synth||!t)return;synth.cancel();const u=new SpeechSynthesisUtterance(t);const v=voice();if(v)u.voice=v;u.lang=C.voiceLangs[0];u.rate=rate||C.rate;synth.speak(u)}
+function hush(){if(synth)synth.cancel()}
+let ac;
+function actx(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==="suspended")ac.resume();return ac}
+function tone(f,t0,d,type="sine",g=.12,f2){const a=actx();if(!a||!audioOn)return;const o=a.createOscillator(),gn=a.createGain();o.type=type;o.frequency.setValueAtTime(f,a.currentTime+t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,a.currentTime+t0+d);gn.gain.setValueAtTime(g,a.currentTime+t0);gn.gain.exponentialRampToValueAtTime(.001,a.currentTime+t0+d);o.connect(gn).connect(a.destination);o.start(a.currentTime+t0);o.stop(a.currentTime+t0+d+.05)}
+const sfx={good(){tone(660,0,.12);tone(990,.09,.2)},bad(){tone(220,0,.22,"triangle",.12,150)},flip(){tone(500,0,.06,"triangle",.08,720)},combo(){tone(1320,0,.12,"triangle",.08)},win(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.12,.28,"triangle",.12))},tap(){tone(700,0,.05,"triangle",.06)}};
+
+/* ===== confetti ===== */
+const cv=$("#confetti"),cx=cv.getContext("2d");let parts=[],raf=null;
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function confetti(n=140){if(reduce)return;cv.width=innerWidth;cv.height=innerHeight;for(let i=0;i<n;i++)parts.push({x:innerWidth/2+(Math.random()-.5)*240,y:innerHeight*.35,vx:(Math.random()-.5)*13,vy:-Math.random()*13-4,r:Math.random()*6+4,c:C.confetti[i%C.confetti.length],a:Math.random()*6,l:130});if(!raf)stepC()}
+function stepC(){cx.clearRect(0,0,cv.width,cv.height);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.42;p.a+=.2;p.l--;cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.fillStyle=p.c;cx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);cx.restore()});parts=parts.filter(p=>p.l>0&&p.y<cv.height+20);raf=parts.length?requestAnimationFrame(stepC):(cx.clearRect(0,0,cv.width,cv.height),null)}
+
+/* ===== data prep ===== */
+const stripArt=t=>t.replace(/^(der|die|das)\s+/i,"");
+C.units.forEach((u,ui)=>{u.idx=ui;u.cards=(u.cards||[]).map(c=>{const[t,fr,o={}]=c;const base=o.key||(C.lemma?t.split(",")[0].trim():t);return{t,fr,g:o.g,say:o.say||base.replace(/\s*\(.*?\)\s*/g," ").trim(),ans:[base,...(o.alt||[])],noun:o.g?stripArt(t):null}})});
+const missH=c=>`<b>${esc(c.t)}</b> — ${esc(c.fr)}`;
+
+/* ===== navigation ===== */
+let keyH=null,timers=[];
+document.addEventListener("keydown",e=>{if(keyH)keyH(e)});
+function nav(fn){timers.forEach(t=>{clearTimeout(t);clearInterval(t)});timers=[];keyH=null;hush();fn();window.scrollTo(0,0)}
+
+const MODES={
+  lex:u=>true,
+  flash:u=>u.cards.length>=4,
+  qcm:u=>u.cards.length>=4,
+  type:u=>u.cards.length>=4,
+  match:u=>u.cards.length>=6,
+  article:u=>u.cards.filter(c=>c.g).length>=5,
+  conj:u=>!!u.conj,
+  decl:u=>!!u.decl,
+  quiz:u=>!!u.quiz,
+  roman:u=>!!u.roman,
+};
+const avail=u=>Object.keys(MODES).filter(k=>MODES[k](u));
+const scored=u=>avail(u).filter(k=>k!=="lex");
+const doneCount=u=>scored(u).filter(k=>store.best[u.id+":"+k]).length;
+
+/* ===== screens ===== */
+function home(){
+  const{cur,next}=level(store.xp);
+  const pct=next?Math.round((store.xp-cur[0])/(next[0]-cur[0])*100):100;
+  const nextU=C.units.find(u=>doneCount(u)<scored(u).length)||C.units[C.units.length-1];
+  app.innerHTML=`<header class="hdr">${C.headerHTML}
+    <div class="who"><div><div class="lvl">${esc(cur[1])}</div><div class="xpbar"><i style="width:${pct}%"></i></div>
+    <small>${store.xp} XP${next?` · prochain grade : ${esc(next[1])} à ${next[0]} XP`:" · grade maximum !"}</small></div>
+    <button class="icon" id="snd" aria-label="Son">${audioOn?"🔊":"🔇"}</button></div></header>
+    <p class="nexthint">${C.nextLabel} <b>${esc(nextU.name)}</b></p>
+    <ol class="route">${C.units.map(u=>{const d=doneCount(u),t=scored(u).length;return `<li><button class="stop${u===nextU?" is-next":""}${d===t?" is-done":""}" data-u="${u.idx}">
+      <span class="stop-ic">${u.icon}</span><span class="stop-tag">${esc(u.tag)}</span>
+      <span class="stop-main"><b>${esc(u.name)}</b><small>${esc(u.fr)}</small></span>
+      <span class="stop-prog">${d===t?"✓ ":""}${d}/${t}</span></button></li>`}).join("")}</ol>
+    <p class="foot">${C.footHTML}</p>`;
+  $("#snd").onclick=e=>{audioOn=!audioOn;try{localStorage.setItem(C.key+"-audio",audioOn?"1":"0")}catch(_){}e.currentTarget.textContent=audioOn?"🔊":"🔇";if(audioOn){actx();sfx.tap()}else hush()};
+  app.querySelectorAll(".stop").forEach(b=>b.onclick=()=>{actx();sfx.tap();nav(()=>unitView(C.units[b.dataset.u]))});
+}
+
+function unitView(u){
+  app.innerHTML=`<button class="back" id="bk">← ${C.homeLabel}</button>
+   <div class="uhead"><span class="stop-tag">${esc(u.tag)}</span><h2>${u.icon} ${esc(u.name)}</h2><small>${esc(u.fr)}</small></div>
+   <div class="modes">${avail(u).map(k=>{const m=C.modes[k];const b=store.best[u.id+":"+k]||0;
+     return `<button class="mode${k==="lex"?" first":""}" data-k="${k}"><span class="mode-ic">${m[2]}</span><b>${esc(m[0])}</b><small>${esc(m[1])}</small>
+     <span class="mstars">${k==="lex"?"<small>Commence ici</small>":"★".repeat(b)+'<span class="dim">'+"★".repeat(3-b)+"</span>"}</span></button>`}).join("")}</div>`;
+  $("#bk").onclick=()=>nav(home);
+  app.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{actx();sfx.tap();nav(()=>RUN[b.dataset.k](u))});
+}
+
+function lexique(u){
+  const cases=C.cases||[];
+  const hl=(f,stem)=>stem&&f.startsWith(stem)?`${esc(stem)}<b>${esc(f.slice(stem.length))}</b>`:`<b>${esc(f)}</b>`;
+  app.innerHTML=`<button class="back" id="bk">← ${esc(u.name)}</button>
+  <article class="lex"><h2>${u.icon} ${esc(u.name)}</h2>
+   ${u.note?`<div class="note">${u.note}</div>`:""}
+   ${u.cards.some(c=>c.g)&&C.genderLegend?`<div class="legend">${C.genderLegend}</div>`:""}
+   ${u.cards.length?`<div class="tblwrap"><table><tbody>${u.cards.map((c,i)=>`<tr><td style="width:44px"><button class="mini" data-s="${i}" aria-label="Écouter">🔊</button></td><td class="tw ${c.g?"g-"+c.g:""}">${esc(c.t)}</td><td>${esc(c.fr)}</td></tr>`).join("")}</tbody></table></div>`:""}
+   ${u.conj?`<div class="tables">${u.conj.map(v=>`<div class="tbl"><h3>${esc(v.inf)} <small>${esc(v.fr)}</small></h3><table>${v.forms.map((f,p)=>`<tr><td><small>${esc(C.pronouns[p])}</small></td><td>${hl(f,v.stem)}</td></tr>`).join("")}</table></div>`).join("")}</div>`:""}
+   ${u.decl?`<div class="tables">${u.decl.map(d=>`<div class="tbl"><h3>${esc(d.lemma)}</h3><div class="tblwrap"><table><tr><th>cas</th><th>singulier</th><th>pluriel</th></tr>${cases.map((cs,i)=>`<tr><td><small>${cs}</small></td><td>${hl(d.sg[i],d.stem)}</td><td>${hl(d.pl[i],d.stem)}</td></tr>`).join("")}</table></div></div>`).join("")}</div>`:""}
+  </article>
+  <div class="row"><button class="btn primary" id="go">C'est compris : aux épreuves →</button></div>`;
+  $("#bk").onclick=()=>nav(()=>unitView(u));
+  $("#go").onclick=()=>nav(()=>unitView(u));
+  app.querySelectorAll(".mini").forEach(b=>b.onclick=()=>speak(u.cards[b.dataset.s].say));
+  store.best[u.id+":lex"]=1;save();
+}
+
+/* ===== session ===== */
+function session(u,mode,total){
+  return{u,mode,total,n:0,right:0,pts:0,combo:0,missed:[],
+    mark(ok,miss,assisted){this.n++;if(ok){this.right++;if(assisted){this.combo=0;this.pts+=5}else{this.combo++;this.pts+=10+2*Math.min(this.combo,5);if(this.combo>=3)sfx.combo()}sfx.good()}else{this.combo=0;sfx.bad();if(miss&&!this.missed.includes(miss))this.missed.push(miss)}upd(this)}};
+}
+function upd(S){const pg=$("#pg"),pt=$("#pts"),cb=$("#cb");if(pg)pg.style.width=Math.min(100,S.n/S.total*100)+"%";if(pt)pt.textContent=S.pts;if(cb)cb.textContent=S.combo>=2?`×${Math.min(S.combo,5)} 🔥`:""}
+function stage(S,html){
+  app.innerHTML=`<div class="gtop"><button class="icon" id="quit" aria-label="Quitter">✕</button><div class="prog"><i id="pg"></i></div><span class="pts">⭐ <b id="pts">0</b></span><span class="combo" id="cb"></span></div>${html}`;
+  $("#quit").onclick=()=>nav(()=>unitView(S.u));upd(S);
+}
+function results(S,replay){
+  const acc=S.total?S.right/S.total:1,st=acc>=.9?3:acc>=.7?2:1;
+  const key=S.u.id+":"+S.mode,before=level(store.xp).cur;
+  store.best[key]=Math.max(store.best[key]||0,st);store.xp+=S.pts;save();
+  const after=level(store.xp).cur;
+  sfx.win();if(st===3)confetti();
+  app.innerHTML=`<div class="res"><div class="res-st">${"★".repeat(st)}<span class="dim">${"★".repeat(3-st)}</span></div>
+    <h2>${esc(C.resTitles[st-1])}</h2><p style="margin:0">${S.right} / ${S.total} réussies · <b>+${S.pts} XP</b>${S.extra?"<br>"+S.extra:""}</p>
+    ${after!==before?`<div class="lvlup">Nouveau grade : ${esc(after[1])} !</div>`:""}
+    ${S.missed.length?`<div class="miss"><h3>À revoir</h3><ul>${S.missed.map(m=>`<li>${m}</li>`).join("")}</ul></div>`:`<p style="margin:0">Aucune erreur. ${esc(C.perfect)}</p>`}
+    <div class="row"><button class="btn primary" id="ag">↻ Rejouer</button><button class="btn" id="un">Autres épreuves</button></div></div>`;
+  $("#ag").onclick=()=>nav(replay);$("#un").onclick=()=>nav(()=>unitView(S.u));
+  keyH=e=>{if(e.key==="Enter")nav(replay)};
+}
+
+/* ===== choice runner ===== */
+function runChoice(u,mode,gen){
+  const qs=gen(),S=session(u,mode,qs.length);let i=0;
+  function show(){
+    const q=qs[i];let done=false;
+    const opts=q.fixed?q.options:shuffle(q.options);
+    stage(S,`<div class="qcard">${q.kicker?`<div class="kicker">${q.kicker}</div>`:""}<div class="prompt${q.small?" sm":""}">${q.prompt}</div>${q.sub?`<div class="sub">${q.sub}</div>`:""}${q.say?`<button class="say" id="say">🔊 Écouter</button>`:""}</div>
+     <div class="opts${q.fixed?" fixed":""}">${opts.map((o,k)=>`<button class="opt ${q.cls?q.cls[o]||"":""}" data-k="${k}"><kbd>${k+1}</kbd><span>${esc(o)}</span></button>`).join("")}</div><div class="fb" id="fb"></div>`);
+    if(q.say){$("#say").onclick=()=>speak(q.say);if(q.autoSay)speak(q.say)}
+    const btns=[...app.querySelectorAll(".opt")];
+    let go=()=>{};
+    const choose=k=>{if(done)return;done=true;const ok=opts[k]===q.correct;
+      btns.forEach((b,j)=>{b.disabled=true;if(opts[j]===q.correct)b.classList.add("ok")});if(!ok)btns[k].classList.add("bad");
+      S.mark(ok,q.miss);if(q.after)speak(q.after);
+      $("#fb").innerHTML=`<div class="fbmsg ${ok?"good":"oops"}">${ok?esc(pick(C.praise)):"La bonne réponse : "+esc(q.correct)}${q.explain?`<p>${q.explain}</p>`:""}</div><button class="btn primary" id="nx">Suivant →</button>`;
+      go=()=>{i++;nav(()=>{}) ;i<qs.length?show():results(S,()=>runChoice(u,mode,gen))};
+      $("#nx").onclick=go;$("#nx").focus({preventScroll:true});
+      if(ok&&!q.explain)timers.push(setTimeout(go,q.after?1300:850));
+    };
+    btns.forEach((b,k)=>b.onclick=()=>choose(k));
+    keyH=e=>{if(!done&&/^[1-9]$/.test(e.key)&&+e.key<=btns.length)choose(+e.key-1)};
+  }
+  show();
+}
+
+/* ===== typing runner ===== */
+function runType(u,mode,gen){
+  const qs=gen(),S=session(u,mode,qs.length);let i=0;
+  function show(){
+    const c=qs[i];let done=false,hints=0;
+    stage(S,`<div class="qcard"><div class="kicker">${C.typeKicker}</div><div class="prompt">${esc(c.fr)}</div></div>
+     <form class="typein" id="tf" autocomplete="off"><input id="ti" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Ta réponse" placeholder="${esc(C.typePh)}"><button class="btn primary" type="submit">Valider</button></form>
+     ${C.chars.length?`<div class="chars">${C.chars.map(ch=>`<button type="button" class="ch" data-c="${ch}">${ch}</button>`).join("")}</div>`:""}
+     <div class="row"><button class="btn ghost" id="hint" type="button">💡 Indice</button><button class="btn ghost" id="skip" type="button">Je ne sais pas</button></div>
+     <div class="fb" id="fb"></div>`);
+    const inp=$("#ti");inp.focus();
+    app.querySelectorAll(".ch").forEach(b=>b.onclick=()=>{if(done)return;const s=inp.selectionStart??inp.value.length,e=inp.selectionEnd??s;inp.setRangeText(b.dataset.c,s,e,"end");inp.focus()});
+    $("#hint").onclick=()=>{if(done)return;hints++;const a=c.ans[0];inp.value=a.slice(0,Math.min(a.length-1,hints*2));inp.focus()};
+    const go=()=>{i++;nav(()=>{});i<qs.length?show():results(S,()=>runType(u,mode,gen))};
+    const check=val=>{
+      if(done)return;done=true;
+      const n=norm(val);const ok=n.length>0&&c.ans.some(a=>norm(a)===n);let tip="";
+      if(ok&&C.caseTip){const ty=val.trim().replace(/[.!?]+$/,""),ta=c.ans[0].replace(/[.!?]+$/,"");if(ty!==ta&&ty.toLowerCase()===ta.toLowerCase())tip=C.caseTip}
+      if(ok&&C.chars.length&&/[äöüß]/i.test(c.ans[0])&&!/[äöüß]/i.test(val))tip=(tip?tip+" ":"")+"Astuce : utilise les boutons ä ö ü ß.";
+      if(!ok&&c.noun&&norm(val)===norm(c.noun))tip="Presque ! Il manque l'article : on apprend toujours le nom avec der, die ou das.";
+      S.mark(ok,missH(c),hints>0);inp.disabled=true;speak(c.say);
+      $("#fb").innerHTML=`<div class="fbmsg ${ok?"good":"oops"}">${ok?esc(pick(C.praise))+(c.ans[0]!==val.trim()?` · ${esc(c.t)}`:""):"La bonne réponse : "+esc(c.t)}${tip?`<p>${tip}</p>`:""}</div><button class="btn primary" id="nx">Suivant →</button>`;
+      $("#nx").onclick=go;timers.push(setTimeout(()=>{keyH=e=>{if(e.key==="Enter"){e.preventDefault();go()}}},50));
+    };
+    $("#tf").onsubmit=e=>{e.preventDefault();check(inp.value)};
+    $("#skip").onclick=()=>check("");
+  }
+  show();
+}
+
+/* ===== flashcards ===== */
+function flash(u,dirArg){
+  let dir=dirArg||"t";const total=u.cards.length;let queue=shuffle(u.cards);const known=new Set(u.cards);
+  const S=session(u,"flash",total);
+  function show(){
+    if(!queue.length){S.right=known.size;S.n=total;results(S,()=>flash(u,dir));return}
+    const c=queue[0];let flipped=false;
+    const fT=dir==="t"?c.t:c.fr,bT=dir==="t"?c.fr:c.t;
+    stage(S,`<div class="flipwrap"><button class="flip" id="fc" aria-label="Retourner la carte"><span class="face front"><small>${dir==="t"?C.langLabel:"français"}</small><b>${esc(fT)}</b><em>Touche la carte (ou Espace) pour la retourner</em></span><span class="face back"><small>${dir==="t"?"français":C.langLabel}</small><b>${esc(bT)}</b></span></button></div>
+      <div class="row" id="judge" style="visibility:hidden"><button class="btn bad" id="no">✗ À revoir (←)</button><button class="btn good" id="yes">✓ Je savais (→)</button></div>
+      <div class="row"><button class="btn ghost" id="dir">⇄ Sens : ${dir==="t"?C.langShort+" → FR":"FR → "+C.langShort}</button><button class="btn ghost" id="sy">🔊 Écouter</button></div>
+      <p class="left">${queue.length} carte${queue.length>1?"s":""} restante${queue.length>1?"s":""}</p>`);
+    S.n=total-queue.length;upd(S);
+    if(dir==="t")speak(c.say);
+    const flip=()=>{flipped=!flipped;$("#fc").classList.toggle("on",flipped);$("#judge").style.visibility="visible";sfx.flip();if(dir!=="t"&&flipped)speak(c.say)};
+    const yes=()=>{if(!flipped)return;queue.shift();if(known.has(c))S.pts+=4;upd(S);show()};
+    const no=()=>{if(!flipped)return;known.delete(c);const m=missH(c);if(!S.missed.includes(m))S.missed.push(m);queue.shift();queue.splice(Math.min(3,queue.length),0,c);sfx.bad();show()};
+    $("#fc").onclick=flip;$("#yes").onclick=yes;$("#no").onclick=no;
+    $("#sy").onclick=()=>speak(c.say);
+    $("#dir").onclick=()=>nav(()=>flash(u,dir==="t"?"f":"t"));
+    keyH=e=>{if(e.key===" "){e.preventDefault();flip()}else if(e.key==="ArrowRight")yes();else if(e.key==="ArrowLeft")no()};
+  }
+  show();
+}
+
+/* ===== match ===== */
+function match(u){
+  const set=shuffle(u.cards).slice(0,6),S=session(u,"match",set.length);let sel=null,found=0,errs=0;const t0=performance.now();
+  const L=shuffle(set),R=shuffle(set);
+  stage(S,`<p class="kick2">Associe chaque mot à sa traduction · <span id="clock">0 s</span></p>
+    <div class="match"><div class="col">${L.map(c=>`<button class="mt l" data-i="${set.indexOf(c)}" data-s="l">${esc(c.t)}</button>`).join("")}</div>
+    <div class="col">${R.map(c=>`<button class="mt r" data-i="${set.indexOf(c)}" data-s="r">${esc(c.fr)}</button>`).join("")}</div></div>`);
+  timers.push(setInterval(()=>{const k=$("#clock");if(k)k.textContent=Math.round((performance.now()-t0)/1000)+" s"},500));
+  app.querySelectorAll(".mt").forEach(b=>b.onclick=()=>{
+    if(b.classList.contains("done"))return;
+    const side=b.dataset.s,i=+b.dataset.i;
+    if(side==="l")speak(set[i].say);
+    if(!sel||sel.side===side){if(sel)sel.el.classList.remove("sel");sel={side,i,el:b};b.classList.add("sel");return}
+    if(sel.i===i){[sel.el,b].forEach(x=>{x.classList.remove("sel");x.classList.add("done");x.disabled=true});found++;S.mark(true);S.n=found;upd(S);
+      if(found===set.length){const sec=Math.round((performance.now()-t0)/1000);const k=u.id;const rec=store.times[k];const isRec=!rec||sec<rec;if(isRec)store.times[k]=sec;save();
+        S.total=set.length+errs;S.right=found;S.extra=`Temps : ${sec} s${isRec?" · nouveau record !":` · record : ${rec} s`}`;timers.push(setTimeout(()=>results(S,()=>match(u)),500))}}
+    else{errs++;const li=sel.side==="l"?sel.i:i;S.mark(false,missH(set[li]));S.n=found;upd(S);const a=sel.el;[a,b].forEach(x=>{x.classList.remove("sel");x.classList.add("bad")});timers.push(setTimeout(()=>{a.classList.remove("bad");b.classList.remove("bad")},400))}
+    sel=null;
+  });
+}
+
+/* ===== generators ===== */
+function genQcm(u){const cs=shuffle(u.cards).slice(0,Math.min(10,u.cards.length));
+  return cs.map((c,i)=>{const o=shuffle(u.cards.filter(x=>x!==c));
+    if(i%2===0)return{kicker:C.qcmA,prompt:esc(c.t),say:c.say,autoSay:true,options:uniq([c.fr,...o.map(x=>x.fr)]).slice(0,4),correct:c.fr,miss:missH(c)};
+    return{kicker:C.qcmB,prompt:esc(c.fr),options:uniq([c.t,...o.map(x=>x.t)]).slice(0,4),correct:c.t,after:c.say,miss:missH(c)}})}
+function genType(u){return shuffle(u.cards).slice(0,Math.min(8,u.cards.length))}
+function genArticle(u){const A={m:"der",f:"die",n:"das",pl:"die"};
+  return shuffle(u.cards.filter(c=>c.g)).slice(0,10).map(c=>({kicker:"Quel article ?",prompt:esc(c.noun),sub:esc(c.fr),options:["der","die","das"],fixed:true,cls:{der:"art-m",die:"art-f",das:"art-n"},correct:A[c.g],after:c.t,explain:c.g==="pl"?"C'est un pluriel : au pluriel, l'article est toujours <b>die</b>.":"",miss:missH(c)}))}
+function genConj(u){const seen=new Set(),out=[];let guard=0;
+  while(out.length<10&&guard++<200){const v=pick(u.conj),p=Math.random()*6|0,k=v.inf+p;if(seen.has(k))continue;seen.add(k);const correct=v.forms[p];
+    let pool=uniq([correct,...shuffle(v.forms)]);if(pool.length<4)pool=uniq([...pool,...shuffle(u.conj.flatMap(x=>x.forms))]);
+    out.push({kicker:`${esc(v.inf)} — ${esc(v.fr)}`,prompt:`<span class="pron">${esc(C.pronouns[p])}</span> <span class="blank">…</span>`,options:pool.slice(0,4),correct,after:(C.pronSay?C.pronSay[p]+" ":"")+correct,miss:`<b>${esc(C.pronouns[p])} → ${esc(correct)}</b> (${esc(v.inf)})`})}
+  return out}
+function genDecl(u){const out=[],seen=new Set();let guard=0;
+  const lab=(n,c)=>`${C.cases[c]} ${n==="sg"?"singulier":"pluriel"}`;
+  while(out.length<10&&guard++<300){const d=pick(u.decl),num=Math.random()<.5?"sg":"pl",ci=Math.random()*6|0,k=d.lemma+num+ci;if(seen.has(k))continue;seen.add(k);
+    const form=d[num][ci],all=[...d.sg,...d.pl],cnt=all.filter(x=>x===form).length,name=d.lemma.split(",")[0];
+    if(Math.random()<.4&&cnt===1){const labels=[];["sg","pl"].forEach(n=>[0,1,2,3,4,5].forEach(c=>{if(d[n][c]!==form)labels.push(lab(n,c))}));
+      out.push({kicker:"Quel est le cas ?",prompt:`<i>${esc(form)}</i>`,sub:esc(d.lemma),options:[lab(num,ci),...shuffle(labels).slice(0,3)],correct:lab(num,ci),after:form,miss:`<i>${esc(form)}</i> = ${lab(num,ci)}`})}
+    else out.push({kicker:esc(d.lemma),prompt:`${esc(name)} → <span class="pron">${lab(num,ci)}</span>`,small:true,options:uniq([form,...shuffle(all)]).slice(0,4),correct:form,after:form,miss:`${esc(name)}, ${lab(num,ci)} : <b>${esc(form)}</b>`})}
+  return out}
+function genQuiz(u){return shuffle(u.quiz).slice(0,10).map(q=>({kicker:q.k||"Défi",prompt:q.q,small:true,options:uniq([q.a,...q.w]),correct:q.a,explain:q.ex||"",after:q.say||"",miss:`${q.q} → <b>${esc(q.a)}</b>`}))}
+function toRoman(n){const m=[[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];let s="";for(const[v,r]of m)while(n>=v){s+=r;n-=v}return s}
+function genRoman(){const out=[],years=[2026,1789,1515,800,476,1492,1999,2012,1610,1914];
+  for(let i=0;i<10;i++){const r=Math.random();const n=r<.6?1+(Math.random()*49|0):r<.85?51+(Math.random()*450|0):pick(years);
+    const near=uniq([n+1,n-1,n+4,n-4,n+5,n-5,n+9,n-9,n+10,n-10,n+40,n-40,n+90,n+100,n-100,n+1000].filter(x=>x>0&&x!==n));
+    const d=shuffle(near).slice(0,3);
+    if(i%2===0)out.push({kicker:"Écris en chiffres romains",prompt:String(n),options:[toRoman(n),...d.map(toRoman)],correct:toRoman(n),miss:`${n} = <b>${toRoman(n)}</b>`});
+    else out.push({kicker:"Combien vaut ce nombre ?",prompt:toRoman(n),options:[String(n),...d.map(String)],correct:String(n),miss:`${toRoman(n)} = <b>${n}</b>`})}
+  return out}
+
+const RUN={
+  lex:lexique,flash:u=>flash(u),match,
+  qcm:u=>runChoice(u,"qcm",()=>genQcm(u)),
+  type:u=>runType(u,"type",()=>genType(u)),
+  article:u=>runChoice(u,"article",()=>genArticle(u)),
+  conj:u=>runChoice(u,"conj",()=>genConj(u)),
+  decl:u=>runChoice(u,"decl",()=>genDecl(u)),
+  quiz:u=>runChoice(u,"quiz",()=>genQuiz(u)),
+  roman:u=>runChoice(u,"roman",genRoman),
+};
+home();
+</script>
+
+</body></html>

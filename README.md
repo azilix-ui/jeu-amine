@@ -1,10 +1,11 @@
-# Les jeux d'Amine
+# Famille Missaoui — missaoui-family.com
 
-Petits jeux éducatifs pour un enfant de 5 ans (grande section).
+Site statique (HTML uniquement) avec les cours et les jeux des enfants.
 
-- `index.html` : page d'accueil
-- `la-nuit-d-amine.html` : jeux d'Halloween (mémoire, compter, couleurs, suites)
-- `la-nuit-d-amine-2.html` : version 2, avec une histoire interactive
-- `nahki-tounsi.html` : apprendre la derja tunisienne
+- `index.html` : accueil de la famille
+- `essil/` : Deutsch Express (allemand), Via Romana (latin)
+- `salma/` : Salma's English Garden (anglais)
+- `amine/` : La Nuit d'Amine 1 et 2 (Halloween), Nahki Tounsi (derja tunisienne)
+- `famille.css` : style commun des pages d'accueil
 
-Site statique : aucun serveur ni installation nécessaires. Chaque modification poussée sur la branche `main` est publiée par Hostinger.
+Chaque modification poussée sur la branche `main` est publiée automatiquement par Hostinger.
