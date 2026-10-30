@@ -25,6 +25,9 @@ essil/index.html      espace Essil  → deutsch-express.html, via-romana.html
 salma/index.html      espace Salma  → english-garden.html
 amine/index.html      espace Amine (« Les jeux d'Amine ») → 4 jeux
 amine/voix/api.php    stockage en ligne des voix de Nahki Tounsi (PHP)
+api/famille.php       base de données famille (PHP + SQLite) : joueurs, records, progrès
+famille.js            module commun : « Qui joue ? », scores, classements, suivi des progrès
+progression.html      tableau de bord des parents (mot de passe parent)
 .htaccess             cache README/package.json/build.js ; redirige les anciens liens des jeux d'Amine
 package.json, build.js  copie le site dans dist/ (filet de sécurité si Hostinger lance un « build »)
 CLAUDE.md             cette fiche (bloquée en ligne par .htaccess)
@@ -55,6 +58,16 @@ Conventions :
 - `C:\Users\azili\OneDrive\Amine\grande section\` : jeux d'Amine (versions hors-ligne) + copie du site dans `site-jeux-amine\` (ancienne version, avant la page famille).
 - `C:\Users\azili\OneDrive\Salma etude\` : `Salma English Garden.html` (v1) et `… v2 - jours et mois.html` (publiée) ; `Essil\` : `Essil Deutsch Express.html` (v1), `… v2 - cours.html` (publiée), `Essil Via Romana Latin.html` (publiée), et 2 photos WhatsApp (sources, **non publiées**).
 
+## Base de données famille (records et progression)
+
+- `api/famille.php` + SQLite. Fichier de base : `famille-data/famille.sqlite`, **hors du site public** (à côté de `public_html`, comme `nahki-voix/`). Un redéploiement GitHub n'y touche pas.
+- Tables : `players` (prénom, première et dernière visite), `scores` (joueur, jeu, variante, score, date), `progress` (dernier état des progrès par joueur et par cours), `history` (un instantané par heure au plus, pour voir l'évolution), `writes` (anti-abus : 240 écritures max par 10 min et par adresse).
+- `famille.js` est chargé par tous les cours et jeux. Il envoie toutes les 15 s, et à la fermeture de la page, le contenu des clés `localStorage` du cours (`Famille.track(cours, joueur, clés)`). Les envois ratés attendent le retour du réseau.
+- Correspondance cours → joueur → clés : `essil-deutsch`/Essil/`essil-deutsch`, `essil-latin`/Essil/`essil-latin`, `salma-english`/Salma/`salma-stars`, `amine-halloween`/Amine/`amine-bonbons` (cagnotte), `amine-tounsi`/Amine/`amine-tounsi-etoiles`. Pour un nouveau cours : l'ajouter à `COURSES` dans `api/famille.php`, à `metric` dans `progression.html`, et appeler `Famille.track` en bas de la page.
+- Serpentin : écran « Qui joue ? » (Essil, Salma, Amine ou un autre prénom, gardé sur l'appareil). Classement en ligne par variante `vitesse-mode` (ex. `lapin-eat`). La cagnotte de bonbons ne se remplit que quand le joueur est Amine.
+- `progression.html` (lien en bas de l'accueil) : protégée par le **même mot de passe parent** que les voix de Nahki Tounsi (`nahki-voix/auth.json`). Affiche XP, grade, épreuves et étoiles par unité (Essil), étoiles par thème (Salma), cagnotte, Nahki et records Serpentin (Amine), gains de la semaine, dernières parties.
+- Limite connue : les progrès des cours restent d'abord dans le navigateur ; le serveur garde une copie pour le suivi, mais elle ne revient pas sur un autre appareil.
+
 ## Nahki Tounsi : la voix de la maman en ligne
 
 - Aucune voix de synthèse ne parle vraiment la derja : la maman enregistre les mots elle-même (bouton **🎙️ Ma voix** dans le jeu).
@@ -83,3 +96,4 @@ Conventions :
 - 22-23/10/2026 : Nahki Tounsi (derja) + mode « Ma voix ».
 - 29/10/2026 : mise en ligne sur Hostinger via GitHub ; page « Famille Missaoui » avec les espaces Essil, Salma, Amine ; voix de Nahki Tounsi gardée en ligne (PHP).
 - 30/10/2026 : Serpentin (snake pour tablette, 4 mondes, 3 vitesses, mode chiffres).
+- 30/10/2026 : base de données famille (SQLite) : « Qui joue ? » et records en ligne dans Serpentin, suivi automatique des progrès de tous les cours, page Progression pour les parents ; en-têtes anti-cache pour que les tablettes voient toujours la dernière version.
