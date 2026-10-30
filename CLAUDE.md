@@ -19,7 +19,7 @@ Ordre d'affichage voulu par la maman : **Essil, Salma, Amine** (de l'aîné au p
 ## Arborescence du site (dépôt GitHub)
 
 ```
-index.html            accueil « Famille Missaoui » (3 cartes, une par enfant)
+index.html            accueil « Famille Missaoui » (3 cartes ; chaque cours/jeu y est un lien direct)
 famille.css           style commun de l'accueil et des pages d'espace
 essil/index.html      espace Essil  → deutsch-express.html, via-romana.html
 salma/index.html      espace Salma  → english-garden.html
@@ -46,7 +46,7 @@ Conventions :
 1. Récupérer le fichier HTML (dossiers sources ci-dessous). Publier la **dernière version** seulement.
 2. Le copier dans le dossier de l'enfant avec un nom simple, sans espaces ni accents (`salma/maths-garden.html`).
 3. Ajouter la pastille de retour juste après `<body>` (copier celle d'un cours existant).
-4. Ajouter une carte dans `<enfant>/index.html` (et mettre à jour la liste sur `index.html` si besoin).
+4. Ajouter une carte dans `<enfant>/index.html` ET un lien direct dans la carte de l'enfant sur `index.html` (accueil famille). Après une modif de `famille.css`, augmenter `?v=` dans les 3 pages qui l'appellent (cache des tablettes).
 5. Ne jamais publier de photos personnelles ni de documents scolaires bruts.
 6. Commit + push sur `main`, puis vérifier la page en ligne.
 
