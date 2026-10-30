@@ -36,6 +36,7 @@ CLAUDE.md             cette fiche (bloquée en ligne par .htaccess)
 Conventions :
 - Chaque cours a une **pastille de retour** fixe en haut à gauche (« ← Essil », « ← Salma ») ; les jeux d'Amine ont un lien « ← Tous les jeux » ; les pages d'espace ont « ← Famille Missaoui ».
 - Polices : accueil et espaces en **Bricolage Grotesque** (titres) + **Nunito** (texte). Chaque cours garde sa propre identité visuelle.
+- Couleurs d'identité dans `famille.css` (variables) : `--essil-card` #1f3c88 + `--essil-rail` #d7263d, `--salma-card` #1f6b44 + `--salma-sky` #5aaedc, `--amine-card` #2a1f4f + `--amine-moon` #fff1bf. Texte blanc dessus : contraste ≥ 4,5:1 vérifié (audit Impeccable du 30/10/2026). Contour de sélection jaune `--ring-on-card` sur les cartes de couleur.
 - Les progrès (étoiles, XP, bonbons) sont gardés dans le `localStorage` du navigateur : clés `salma-stars`, `essil-deutsch`, `essil-latin`, `amine-bonbons` (cagnotte commune des jeux d'Amine), `amine-tounsi-etoiles`, `serpentin-best`, `serpentin-pref`.
 
 ## Publication (workflow)
