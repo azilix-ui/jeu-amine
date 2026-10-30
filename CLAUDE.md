@@ -98,3 +98,4 @@ Conventions :
 - 29/10/2026 : mise en ligne sur Hostinger via GitHub ; page « Famille Missaoui » avec les espaces Essil, Salma, Amine ; voix de Nahki Tounsi gardée en ligne (PHP).
 - 30/10/2026 : Serpentin (snake pour tablette, 4 mondes, 3 vitesses, mode chiffres).
 - 30/10/2026 : base de données famille (SQLite) : « Qui joue ? » et records en ligne dans Serpentin, suivi automatique des progrès de tous les cours, page Progression pour les parents ; en-têtes anti-cache pour que les tablettes voient toujours la dernière version.
+- 30/10/2026 : photos de famille sur l'accueil, en tirages aimantés sur la « porte du frigo » (un aimant par couleur d'enfant, agrandissement au toucher). Publiques, à la demande de la maman.
