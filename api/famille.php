@@ -18,7 +18,7 @@
 declare(strict_types=1);
 
 const GAMES   = ['serpentin'];
-const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'amine-halloween', 'amine-tounsi', 'amine-serpentin'];
+const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'amine-halloween', 'amine-tounsi', 'amine-serpentin'];
 const MAX_DATA = 30000;
 const MAX_WRITES = 240;        // écritures par adresse…
 const WRITE_WINDOW = 600;      // …toutes les 10 minutes

@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Le Jardin des Nombres</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A6%89%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: le monde de Salma (ciel, herbe, Ollie la chouette) — accueil = chemin de 8 étapes ; exercice = Ollie qui parle,
+   la soustraction posée sur une feuille de cahier à petits carreaux, retenues au stylo rouge, grand pavé de chiffres pour la tablette. */
+:root{
+  --sky:#7cc8f2; --sky2:#b8e4fb; --grass:#5dbb63; --grass2:#3f9a48;
+  --card:#ffffff; --ink:#23324a; --soft:#566781;
+  --coral:#ff6b5b; --coral-deep:#c8473a; --sun:#ffc93c; --plum:#7a4fe0; --mint:#1fa98e; --mint-deep:#147a66;
+  --paper:#fdfdf8; --grid:#cfe0f3; --margin:#f19a9a; --pen:#24407e; --red:#d32f2f;
+  --display:"Baloo 2","Comic Sans MS","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Trebuchet MS",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;margin:0}
+body{font-family:var(--body);color:var(--ink);font-size:18px;line-height:1.4;
+  background:linear-gradient(var(--sky) 0%,var(--sky2) 62%,var(--grass) 62%,var(--grass2) 100%) fixed;background-color:var(--sky)}
+::selection{background:var(--sun);color:var(--ink)}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:4px solid var(--plum);outline-offset:3px}
+[hidden]{display:none!important}
+.wrap{max-width:980px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(36px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:16px}
+
+/* barre du haut */
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{background:var(--card);border-radius:999px;min-height:48px;padding:10px 18px;font-weight:800;font-size:17px;box-shadow:0 4px 0 #0002;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.chip.round{width:48px;padding:0;justify-content:center;font-size:22px}
+.stars{margin-left:auto;font-family:var(--display);font-size:21px;font-variant-numeric:tabular-nums}
+
+/* Ollie et sa bulle */
+.teacher{display:flex;align-items:flex-end;gap:10px}
+.owl{width:96px;flex:none;transform-origin:50% 100%}
+.owl.talk{animation:bob .5s ease-in-out 2}
+@keyframes bob{50%{transform:translateY(-6px) rotate(-3deg)}}
+.bubble{position:relative;background:var(--card);border-radius:22px;padding:14px 18px;font-size:clamp(18px,2.4vw,22px);font-weight:800;box-shadow:0 5px 0 #0002;min-width:0;flex:1}
+.bubble::before{content:"";position:absolute;left:-14px;bottom:22px;border:10px solid transparent;border-right:16px solid var(--card)}
+.bubble b.n{font-family:var(--display);color:var(--pen);font-size:1.15em}
+.bubble b.r{color:var(--red)}
+.bubble small{display:block;font-weight:600;color:var(--soft);font-size:.82em;margin-top:4px}
+
+h1{font-family:var(--display);font-weight:800;font-size:clamp(36px,6.5vw,62px);line-height:1;margin:0;color:#fff;text-shadow:0 4px 0 #2a7fb4;text-wrap:balance}
+.lead{margin:6px 0 0;color:#fff;font-weight:800;font-size:19px;text-shadow:0 2px 0 #2a7fb4}
+
+/* chemin des étapes */
+.path{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:620px){.path{grid-template-columns:1fr}}
+.step{background:var(--card);border-radius:24px;padding:14px 16px;display:flex;align-items:center;gap:14px;text-align:left;box-shadow:0 6px 0 var(--edge,#0002);transition:transform .12s;min-width:0}
+.step:hover:not(:disabled){transform:translateY(-3px)}
+.step:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 var(--edge,#0002)}
+.step .ic{font-size:40px;line-height:1;width:58px;height:58px;display:grid;place-items:center;border-radius:18px;background:#eef7ff;flex:none}
+.step .tx{min-width:0;flex:1}
+.step .num{font-weight:800;color:var(--soft);font-size:14px}
+.step b{display:block;font-family:var(--display);font-size:23px;line-height:1.1}
+.step .sub{color:var(--soft);font-size:15px}
+.step .st{font-size:20px;letter-spacing:1px;color:#e0a100;white-space:nowrap}
+.step:disabled{opacity:.62;cursor:not-allowed}
+.step.next{outline:4px solid var(--sun);outline-offset:2px}
+
+/* cahier à petits carreaux */
+.sheet{--sq:clamp(46px,9vw,66px);align-self:center;background-color:var(--paper);
+  background-image:linear-gradient(90deg,transparent calc(var(--sq)*.9 - 1px),var(--margin) calc(var(--sq)*.9 - 1px),var(--margin) calc(var(--sq)*.9 + 1px),transparent calc(var(--sq)*.9 + 1px)),
+   linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:100% 100%,calc(var(--sq)/2) calc(var(--sq)/2),calc(var(--sq)/2) calc(var(--sq)/2);
+  border-radius:10px;box-shadow:0 10px 24px -10px rgba(20,40,70,.45),0 2px 0 #0001;padding:calc(var(--sq)*.35) calc(var(--sq)*.6) calc(var(--sq)*.4) calc(var(--sq)*1.3);display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap}
+.op{display:grid;grid-template-columns:var(--sq) repeat(var(--n),var(--sq));grid-auto-rows:auto;font-family:var(--display);font-weight:800;color:var(--pen);font-variant-numeric:tabular-nums}
+.op .lab{font-family:var(--body);font-size:15px;color:#7e8ca3;text-align:center;font-weight:800;height:26px}
+.op .cell{position:relative;height:var(--sq);display:grid;place-items:center;font-size:calc(var(--sq)*.72);line-height:1;border-radius:10px;transition:background .2s}
+.op .cell.on{background:rgba(255,201,60,.38)}
+.op .minus{font-size:calc(var(--sq)*.7)}
+.op .bar{grid-column:1 / -1;height:4px;background:var(--pen);border-radius:2px;margin:4px 0 6px}
+.op .res{border:3px dashed transparent}
+.op .res.on{border-color:var(--sun);background:#fff8de}
+.op .res.ok{color:var(--mint-deep)}
+.op .res.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.op .mk{position:absolute;font-size:calc(var(--sq)*.34);color:var(--red);font-family:var(--body);font-weight:800;line-height:1;animation:pen .5s cubic-bezier(.16,1,.3,1)}
+.op .mk.top{left:2px;top:6px}
+.op .mk.bot{left:calc(var(--sq)*-.14);top:calc(var(--sq)*-.06)}
+@keyframes pen{from{transform:scale(2.2);opacity:0}}
+.proof{font-family:var(--display);font-size:20px;color:var(--soft);text-align:center;margin:0}
+.proof b{color:var(--mint-deep)}
+
+/* boutons de réponse et pavé */
+.zone{display:flex;flex-direction:column;gap:12px;align-items:center}
+.choices{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:var(--display);font-weight:800;font-size:22px;min-height:56px;padding:10px 26px;border-radius:20px;background:var(--card);color:var(--ink);box-shadow:0 6px 0 #0002}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #0002}
+.btn.go{background:var(--coral);color:#fff;box-shadow:0 6px 0 var(--coral-deep)}
+.btn.ok{background:var(--mint-deep);color:#fff;box-shadow:0 6px 0 #0d5244}
+.btn.red{background:#fff;color:var(--red);border:3px solid var(--red)}
+.btn.red[aria-pressed="true"]{background:var(--red);color:#fff}
+.btn:disabled{opacity:.4}
+.pad{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:min(100%,520px)}
+.pad button{font-family:var(--display);font-weight:800;font-size:32px;height:64px;border-radius:18px;background:var(--card);color:var(--pen);box-shadow:0 5px 0 #0002}
+.pad button:active{transform:translateY(4px);box-shadow:0 1px 0 #0002}
+.tools{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:14px;height:14px;border-radius:50%;background:#fff8;box-shadow:inset 0 0 0 2px #fff}
+.dots i.done{background:var(--mint)}
+.dots i.now{background:var(--sun)}
+.hops{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-family:var(--display);font-weight:800}
+.hops span{background:#fff;border-radius:12px;padding:4px 10px;color:var(--pen);box-shadow:0 3px 0 #0002}
+.hops span.f{background:#eef7ff;color:var(--soft)}
+
+/* leçon */
+.card{background:var(--card);border-radius:24px;padding:18px 20px;box-shadow:0 6px 0 #0002;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+.ages{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;font-family:var(--display);font-weight:800;font-size:26px}
+.ages div{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ages .e{font-size:54px;line-height:1}
+.rule{background:#fff8de;border:3px solid var(--sun);border-radius:18px;padding:12px 16px;font-weight:800;font-size:20px;max-width:560px}
+
+/* résultats */
+.result{align-items:center;text-align:center}
+.result .big{font-size:64px;letter-spacing:6px;color:#e0a100;line-height:1}
+.problem{font-size:clamp(19px,2.6vw,23px);font-weight:800;max-width:640px}
+
+.float{position:fixed;font-size:38px;pointer-events:none;z-index:50;animation:rise 1.5s ease-out forwards}
+@keyframes rise{to{transform:translateY(-55vh) rotate(25deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script>
+'use strict';
+/* ---------- Ollie, la chouette de Salma ---------- */
+const OWL = `<svg class="owl" viewBox="0 0 120 130" aria-hidden="true">
+  <ellipse cx="60" cy="124" rx="38" ry="5" fill="#0002"/>
+  <path d="M22 40 L30 14 L46 32 Z M98 40 L90 14 L74 32 Z" fill="#7a4b2a"/>
+  <ellipse cx="60" cy="74" rx="42" ry="50" fill="#9a6236"/>
+  <ellipse cx="60" cy="88" rx="28" ry="32" fill="#f3d9b1"/>
+  <path d="M44 84 q4 4 8 0 M56 92 q4 4 8 0 M68 84 q4 4 8 0 M50 100 q4 4 8 0 M62 100 q4 4 8 0" stroke="#d8b585" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="42" cy="52" r="17" fill="#fff"/><circle cx="78" cy="52" r="17" fill="#fff"/>
+  <circle cx="44" cy="54" r="8" fill="#23324a"/><circle cx="76" cy="54" r="8" fill="#23324a"/>
+  <circle cx="47" cy="51" r="2.5" fill="#fff"/><circle cx="79" cy="51" r="2.5" fill="#fff"/>
+  <path d="M54 64 L66 64 L60 74 Z" fill="#ffb02e"/>
+  <rect x="26" y="34" width="68" height="7" rx="3" fill="#23324a"/><path d="M36 34 L84 34 L60 20 Z" fill="#23324a"/>
+  <path d="M84 37 q10 6 6 18" stroke="#ffc93c" stroke-width="3" fill="none"/><circle cx="90" cy="56" r="4" fill="#ffc93c"/>
+  <path d="M18 74 q-6 22 10 34 M102 74 q6 22 -10 34" stroke="#7a4b2a" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M48 120 l-4 6 M52 120 l0 6 M68 120 l0 6 M72 120 l4 6" stroke="#ffb02e" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+
+/* ---------- outils ---------- */
+const app = document.getElementById('app');
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const digits = n => String(n).split('').reverse().map(Number);
+const COL = ['unités','dizaines','centaines'];
+const COLSHORT = ['u','d','c'];
+const KEY = 'salma-maths';
+let data = { stars:{}, done:{} };
+try{ Object.assign(data, JSON.parse(localStorage.getItem(KEY) || '{}')); }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} }
+const totalStars = () => Object.values(data.stars).reduce((a,b) => a + b, 0);
+
+/* ---------- son et voix ---------- */
+let muted = false; try{ muted = localStorage.getItem(KEY + '-muet') === '1'; }catch(e){}
+let ac = null, frVoice = null;
+function tone(f,d,t=0,type='triangle',vol=.12){ if(muted) return; try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); const o=ac.createOscillator(),g=ac.createGain(),s=ac.currentTime+t; o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(ac.destination);o.start(s);o.stop(s+d+.02);}catch(e){} }
+const sfx = { ok(){ tone(660,.12); tone(880,.16,.08); }, no(){ tone(240,.25,0,'sine',.1); }, tap(){ tone(900,.05,0,'triangle',.06); }, pen(){ tone(1200,.04,0,'square',.03); tone(1500,.04,.05,'square',.03); }, win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.22,i*.1)); } };
+function pickVoice(){ try{ const vs = speechSynthesis.getVoices(); frVoice = vs.find(v=>/^fr[-_]FR/i.test(v.lang)) || vs.find(v=>/^fr/i.test(v.lang)) || null; }catch(e){} }
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(html){
+  talk();
+  if(muted || !('speechSynthesis' in window)) return;
+  const t = String(html).replace(/<small>.*?<\/small>/g,'').replace(/<[^>]+>/g,'').replace(/−/g,' moins ').replace(/\+/g,' plus ').replace(/=/g,' égale ');
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='fr-FR'; if(frVoice) u.voice=frVoice; u.rate=.95; u.pitch=1.1; speechSynthesis.speak(u); }catch(e){}
+}
+function hush(){ try{ speechSynthesis.cancel(); }catch(e){} }
+function talk(){ document.querySelectorAll('.owl').forEach(o => { o.classList.remove('talk'); void o.offsetWidth; o.classList.add('talk'); }); }
+function confetti(){ for(let i=0;i<10;i++){ const s=document.createElement('span'); s.className='float'; s.textContent=pick(['⭐','🌼','🌷','🍀','🎉']); s.style.left=rnd(5,90)+'vw'; s.style.top=rnd(55,90)+'vh'; s.style.animationDelay=(i*60)+'ms'; document.body.appendChild(s); setTimeout(()=>s.remove(),1800); } }
+
+function topbar(back){
+  return `<div class="top">
+    ${back ? `<button class="chip" id="back">← Le chemin</button>` : `<a class="chip" href="./">← Espace Salma</a>`}
+    <button class="chip round" id="mute" aria-label="${muted ? 'Activer' : 'Couper'} le son">${muted ? '🔇' : '🔊'}</button>
+    <div class="chip stars" aria-label="Étoiles gagnées">⭐ ${totalStars()}</div></div>`;
+}
+function wireTop(back){
+  const b = document.getElementById('back'); if(b) b.onclick = () => { sfx.tap(); hush(); back(); };
+  document.getElementById('mute').onclick = e => { muted = !muted; try{ localStorage.setItem(KEY+'-muet', muted?'1':'0'); }catch(_){} e.currentTarget.textContent = muted ? '🔇' : '🔊'; if(muted) hush(); };
+}
+const teacher = html => `<div class="teacher">${OWL}<div class="bubble" id="say" aria-live="polite">${html}</div></div>`;
+function say(html, voice=true){ const s = document.getElementById('say'); if(s) s.innerHTML = html; if(voice) speak(html); }
+const N = n => `<b class="n">${n}</b>`;
+
+/* ---------- générateurs de soustractions (méthode : retenue « en bas ») ---------- */
+function analyse(a, b){
+  const A = digits(a), B = digits(b), n = A.length, cols = [];
+  let carry = 0;
+  for(let i=0;i<n;i++){
+    const t = A[i], hasB = i < B.length, bd = hasB ? B[i] : 0, sub = bd + carry, need = t < sub;
+    cols.push({ i, t, bd, hasB, carryIn: carry, sub, need, top: t + (need ? 10 : 0), res: t + (need ? 10 : 0) - sub });
+    carry = need ? 1 : 0;
+  }
+  return { a, b, n, cols, carries: cols.filter(c => c.need).length, r: a - b };
+}
+function gen2(withCarry){
+  for(;;){ const a = rnd(31, 98), b = rnd(11, a - 10), x = analyse(a, b);
+    if(x.r >= 10 && x.n === 2 && (withCarry ? x.carries === 1 : x.carries === 0)) return x; }
+}
+function gen3(k){
+  for(;;){ const a = rnd(210, 989), b = Math.random() < .2 ? rnd(12, 98) : rnd(105, a - 100), x = analyse(a, b);
+    if(x.r >= 100 && x.carries === k && !String(a).includes('0')) return x; }
+}
+function genZero(){
+  for(;;){ const h = rnd(2, 9), z = pick([[0, rnd(1,9)], [rnd(1,9), 0], [0, 0]]), a = h*100 + z[0]*10 + z[1];
+    const b = Math.random() < .3 ? rnd(12, 98) : rnd(101, a - 100), x = analyse(a, b);
+    if(x.r >= 100 && x.carries >= 1) return x; }
+}
+const PROBLEMS = [
+  (a,b) => ({ text:`Ollie a ramassé ${a} glands. Il en donne ${b} à l'écureuil. Combien de glands lui reste-t-il ?`, unit:'glands', answer:r => `Il reste ${r} glands à Ollie.` }),
+  (a,b) => ({ text:`Dans le jardin, il y a ${a} fleurs. ${b} sont rouges, les autres sont jaunes. Combien y a-t-il de fleurs jaunes ?`, unit:'fleurs', answer:r => `Il y a ${r} fleurs jaunes.` }),
+  (a,b) => ({ text:`Un livre a ${a} pages. Salma en a déjà lu ${b}. Combien de pages lui reste-t-il à lire ?`, unit:'pages', answer:r => `Il reste ${r} pages à lire.` }),
+  (a,b) => ({ text:`Un sac contenait ${a} billes. Après la récré, il n'en reste que ${b}. Combien de billes ont été perdues ?`, unit:'billes', answer:r => `${r} billes ont été perdues.` }),
+  (a,b) => ({ text:`Le panier du marché pèse ${a} grammes. On enlève une pomme de ${b} grammes. Combien pèse le panier maintenant ?`, unit:'grammes', answer:r => `Le panier pèse ${r} grammes.` })
+];
+
+/* ---------- les 8 étapes : la progression de la maîtresse ---------- */
+const CH = [
+  { id:'echauffement', icon:'🌱', name:'Échauffement',          sub:'Soustraire sans retenue',             kind:'ops', n:5, mode:'guide', gen:() => gen2(false), edge:'#5dbb63' },
+  { id:'secret',       icon:'🔑', name:'Le secret de la retenue', sub:'Comprendre pourquoi ça marche',     kind:'lesson', edge:'#ffc93c' },
+  { id:'pasapas',      icon:'👣', name:'Pas à pas',             sub:'Une retenue, Ollie t\'aide',           kind:'ops', n:5, mode:'guide', gen:() => gen2(true), edge:'#7cc8f2' },
+  { id:'atoi',         icon:'🌻', name:'À toi de jouer',        sub:'Retenue ou pas ? C\'est toi qui vois', kind:'ops', n:6, mode:'auto', gen:() => Math.random() < .25 ? gen2(false) : gen2(true), edge:'#ff6b5b' },
+  { id:'centaines',    icon:'🌳', name:'Les centaines',         sub:'3 chiffres, une retenue',              kind:'ops', n:5, mode:'guide2', gen:() => gen3(1), edge:'#1fa98e' },
+  { id:'double',       icon:'🌈', name:'Double retenue',        sub:'3 chiffres, deux retenues',            kind:'ops', n:5, mode:'auto', gen:() => gen3(2), edge:'#7a4fe0' },
+  { id:'zero',         icon:'🕳️', name:'Le piège du zéro',      sub:'Quand il y a des 0 en haut',           kind:'ops', n:5, mode:'auto', gen:() => genZero(), edge:'#9a6236' },
+  { id:'problemes',    icon:'🧺', name:'Petits problèmes',      sub:'Trouver le bon calcul, puis le faire', kind:'problems', n:4, mode:'auto', edge:'#e0a100' }
+];
+const unlocked = i => i === 0 || (data.stars[CH[i-1].id] || 0) > 0;
+
+/* ---------- accueil : le chemin ---------- */
+function home(greet){
+  hush();
+  const next = CH.findIndex((c, i) => unlocked(i) && !(data.stars[c.id] > 0));
+  app.innerHTML = topbar(false) +
+    `<div><h1>Le Jardin des Nombres</h1><p class="lead">La soustraction avec retenue, étape par étape</p></div>` +
+    teacher(next === 0 && !totalStars()
+      ? `Bonjour Salma ! Je suis Ollie. Aujourd'hui, je suis aussi ta maîtresse de maths. On va apprendre la <b class="r">soustraction avec retenue</b>, une étape après l'autre. Commence par l'échauffement !`
+      : next >= 0 ? `Bravo pour ton travail, Salma ! Ta prochaine étape : <b class="n">${CH[next].name}</b>.` : `Tu as fini tout le chemin, Salma ! Tu peux refaire les étapes pour gagner 3 étoiles partout.`) +
+    `<div class="path">${CH.map((c, i) => {
+      const s = data.stars[c.id] || 0, open = unlocked(i);
+      return `<button class="step${i === next ? ' next' : ''}" data-i="${i}" style="--edge:${c.edge}" ${open ? '' : 'disabled aria-disabled="true"'}>
+        <span class="ic" aria-hidden="true">${open ? c.icon : '🔒'}</span>
+        <span class="tx"><span class="num">Étape ${i+1}</span><b>${c.name}</b><span class="sub">${open ? c.sub : 'Termine l\'étape d\'avant'}</span></span>
+        <span class="st" aria-label="${s} étoiles sur 3">${'★'.repeat(s)}${'☆'.repeat(3-s)}</span></button>`; }).join('')}</div>`;
+  wireTop();
+  app.querySelectorAll('.step').forEach(b => b.onclick = () => { if(b.disabled) return; sfx.tap(); start(+b.dataset.i); });
+  if(greet) speak(document.getElementById('say').innerHTML);
+}
+
+/* ---------- une séance ---------- */
+let S = null;
+function start(i){
+  const c = CH[i];
+  if(c.kind === 'lesson') return lesson(i);
+  S = { i, c, k:0, errors:0, list: Array.from({length:c.n}, () => c.kind === 'problems' ? makeProblem() : c.gen()) };
+  next();
+}
+function makeProblem(){
+  const x = Math.random() < .5 ? gen2(true) : gen3(1);
+  return Object.assign(x, { story: pick(PROBLEMS)(x.a, x.b) });
+}
+function dots(){ return `<div class="dots" aria-label="Calcul ${S.k+1} sur ${S.list.length}">${S.list.map((_, j) => `<i class="${j < S.k ? 'done' : j === S.k ? 'now' : ''}"></i>`).join('')}</div>`; }
+function next(){
+  if(S.k >= S.list.length) return finish();
+  const x = S.list[S.k];
+  const guide = S.c.mode === 'guide' || (S.c.mode === 'guide2' && S.k < 2);
+  if(S.c.kind === 'problems') return problem(x);
+  exercise(x, guide);
+}
+
+/* ---------- la soustraction posée ---------- */
+function sheet(x){
+  const n = x.n, B = digits(x.b);
+  let h = `<div class="op" style="--n:${n}" role="img" aria-label="${x.a} moins ${x.b}">`;
+  h += `<div class="lab"></div>` + Array.from({length:n}, (_, k) => `<div class="lab">${COLSHORT[n-1-k]}</div>`).join('');
+  h += `<div class="cell"></div>` + Array.from({length:n}, (_, k) => { const i = n-1-k; return `<div class="cell t" data-c="${i}">${digits(x.a)[i]}</div>`; }).join('');
+  h += `<div class="cell minus">−</div>` + Array.from({length:n}, (_, k) => { const i = n-1-k; return `<div class="cell b" data-c="${i}">${i < B.length ? B[i] : ''}</div>`; }).join('');
+  h += `<div class="bar"></div>`;
+  h += `<div class="cell"></div>` + Array.from({length:n}, (_, k) => { const i = n-1-k; return `<div class="cell res" data-c="${i}"></div>`; }).join('');
+  return h + `</div>`;
+}
+const cellAt = (cls, i) => app.querySelector(`.op .${cls}[data-c="${i}"]`);
+function markCarry(i){ // la retenue au stylo rouge : 10 en haut, 1 dizaine en bas dans la colonne suivante
+  sfx.pen();
+  const t = cellAt('t', i); if(t && !t.querySelector('.mk')) t.insertAdjacentHTML('afterbegin', `<span class="mk top">1</span>`);
+  const b = cellAt('b', i+1); if(b && !b.querySelector('.mk')) b.insertAdjacentHTML('afterbegin', `<span class="mk bot">+1</span>`);
+}
+function highlight(i){ app.querySelectorAll('.op .cell').forEach(c => c.classList.toggle('on', +c.dataset.c === i && !c.classList.contains('res'))); app.querySelectorAll('.op .res').forEach(c => c.classList.toggle('on', +c.dataset.c === i)); }
+
+function bottomText(c){
+  if(c.carryIn) return c.hasB ? `${N(c.bd)} + la retenue ${N(1)} = ${N(c.sub)}` : `la retenue ${N(1)}`;
+  return c.hasB ? N(c.bd) : `rien, donc ${N(0)}`;
+}
+
+function exercise(x, guide, onDone){
+  let col = 0, placed = false, tries = 0;
+  const isProblem = !!onDone;
+  app.innerHTML = topbar(true) + (isProblem ? '' : dots()) + teacher('') +
+    `<div class="sheet">${sheet(x)}</div><div class="zone" id="zone"></div>`;
+  wireTop(() => home());
+
+  function ask(){
+    const c = x.cols[col]; placed = false; tries = 0; highlight(col);
+    if(guide){
+      say(`Colonne des <b>${COL[col]}</b>. En haut : ${N(c.t)}. En bas : ${bottomText(c)}.<br>Peut-on enlever ${N(c.sub)} à ${N(c.t)} ?`);
+      zone(`<div class="choices"><button class="btn ok" id="yes">Oui</button><button class="btn red" id="no">Non, c'est trop grand</button></div>`);
+      document.getElementById('yes').onclick = () => decide(false);
+      document.getElementById('no').onclick = () => decide(true);
+    } else {
+      say(`Colonne des <b>${COL[col]}</b>.${c.carryIn ? ' N\'oublie pas la retenue en bas !' : ''}`, col === 0 && S && S.k === 0);
+      keypad(true);
+    }
+  }
+  function decide(saysNeed){
+    const c = x.cols[col];
+    if(saysNeed !== c.need){
+      S.errors++; sfx.no();
+      say(c.need
+        ? `Regarde bien : ${N(c.t)} est plus petit que ${N(c.sub)}. On ne peut pas enlever ${N(c.sub)} à ${N(c.t)} : il faut une retenue !`
+        : `Si ! ${N(c.t)} est assez grand : on peut enlever ${N(c.sub)} à ${N(c.t)}. Pas besoin de retenue.`);
+      setTimeout(() => decide(c.need), 2600); return;
+    }
+    sfx.ok();
+    if(c.need){
+      markCarry(col);
+      say(`Exact ! Alors on fait la retenue : on ajoute ${N(10)} en haut, ${N(c.t)} devient ${N(c.top)}. Et pour que ce soit juste, on ajoute aussi ${N(1)} dizaine <b class="r">en bas</b>, dans la colonne d'à côté.<small>On a ajouté 10 aux deux nombres : la différence ne change pas.</small>`);
+      zone(`<button class="btn go" id="calc">Je calcule ${c.top} − ${c.sub}</button>`);
+      document.getElementById('calc').onclick = () => { sfx.tap(); say(`Combien font ${N(c.top)} − ${N(c.sub)} ?`); keypad(false); };
+    } else {
+      say(`Oui ! Combien font ${N(c.t)} − ${N(c.sub)} ?`);
+      keypad(false);
+    }
+  }
+  function keypad(withCarryButton){
+    const c = x.cols[col];
+    zone(`<div class="pad" role="group" aria-label="Chiffres">${[1,2,3,4,5,6,7,8,9,0].map(d => `<button data-d="${d}" aria-label="${d}">${d}</button>`).join('')}</div>
+      <div class="tools">${withCarryButton ? `<button class="btn red" id="carry" aria-pressed="false">✏️ Retenue</button>` : ''}<button class="btn" id="help">🦉 Aide</button></div>`);
+    app.querySelectorAll('.pad button').forEach(b => b.onclick = () => typed(+b.dataset.d));
+    const cb = document.getElementById('carry');
+    if(cb) cb.onclick = () => {
+      if(placed) return;
+      if(!c.need){ S.errors++; sfx.no(); say(`Pas besoin de retenue ici : ${N(c.t)} est assez grand pour enlever ${N(c.sub)}.`); return; }
+      placed = true; cb.setAttribute('aria-pressed', 'true'); markCarry(col);
+      say(`Bien vu ! ${N(c.t)} devient ${N(c.top)} en haut, et ${N(1)} dizaine s'ajoute en bas à côté. Combien font ${N(c.top)} − ${N(c.sub)} ?`);
+    };
+    document.getElementById('help').onclick = () => help();
+  }
+  function help(){
+    const c = x.cols[col];
+    if(c.need && !guide && !placed){ say(`Regarde la colonne des ${COL[col]} : ${N(c.t)} en haut, ${N(c.sub)} en bas. Peut-on enlever ${N(c.sub)} à ${N(c.t)} ? Si non, appuie sur <b class="r">Retenue</b>.`); return; }
+    const from = c.sub, to = c.top, hops = [];
+    for(let v = from + 1; v <= to; v++) hops.push(v);
+    say(`Pour faire ${N(to)} − ${N(from)}, pars de ${N(from)} et compte jusqu'à ${N(to)}. Compte les bonds !`);
+    const z = document.getElementById('zone');
+    const old = z.querySelector('.hops'); if(old) old.remove();
+    z.insertAdjacentHTML('afterbegin', `<div class="hops" aria-label="Les bonds de ${from} à ${to}"><span class="f">${from}</span>${hops.map(v => `<span>${v}</span>`).join('')}</div>`);
+  }
+  function typed(d){
+    const c = x.cols[col];
+    if(!guide && c.need && !placed){
+      S.errors++; sfx.no(); shakeRes();
+      say(`Attention : on ne peut pas enlever ${N(c.sub)} à ${N(c.t)}. Il faut d'abord faire une <b class="r">retenue</b> !`); return;
+    }
+    if(d !== c.res){
+      S.errors++; tries++; sfx.no(); shakeRes();
+      if(tries >= 2){ say(`${N(c.top)} − ${N(c.sub)} = ${N(c.res)}. Je l'écris pour toi. On continue !`); fill(c.res, 2200); }
+      else say(`Pas tout à fait. ${N(c.top)} − ${N(c.sub)} = ? Appuie sur 🦉 Aide si tu veux compter les bonds.`);
+      return;
+    }
+    sfx.ok(); fill(d, 500);
+  }
+  function shakeRes(){ const r = cellAt('res', col); r.classList.remove('shake'); void r.offsetWidth; r.classList.add('shake'); }
+  function fill(d, wait){
+    const r = cellAt('res', col); r.textContent = d; r.classList.add('ok');
+    zone('');
+    setTimeout(() => { col++; if(col < x.n) ask(); else done(); }, wait);
+  }
+  function done(){
+    highlight(-1); sfx.win(); confetti();
+    say(`Bravo Salma ! ${N(x.a)} − ${N(x.b)} = ${N(x.r)}.<small>La preuve : ${x.r} + ${x.b} = ${x.a}. Le compte est bon !</small>`);
+    document.querySelector('.sheet').insertAdjacentHTML('beforeend', `<p class="proof">Preuve : ${x.r} + ${x.b} = <b>${x.a}</b> ✔</p>`);
+    zone(`<button class="btn go" id="nx">${isProblem ? 'Écrire la réponse →' : S.k + 1 < S.list.length ? 'Calcul suivant →' : 'Voir mes étoiles →'}</button>`);
+    document.getElementById('nx').onclick = () => { sfx.tap(); if(isProblem) onDone(); else { S.k++; next(); } };
+  }
+  ask();
+}
+function zone(html){ document.getElementById('zone').innerHTML = html; }
+
+/* ---------- petits problèmes ---------- */
+function problem(x){
+  const st = x.story;
+  const opts = shuffle([`${x.a} − ${x.b}`, `${x.a} + ${x.b}`, `${x.b} − ${x.a}`]);
+  app.innerHTML = topbar(true) + dots() + teacher(`Lis bien le problème. Quel calcul faut-il faire ?`) +
+    `<div class="card"><p class="problem">${st.text}</p><div class="choices">${opts.map(o => `<button class="btn" data-o="${o}">${o}</button>`).join('')}</div></div>`;
+  wireTop(() => home());
+  speak(st.text + ' Quel calcul faut-il faire ?');
+  app.querySelectorAll('.choices .btn').forEach(b => b.onclick = () => {
+    const o = b.dataset.o;
+    if(o === `${x.a} − ${x.b}`){
+      sfx.ok(); say(`Oui ! On cherche ce qui reste : c'est une <b class="r">soustraction</b>, avec le plus grand nombre en haut. À toi de la poser !`);
+      setTimeout(() => exercise(x, false, () => answer(x)), 2200);
+    } else {
+      S.errors++; sfx.no(); b.disabled = true;
+      say(o.includes('+')
+        ? `Une addition ferait grandir le nombre. Ici, on enlève, on cherche ce qui reste : c'est une soustraction.`
+        : `Presque ! Dans une soustraction, on met toujours le plus grand nombre en haut : ${N(x.a)} d'abord.`);
+    }
+  });
+}
+function answer(x){
+  const st = x.story;
+  const opts = shuffle([st.answer(x.r), st.answer(x.a + x.b), st.answer(x.r + 10)]);
+  app.innerHTML = topbar(true) + dots() + teacher(`Dernière étape : choisis la bonne phrase-réponse.`) +
+    `<div class="card"><p class="problem">${st.text}</p><div class="choices" style="flex-direction:column">${opts.map(o => `<button class="btn" data-o="${o}">${o}</button>`).join('')}</div></div>`;
+  wireTop(() => home());
+  app.querySelectorAll('.choices .btn').forEach(b => b.onclick = () => {
+    if(b.dataset.o === st.answer(x.r)){ sfx.ok(); confetti(); say(`Parfait ! ${st.answer(x.r)}`); setTimeout(() => { S.k++; next(); }, 1800); }
+    else { S.errors++; sfx.no(); b.disabled = true; say(`Regarde ton calcul : le résultat est ${N(x.r)}.`); }
+  });
+}
+
+/* ---------- étape 2 : la leçon du secret ---------- */
+function lesson(i){
+  let p = 0, errs = 0;
+  const x = analyse(52, 17);
+  const pages = [
+    () => ({ say:`Ollie a ${N(8)} ans. Son petit frère Pipo a ${N(5)} ans. Quelle est la différence d'âge entre eux ?`,
+      body:`<div class="ages"><div><span class="e">🦉</span>Ollie<br>8 ans</div><div><span class="e">🐣</span>Pipo<br>5 ans</div></div>`, q:['3 ans','13 ans','2 ans'], good:'3 ans',
+      ok:`Oui : ${N(8)} − ${N(5)} = ${N(3)}. Ollie a 3 ans de plus que Pipo.` }),
+    () => ({ say:`Dans ${N(10)} ans, Ollie aura ${N(18)} ans et Pipo ${N(15)} ans. Quelle sera la différence d'âge ?`,
+      body:`<div class="ages"><div><span class="e">🦉</span>Ollie<br>18 ans</div><div><span class="e">🐥</span>Pipo<br>15 ans</div></div>`, q:['3 ans','13 ans','10 ans'], good:'3 ans',
+      ok:`Toujours ${N(3)} ans ! Les deux ont pris 10 ans : la différence n'a pas changé.` }),
+    () => ({ say:`Voilà le grand secret de la retenue :`, body:`<div class="rule">Si on ajoute le même nombre en haut et en bas, le résultat d'une soustraction ne change pas.</div>`, next:true }),
+    () => ({ say:`Regarde ${N(52)} − ${N(17)}. Colonne des unités : ${N(2)} − ${N(7)}… impossible, ${N(2)} est trop petit !`, body:`<div class="sheet">${sheet(x)}</div>`, next:true, after:() => highlight(0) }),
+    () => ({ say:`Alors on ajoute ${N(10)} aux deux nombres. En haut, on met les 10 dans les unités : ${N(2)} devient ${N(12)}. En bas, on met les 10 sous forme d'${N(1)} dizaine : le ${N(1)} devient ${N(2)}.`,
+      body:`<div class="sheet">${sheet(x)}</div>`, next:true, after:() => { highlight(0); setTimeout(() => markCarry(0), 600); } }),
+    () => ({ say:`Maintenant c'est facile : ${N(12)} − ${N(7)} = ${N(5)}, puis ${N(5)} − ${N(2)} = ${N(3)}. Le résultat est ${N(35)} !<small>La preuve : 35 + 17 = 52.</small>`,
+      body:`<div class="sheet">${sheet(x)}</div>`, next:true, after:() => { markCarry(0); cellAt('res',0).textContent = 5; cellAt('res',1).textContent = 3; app.querySelectorAll('.res').forEach(r => r.classList.add('ok')); } }),
+    () => ({ say:`Petite question : quand j'ajoute ${N(10)} en haut, dans les unités, que dois-je faire aussi ?`, body:'',
+      q:['Ajouter 1 dizaine en bas','Enlever 10 en haut','Rien du tout'], good:'Ajouter 1 dizaine en bas', ok:`Exactement ! C'est ça, la retenue : 10 en haut, 1 dizaine en bas.` })
+  ];
+  function show(){
+    const pg = pages[p]();
+    app.innerHTML = topbar(true) + `<div class="dots">${pages.map((_, j) => `<i class="${j < p ? 'done' : j === p ? 'now' : ''}"></i>`).join('')}</div>` +
+      teacher(pg.say) + `<div class="card">${pg.body}${pg.q ? `<div class="choices">${shuffle(pg.q).map(o => `<button class="btn" data-o="${o}">${o}</button>`).join('')}</div>` : ''}
+      <button class="btn go" id="nx" ${pg.next ? '' : 'hidden'}>${p + 1 < pages.length ? 'Suivant →' : 'J\'ai compris !'}</button></div>`;
+    wireTop(() => home());
+    speak(pg.say);
+    if(pg.after) pg.after();
+    app.querySelectorAll('.choices .btn').forEach(b => b.onclick = () => {
+      if(b.dataset.o === pg.good){ sfx.ok(); say(pg.ok); app.querySelectorAll('.choices .btn').forEach(x => x.disabled = x !== b); b.classList.add('ok'); document.getElementById('nx').hidden = false; }
+      else { errs++; sfx.no(); b.disabled = true; say(`Pas tout à fait… essaie encore !`); }
+    });
+    document.getElementById('nx').onclick = () => { sfx.tap(); p++; if(p < pages.length) show(); else { S = { i, c:CH[i], errors:errs, list:[1] }; finish(); } };
+  }
+  show();
+}
+
+/* ---------- fin de séance ---------- */
+function finish(){
+  const st = S.errors <= 1 ? 3 : S.errors <= 4 ? 2 : 1;
+  const id = S.c.id;
+  data.stars[id] = Math.max(data.stars[id] || 0, st);
+  data.done[id] = (data.done[id] || 0) + 1;
+  data.last = new Date().toISOString();
+  save();
+  sfx.win(); confetti();
+  const nextI = S.i + 1 < CH.length ? S.i + 1 : -1;
+  const msg = st === 3 ? `Magnifique, Salma ! Presque aucune erreur.` : st === 2 ? `Très bien, Salma ! Tu progresses.` : `Bravo d'avoir tout fini ! Refais l'étape pour gagner plus d'étoiles.`;
+  app.innerHTML = topbar(true) + teacher(msg) +
+    `<div class="card result"><div class="big" aria-label="${st} étoiles sur 3">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>
+     <b style="font-family:var(--display);font-size:26px">${S.c.name}</b>
+     <div class="choices"><button class="btn" id="again">↻ Recommencer</button>${nextI >= 0 ? `<button class="btn go" id="nxt">Étape suivante →</button>` : `<button class="btn go" id="path">Le chemin</button>`}</div></div>`;
+  wireTop(() => home());
+  speak(msg);
+  document.getElementById('again').onclick = () => { sfx.tap(); start(S.i); };
+  const n = document.getElementById('nxt'); if(n) n.onclick = () => { sfx.tap(); start(nextI); };
+  const pth = document.getElementById('path'); if(pth) pth.onclick = () => { sfx.tap(); home(); };
+}
+
+/* clavier de l'ordinateur : les chiffres marchent aussi */
+document.addEventListener('keydown', e => {
+  if(!/^[0-9]$/.test(e.key)) return;
+  const b = app.querySelector(`.pad button[data-d="${e.key}"]`); if(b){ e.preventDefault(); b.click(); }
+});
+
+home(false);
+</script>
+<script src="../famille.js"></script>
+<script>if(window.Famille) Famille.track('salma-maths', 'Salma', ['salma-maths']);</script>
+</body></html>

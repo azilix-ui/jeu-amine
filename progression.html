@@ -125,6 +125,7 @@ const metric = {
   'essil-deutsch': d => (d['essil-deutsch'] || {}).xp || 0,
   'essil-latin':   d => (d['essil-latin'] || {}).xp || 0,
   'salma-english': d => Object.values(d['salma-stars'] || {}).reduce((a,b) => a + (+b || 0), 0),
+  'salma-maths': d => Object.values((d['salma-maths'] || {}).stars || {}).reduce((a,b) => a + (+b || 0), 0),
   'amine-halloween': d => +d['amine-bonbons'] || 0,
   'amine-tounsi':  d => +d['amine-tounsi-etoiles'] || 0
 };
@@ -168,6 +169,15 @@ function salmaCard(S){
   }).join('');
   return '<div class="subject"><h3>🦉 English Garden</h3><div class="kpis">' + kpi(total, 'étoiles', weekGain(S, 'Salma', 'salma-english', total), '★') + kpi(Object.keys(stars).length, 'activités réussies') + '</div><dl class="units">' + rows + '</dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
 }
+const MATHS = [['echauffement','🌱','Échauffement'],['secret','🔑','Le secret de la retenue'],['pasapas','👣','Pas à pas'],['atoi','🌻','À toi de jouer'],['centaines','🌳','Les centaines'],['double','🌈','Double retenue'],['zero','🕳️','Le piège du zéro'],['problemes','🧺','Petits problèmes']];
+function mathsCard(S){
+  const p = prog(S, 'Salma', 'salma-maths');
+  if(!p) return '<div class="subject"><h3>➖ Jardin des Nombres</h3><p class="none">Pas encore commencé.</p></div>';
+  const m = p.data['salma-maths'] || {}, st = m.stars || {}, done = m.done || {}, total = metric['salma-maths'](p.data);
+  const reached = MATHS.filter(x => st[x[0]]).length;
+  const rows = MATHS.map(x => '<dt>' + x[1] + ' ' + esc(x[2]) + '</dt><dd>' + (st[x[0]] ? '<span class="st">' + '★'.repeat(st[x[0]]) + '</span> · ' + done[x[0]] + '×' : '—') + '</dd>').join('');
+  return '<div class="subject"><h3>➖ Jardin des Nombres</h3><div class="kpis">' + kpi(reached + ' / 8', 'étapes réussies') + kpi(total, 'étoiles', weekGain(S, 'Salma', 'salma-maths', total), '★') + '</div><dl class="units">' + rows + '</dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
+}
 function simpleCard(S, player, course, title, icon, label){
   const p = prog(S, player, course);
   if(!p) return '<div class="subject"><h3>' + icon + ' ' + title + '</h3><p class="none">Pas encore de données.</p></div>';
@@ -196,8 +206,8 @@ function show(S){
     '<div class="bar"><span>Mis à jour ' + fmtDate(new Date().toISOString()) + '</span><button class="tool" id="reload">↻ Actualiser</button><button class="tool" id="logout">Se déconnecter</button></div>' +
     '<article class="child essil"><header><h2>Essil</h2><span>Allemand · Latin</span><span>· ' + lastSeen(S, 'Essil') + '</span></header><div class="subjects">' +
       courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + '</div></article>' +
-    '<article class="child salma"><header><h2>Salma</h2><span>Anglais</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
-      salmaCard(S) + serpentCard(S, 'Salma') + '</div></article>' +
+    '<article class="child salma"><header><h2>Salma</h2><span>Anglais · Maths</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
+      salmaCard(S) + mathsCard(S) + serpentCard(S, 'Salma') + '</div></article>' +
     '<article class="child amine"><header><h2>Amine</h2><span>Jeux · Grande section</span><span>· ' + lastSeen(S, 'Amine') + '</span></header><div class="subjects">' +
       serpentCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') + '</div></article>' +
     '<section class="panel"><h2>🏆 Serpentin : les records de tout le monde</h2>' + (variants.length
