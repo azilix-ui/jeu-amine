@@ -5,17 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Caveat:wght@600&family=Nunito:wght@400;600;700;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E">
 <title>Famille Missaoui</title>
 <meta name="description" content="Les cours et les jeux d'Essil, Salma et Amine.">
-<link rel="stylesheet" href="famille.css?v=3">
+<link rel="stylesheet" href="famille.css?v=4">
 </head>
 <body>
 <main class="wrap">
-  <header class="top">
-    <h1>Famille Missaoui<span class="dot">.</span></h1>
-    <p class="lead">Les cours et les jeux de la maison. Choisis ton espace !</p>
+  <header class="hero">
+    <div class="top">
+      <h1>Famille Missaoui<span class="dot">.</span></h1>
+      <p class="lead">Les cours et les jeux de la maison. Choisis ton espace !</p>
+    </div>
+    <div class="fridge" role="group" aria-label="Photos de famille">
+      <button class="polaroid p1" type="button" data-full="photos/maison-900" aria-label="Agrandir la photo : Devant la maison">
+        <i class="magnet m-essil" aria-hidden="true"></i>
+        <picture>
+          <source type="image/webp" srcset="photos/maison-480.webp 480w, photos/maison-900.webp 900w" sizes="(max-width: 820px) 60vw, 300px">
+          <img src="photos/maison-480.jpg" srcset="photos/maison-480.jpg 480w, photos/maison-900.jpg 900w" sizes="(max-width: 820px) 60vw, 300px" width="840" height="1050" alt="Papa, maman, Essil, Salma et Amine sur les marches devant la maison, au soleil." decoding="async">
+        </picture>
+        <span class="cap">Devant la maison</span>
+      </button>
+      <button class="polaroid p2" type="button" data-full="photos/salon-900" aria-label="Agrandir la photo : Au salon">
+        <i class="magnet m-salma" aria-hidden="true"></i>
+        <picture>
+          <source type="image/webp" srcset="photos/salon-480.webp 480w, photos/salon-900.webp 900w" sizes="(max-width: 820px) 60vw, 300px">
+          <img src="photos/salon-480.jpg" srcset="photos/salon-480.jpg 480w, photos/salon-900.jpg 900w" sizes="(max-width: 820px) 60vw, 300px" width="870" height="696" alt="Toute la famille serrée sur le canapé du salon, Amine sur les genoux de maman." decoding="async">
+        </picture>
+        <span class="cap">Au salon</span>
+      </button>
+      <button class="polaroid p3" type="button" data-full="photos/canape-900" aria-label="Agrandir la photo : Fou rire !">
+        <i class="magnet m-amine" aria-hidden="true"></i>
+        <picture>
+          <source type="image/webp" srcset="photos/canape-480.webp 480w, photos/canape-900.webp 900w" sizes="(max-width: 820px) 60vw, 300px">
+          <img src="photos/canape-480.jpg" srcset="photos/canape-480.jpg 480w, photos/canape-900.jpg 900w" sizes="(max-width: 820px) 60vw, 300px" width="900" height="720" alt="Fou rire sur le canapé : Amine a les pieds en l'air." decoding="async">
+        </picture>
+        <span class="cap">Fou rire !</span>
+      </button>
+    </div>
   </header>
 
   <nav class="kids" aria-label="Les espaces des enfants">
@@ -54,5 +82,30 @@
 
   <footer>Fait à la maison, avec amour · missaoui-family.com · <a href="progression.html">📈 Progression (parents)</a></footer>
 </main>
+
+<dialog class="viewer" id="viewer" aria-label="Photo de famille">
+  <figure>
+    <picture><source type="image/webp" id="vWebp"><img id="vImg" src="photos/maison-480.jpg" alt="" loading="lazy"></picture>
+    <figcaption id="vCap"></figcaption>
+  </figure>
+  <button class="close" type="button" id="vClose">Fermer</button>
+</dialog>
+<script>
+(function(){
+  var d = document.getElementById('viewer');
+  if(!d || typeof d.showModal !== 'function') return;
+  document.querySelectorAll('.polaroid').forEach(function(b){
+    b.addEventListener('click', function(){
+      var base = b.getAttribute('data-full'), img = b.querySelector('img');
+      document.getElementById('vWebp').srcset = base + '.webp';
+      var v = document.getElementById('vImg'); v.src = base + '.jpg'; v.alt = img.alt;
+      document.getElementById('vCap').textContent = b.querySelector('.cap').textContent;
+      d.showModal();
+    });
+  });
+  document.getElementById('vClose').addEventListener('click', function(){ d.close(); });
+  d.addEventListener('click', function(e){ if(e.target === d) d.close(); });
+})();
+</script>
 </body>
 </html>
