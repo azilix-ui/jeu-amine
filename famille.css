@@ -35,16 +35,21 @@ h1 .dot{color:var(--essil-2)}
 /* Les trois enfants */
 .kids{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 @media (max-width:820px){.kids{grid-template-columns:1fr}}
-.kid{position:relative;display:flex;flex-direction:column;gap:14px;text-decoration:none;color:#fff;background:var(--c);border-radius:30px;padding:26px 24px 24px;min-height:340px;overflow:hidden;box-shadow:0 10px 0 color-mix(in srgb,var(--c) 70%,#000);transition:transform .15s}
-.kid:hover{transform:translateY(-4px)}
-.kid:active{transform:translateY(4px);box-shadow:0 4px 0 color-mix(in srgb,var(--c) 70%,#000)}
+.kid{position:relative;display:flex;flex-direction:column;gap:14px;color:#fff;background:var(--c);border-radius:30px;padding:26px 24px 24px;min-height:340px;overflow:hidden;box-shadow:0 10px 0 color-mix(in srgb,var(--c) 70%,#000)}
+.kid a{color:#fff;text-decoration:none}
 .kid .initial{font-family:var(--display);font-weight:800;font-size:150px;line-height:.8;position:absolute;right:-6px;bottom:-14px;opacity:.14;pointer-events:none}
-.kid .who{font-family:var(--display);font-weight:800;font-size:44px;line-height:1}
+.kid .who{font-family:var(--display);font-weight:800;font-size:44px;line-height:1;align-self:flex-start}
+.kid .who:hover{text-decoration:underline;text-decoration-thickness:3px}
 .kid .what{font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
 .kid ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;position:relative}
-.kid li{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.14);border-radius:14px;padding:9px 12px;font-weight:700}
-.kid li span{font-size:24px;line-height:1}
-.kid .go{margin-top:auto;font-weight:800;display:flex;align-items:center;gap:8px;position:relative}
+.kid li a{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.14);border-radius:14px;padding:10px 12px;font-weight:700;transition:background .15s,transform .15s}
+.kid li a:hover{background:rgba(255,255,255,.26);transform:translateX(4px)}
+.kid li a:active{transform:translateX(4px) scale(.98)}
+.kid li a::after{content:"▶";margin-left:auto;font-size:13px;opacity:.7}
+.kid li span{font-size:24px;line-height:1;display:inline-flex}
+.kid li em{font-style:normal;font-size:12px;font-weight:800;background:#fff1bf;color:#2a1f4f;border-radius:999px;padding:2px 9px;margin-left:4px}
+.kid .go{margin-top:auto;font-weight:800;display:inline-flex;align-items:center;gap:8px;position:relative;align-self:flex-start;border-bottom:2px solid rgba(255,255,255,.5)}
+.kid .go:hover{border-color:#fff}
 .kid.essil{--c:#1f3c88;background-image:linear-gradient(transparent calc(100% - 10px),#d7263d calc(100% - 10px))}
 .kid.salma{--c:#2e8b57;background-image:linear-gradient(180deg,#5aaedc 0 76px,transparent 76px)}
 .kid.amine{--c:#2a1f4f;background-image:radial-gradient(circle at 86% 14%,#fff1bf 0 22px,transparent 23px)}
