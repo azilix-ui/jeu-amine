@@ -36,8 +36,8 @@ body{
 .wrap{max-width:960px;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 48px max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:28px}
 h1{font-family:var(--display);font-weight:800;font-size:clamp(38px,8vw,64px);line-height:1;margin:0;color:var(--pumpkin);text-shadow:0 4px 0 var(--pumpkin-deep);text-wrap:balance}
 .lead{margin:10px 0 0;color:var(--mist);font-size:20px;max-width:46ch}
-.games{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-@media (max-width:760px){.games{grid-template-columns:1fr}}
+.games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:640px){.games{grid-template-columns:1fr}}
 .game{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:var(--ink);background:var(--card);border-radius:28px;padding:22px;border:4px solid var(--c);box-shadow:0 7px 0 var(--c);transition:transform .15s}
 .game:hover{transform:translateY(-4px)}
 .game:active{transform:translateY(4px);box-shadow:0 2px 0 var(--c)}
@@ -75,6 +75,12 @@ footer{color:var(--mist);font-size:14px}
       <b>La Nuit d'Amine 2</b>
       <p>Plus difficile, avec une histoire à vivre : où est passé Minuit, le chat noir ?</p>
       <div class="tags"><span>Mémoire 10 paires</span><span>Jusqu'à 20</span><span>Additions</span><span>Histoire</span></div>
+    </a>
+    <a class="game" href="serpentin.html" style="--c:#8be08f">
+      <span class="big">🐍</span>
+      <b>Serpentin</b>
+      <p>Le jeu du serpent, pour la tablette : on glisse le doigt pour le diriger.</p>
+      <div class="tags"><span>4 mondes</span><span>3 vitesses</span><span>Compter de 1 à 10</span></div>
     </a>
     <a class="game tn" href="nahki-tounsi.html" style="--c:var(--door)">
       <span class="big">🇹🇳</span>
