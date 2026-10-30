@@ -7,3 +7,11 @@
 Redirect 301 /la-nuit-d-amine.html /amine/la-nuit-d-amine.html
 Redirect 301 /la-nuit-d-amine-2.html /amine/la-nuit-d-amine-2.html
 Redirect 301 /nahki-tounsi.html /amine/nahki-tounsi.html
+
+# Toujours vérifier la dernière version des pages : les navigateurs (Chrome sur tablette surtout)
+# ne gardent plus une vieille copie du site après une mise à jour.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|css|js)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
