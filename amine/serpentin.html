@@ -55,6 +55,20 @@ h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0 0 10px;col
 .choice[aria-pressed="true"]{border-color:var(--slime);background:var(--card-hi)}
 .go{align-self:center;background:var(--slime);color:#14321a;font-family:var(--display);font-weight:800;font-size:clamp(30px,6vw,40px);padding:14px 56px;border-radius:999px;box-shadow:0 7px 0 var(--slime-deep)}
 .go:active{transform:translateY(5px);box-shadow:0 2px 0 var(--slime-deep)}
+.who{cursor:pointer;color:var(--ink);font-size:18px;border:3px solid var(--slime)}
+.who:active{transform:translateY(2px)}
+.board{background:var(--card);border-radius:24px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.board h2{margin:0}
+.board .sub{color:var(--mist);font-size:15px;margin:0}
+.board ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:r}
+.board li{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border-radius:14px;padding:8px 14px;font-weight:600;counter-increment:r}
+.board li::before{content:counter(r);font-family:var(--display);font-weight:800;font-size:20px;color:var(--mist);width:1.4em;text-align:center}
+.board li:nth-child(1)::before{content:"🥇"}.board li:nth-child(2)::before{content:"🥈"}.board li:nth-child(3)::before{content:"🥉"}
+.board li b{margin-left:auto;font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.board li.me{background:rgba(139,224,143,.22);outline:2px solid var(--slime)}
+.board .empty{color:var(--mist);font-size:15px}
+.overlay .board{background:rgba(255,255,255,.06);width:100%;padding:10px 12px}
+.overlay .board li{padding:6px 10px;font-size:16px}
 .parents{background:rgba(51,41,95,.7);border-radius:18px;padding:14px 18px;font-size:15px;color:var(--mist)}
 .parents strong{color:var(--ink)}
 
@@ -84,7 +98,7 @@ canvas{display:block;border-radius:18px;touch-action:none;box-shadow:0 0 0 4px r
 #play.nopad{grid-template-columns:1fr}
 
 .overlay{position:absolute;inset:0;display:grid;place-items:center;padding:16px;pointer-events:none}
-.overlay .box{pointer-events:auto;background:rgba(27,21,51,.92);border:4px solid var(--slime);border-radius:30px;padding:22px 26px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;max-width:440px}
+.overlay .box{pointer-events:auto;max-height:100%;overflow:auto;background:rgba(27,21,51,.92);border:4px solid var(--slime);border-radius:30px;padding:22px 26px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;max-width:440px}
 .overlay .em{font-size:64px;line-height:1}
 .overlay h3{font-family:var(--display);font-weight:800;font-size:clamp(28px,6vw,40px);margin:0;color:var(--moon)}
 .overlay p{margin:0;color:var(--mist)}
@@ -106,7 +120,10 @@ canvas{display:block;border-radius:18px;touch-action:none;box-shadow:0 0 0 4px r
   <div class="wrap">
     <div class="topline">
       <a class="back" href="./">← Tous les jeux</a>
-      <div class="pill" aria-label="Bonbons gagnés">🍬 <span id="candies">0</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="pill who" id="whoBtn" aria-label="Changer de joueur">🧒 <span id="whoName">Qui joue ?</span></button>
+        <div class="pill" aria-label="Bonbons d'Amine">🍬 <span id="candies">0</span></div>
+      </div>
     </div>
     <h1>Serpentin<small>Dirige le serpent, mange tout ce que tu trouves… et ne te cogne pas !</small></h1>
 
@@ -124,8 +141,14 @@ canvas{display:block;border-radius:18px;touch-action:none;box-shadow:0 0 0 4px r
     </div>
     <button class="go" id="goBtn">▶ Jouer !</button>
 
+    <section class="board" aria-live="polite">
+      <h2>🏆 Les records</h2>
+      <p class="sub" id="boardTitle"></p>
+      <ol id="board"></ol>
+    </section>
+
     <aside class="parents">
-      <strong>Pour les parents.</strong> Sur tablette, on dirige le serpent en <strong>glissant le doigt</strong> sur le terrain ou avec la <strong>croix</strong>. Au clavier, ce sont les flèches. Le mode 🐢 Tortue ne se termine jamais : si le serpent se mord la queue, il raccourcit simplement. Le mode 🔢 Les chiffres fait manger les numéros dans l'ordre, de 1 à 10 : on travaille la suite des nombres. Tous les 5 points, Amine gagne un bonbon 🍬 pour sa cagnotte.
+      <strong>Pour les parents.</strong> Sur tablette, on dirige le serpent en <strong>glissant le doigt</strong> sur le terrain ou avec la <strong>croix</strong>. Au clavier, ce sont les flèches. Le mode 🐢 Tortue ne se termine jamais : si le serpent se mord la queue, il raccourcit simplement. Le mode 🔢 Les chiffres fait manger les numéros dans l'ordre, de 1 à 10 : on travaille la suite des nombres. Avant de jouer, chacun choisit son prénom : les records sont gardés en ligne et le classement est partagé entre tous les appareils. Tous les 5 points, Amine gagne un bonbon 🍬 pour sa cagnotte.
     </aside>
   </div>
 </section>
@@ -154,6 +177,7 @@ canvas{display:block;border-radius:18px;touch-action:none;box-shadow:0 0 0 4px r
   </div>
 </section>
 
+<script src="../famille.js"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -323,9 +347,37 @@ function renderMenu(){
   document.querySelectorAll('#speeds .choice').forEach(b => b.onclick = () => { pref.speed = b.dataset.k; sfx.tap(); save(); renderMenu(); speak(SPEEDS[pref.speed].name); });
   document.querySelectorAll('#modes .choice').forEach(b => b.onclick = () => { pref.mode = b.dataset.k; sfx.tap(); save(); renderMenu(); speak(MODES[pref.mode].name); });
   $('#candies').textContent = store.get('amine-bonbons', 0);
+  $('#whoName').textContent = player() || 'Qui joue ?';
+  loadBoard();
 }
+const hasFamille = () => typeof window.Famille === 'object';
+const player = () => hasFamille() ? Famille.player() : null;
+const variant = () => `${pref.speed}-${pref.mode}`;
+const variantLabel = () => `${SPEEDS[pref.speed].emoji} ${SPEEDS[pref.speed].name} · ${MODES[pref.mode].emoji} ${MODES[pref.mode].name}`;
+function boardHtml(list, me){
+  if(!list) return `<li class="empty">Les records en ligne s'affichent quand on joue sur missaoui-family.com.</li>`;
+  if(!list.length) return `<li class="empty">Pas encore de record ici. À toi de jouer !</li>`;
+  return list.map(r => `<li class="${r.player === me ? 'me' : ''}"><span>${escapeHtml(r.player)}</span><b>${r.score}</b></li>`).join('');
+}
+function escapeHtml(t){ return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let boardReq = 0;
+async function loadBoard(){
+  $('#boardTitle').textContent = variantLabel();
+  const n = ++boardReq;
+  const list = hasFamille() ? await Famille.highscores('serpentin', variant(), 8) : null;
+  if(n !== boardReq) return;
+  $('#board').innerHTML = boardHtml(list, player());
+}
+$('#whoBtn').onclick = async () => { if(!hasFamille()) return; const n = await Famille.choosePlayer({title:'Qui joue ?'}); if(n){ sfx.tap(); speak('Bonjour ' + n + ' !'); renderMenu(); } };
 function save(){ store.set('serpentin-pref', pref); }
-$('#goBtn').onclick = () => startGame();
+$('#goBtn').onclick = async () => {
+  if(hasFamille() && !Famille.player()){
+    const n = await Famille.choosePlayer({title:'Qui joue ?'});
+    if(!n) return;
+    renderMenu();
+  }
+  startGame();
+};
 
 /* =========================================================
    Son et voix
@@ -492,8 +544,9 @@ function showStart(){
   const isTouch = matchMedia('(pointer:coarse)').matches;
   const T = G.T;
   const goal = pref.mode === 'count' ? 'Mange les numéros dans l\'ordre : 1, puis 2, puis 3…' : `Mange les ${T.foodName} pour grandir !`;
-  overlay(`<div class="hand">${isTouch ? '👆' : '⌨️'}</div><h3>${isTouch ? 'Glisse ton doigt' : 'Utilise les flèches'}</h3><p>${goal}</p><p><b>Touche le terrain pour commencer</b></p>`);
-  speak(isTouch ? `Glisse ton doigt pour diriger le serpent. ${goal}` : `Utilise les flèches. ${goal}`);
+  const me = player();
+  overlay(`<div class="hand">${isTouch ? '👆' : '⌨️'}</div><h3>${me ? `À toi, ${escapeHtml(me)} !` : (isTouch ? 'Glisse ton doigt' : 'Utilise les flèches')}</h3><p>${isTouch ? 'Glisse ton doigt pour diriger le serpent.' : 'Utilise les flèches du clavier.'} ${goal}</p><p><b>Touche le terrain pour commencer</b></p>`);
+  speak(`${me ? `À toi, ${me} ! ` : ''}${isTouch ? 'Glisse ton doigt pour diriger le serpent.' : 'Utilise les flèches.'} ${goal}`);
 }
 function toast(text){ const t = document.createElement('div'); t.className = 'toast'; t.textContent = text; arenaEl.appendChild(t); setTimeout(() => t.remove(), 1500); }
 
@@ -561,19 +614,35 @@ function gameOver(){
   const best = store.get('serpentin-best', {});
   const record = G.score > (best[id] || 0);
   if(record){ best[id] = G.score; store.set('serpentin-best', best); }
-  const won = Math.floor(G.score / 5);
-  if(won) store.set('amine-bonbons', store.get('amine-bonbons', 0) + won);
+  const won = giveCandies(G.score);
   G.awarded = true;
-  setTimeout(() => {
-    overlay(`<div class="em">${record && G.score ? '🏆' : '🐍'}</div><h3>${record && G.score ? 'Nouveau record !' : 'Le serpent s\'est cogné !'}</h3>
-      <p>Score : <b>${G.score}</b> · Meilleur : <b>${Math.max(G.score, best[id] || 0)}</b>${won ? ` · +${won} 🍬` : ''}</p>
+  const me = player(), score = G.score, v = variant();
+  const sent = hasFamille() && me ? Famille.score('serpentin', v, score, me) : Promise.resolve(null);
+  setTimeout(async () => {
+    const res = await Promise.race([sent, new Promise(r => setTimeout(() => r(null), 2500))]);
+    const top = hasFamille() ? await Famille.highscores('serpentin', v, 5) : null;
+    const isRecord = res ? res.personalBest && score > 0 : record && score > 0;
+    const name = me ? escapeHtml(me) : '';
+    overlay(`<div class="em">${res && res.rank === 1 && score > 0 ? '👑' : isRecord ? '🏆' : '🐍'}</div>
+      <h3>${res && res.rank === 1 && score > 0 ? `${name}, tu es numéro 1 !` : isRecord ? 'Nouveau record !' : 'Le serpent s\'est cogné !'}</h3>
+      <p>${name ? name + ' · ' : ''}Score : <b>${score}</b>${res ? ` · Ton meilleur : <b>${res.best}</b> · Place : <b>${res.rank}</b>` : ` · Meilleur : <b>${Math.max(score, best[id] || 0)}</b>`}${won ? ` · +${won} 🍬` : ''}</p>
+      ${top ? `<div class="board"><p class="sub">🏆 ${variantLabel()}</p><ol>${boardHtml(top, me)}</ol></div>` : ''}
       <div class="row"><button class="btn" id="again">🔄 Rejouer</button><button class="btn alt" id="toMenu">🏠 Menu</button></div>`);
     $('#again').onclick = () => startGame(); $('#toMenu').onclick = quit;
-    speak(record && G.score ? `Nouveau record ! ${G.score} points !` : `Bravo ! Tu as fait ${G.score} points !`);
+    if(res && res.rank === 1 && score > 0) speak(`Bravo ${me} ! Tu es premier du classement avec ${score} points !`);
+    else speak(isRecord ? `Nouveau record ! ${score} points !` : `Bravo ! Tu as fait ${score} points !`);
   }, 500);
 }
+// La cagnotte de bonbons est celle d'Amine : elle ne se remplit que quand c'est lui qui joue.
+function giveCandies(score){
+  const me = player();
+  if(me && me !== 'Amine') return 0;
+  const won = Math.floor(score / 5);
+  if(won) store.set('amine-bonbons', store.get('amine-bonbons', 0) + won);
+  return won;
+}
 function quit(){
-  if(G && !G.awarded){ const won = Math.floor(G.score / 5); if(won) store.set('amine-bonbons', store.get('amine-bonbons', 0) + won); }
+  if(G && !G.awarded && G.started){ giveCandies(G.score); if(hasFamille() && player() && G.score > 0) Famille.score('serpentin', variant(), G.score, player()); }
   cancelAnimationFrame(raf); G = null;
   try{ if(wakeLock) wakeLock.release(); }catch(e){} wakeLock = null;
   clearOverlay(); $('#play').hidden = true; $('#menu').hidden = false; renderMenu();
@@ -581,7 +650,7 @@ function quit(){
 }
 function hud(){
   $('#score').textContent = G.score;
-  $('#hearts').textContent = G.lives === Infinity ? '' : '❤️'.repeat(Math.max(0, G.lives)) + '🤍'.repeat(Math.max(0, G.S.lives - G.lives));
+  $('#hearts').textContent = G.S.lives === Infinity ? '' : '❤️'.repeat(Math.max(0, G.lives)) + '🤍'.repeat(Math.max(0, G.S.lives - G.lives));
   if(pref.mode === 'count') $('#target').textContent = G.target;
 }
 
@@ -679,6 +748,7 @@ function drawStar(ctx, c, now){
 }
 
 renderMenu();
+if(hasFamille()) Famille.track('amine-halloween', 'Amine', ['amine-bonbons']);
 </script>
 </body>
 </html>

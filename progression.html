@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%88%3C/text%3E%3C/svg%3E">
+<title>Progression · Famille Missaoui</title>
+<link rel="stylesheet" href="famille.css?v=2">
+<style>
+[hidden]{display:none!important}
+/* Tableau de bord des parents : une carte par enfant (couleur de son espace), le plus récent en haut. */
+.login{background:var(--surface);border:2px solid var(--line);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:12px;max-width:520px}
+.login h2{font-family:var(--display);font-size:26px;margin:0}
+.login p{margin:0;color:var(--soft)}
+.login form{display:flex;gap:10px;flex-wrap:wrap}
+.login input{flex:1 1 200px;min-width:0;font:inherit;padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.login button,.tool{font:inherit;font-weight:800;border:0;border-radius:14px;padding:10px 18px;background:var(--essil);color:#fff;cursor:pointer}
+.tool{background:var(--surface);color:var(--ink);border:2px solid var(--line);padding:8px 14px;font-weight:700}
+.msg{font-weight:700;color:var(--essil-2);min-height:1.2em}
+.board{display:flex;flex-direction:column;gap:22px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--soft);font-size:15px}
+.child{background:var(--surface);border:2px solid var(--line);border-radius:28px;overflow:hidden}
+.child>header{background:var(--c);color:#fff;padding:18px 22px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+.child>header h2{font-family:var(--display);font-weight:800;font-size:36px;margin:0;line-height:1}
+.child>header span{opacity:.85;font-weight:700}
+.child.essil{--c:#1f3c88}.child.salma{--c:#2e8b57}.child.amine{--c:#2a1f4f}
+.subjects{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;padding:18px}
+.subject{border:2px solid var(--line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.subject h3{margin:0;font-family:var(--display);font-size:22px;display:flex;align-items:center;gap:8px}
+.kpis{display:flex;gap:10px;flex-wrap:wrap}
+.kpi{background:var(--bg);border-radius:14px;padding:8px 12px;min-width:0}
+.kpi b{display:block;font-family:var(--display);font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi small{color:var(--soft);font-weight:700;font-size:13px}
+.kpi .up{color:var(--salma);font-weight:800;font-size:14px}
+.grade{font-weight:800}
+.meter{height:10px;border-radius:999px;background:var(--bg);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--c, var(--essil));border-radius:999px}
+.units{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:15px;margin:0}
+.units dt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.units dd{margin:0;font-variant-numeric:tabular-nums;color:var(--soft);font-weight:700;text-align:right}
+.units dd .st{color:#e0a800;letter-spacing:1px}
+.none{color:var(--soft);font-size:15px;margin:0}
+.when{font-size:14px;color:var(--soft);margin:0}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--soft);font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
+.panel{background:var(--surface);border:2px solid var(--line);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.panel h2{font-family:var(--display);font-size:26px;margin:0}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="back" href="./">← Famille Missaoui</a>
+  <header class="top">
+    <h1>Progression<span class="dot">.</span></h1>
+    <p class="lead">Où en sont Essil, Salma et Amine dans leurs cours et leurs jeux. Réservé aux parents.</p>
+  </header>
+  <section id="login" class="login" hidden></section>
+  <section id="board" class="board" hidden></section>
+</main>
+<script>
+'use strict';
+const API = 'api/famille.php';
+const CFG = {"essil-deutsch": {"units": [["ich", "🙋‍♀️", "Das bin ich"], ["steckbrief", "🪪", "Er heißt Mike"], ["laender", "🗺️", "Länder & Hauptstädte"], ["wetter", "⛅", "Datum & Wetter"], ["fehler", "🔎", "Fehlerjagd"], ["hallo", "👋", "Hallo!"], ["verben", "⚙️", "Verben: sein & haben"], ["zahlen", "🔢", "Zahlen"], ["zeit", "📅", "Tage & Monate"], ["familie", "🐶", "Familie & Tiere"], ["schule", "🎒", "Schule"], ["freizeit", "⚽", "Freizeit"], ["essen", "🥨", "Essen & Trinken"], ["farben", "👕", "Farben & Kleidung"]], "levels": [[0, "Anfängerin · débutante"], [300, "Entdeckerin · exploratrice"], [800, "Reisende · voyageuse"], [1600, "Kennerin · connaisseuse"], [2800, "Profi · pro"], [4500, "Expertin · experte"], [7000, "Deutsch-Star"]]}, "essil-latin": {"units": [["salve", "👋", "Salve !"], ["familia", "🏠", "Familia"], ["roma", "🏛️", "Roma"], ["decl1", "🌹", "1re déclinaison"], ["decl2", "🛡️", "2e déclinaison"], ["verba", "⚔️", "Verba"], ["versio", "🔍", "Versio"], ["dei", "⚡", "Dei & mythi"], ["numeri", "🔢", "Numeri"], ["heres", "🔗", "Hereditas"]], "levels": [[0, "Tiro · recrue"], [300, "Miles · soldat"], [800, "Signifer · porte-enseigne"], [1600, "Centurio · centurion"], [2800, "Tribunus · tribun"], [4500, "Consul · consul"], [7000, "Imperator · général triomphant"]]}, "salma-english": {"themes": [["animals", "Animals", "Les animaux", "🐶"], ["colors", "Colours", "Les couleurs", "🎨"], ["numbers", "Numbers", "Les nombres", "🔢"], ["fruits", "Fruits", "Les fruits", "🍓"], ["family", "Family", "La famille", "👨‍👩‍👧"], ["hello", "Hello!", "Se présenter", "👋"], ["days", "Days", "Les jours", "📅"], ["months", "Months", "Les mois", "🗓️"]]}};
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let pass = null;
+try{ pass = sessionStorage.getItem('famille-pass') || localStorage.getItem('nahki-pass'); }catch(e){}
+
+async function post(fields){
+  const fd = new FormData(); for(const [k,v] of Object.entries(fields)) fd.append(k, v);
+  const r = await fetch(API, {method:'POST', body:fd});
+  let j = {}; try{ j = await r.json(); }catch(e){}
+  if(!r.ok){ const e = new Error(j.error || 'Erreur du serveur (' + r.status + ')'); e.status = r.status; throw e; }
+  return j;
+}
+function ago(iso){
+  if(!iso) return 'jamais';
+  const s = (Date.now() - Date.parse(iso)) / 1000;
+  if(s < 90) return "à l'instant";
+  if(s < 3600) return 'il y a ' + Math.round(s/60) + ' min';
+  if(s < 86400) return 'il y a ' + Math.round(s/3600) + ' h';
+  const d = Math.round(s/86400);
+  return d === 1 ? 'hier' : 'il y a ' + d + ' jours';
+}
+const fmtDate = iso => new Date(iso).toLocaleString('fr-FR', {weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+
+/* ---------- Connexion ---------- */
+async function start(){
+  if(pass){ try{ return show(await post({action:'summary', pass})); }catch(e){ if(e.status !== 403 && e.status !== 409) return loginForm(e.message); pass = null; } }
+  let setup = false;
+  try{ setup = (await (await fetch(API + '?action=auth', {cache:'no-store'})).json()).setup; }catch(e){}
+  loginForm('', setup);
+}
+function loginForm(msg, setup){
+  const box = $('#login'); box.hidden = false; $('#board').hidden = true;
+  box.innerHTML = setup
+    ? '<h2>Choisis le mot de passe parent</h2><p>C\'est le même que pour enregistrer ta voix dans Nahki Tounsi. 6 caractères minimum.</p><form id="f"><input type="password" id="p1" placeholder="Mot de passe" autocomplete="new-password"><input type="password" id="p2" placeholder="Encore une fois" autocomplete="new-password"><button>Créer</button></form><div class="msg" id="m"></div>'
+    : '<h2>Mot de passe parent</h2><p>Le même que pour enregistrer ta voix dans Nahki Tounsi.</p><form id="f"><input type="password" id="p1" placeholder="Mot de passe" autocomplete="current-password"><button>Voir la progression</button></form><div class="msg" id="m"></div>';
+  $('#m').textContent = msg || '';
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    const a = $('#p1').value;
+    try{
+      if(setup){
+        if(a.length < 6) return $('#m').textContent = 'Au moins 6 caractères.';
+        if(a !== $('#p2').value) return $('#m').textContent = 'Les deux mots de passe ne sont pas pareils.';
+        await post({action:'setup', newpass:a});
+      }
+      const data = await post({action:'summary', pass:a});
+      pass = a; try{ sessionStorage.setItem('famille-pass', a); }catch(err){}
+      show(data);
+    }catch(err){ $('#m').textContent = err.message; }
+  };
+}
+
+/* ---------- Calculs ---------- */
+const metric = {
+  'essil-deutsch': d => (d['essil-deutsch'] || {}).xp || 0,
+  'essil-latin':   d => (d['essil-latin'] || {}).xp || 0,
+  'salma-english': d => Object.values(d['salma-stars'] || {}).reduce((a,b) => a + (+b || 0), 0),
+  'amine-halloween': d => +d['amine-bonbons'] || 0,
+  'amine-tounsi':  d => +d['amine-tounsi-etoiles'] || 0
+};
+function weekGain(S, player, course, current){
+  const h = S.history.filter(x => x.player.toLowerCase() === player.toLowerCase() && x.course === course);
+  if(!h.length) return null;
+  const limit = Date.now() - 7*86400000;
+  let base = null;
+  for(const x of h){ if(Date.parse(x.created) <= limit) base = x; }
+  if(!base) base = h[0];
+  const v = current - metric[course](base.data || {});
+  return v > 0 ? v : 0;
+}
+function prog(S, player, course){ return S.progress.find(p => p.player.toLowerCase() === player.toLowerCase() && p.course === course); }
+function kpi(value, label, gain, unit){ return '<div class="kpi"><b>' + value + '</b><small>' + label + '</small>' + (gain ? ' <span class="up">+' + gain + (unit ? ' ' + unit : '') + ' cette semaine</span>' : '') + '</div>'; }
+
+function courseCard(S, player, course, title, icon){
+  const p = prog(S, player, course);
+  if(!p) return '<div class="subject"><h3>' + icon + ' ' + title + '</h3><p class="none">Pas encore commencé (ou pas encore ouvert depuis la mise en place du suivi).</p></div>';
+  const d = p.data || {}, cfg = CFG[course], st = d[course] || {};
+  const xp = st.xp || 0, best = st.best || {};
+  let cur = cfg.levels[0], next = null;
+  cfg.levels.forEach((l, i) => { if(xp >= l[0]){ cur = l; next = cfg.levels[i+1] || null; } });
+  const pct = next ? Math.round((xp - cur[0]) / (next[0] - cur[0]) * 100) : 100;
+  const done = Object.keys(best).length, stars = Object.values(best).reduce((a,b) => a + b, 0);
+  const per = {}; for(const [k,v] of Object.entries(best)){ const u = k.split(':')[0]; (per[u] = per[u] || {n:0, s:0}); per[u].n++; per[u].s += v; }
+  const units = cfg.units.filter(u => per[u[0]]).map(u => '<dt>' + u[1] + ' ' + esc(u[2]) + '</dt><dd>' + per[u[0]].n + ' épreuve' + (per[u[0]].n > 1 ? 's' : '') + ' · <span class="st">' + '★'.repeat(Math.round(per[u[0]].s / per[u[0]].n)) + '</span></dd>').join('');
+  return '<div class="subject"><h3>' + icon + ' ' + title + '</h3>' +
+    '<div class="kpis">' + kpi(xp, 'XP', weekGain(S, player, course, xp), 'XP') + kpi(done, 'épreuves réussies') + kpi(stars, 'étoiles') + '</div>' +
+    '<div><span class="grade">' + esc(cur[1]) + '</span>' + (next ? ' <span class="when">→ ' + esc(next[1]) + ' à ' + next[0] + ' XP</span>' : '') + '<div class="meter" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
+    (units ? '<dl class="units">' + units + '</dl>' : '<p class="none">Aucune épreuve terminée pour l\'instant.</p>') +
+    '<p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
+}
+function salmaCard(S){
+  const p = prog(S, 'Salma', 'salma-english');
+  if(!p) return '<div class="subject"><h3>🦉 English Garden</h3><p class="none">Pas encore commencé (ou pas encore ouvert depuis la mise en place du suivi).</p></div>';
+  const stars = p.data['salma-stars'] || {}, total = metric['salma-english'](p.data);
+  const rows = CFG['salma-english'].themes.map(t => {
+    const s = Object.entries(stars).filter(([k]) => k.startsWith(t[0] + '-')).reduce((a,[,v]) => a + v, 0);
+    return '<dt>' + t[3] + ' ' + esc(t[1]) + ' <span class="when">(' + esc(t[2]) + ')</span></dt><dd>' + (s ? '<span class="st">★</span> ' + s : '—') + '</dd>';
+  }).join('');
+  return '<div class="subject"><h3>🦉 English Garden</h3><div class="kpis">' + kpi(total, 'étoiles', weekGain(S, 'Salma', 'salma-english', total), '★') + kpi(Object.keys(stars).length, 'activités réussies') + '</div><dl class="units">' + rows + '</dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
+}
+function simpleCard(S, player, course, title, icon, label){
+  const p = prog(S, player, course);
+  if(!p) return '<div class="subject"><h3>' + icon + ' ' + title + '</h3><p class="none">Pas encore de données.</p></div>';
+  const v = metric[course](p.data || {});
+  return '<div class="subject"><h3>' + icon + ' ' + title + '</h3><div class="kpis">' + kpi(v, label, weekGain(S, player, course, v)) + '</div><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
+}
+const SPEED = {tortue:'🐢 Tortue', lapin:'🐇 Lapin', guepard:'🐆 Guépard'}, MODE = {eat:'Manger', count:'Les chiffres'};
+const vLabel = v => { const [s, m] = v.split('-'); return (SPEED[s] || s) + ' · ' + (MODE[m] || m); };
+function serpentCard(S, player){
+  const rows = S.best.filter(b => b.game === 'serpentin' && b.player.toLowerCase() === player.toLowerCase());
+  if(!rows.length) return '<div class="subject"><h3>🐍 Serpentin</h3><p class="none">Pas encore joué avec son prénom.</p></div>';
+  const games = rows.reduce((a,b) => a + +b.games, 0), last = rows.map(r => r.last).sort().pop();
+  return '<div class="subject"><h3>🐍 Serpentin</h3><div class="kpis">' + kpi(Math.max(...rows.map(r => +r.best)), 'meilleur score') + kpi(games, 'parties') + '</div><dl class="units">' + rows.sort((a,b) => b.best - a.best).map(r => '<dt>' + vLabel(r.variant) + '</dt><dd>' + r.best + ' pts</dd>').join('') + '</dl><p class="when">Dernière partie : ' + ago(last) + '</p></div>';
+}
+function lastSeen(S, name){ const p = S.players.find(x => x.name.toLowerCase() === name.toLowerCase()); return p ? 'dernière visite ' + ago(p.last_seen) : 'pas encore de visite'; }
+
+/* ---------- Affichage ---------- */
+function show(S){
+  $('#login').hidden = true; const b = $('#board'); b.hidden = false;
+  const others = S.players.map(p => p.name).filter(n => !['essil','salma','amine'].includes(n.toLowerCase()));
+  const serp = S.best.filter(x => x.game === 'serpentin');
+  const variants = [...new Set(serp.map(x => x.variant))].sort();
+  const top = n => Math.max(...serp.filter(x => x.player === n).map(x => +x.best));
+  const names = [...new Set(serp.map(x => x.player))].sort((a,b) => top(b) - top(a));
+  b.innerHTML =
+    '<div class="bar"><span>Mis à jour ' + fmtDate(new Date().toISOString()) + '</span><button class="tool" id="reload">↻ Actualiser</button><button class="tool" id="logout">Se déconnecter</button></div>' +
+    '<article class="child essil"><header><h2>Essil</h2><span>Allemand · Latin</span><span>· ' + lastSeen(S, 'Essil') + '</span></header><div class="subjects">' +
+      courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + '</div></article>' +
+    '<article class="child salma"><header><h2>Salma</h2><span>Anglais</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
+      salmaCard(S) + serpentCard(S, 'Salma') + '</div></article>' +
+    '<article class="child amine"><header><h2>Amine</h2><span>Jeux · Grande section</span><span>· ' + lastSeen(S, 'Amine') + '</span></header><div class="subjects">' +
+      serpentCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') + '</div></article>' +
+    '<section class="panel"><h2>🏆 Serpentin : les records de tout le monde</h2>' + (variants.length
+      ? '<div class="table-wrap"><table><thead><tr><th>Joueur</th>' + variants.map(v => '<th>' + vLabel(v) + '</th>').join('') + '</tr></thead><tbody>' +
+        names.map(n => '<tr><td>' + esc(n) + '</td>' + variants.map(v => { const r = serp.find(x => x.player === n && x.variant === v); return '<td class="n">' + (r ? r.best : '—') + '</td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>'
+      : '<p class="none">Aucune partie enregistrée pour l\'instant.</p>') +
+      (others.length ? '<p class="when">Autres joueurs : ' + others.map(esc).join(', ') + '</p>' : '') + '</section>' +
+    '<section class="panel"><h2>🕒 Dernières parties</h2>' + (S.recent.length
+      ? '<div class="table-wrap"><table><thead><tr><th>Quand</th><th>Joueur</th><th>Jeu</th><th>Score</th></tr></thead><tbody>' +
+        S.recent.slice(0, 15).map(r => '<tr><td>' + fmtDate(r.created) + '</td><td>' + esc(r.player) + '</td><td>🐍 ' + vLabel(r.variant) + '</td><td class="n">' + r.score + '</td></tr>').join('') + '</tbody></table></div>'
+      : '<p class="none">Rien pour l\'instant.</p>') + '</section>' +
+    '<p class="when">Les progrès des cours sont envoyés automatiquement quand l\'enfant les utilise sur missaoui-family.com. Ce qui a été fait avant la mise en place du suivi apparaît dès que l\'enfant rouvre le cours sur le même appareil.</p>';
+  $('#reload').onclick = async () => { try{ show(await post({action:'summary', pass})); }catch(e){ loginForm(e.message); } };
+  $('#logout').onclick = () => { pass = null; try{ sessionStorage.removeItem('famille-pass'); }catch(e){} loginForm(''); };
+}
+start();
+</script>
+</body>
+</html>
