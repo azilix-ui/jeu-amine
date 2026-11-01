@@ -70,6 +70,9 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
 .title h1{font-size:clamp(40px,8vw,72px);color:#fff;text-shadow:0 4px 0 #0006,0 0 30px #7b5cff88}
 .title h1 span{color:var(--gold)}
 .title p{margin:6px 0 0;color:#fff;font-weight:600;text-shadow:0 2px 6px #000a}
+.title .hero{display:block;width:min(500px,82vw);height:auto;margin:14px auto 0;border-radius:22px;border:4px solid var(--gold);box-shadow:0 14px 30px -10px #000c;transform:rotate(-1.5deg)}
+@media (max-height:760px){.title .hero{width:min(360px,60vw)}}
+@media (max-height:560px){.title .hero{display:none}}
 .modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 @media (max-width:560px){.modes{grid-template-columns:1fr}}
 
@@ -178,7 +181,8 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
       <a class="back" href="../index.html">← Famille</a>
       <button class="who" id="who" aria-label="Changer de joueur"><span class="av" id="whoAv">🙂</span><span><small>Joueur</small><b id="whoName">…</b></span></button>
     </div>
-    <div class="title"><h1>Ludo <span>Légendes</span></h1><p>Le Ludo de la famille, en 3D : sors tes pions avec un 6 et ramène-les tous au centre !</p></div>
+    <div class="title"><h1>Ludo <span>Légendes</span></h1><p>Le Ludo de la famille, en 3D : sors tes pions avec un 6 et ramène-les tous au centre !</p>
+      <img class="hero" src="avatars/ludo-famille.webp" width="1000" height="563" alt="Papa, maman, Essil, Salma et Amine qui rient autour d'un grand plateau de Ludo."></div>
   </div>
   <div class="panel">
     <div class="modes">
