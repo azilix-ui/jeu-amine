@@ -125,6 +125,7 @@ const metric = {
   'essil-deutsch': d => (d['essil-deutsch'] || {}).xp || 0,
   'essil-latin':   d => (d['essil-latin'] || {}).xp || 0,
   'salma-english': d => Object.values(d['salma-stars'] || {}).reduce((a,b) => a + (+b || 0), 0),
+  'salma-cheval': d => Object.entries((d['salma-cheval'] || {}).stars || {}).filter(([k]) => k !== 'grandprix').length,
   'salma-maths': d => Object.values((d['salma-maths'] || {}).stars || {}).reduce((a,b) => a + (+b || 0), 0),
   'amine-halloween': d => +d['amine-bonbons'] || 0,
   'amine-tounsi':  d => +d['amine-tounsi-etoiles'] || 0
@@ -178,6 +179,15 @@ function mathsCard(S){
   const rows = MATHS.map(x => '<dt>' + x[1] + ' ' + esc(x[2]) + '</dt><dd>' + (st[x[0]] ? '<span class="st">' + '★'.repeat(st[x[0]]) + '</span> · ' + done[x[0]] + '×' : '—') + '</dd>').join('');
   return '<div class="subject"><h3>➖ Jardin des Nombres</h3><div class="kpis">' + kpi(reached + ' / 8', 'étapes réussies') + kpi(total, 'étoiles', weekGain(S, 'Salma', 'salma-maths', total), '★') + '</div><dl class="units">' + rows + '</dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
 }
+const CHEVAL = [['identite','🪪','Carte d\'identité'],['pouvoirs','🦸','Ses super-pouvoirs'],['famille','🐴','La famille du cheval'],['menu','🥕','Au menu'],['allures','🐎','Robes et allures'],['vie','🏡','Vie et soins']];
+function chevalCard(S){
+  const p = prog(S, 'Salma', 'salma-cheval');
+  if(!p) return '<div class="subject"><h3>🐴 Le Grand Galop</h3><p class="none">Pas encore commencé.</p></div>';
+  const m = p.data['salma-cheval'] || {}, st = m.stars || {}, done = m.done || {}, galops = metric['salma-cheval'](p.data);
+  const rows = CHEVAL.map((x, k) => '<dt>' + x[1] + ' Galop ' + (k+1) + ' · ' + esc(x[2]) + '</dt><dd>' + (st[x[0]] ? '<span class="st">' + '★'.repeat(st[x[0]]) + '</span> · ' + done[x[0]] + '×' : '—') + '</dd>').join('') +
+    '<dt>🏆 Grand Prix</dt><dd>' + (m.gp ? m.gp + ' / 12' : '—') + '</dd>';
+  return '<div class="subject"><h3>🐴 Le Grand Galop (exposé)</h3><div class="kpis">' + kpi(galops + ' / 6', 'Galops gagnés', weekGain(S, 'Salma', 'salma-cheval', galops)) + kpi(m.gp ? m.gp + '/12' : '—', 'Grand Prix') + '</div><dl class="units">' + rows + '</dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
+}
 function simpleCard(S, player, course, title, icon, label){
   const p = prog(S, player, course);
   if(!p) return '<div class="subject"><h3>' + icon + ' ' + title + '</h3><p class="none">Pas encore de données.</p></div>';
@@ -206,8 +216,8 @@ function show(S){
     '<div class="bar"><span>Mis à jour ' + fmtDate(new Date().toISOString()) + '</span><button class="tool" id="reload">↻ Actualiser</button><button class="tool" id="logout">Se déconnecter</button></div>' +
     '<article class="child essil"><header><h2>Essil</h2><span>Allemand · Latin</span><span>· ' + lastSeen(S, 'Essil') + '</span></header><div class="subjects">' +
       courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + '</div></article>' +
-    '<article class="child salma"><header><h2>Salma</h2><span>Anglais · Maths</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
-      salmaCard(S) + mathsCard(S) + serpentCard(S, 'Salma') + '</div></article>' +
+    '<article class="child salma"><header><h2>Salma</h2><span>Anglais · Maths · Exposé</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
+      salmaCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + '</div></article>' +
     '<article class="child amine"><header><h2>Amine</h2><span>Jeux · Grande section</span><span>· ' + lastSeen(S, 'Amine') + '</span></header><div class="subjects">' +
       serpentCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') + '</div></article>' +
     '<section class="panel"><h2>🏆 Serpentin : les records de tout le monde</h2>' + (variants.length

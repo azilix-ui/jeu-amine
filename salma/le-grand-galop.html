@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Le Grand Galop</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%90%B4%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: le monde de Salma (ciel, herbe, Ollie) devient un terrain de concours : une barrière en bois sous le titre,
+   6 obstacles = les 6 parties de l'exposé, chaque obstacle réussi = un Galop (flot de concours), puis le Grand Prix. */
+:root{
+  --sky:#7cc8f2; --sky2:#c4e8fb; --grass:#5dbb63; --grass2:#3f9a48;
+  --card:#ffffff; --ink:#23324a; --soft:#566781;
+  --wood:#9a6236; --wood-dark:#6e4322; --hay:#f2c14e; --hay-deep:#b98a17;
+  --coral:#ff6b5b; --coral-deep:#c8473a; --ok:#1f8a5b; --ok-deep:#146343; --bad:#d32f2f; --plum:#7a4fe0;
+  --display:"Baloo 2","Comic Sans MS","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Trebuchet MS",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;margin:0}
+body{font-family:var(--body);color:var(--ink);font-size:18px;line-height:1.4;
+  background:linear-gradient(var(--sky) 0%,var(--sky2) 55%,var(--grass) 55%,var(--grass2) 100%) fixed;background-color:var(--sky)}
+::selection{background:var(--hay);color:var(--ink)}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:4px solid var(--plum);outline-offset:3px}
+[hidden]{display:none!important}
+.wrap{max-width:980px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(36px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:16px}
+
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{background:var(--card);border-radius:999px;min-height:48px;padding:10px 18px;font-weight:800;font-size:17px;box-shadow:0 4px 0 #0002;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.chip.round{width:48px;padding:0;justify-content:center;font-size:22px}
+.chip.score{margin-left:auto;font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}
+
+h1{font-family:var(--display);font-weight:800;font-size:clamp(38px,7vw,64px);line-height:1;margin:0;color:#fff;text-shadow:0 4px 0 #2a7fb4;text-wrap:balance}
+.lead{margin:4px 0 0;color:#fff;font-weight:800;font-size:19px;text-shadow:0 2px 0 #2a7fb4}
+/* barrière de concours en bois */
+.fence{height:34px;margin:2px -4px 0;background:
+  linear-gradient(var(--wood) 0 0) 0 6px/100% 8px no-repeat,
+  linear-gradient(var(--wood) 0 0) 0 20px/100% 8px no-repeat,
+  repeating-linear-gradient(90deg,transparent 0 46px,var(--wood-dark) 46px 56px,transparent 56px 120px);
+  filter:drop-shadow(0 3px 0 #0002)}
+
+.teacher{display:flex;align-items:flex-end;gap:10px}
+.owl{width:90px;flex:none;transform-origin:50% 100%}
+.owl.talk{animation:bob .5s ease-in-out 2}
+@keyframes bob{50%{transform:translateY(-6px) rotate(-3deg)}}
+.bubble{position:relative;background:var(--card);border-radius:22px;padding:14px 18px;font-size:clamp(18px,2.4vw,22px);font-weight:800;box-shadow:0 5px 0 #0002;min-width:0;flex:1}
+.bubble::before{content:"";position:absolute;left:-14px;bottom:22px;border:10px solid transparent;border-right:16px solid var(--card)}
+
+/* les galops gagnés */
+.galops{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#fffa;border-radius:20px;padding:10px 14px}
+.galops b{font-family:var(--display);font-size:18px;margin-right:4px}
+.flot{width:44px;height:58px;flex:none}
+.flot.off{opacity:.28;filter:grayscale(1)}
+
+/* les obstacles */
+.course{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:620px){.course{grid-template-columns:1fr}}
+.obst{background:var(--card);border-radius:24px;padding:14px 16px;display:flex;align-items:center;gap:14px;text-align:left;box-shadow:0 6px 0 var(--edge);transition:transform .12s;min-width:0}
+.obst:hover{transform:translateY(-3px)}
+.obst:active{transform:translateY(3px);box-shadow:0 2px 0 var(--edge)}
+.obst .ic{font-size:38px;line-height:1;width:58px;height:58px;display:grid;place-items:center;border-radius:18px;background:#fff6dc;flex:none}
+.obst .tx{min-width:0;flex:1}
+.obst .num{font-weight:800;color:var(--soft);font-size:14px}
+.obst b{display:block;font-family:var(--display);font-size:23px;line-height:1.1}
+.obst .sub{color:var(--soft);font-size:15px}
+.obst .st{font-size:20px;letter-spacing:1px;color:#e0a100;white-space:nowrap}
+.obst.gp{grid-column:1 / -1;background:linear-gradient(135deg,#fff7df,#fff);border:3px solid var(--hay)}
+.obst:disabled{opacity:.6;cursor:not-allowed}
+.revise{display:flex;gap:12px;flex-wrap:wrap}
+
+/* question */
+.qcard{background:var(--card);border-radius:26px;padding:20px;box-shadow:0 7px 0 #0002;display:flex;flex-direction:column;gap:16px;align-items:stretch}
+.qtag{align-self:flex-start;font-weight:800;font-size:15px;color:var(--wood-dark);background:#fff1cf;border-radius:999px;padding:4px 12px}
+.q{font-family:var(--display);font-weight:800;font-size:clamp(23px,3.4vw,30px);line-height:1.15;margin:0;text-wrap:balance}
+.answers{display:grid;gap:10px}
+.ans{background:#f5f8fc;border:3px solid #dde6f2;border-radius:18px;padding:14px 16px;min-height:60px;text-align:left;font-weight:800;font-size:20px;color:var(--ink);transition:transform .1s}
+.ans:active{transform:scale(.98)}
+.ans.good{background:#e3f6ec;border-color:var(--ok);color:var(--ok-deep)}
+.ans.bad{background:#fdecec;border-color:var(--bad);color:var(--bad)}
+.ans:disabled{cursor:default}
+.vf{grid-template-columns:1fr 1fr}
+.vf .ans{text-align:center;font-family:var(--display);font-size:26px}
+.ex{background:#fff8de;border:3px solid var(--hay);border-radius:18px;padding:12px 16px;font-weight:700;font-size:18px}
+.ex b{color:var(--wood-dark)}
+.next{align-self:center;font-family:var(--display);font-weight:800;font-size:23px;min-height:56px;padding:10px 30px;border-radius:20px;background:var(--coral);color:#fff;box-shadow:0 6px 0 var(--coral-deep)}
+.next:active{transform:translateY(4px);box-shadow:0 2px 0 var(--coral-deep)}
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.dots i{width:14px;height:14px;border-radius:50%;background:#fff8;box-shadow:inset 0 0 0 2px #fff}
+.dots i.ok{background:var(--ok)}.dots i.ko{background:var(--coral)}.dots i.now{background:var(--hay)}
+
+/* photos */
+.pics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pic{padding:0;border:4px solid transparent;border-radius:16px;overflow:hidden;background:#eee;aspect-ratio:4/3}
+.pic img{display:block;width:100%;height:100%;object-fit:cover}
+.pic.good{border-color:var(--ok)}.pic.bad{border-color:var(--bad);opacity:.55}
+.hero-img{border-radius:18px;overflow:hidden;aspect-ratio:4/3;max-height:260px;align-self:center}
+.hero-img img{display:block;width:100%;height:100%;object-fit:cover}
+
+/* relier les mots */
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pairs .col{display:flex;flex-direction:column;gap:10px}
+.pairs .ans{text-align:center;font-size:19px;padding:12px 10px}
+.pairs .ans.sel{border-color:var(--plum);background:#efe9ff}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* rythme des sabots */
+.rhythm{display:flex;flex-direction:column;align-items:center;gap:14px}
+.hoof{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 24% 22%,#fff9 0 7%,transparent 8%),var(--hay);box-shadow:0 8px 0 var(--hay-deep);display:grid;place-items:center}
+.hoof svg{width:84px;height:84px}
+.hoof:active,.hoof.hit{transform:translateY(5px) scale(.97);box-shadow:0 3px 0 var(--hay-deep)}
+.beats{display:flex;gap:10px;min-height:28px}
+.beats i{width:24px;height:24px;border-radius:50%;background:var(--wood);animation:pop .25s cubic-bezier(.16,1,.3,1)}
+@keyframes pop{from{transform:scale(0)}}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:var(--display);font-weight:800;font-size:21px;min-height:54px;padding:10px 24px;border-radius:18px;background:#f5f8fc;border:3px solid #dde6f2;color:var(--ink)}
+.btn.play{background:var(--hay);border-color:var(--hay-deep)}
+
+/* robe du cheval dessinée */
+.robe{width:min(300px,80vw);align-self:center}
+
+/* révision */
+.poster{display:block;padding:0;border-radius:18px;overflow:hidden;box-shadow:0 7px 0 #0002;max-width:420px;align-self:center;background:#fff}
+.poster img{display:block;width:100%;height:auto}
+.flash{display:grid;gap:12px}
+.fcard{background:var(--card);border-radius:20px;padding:14px 16px;box-shadow:0 5px 0 #0002;display:flex;gap:12px;align-items:flex-start}
+.fcard .ic{font-size:32px;line-height:1}
+.fcard p{margin:0;font-weight:700}
+.fcard b{color:var(--wood-dark)}
+.fcard button{margin-left:auto;flex:none;width:48px;height:48px;border-radius:50%;background:#f5f8fc;font-size:22px}
+.tip{background:#eaf6ff;border:3px solid var(--sky);border-radius:18px;padding:12px 16px;font-weight:700}
+
+/* résultat */
+.result{align-items:center;text-align:center}
+.result .flot{width:110px;height:146px}
+.result .big{font-size:56px;letter-spacing:6px;color:#e0a100;line-height:1}
+.viewer{border:0;padding:10px;border-radius:14px;max-width:min(94vw,720px);max-height:94vh;background:#fff}
+.viewer::backdrop{background:rgba(16,20,28,.8)}
+.viewer img{display:block;max-width:100%;max-height:calc(94vh - 90px);margin:0 auto}
+.viewer .close{display:block;margin:10px auto 0;min-height:48px;padding:10px 26px;border-radius:14px;background:#f5f8fc;border:2px solid #dde6f2;font-weight:800;font-size:17px}
+.float{position:fixed;font-size:38px;pointer-events:none;z-index:50;animation:rise 1.5s ease-out forwards}
+@keyframes rise{to{transform:translateY(-55vh) rotate(25deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<dialog class="viewer" id="viewer" aria-label="Image agrandie"><img id="vImg" alt=""><button class="close" id="vClose">Fermer</button></dialog>
+<script>
+'use strict';
+const OWL = `<svg class="owl" viewBox="0 0 120 130" aria-hidden="true"><ellipse cx="60" cy="124" rx="38" ry="5" fill="#0002"/><path d="M22 40 L30 14 L46 32 Z M98 40 L90 14 L74 32 Z" fill="#7a4b2a"/><ellipse cx="60" cy="74" rx="42" ry="50" fill="#9a6236"/><ellipse cx="60" cy="88" rx="28" ry="32" fill="#f3d9b1"/><path d="M44 84 q4 4 8 0 M56 92 q4 4 8 0 M68 84 q4 4 8 0 M50 100 q4 4 8 0 M62 100 q4 4 8 0" stroke="#d8b585" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="42" cy="52" r="17" fill="#fff"/><circle cx="78" cy="52" r="17" fill="#fff"/><circle cx="44" cy="54" r="8" fill="#23324a"/><circle cx="76" cy="54" r="8" fill="#23324a"/><circle cx="47" cy="51" r="2.5" fill="#fff"/><circle cx="79" cy="51" r="2.5" fill="#fff"/><path d="M54 64 L66 64 L60 74 Z" fill="#ffb02e"/><rect x="26" y="34" width="68" height="7" rx="3" fill="#23324a"/><path d="M36 34 L84 34 L60 20 Z" fill="#23324a"/><path d="M84 37 q10 6 6 18" stroke="#ffc93c" stroke-width="3" fill="none"/><circle cx="90" cy="56" r="4" fill="#ffc93c"/><path d="M18 74 q-6 22 10 34 M102 74 q6 22 -10 34" stroke="#7a4b2a" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M48 120 l-4 6 M52 120 l0 6 M68 120 l0 6 M72 120 l4 6" stroke="#ffb02e" stroke-width="4" stroke-linecap="round"/></svg>`;
+const SHOE = `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M22 88 V46 a28 28 0 0 1 56 0 V88 h-16 V48 a12 12 0 0 0 -24 0 V88 Z" fill="#6e4322"/><g fill="#f2c14e"><circle cx="30" cy="80" r="3.5"/><circle cx="30" cy="62" r="3.5"/><circle cx="34" cy="44" r="3.5"/><circle cx="70" cy="80" r="3.5"/><circle cx="70" cy="62" r="3.5"/><circle cx="66" cy="44" r="3.5"/></g></svg>`;
+const FLOT_COLORS = ['#2f6fd6','#d93b3b','#f2c14e','#1f8a5b','#7a4fe0','#ff8c1a','#d4a017'];
+const flot = (k, on=true, label='') => { const c = FLOT_COLORS[k % FLOT_COLORS.length];
+  return `<svg class="flot${on ? '' : ' off'}" viewBox="0 0 60 80" role="img" aria-label="${label}"><path d="M18 40 L10 78 L20 70 L26 79 L30 44 Z M42 40 L50 78 L40 70 L34 79 L30 44 Z" fill="${c}" opacity=".85"/><circle cx="30" cy="28" r="26" fill="${c}"/><circle cx="30" cy="28" r="26" fill="none" stroke="#fff8" stroke-width="5" stroke-dasharray="3 3"/><circle cx="30" cy="28" r="15" fill="#fff"/><text x="30" y="34" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="${k === 6 ? 11 : 17}" fill="${c}">${k === 6 ? 'GP' : k + 1}</text></svg>`; };
+
+const app = document.getElementById('app');
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const KEY = 'salma-cheval';
+let data = { stars:{}, done:{}, gp:0 };
+try{ Object.assign(data, JSON.parse(localStorage.getItem(KEY) || '{}')); }catch(e){}
+const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} };
+const totalStars = () => Object.values(data.stars).reduce((a,b) => a + b, 0);
+
+/* ---------- son, sabots et voix ---------- */
+let muted = false; try{ muted = localStorage.getItem(KEY+'-muet') === '1'; }catch(e){}
+let ac = null, frVoice = null;
+function actx(){ try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); }catch(e){} return ac; }
+function tone(f,d,t=0,type='triangle',vol=.12){ if(muted || !actx()) return; const o=ac.createOscillator(),g=ac.createGain(),s=ac.currentTime+t; o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(ac.destination);o.start(s);o.stop(s+d+.02); }
+function clop(t=0){ // un coup de sabot : petit bruit sec + note grave
+  if(muted || !actx()) return;
+  const s = ac.currentTime + t, len = Math.floor(ac.sampleRate*.07), buf = ac.createBuffer(1, len, ac.sampleRate), ch = buf.getChannelData(0);
+  for(let i=0;i<len;i++) ch[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 3);
+  const n = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+  n.buffer = buf; f.type='bandpass'; f.frequency.value = 1100; f.Q.value = 2; g.gain.value = .9;
+  n.connect(f); f.connect(g); g.connect(ac.destination); n.start(s);
+  tone(170, .09, t, 'sine', .25);
+}
+const PATTERN = { pas:[0,.42,.84,1.26], trot:[0,.32], galop:[0,.17,.34] };
+function playAllure(a){ let t = 0; for(let r=0;r<2;r++){ PATTERN[a].forEach(x => clop(t + x)); t += a === 'pas' ? 1.8 : a === 'trot' ? .8 : 1.0; } }
+const sfx = { ok(){ tone(660,.12); tone(990,.16,.08); }, no(){ tone(240,.25,0,'sine',.1); }, tap(){ tone(900,.05,0,'triangle',.06); }, win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.22,i*.1)); } };
+function pickVoice(){ try{ const vs = speechSynthesis.getVoices(); frVoice = vs.find(v=>/^fr[-_]FR/i.test(v.lang)) || vs.find(v=>/^fr/i.test(v.lang)) || null; }catch(e){} }
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(html){
+  document.querySelectorAll('.owl').forEach(o => { o.classList.remove('talk'); void o.offsetWidth; o.classList.add('talk'); });
+  if(muted || !('speechSynthesis' in window)) return;
+  const t = String(html).replace(/<[^>]+>/g,'').replace(/°/g,' degrés').replace(/«|»/g,'');
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='fr-FR'; if(frVoice) u.voice=frVoice; u.rate=.95; u.pitch=1.1; speechSynthesis.speak(u); }catch(e){}
+}
+const hush = () => { try{ speechSynthesis.cancel(); }catch(e){} };
+function confetti(){ for(let i=0;i<10;i++){ const s=document.createElement('span'); s.className='float'; s.textContent=pick(['🐴','⭐','🥕','🏆','🍀']); s.style.left=rnd(5,90)+'vw'; s.style.top=rnd(55,90)+'vh'; s.style.animationDelay=(i*60)+'ms'; document.body.appendChild(s); setTimeout(()=>s.remove(),1800); } }
+
+/* ---------- images de l'exposé ---------- */
+const IMG = {
+  galop:   { src:'cheval/galop',          alt:'Un cheval bai qui galope dans un pré' },
+  portrait:{ src:'cheval/portrait',       alt:'Un cheval alezan debout dans un pré' },
+  troupeau:{ src:'cheval/troupeau',       alt:'Des chevaux qui broutent ensemble dans un pré' },
+  famille: { src:'cheval/jument-poulain', alt:'Une jument et son poulain au lever du soleil' }
+};
+const pic = (k, w=480) => `<img src="${IMG[k].src}-${w}.webp" srcset="${IMG[k].src}-480.webp 480w, ${IMG[k].src}-900.webp 900w" sizes="(max-width:620px) 90vw, 440px" alt="${IMG[k].alt}" loading="lazy">`;
+
+/* ---------- dessin des robes (original) ---------- */
+function horse(body, mane, legs, extra=''){
+  return `<svg class="robe" viewBox="0 0 220 170" role="img" aria-label="Un cheval dessiné">
+    <ellipse cx="110" cy="160" rx="80" ry="6" fill="#0002"/>
+    <path d="M168 78 q24 10 18 52" stroke="${mane}" stroke-width="12" fill="none" stroke-linecap="round"/>
+    ${[[62,0],[80,1],[136,0],[154,1]].map(([x,i]) => `<rect x="${x-7}" y="96" width="14" height="38" rx="6" fill="${body}"/><rect x="${x-7}" y="126" width="14" height="28" rx="5" fill="${legs}"/><rect x="${x-8}" y="150" width="16" height="7" rx="3" fill="#3b2a1e"/>`).join('')}
+    <ellipse cx="110" cy="92" rx="62" ry="30" fill="${body}"/>
+    <path d="M58 86 L42 34 L66 30 L80 82 Z" fill="${body}"/>
+    <rect x="18" y="22" width="44" height="26" rx="12" fill="${body}" transform="rotate(-18 40 35)"/>
+    <path d="M52 20 l4 -14 l7 15 Z" fill="${body}"/>
+    <path d="M60 22 q12 26 18 58" stroke="${mane}" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <circle cx="40" cy="27" r="3.4" fill="#23324a"/>
+    ${extra}</svg>`;
+}
+const ROBES = {
+  bai:    { name:'Bai',    svg:() => horse('#8a4a26', '#1f1a17', '#1f1a17'), ex:'<b>Bai</b> : corps marron/roux, mais crinière, queue et bas des jambes <b>noirs</b>.' },
+  alezan: { name:'Alezan', svg:() => horse('#b8692e', '#b8692e', '#b8692e'), ex:'<b>Alezan</b> : corps marron/roux et crins de <b>la même couleur</b> que le corps.' },
+  gris:   { name:'Gris',   svg:() => horse('#c3c6cc', '#6f737b', '#9a9ea6', '<g fill="#9a9ea6">'+[[90,86],[112,98],[132,84],[100,104],[146,96],[124,90]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4"/>`).join('')+'</g>'), ex:'<b>Gris</b> : des poils blancs mélangés à des poils noirs, sur une peau sombre.' },
+  pie:    { name:'Pie',    svg:() => horse('#f7f4ee', '#5a3a22', '#f7f4ee', '<g fill="#7a4a26"><ellipse cx="96" cy="86" rx="20" ry="13"/><ellipse cx="140" cy="96" rx="15" ry="11"/><ellipse cx="66" cy="60" rx="8" ry="14"/></g>'), ex:'<b>Pie</b> : un corps blanc avec de <b>grandes taches</b> d\'une autre couleur.' }
+};
+
+/* ---------- les questions : tout vient de l'exposé de Salma ---------- */
+const OBST = [
+ { id:'identite', icon:'🪪', name:'Carte d\'identité', sub:'Nom, famille, taille, poids', edge:'#2f6fd6', qs:[
+   {t:'qcm', q:'Quel est le nom scientifique du cheval ?', a:['Equus caballus','Felis catus','Canis lupus'], ex:'<b>Equus caballus</b> : c\'est son nom savant, en latin.'},
+   {t:'qcm', q:'À quelle famille appartient le cheval ?', a:['Les équidés','Les félins','Les bovidés'], ex:'Le cheval est un <b>équidé</b>, comme l\'âne et le zèbre.'},
+   {t:'qcm', q:'Lesquels sont des cousins du cheval ?', a:['L\'âne et le zèbre','La vache et le mouton','Le chien et le loup'], ex:'L\'âne et le zèbre sont aussi des <b>équidés</b>.'},
+   {t:'qcm', q:'Où mesure-t-on la taille d\'un cheval ?', a:['Au garrot','Au bout des oreilles','Au sommet de la tête'], ex:'Au <b>garrot</b> : en bas du cou, juste au-dessus de l\'épaule. Pour ton exposé, montre l\'endroit sur toi !'},
+   {t:'qcm', q:'Un équidé mesure 1,40 m au garrot. C\'est…', a:['Un poney','Un cheval','Un zèbre'], ex:'Moins de <b>1,48 m</b> au garrot : c\'est un poney. 1,48 m ou plus : c\'est un cheval.'},
+   {t:'vf',  q:'Le cheval et le poney sont de la même espèce.', v:true, ex:'Vrai ! Ils font partie <b>exactement de la même espèce</b> ; seule la taille change.'},
+   {t:'qcm', q:'Combien pèse un cheval en moyenne ?', a:['Environ 500 kg','Environ 50 kg','Environ 5 kg'], ex:'En moyenne <b>500 kg</b>. Un grand cheval de trait peut peser 1 200 kg !'},
+   {t:'vf',  q:'L\'Homme vit avec le cheval depuis plus de 5 000 ans.', v:true, ex:'Vrai : il est <b>domestiqué depuis plus de 5 000 ans</b>, pour le travail, le transport, puis le sport et les loisirs.'}
+ ]},
+ { id:'pouvoirs', icon:'🦸', name:'Ses super-pouvoirs', sub:'Sabots, vision, sommeil', edge:'#d93b3b', qs:[
+   {t:'qcm', q:'Le sabot du cheval, c\'est en réalité…', a:['Un ongle très solide','Un os','Une chaussure'], ex:'Le sabot est un <b>ongle durci et épais</b> qui recouvre le bout du doigt.'},
+   {t:'qcm', q:'Combien de doigts le cheval a-t-il au bout de chaque jambe ?', a:['Un seul','Trois','Cinq'], ex:'<b>Un seul doigt</b>, protégé par le sabot.'},
+   {t:'qcm', q:'Grâce à ses yeux sur les côtés, le cheval voit…', a:['Presque tout autour de lui (340°)','Seulement devant lui','Seulement la nuit'], ex:'Une vision <b>panoramique à 340°</b> : il voit presque tout autour de lui !'},
+   {t:'qcm', q:'Où sont les angles morts du cheval, là où il ne voit pas ?', a:['Devant son nez et derrière sa tête','Sur ses côtés','Au-dessus des nuages'], ex:'Juste <b>devant son nez</b> et juste <b>derrière sa tête</b>. Ne t\'approche jamais d\'un cheval par derrière !'},
+   {t:'vf',  q:'Le cheval peut somnoler debout.', v:true, ex:'Vrai : il <b>bloque les articulations</b> de ses jambes et reste debout.'},
+   {t:'qcm', q:'Pourquoi somnole-t-il debout ?', a:['Pour s\'enfuir très vite en cas de danger','Parce que le sol est froid','Pour être plus grand'], ex:'Debout, il est <b>prêt à s\'enfuir</b> instantanément.'},
+   {t:'vf',  q:'Pour un sommeil très profond, le cheval reste toujours debout.', v:false, ex:'Faux : pour dormir profondément, il <b>s\'allonge par terre</b> de temps en temps.'}
+ ]},
+ { id:'famille', icon:'🐴', name:'La famille du cheval', sub:'Étalon, jument, poulain', edge:'#f2c14e', qs:[
+   {t:'pairs', q:'Relie chaque nom à sa définition.', pairs:[['Étalon','Le papa'],['Jument','La maman'],['Poulain','Le petit garçon'],['Pouliche','La petite fille'],['Hongre','Le mâle castré']], ex:'Papa : l\'<b>étalon</b>. Maman : la <b>jument</b>. Bébé : le <b>poulain</b> ou la <b>pouliche</b>.'},
+   {t:'img', q:'Quelle photo montre une jument et son poulain ?', good:'famille', others:['portrait','troupeau','galop'], ex:'La maman <b>jument</b> et son <b>poulain</b>, tout près d\'elle.'},
+   {t:'qcm', q:'Combien de temps la jument porte-t-elle son bébé dans son ventre ?', a:['11 mois','9 mois','2 mois'], ex:'<b>11 mois</b> : c\'est plus long que chez les humains (9 mois).'},
+   {t:'qcm', q:'Combien de bébés la jument a-t-elle à la fois ?', a:['Un seul','Deux','Six'], ex:'<b>Un seul poulain</b> à la fois. Les jumeaux sont extrêmement rares.'},
+   {t:'qcm', q:'Le poulain est « nidifuge ». Cela veut dire qu\'il…', a:['Devient autonome très vite','Vit dans un nid','Dort pendant des semaines'], ex:'<b>Nidifuge</b> : il voit tout de suite et se met debout en moins d\'une heure.'},
+   {t:'qcm', q:'Combien de temps faut-il au poulain pour se lever ?', a:['Moins d\'une heure','Une semaine','Un an'], ex:'<b>Moins d\'une heure</b> après sa naissance, il tient sur ses 4 jambes !'},
+   {t:'vf',  q:'Le poulain sait courir environ 2 heures après sa naissance.', v:true, ex:'Vrai : il peut vite suivre sa maman et le troupeau s\'il y a un danger.'},
+   {t:'qcm', q:'Que boit le poulain au début de sa vie ?', a:['Le lait de sa maman','Du jus de carotte','De l\'eau seulement'], ex:'Il <b>tète le lait</b> de sa maman, puis commence l\'herbe au bout de quelques semaines.'}
+ ]},
+ { id:'menu', icon:'🥕', name:'Au menu', sub:'Herbivore et grand buveur', edge:'#1f8a5b', qs:[
+   {t:'qcm', q:'Le cheval est…', a:['Herbivore','Carnivore','Omnivore'], ex:'<b>Herbivore</b> : il ne mange que des végétaux.'},
+   {t:'vf',  q:'Comme la vache, le cheval rumine.', v:false, ex:'Faux : il est <b>non-ruminant</b>, il a un seul estomac et ne remâche pas sa nourriture.'},
+   {t:'qcm', q:'Dans la nature, combien d\'heures par jour le cheval mange-t-il ?', a:['12 à 16 heures','1 heure','30 minutes'], ex:'<b>12 à 16 heures</b> par jour, par petites quantités : son estomac est petit !'},
+   {t:'img', q:'Sur quelle photo les chevaux sont-ils en train de brouter ?', good:'troupeau', others:['galop','portrait','famille'], ex:'Ils <b>broutent ensemble</b> dans le pré : de l\'herbe et des amis !'},
+   {t:'qcm', q:'Le foin, c\'est…', a:['De l\'herbe séchée','Des céréales','Des pommes'], ex:'Le <b>foin</b>, c\'est de l\'herbe séchée. C\'est la base de son repas.'},
+   {t:'qcm', q:'À quoi servent l\'avoine et l\'orge ?', a:['À donner de l\'énergie pour l\'effort','À brosser les dents','À rien du tout'], ex:'Les <b>céréales</b> donnent de l\'énergie aux chevaux qui travaillent ou font du sport.'},
+   {t:'qcm', q:'Les carottes et les pommes, on les donne…', a:['Un peu, en récompense','À volonté','Jamais'], ex:'Ce sont des <b>friandises</b>, à donner avec modération.'},
+   {t:'qcm', q:'Combien d\'eau boit un cheval chaque jour ?', a:['20 à 40 litres','1 verre','1 000 litres'], ex:'<b>20 à 40 litres</b> par jour, et encore plus quand il fait chaud.'}
+ ]},
+ { id:'allures', icon:'🐎', name:'Robes et allures', sub:'Couleurs et rythmes', edge:'#7a4fe0', qs:[
+   {t:'qcm', q:'La « robe » du cheval, c\'est…', a:['La couleur de ses poils et de ses crins','Une couverture','Sa selle'], ex:'La <b>robe</b>, c\'est la couleur des poils et des crins (crinière et queue).'},
+   {t:'robe', robe:'bai'},
+   {t:'robe', robe:'alezan'},
+   {t:'robe', robe:pick(['gris','pie'])},
+   {t:'qcm', q:'Les balzanes, ce sont…', a:['Des marques blanches en bas des jambes','Des fers à cheval','Des tresses'], ex:'Les <b>balzanes</b> : des poils blancs au bas des jambes.'},
+   {t:'rythme', allure:'pas'},
+   {t:'rythme', allure:'trot'},
+   {t:'rythme', allure:'galop'},
+   {t:'ecoute', allure:pick(['pas','trot','galop'])},
+   {t:'vf',  q:'Au galop, il y a un moment où le cheval ne touche plus le sol.', v:true, ex:'Vrai : c\'est le <b>temps de suspension</b>, le cheval vole presque !'}
+ ]},
+ { id:'vie', icon:'🏡', name:'Vie et soins', sub:'Troupeau, soins, langage', edge:'#ff8c1a', qs:[
+   {t:'qcm', q:'« Grégaire » veut dire que le cheval…', a:['Vit en troupeau','Vit tout seul','Vit la nuit'], ex:'<b>Grégaire</b> : il a besoin de vivre en groupe pour se sentir en sécurité.'},
+   {t:'vf',  q:'Deux chevaux qui se grattent le dos se font un « toilettage mutuel ».', v:true, ex:'Vrai : c\'est une preuve d\'<b>amitié</b> entre chevaux.'},
+   {t:'qcm', q:'Le box, c\'est…', a:['Une chambre fermée dans l\'écurie','Un grand pré','Une selle'], ex:'Le <b>box</b> : une pièce fermée à l\'écurie. Le cheval doit quand même sortir chaque jour.'},
+   {t:'qcm', q:'Qui s\'occupe des sabots et pose les fers ?', a:['Le maréchal-ferrant','Le boulanger','Le facteur'], ex:'Le <b>maréchal-ferrant</b> taille la corne et pose des fers.'},
+   {t:'qcm', q:'Tous les combien revient le maréchal-ferrant ?', a:['Toutes les 6 à 8 semaines','Tous les jours','Une fois dans sa vie'], ex:'<b>Toutes les 6 à 8 semaines</b>.'},
+   {t:'vf',  q:'Les dents du cheval poussent toute sa vie.', v:true, ex:'Vrai : c\'est pour ça que le <b>dentiste équin</b> vient les limer.'},
+   {t:'qcm', q:'Le cheval a les oreilles plaquées en arrière. Il est…', a:['Mécontent','Curieux','Endormi'], ex:'<b>Oreilles en arrière</b> : attention, il est mécontent ou en colère !'},
+   {t:'qcm', q:'Les oreilles pointées vers l\'avant veulent dire qu\'il est…', a:['Attentif et curieux','En colère','Malade'], ex:'<b>Oreilles en avant</b> : il est attentif et intéressé.'},
+   {t:'qcm', q:'Le « flehmen », c\'est quand le cheval…', a:['Retrousse sa lèvre pour sentir une odeur','Hennit très fort','Se roule par terre'], ex:'Le <b>flehmen</b> : il retrousse la lèvre du haut pour analyser une odeur inconnue.'}
+ ]}
+];
+const GP = { id:'grandprix', icon:'🏆', name:'Le Grand Prix', sub:'12 questions de tout l\'exposé', edge:'#d4a017' };
+const ALLURE = { pas:{ name:'le pas', du:'du pas', n:4, ex:'Le <b>pas</b> : 4 temps, l\'allure la plus lente (1-2-3-4).' }, trot:{ name:'le trot', du:'du trot', n:2, ex:'Le <b>trot</b> : 2 temps, une allure sautillante (1-2).' }, galop:{ name:'le galop', du:'du galop', n:3, ex:'Le <b>galop</b> : 3 temps, puis le cheval vole un instant (1-2-3).' } };
+
+/* ---------- écrans ---------- */
+function topbar(back){
+  return `<div class="top">${back ? `<button class="chip" id="back">← Le parcours</button>` : `<a class="chip" href="./">← Espace Salma</a>`}
+    <button class="chip round" id="mute" aria-label="${muted ? 'Activer' : 'Couper'} le son">${muted ? '🔇' : '🔊'}</button>
+    <div class="chip score" aria-label="Étoiles gagnées">⭐ ${totalStars()}</div></div>`;
+}
+function wireTop(){
+  const b = document.getElementById('back'); if(b) b.onclick = () => { sfx.tap(); hush(); home(); };
+  document.getElementById('mute').onclick = e => { muted = !muted; try{ localStorage.setItem(KEY+'-muet', muted?'1':'0'); }catch(_){} e.currentTarget.textContent = muted ? '🔇' : '🔊'; if(muted) hush(); };
+}
+const teacher = html => `<div class="teacher">${OWL}<div class="bubble" id="say" aria-live="polite">${html}</div></div>`;
+const allDone = () => OBST.every(o => data.stars[o.id] > 0);
+
+function home(){
+  hush();
+  const got = OBST.filter(o => data.stars[o.id] > 0).length;
+  const msg = !got ? `Bonjour Salma ! Tu as préparé un super exposé sur le cheval. On le révise en jouant ? Saute les 6 obstacles pour gagner tes Galops !`
+    : allDone() ? (data.gp ? `Tu as gagné le Grand Prix, Salma ! Tu es prête pour ton exposé. Tu peux rejouer pour faire encore mieux.` : `Bravo, tu as tes 6 Galops ! Le Grand Prix t'attend.`)
+    : `Bravo Salma ! Tu as déjà ${got} Galop${got > 1 ? 's' : ''}. Continue le parcours !`;
+  app.innerHTML = topbar(false) + `<div><h1>Le Grand Galop</h1><p class="lead">Le quiz de mon exposé sur le cheval</p></div><div class="fence" aria-hidden="true"></div>` +
+    teacher(msg) +
+    `<div class="galops" aria-label="Mes galops"><b>Mes Galops</b>${OBST.map((o, k) => flot(k, data.stars[o.id] > 0, 'Galop ' + (k+1) + (data.stars[o.id] > 0 ? ' gagné' : ' à gagner'))).join('')}${flot(6, data.gp > 0, data.gp ? 'Grand Prix gagné' : 'Grand Prix à gagner')}</div>` +
+    `<div class="revise"><button class="chip" id="revise">📋 Revoir ma fiche</button></div>` +
+    `<div class="course">${OBST.map((o, k) => { const s = data.stars[o.id] || 0;
+      return `<button class="obst" data-k="${k}" style="--edge:${o.edge}"><span class="ic" aria-hidden="true">${o.icon}</span><span class="tx"><span class="num">Obstacle ${k+1} · Galop ${k+1}</span><b>${o.name}</b><span class="sub">${o.sub}</span></span><span class="st" aria-label="${s} étoiles sur 3">${'★'.repeat(s)}${'☆'.repeat(3-s)}</span></button>`; }).join('')}
+      <button class="obst gp" id="gp" style="--edge:${GP.edge}" ${allDone() ? '' : 'disabled aria-disabled="true"'}><span class="ic" aria-hidden="true">${allDone() ? GP.icon : '🔒'}</span><span class="tx"><span class="num">Finale</span><b>${GP.name}</b><span class="sub">${allDone() ? GP.sub + (data.gp ? ` · record : ${data.gp}/12` : '') : 'Gagne d\'abord tes 6 Galops'}</span></span></button></div>`;
+  wireTop();
+  speak(msg);
+  app.querySelectorAll('.obst[data-k]').forEach(b => b.onclick = () => { sfx.tap(); run(+b.dataset.k); });
+  document.getElementById('gp').onclick = () => { if(allDone()){ sfx.tap(); run(-1); } };
+  document.getElementById('revise').onclick = () => { sfx.tap(); revise(); };
+}
+
+/* ---------- une manche ---------- */
+let R = null;
+function run(k){
+  if(k === -1){
+    const pool = shuffle(OBST.flatMap(o => o.qs.filter(q => q.t !== 'pairs').map(q => ({...q, from:o.name}))));
+    const list = pool.slice(0, 11); list.push({ t:'rythme', allure:pick(['pas','trot','galop']), from:'Robes et allures' });
+    R = { k, o:GP, list:shuffle(list), i:0, errors:0, marks:[] };
+  } else {
+    const o = OBST[k];
+    R = { k, o, list:shuffle(o.qs.map(q => ({...q, from:o.name}))), i:0, errors:0, marks:[] };
+  }
+  ask();
+}
+function dotsHtml(){ return `<div class="dots" aria-label="Question ${R.i+1} sur ${R.list.length}">${R.list.map((_, j) => `<i class="${j < R.i ? (R.marks[j] ? 'ok' : 'ko') : j === R.i ? 'now' : ''}"></i>`).join('')}</div>`; }
+function frame(inner, sayHtml){
+  app.innerHTML = topbar(true) + dotsHtml() + teacher(sayHtml) + `<div class="qcard"><span class="qtag">${R.o.icon} ${R.list[R.i].from}</span>${inner}<div id="after"></div></div>`;
+  wireTop();
+}
+function answered(ok, exHtml){
+  R.marks[R.i] = ok; if(!ok) R.errors++;
+  (ok ? sfx.ok : sfx.no)();
+  const say = document.getElementById('say');
+  const praise = pick(['Bravo !','Super !','Exact !','Bien joué !','Parfait !']);
+  say.innerHTML = ok ? praise : 'Pas tout à fait…';
+  document.getElementById('after').innerHTML = `<div class="ex">${exHtml}</div><div style="display:flex;justify-content:center;margin-top:12px"><button class="next" id="nx">${R.i + 1 < R.list.length ? 'Obstacle suivant →' : 'Voir mon résultat →'}</button></div>`;
+  speak((ok ? praise + ' ' : '') + exHtml);
+  const nx = document.getElementById('nx'); nx.focus({preventScroll:true});
+  nx.onclick = () => { sfx.tap(); R.i++; if(R.i < R.list.length) ask(); else finish(); };
+  document.getElementById('after').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function ask(){
+  const q = R.list[R.i];
+  ({ qcm:askQcm, vf:askVf, img:askImg, pairs:askPairs, robe:askRobe, rythme:askRythme, ecoute:askEcoute })[q.t](q);
+}
+function askQcm(q){
+  const opts = shuffle(q.a);
+  frame(`<p class="q">${q.q}</p><div class="answers">${opts.map(o => `<button class="ans" data-o="${o.replace(/"/g,'&quot;')}">${o}</button>`).join('')}</div>`, 'Choisis la bonne réponse.');
+  speak(q.q);
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = b.dataset.o === q.a[0];
+    app.querySelectorAll('.ans').forEach(x => { x.disabled = true; if(x.dataset.o === q.a[0]) x.classList.add('good'); });
+    if(!ok) b.classList.add('bad');
+    answered(ok, q.ex);
+  });
+}
+function askVf(q){
+  frame(`<p class="q">${q.q}</p><div class="answers vf"><button class="ans" data-v="1">Vrai</button><button class="ans" data-v="0">Faux</button></div>`, 'Vrai ou faux ?');
+  speak('Vrai ou faux ? ' + q.q);
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = (b.dataset.v === '1') === q.v;
+    app.querySelectorAll('.ans').forEach(x => { x.disabled = true; if((x.dataset.v === '1') === q.v) x.classList.add('good'); });
+    if(!ok) b.classList.add('bad');
+    answered(ok, q.ex);
+  });
+}
+function askImg(q){
+  const opts = shuffle([q.good, ...q.others]);
+  frame(`<p class="q">${q.q}</p><div class="pics">${opts.map(k => `<button class="pic" data-k="${k}" aria-label="${IMG[k].alt}">${pic(k)}</button>`).join('')}</div>`, 'Touche la bonne photo.');
+  speak(q.q);
+  app.querySelectorAll('.pic').forEach(b => b.onclick = () => {
+    const ok = b.dataset.k === q.good;
+    app.querySelectorAll('.pic').forEach(x => { x.disabled = true; if(x.dataset.k === q.good) x.classList.add('good'); });
+    if(!ok) b.classList.add('bad');
+    answered(ok, q.ex);
+  });
+}
+function askPairs(q){
+  const left = shuffle(q.pairs.map(p => p[0])), right = shuffle(q.pairs.map(p => p[1]));
+  let sel = null, found = 0, miss = 0;
+  frame(`<p class="q">${q.q}</p><div class="pairs"><div class="col">${left.map(w => `<button class="ans" data-l="${w}">${w}</button>`).join('')}</div><div class="col">${right.map(w => `<button class="ans" data-r="${w}">${w}</button>`).join('')}</div></div>`, 'Touche un nom, puis sa définition.');
+  speak(q.q);
+  app.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { if(b.disabled) return; app.querySelectorAll('[data-l]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); sel = b; sfx.tap(); });
+  app.querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
+    if(!sel || b.disabled) return;
+    const ok = q.pairs.some(p => p[0] === sel.dataset.l && p[1] === b.dataset.r);
+    if(ok){ sfx.ok(); [sel, b].forEach(x => { x.classList.remove('sel'); x.classList.add('good'); x.disabled = true; }); sel = null; found++;
+      if(found === q.pairs.length) answered(miss <= 1, q.ex); }
+    else { miss++; sfx.no(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+  });
+}
+function askRobe(q){
+  const r = ROBES[q.robe], opts = shuffle(Object.keys(ROBES));
+  frame(`<p class="q">Quelle est la robe de ce cheval ?</p>${r.svg()}<div class="answers vf">${opts.map(k => `<button class="ans" data-k="${k}">${ROBES[k].name}</button>`).join('')}</div>`, 'Regarde bien le corps, la crinière, la queue et les jambes.');
+  speak('Quelle est la robe de ce cheval ?');
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = b.dataset.k === q.robe;
+    app.querySelectorAll('.ans').forEach(x => { x.disabled = true; if(x.dataset.k === q.robe) x.classList.add('good'); });
+    if(!ok) b.classList.add('bad');
+    answered(ok, r.ex);
+  });
+}
+function askRythme(q){
+  const A = ALLURE[q.allure]; let n = 0;
+  frame(`<p class="q">Tape le rythme ${A.du} sur le sabot !</p>
+    <div class="rhythm"><button class="hoof" id="hoof" aria-label="Taper un coup de sabot">${SHOE}</button><div class="beats" id="beats" aria-live="polite"></div>
+    <div class="row"><button class="btn" id="redo">↺ Recommencer</button><button class="btn play" id="valid">✔ J'ai fini</button></div></div>`,
+    `Comme dans ton exposé : un coup de sabot par « temps ».`);
+  speak(`Tape le rythme ${A.du} sur le sabot !`);
+  const hoof = document.getElementById('hoof'), beats = document.getElementById('beats');
+  hoof.onclick = () => { if(n >= 8) return; n++; clop(); beats.insertAdjacentHTML('beforeend', '<i></i>'); hoof.classList.add('hit'); setTimeout(() => hoof.classList.remove('hit'), 90); };
+  document.getElementById('redo').onclick = () => { n = 0; beats.innerHTML = ''; sfx.tap(); };
+  document.getElementById('valid').onclick = () => {
+    if(!n) return;
+    hoof.disabled = true; document.getElementById('redo').disabled = true; document.getElementById('valid').disabled = true;
+    const ok = n === A.n;
+    if(ok) playAllure(q.allure);
+    answered(ok, (ok ? '' : `Tu as tapé ${n} coup${n > 1 ? 's' : ''}. `) + A.ex);
+  };
+}
+function askEcoute(q){
+  frame(`<p class="q">Écoute les sabots. Quelle est cette allure ?</p>
+    <div class="rhythm"><button class="btn play" id="listen">🔊 Écouter les sabots</button>
+    <div class="answers vf" style="width:100%">${shuffle(['pas','trot','galop']).map(a => `<button class="ans" data-a="${a}">${ALLURE[a].name.replace('le ','Le ')}</button>`).join('')}</div></div>`,
+    `Compte les coups : 4, 2 ou 3 ?`);
+  const play = () => { hush(); playAllure(q.allure); };
+  document.getElementById('listen').onclick = play;
+  setTimeout(play, 500);
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = b.dataset.a === q.allure;
+    app.querySelectorAll('.ans').forEach(x => { x.disabled = true; if(x.dataset.a === q.allure) x.classList.add('good'); });
+    if(!ok) b.classList.add('bad');
+    answered(ok, ALLURE[q.allure].ex);
+  });
+}
+
+function finish(){
+  const total = R.list.length, good = total - R.errors;
+  const st = R.errors === 0 ? 3 : R.errors <= 2 ? 2 : 1;
+  let title, msg, badge;
+  if(R.k === -1){
+    data.gp = Math.max(data.gp || 0, good); data.done.grandprix = (data.done.grandprix || 0) + 1;
+    data.stars.grandprix = Math.max(data.stars.grandprix || 0, st);
+    title = 'Le Grand Prix'; badge = flot(6, true, 'Grand Prix');
+    msg = good >= 10 ? `Incroyable, Salma : ${good} sur 12 ! Tu connais ton exposé sur le bout des doigts.` : `${good} bonnes réponses sur 12. Bravo ! Revois ta fiche et retente le Grand Prix.`;
+  } else {
+    data.stars[R.o.id] = Math.max(data.stars[R.o.id] || 0, st); data.done[R.o.id] = (data.done[R.o.id] || 0) + 1;
+    title = `Galop ${R.k + 1} : ${R.o.name}`; badge = flot(R.k, true, 'Galop ' + (R.k + 1));
+    msg = st === 3 ? `Sans faute ! Tu gagnes ton Galop ${R.k + 1}, Salma !` : `${good} bonnes réponses sur ${total}. Tu gagnes ton Galop ${R.k + 1} ! Rejoue pour avoir 3 étoiles.`;
+  }
+  data.last = new Date().toISOString(); save();
+  sfx.win(); confetti();
+  const nextK = R.k >= 0 && R.k + 1 < OBST.length ? R.k + 1 : null;
+  app.innerHTML = topbar(true) + teacher(msg) + `<div class="qcard result">${badge}<div class="big" aria-label="${st} étoiles sur 3">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div><b style="font-family:var(--display);font-size:26px">${title}</b>
+    <div class="row"><button class="btn" id="again">↻ Rejouer</button>${nextK !== null ? `<button class="next" id="nxt">Obstacle suivant →</button>` : `<button class="next" id="path">Le parcours</button>`}</div></div>`;
+  wireTop(); speak(msg);
+  document.getElementById('again').onclick = () => { sfx.tap(); run(R.k); };
+  const n = document.getElementById('nxt'); if(n) n.onclick = () => { sfx.tap(); run(nextK); };
+  const p = document.getElementById('path'); if(p) p.onclick = () => { sfx.tap(); home(); };
+}
+
+/* ---------- la fiche de révision ---------- */
+function revise(){
+  const FLASH = [
+    ['🪪','<b>Identité</b> : le cheval (<i>Equus caballus</i>) est un mammifère herbivore de la famille des équidés. Il se mesure au <b>garrot</b> : 1,48 m ou plus, c\'est un cheval ; en dessous, un poney.'],
+    ['🦸','<b>Anatomie</b> : un seul doigt protégé par un <b>sabot</b>, une vision à <b>340°</b>, et il peut somnoler debout.'],
+    ['🐴','<b>Famille</b> : le papa est l\'<b>étalon</b>, la maman la <b>jument</b>, le bébé le <b>poulain</b> ou la <b>pouliche</b>. 11 mois de gestation ; le poulain se lève en moins d\'une heure.'],
+    ['🥕','<b>Repas</b> : herbivore non-ruminant, il mange <b>12 à 16 heures par jour</b> et boit <b>20 à 40 litres</b> d\'eau.'],
+    ['🐎','<b>Vie sociale</b> : animal <b>grégaire</b> qui vit en troupeau, communique avec ses oreilles et ses hennissements, et se déplace au <b>pas</b>, au <b>trot</b> et au <b>galop</b>.']
+  ];
+  app.innerHTML = topbar(true) + teacher('Voici ta fiche pour réviser. Touche 🔊 pour que je la lise avec toi.') +
+    `<button class="poster" id="poster" aria-label="Agrandir l'affiche « Tout savoir sur le cheval »"><img src="cheval/affiche-480.webp" srcset="cheval/affiche-480.webp 480w, cheval/affiche-1000.webp 1000w" sizes="(max-width:620px) 90vw, 420px" alt="Affiche « Le Cheval : tout savoir pour l'exposé »" loading="lazy"></button>
+    <div class="flash">${FLASH.map(([ic, t], j) => `<div class="fcard"><span class="ic" aria-hidden="true">${ic}</span><p>${t}</p><button data-j="${j}" aria-label="Lire à voix haute">🔊</button></div>`).join('')}</div>
+    <div class="tip">💡 <b>Pour ton oral</b> : montre le garrot sur toi (là où le cou rejoint les épaules), et tape sur la table le rythme des allures : 1-2-3-4 pour le pas, 1-2 pour le trot, 1-2-3 pour le galop !</div>`;
+  wireTop();
+  speak('Voici ta fiche pour réviser.');
+  app.querySelectorAll('.fcard button').forEach(b => b.onclick = () => speak(FLASH[+b.dataset.j][1]));
+  document.getElementById('poster').onclick = () => { const d = document.getElementById('viewer'); document.getElementById('vImg').src = 'cheval/affiche-1000.webp'; document.getElementById('vImg').alt = 'Affiche « Le Cheval : tout savoir pour l\'exposé »'; if(d.showModal) d.showModal(); };
+}
+document.getElementById('vClose').onclick = () => document.getElementById('viewer').close();
+document.getElementById('viewer').addEventListener('click', e => { if(e.target.id === 'viewer') e.target.close(); });
+
+home();
+</script>
+<script src="../famille.js"></script>
+<script>if(window.Famille) Famille.track('salma-cheval', 'Salma', ['salma-cheval']);</script>
+</body></html>
