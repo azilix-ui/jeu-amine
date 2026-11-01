@@ -5,6 +5,7 @@
  *   Famille.score(game, variant, score)  -> envoie une partie au serveur, renvoie {rank, best, personalBest} ou null
  *   Famille.highscores(game, variant, n) -> meilleurs scores en ligne, ou null hors ligne
  *   Famille.track(course, player, keys)  -> envoie régulièrement les progrès gardés dans le navigateur
+ *   Famille.load(course, player)         -> relit les progrès gardés sur le serveur (jeux autorisés seulement)
  * Tout fonctionne aussi sans connexion : le jeu continue, les envois attendent le retour du réseau.
  */
 (function(){
@@ -129,6 +130,12 @@
     document.addEventListener('visibilitychange', function(){ if(document.hidden) send(true); });
   }
 
+  function load(course, player){
+    if(!online || !player) return Promise.resolve(null);
+    return fetch(API + '?action=load&course=' + encodeURIComponent(course) + '&player=' + encodeURIComponent(player), {cache:'no-store'})
+      .then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ return j ? j.data : null; }).catch(function(){ return null; });
+  }
+
   window.Famille = {
     kids: KIDS,
     player: function(){ return get('famille-joueur', null); },
@@ -137,6 +144,7 @@
     score: score,
     highscores: highscores,
     track: track,
+    load: load,
     online: online
   };
 })();

@@ -8,6 +8,7 @@
  * Public (les jeux) :
  *   GET  ?action=ping                                   -> état du serveur
  *   GET  ?action=highscores&game=serpentin&variant=V    -> meilleurs scores (un par joueur)
+ *   GET  ?action=load&player=P&course=serpent3d         -> relit la collection d'un joueur
  *   POST action=score    player game variant score      -> enregistre une partie
  *   POST action=progress player course data(JSON)       -> enregistre les progrès d'un cours
  * Parents (mot de passe parent, le même que pour les voix de Nahki Tounsi) :
@@ -17,8 +18,10 @@
  */
 declare(strict_types=1);
 
-const GAMES   = ['serpentin'];
-const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'amine-halloween', 'amine-tounsi', 'amine-serpentin'];
+const GAMES   = ['serpentin', 'serpent3d'];
+// Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
+const READABLE = ['serpent3d'];
+const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'serpent3d'];
 const MAX_DATA = 30000;
 const MAX_WRITES = 240;        // écritures par adresse…
 const WRITE_WINDOW = 600;      // …toutes les 10 minutes
@@ -132,6 +135,15 @@ try {
         $st = db()->prepare('SELECT player, MAX(score) AS score, COUNT(*) AS games FROM scores WHERE game = ? AND variant = ? GROUP BY player ORDER BY score DESC, MIN(created) ASC LIMIT ' . $lim);
         $st->execute([$game, $variant]);
         out(200, ['scores' => array_map(fn($r) => ['player' => $r['player'], 'score' => (int)$r['score'], 'games' => (int)$r['games']], $st->fetchAll(PDO::FETCH_ASSOC))]);
+    }
+
+    if ($method === 'GET' && $action === 'load') {
+        $p = clean_player($_GET['player'] ?? '');
+        $course = (string)($_GET['course'] ?? '');
+        if (!in_array($course, READABLE, true)) fail(400, 'Cours inconnu.');
+        $st = db()->prepare('SELECT data, updated FROM progress WHERE player = ? AND course = ?'); $st->execute([$p, $course]);
+        $r = $st->fetch(PDO::FETCH_ASSOC);
+        out(200, ['data' => $r ? json_decode($r['data'], true) : null, 'updated' => $r ? $r['updated'] : null]);
     }
 
     if ($method !== 'POST') fail(405, 'Action inconnue.');
