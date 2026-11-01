@@ -144,6 +144,15 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(38px,7vw,64px);lin
 .float{position:fixed;font-size:38px;pointer-events:none;z-index:50;animation:rise 1.5s ease-out forwards}
 @keyframes rise{to{transform:translateY(-55vh) rotate(25deg);opacity:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* vidéos des allures */
+.vid{display:block;width:100%;max-width:520px;aspect-ratio:16/9;object-fit:cover;border-radius:18px;box-shadow:0 6px 0 #0002;background:#cfe3c8;align-self:center}
+.vid.small{max-width:360px}
+.allures{display:flex;flex-direction:column;gap:12px;background:var(--card);border-radius:22px;padding:16px;box-shadow:0 5px 0 #0002}
+.allures h2{margin:0;font-family:var(--display);font-size:24px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button{font-family:var(--display);font-weight:800;font-size:19px;min-height:50px;padding:8px 18px;border-radius:16px;background:#f5f8fc;border:3px solid #dde6f2;color:var(--ink)}
+.tabs button[aria-pressed="true"]{background:var(--hay);border-color:var(--hay-deep)}
+.allures p{margin:0;font-weight:700}
 </style>
 </head>
 <body>
@@ -420,7 +429,7 @@ function askRobe(q){
 function askRythme(q){
   const A = ALLURE[q.allure]; let n = 0;
   frame(`<p class="q">Tape le rythme ${A.du} sur le sabot !</p>
-    <div class="rhythm"><button class="hoof" id="hoof" aria-label="Taper un coup de sabot">${SHOE}</button><div class="beats" id="beats" aria-live="polite"></div>
+    <div class="rhythm"><video class="vid small" src="cheval/${q.allure}.mp4" poster="cheval/${q.allure}-poster.webp" autoplay muted loop playsinline aria-label="Vidéo d'un cheval ${ALLURE[q.allure].du.replace('du ','au ')}"></video><button class="hoof" id="hoof" aria-label="Taper un coup de sabot">${SHOE}</button><div class="beats" id="beats" aria-live="polite"></div>
     <div class="row"><button class="btn" id="redo">↺ Recommencer</button><button class="btn play" id="valid">✔ J'ai fini</button></div></div>`,
     `Comme dans ton exposé : un coup de sabot par « temps ».`);
   speak(`Tape le rythme ${A.du} sur le sabot !`);
@@ -447,6 +456,7 @@ function askEcoute(q){
     const ok = b.dataset.a === q.allure;
     app.querySelectorAll('.ans').forEach(x => { x.disabled = true; if(x.dataset.a === q.allure) x.classList.add('good'); });
     if(!ok) b.classList.add('bad');
+    document.getElementById('listen').insertAdjacentHTML('afterend', `<video class="vid small" src="cheval/${q.allure}.mp4" poster="cheval/${q.allure}-poster.webp" autoplay muted loop playsinline aria-label="Vidéo d'un cheval ${ALLURE[q.allure].du.replace('du ','au ')}"></video>`);
     answered(ok, ALLURE[q.allure].ex);
   });
 }
@@ -488,10 +498,25 @@ function revise(){
   app.innerHTML = topbar(true) + teacher('Voici ta fiche pour réviser. Touche 🔊 pour que je la lise avec toi.') +
     `<button class="poster" id="poster" aria-label="Agrandir l'affiche « Tout savoir sur le cheval »"><img src="cheval/affiche-480.webp" srcset="cheval/affiche-480.webp 480w, cheval/affiche-1000.webp 1000w" sizes="(max-width:620px) 90vw, 420px" alt="Affiche « Le Cheval : tout savoir pour l'exposé »" loading="lazy"></button>
     <div class="flash">${FLASH.map(([ic, t], j) => `<div class="fcard"><span class="ic" aria-hidden="true">${ic}</span><p>${t}</p><button data-j="${j}" aria-label="Lire à voix haute">🔊</button></div>`).join('')}</div>
+    <section class="allures" aria-labelledby="alh"><h2 id="alh">🎬 Regarde les allures</h2>
+      <div class="tabs" role="group" aria-label="Choisir une allure">${['pas','trot','galop'].map((a,i) => `<button data-a="${a}" aria-pressed="${i===0}">${ALLURE[a].name.replace('le ','Le ')}</button>`).join('')}</div>
+      <video class="vid" id="alvid" src="cheval/pas.mp4" poster="cheval/pas-poster.webp" autoplay muted loop playsinline aria-label="Vidéo d'un cheval au pas"></video>
+      <p id="altxt">${ALLURE.pas.ex}</p>
+      <button class="btn play" id="alsound" style="align-self:flex-start">🔊 Écouter les sabots</button>
+    </section>
     <div class="tip">💡 <b>Pour ton oral</b> : montre le garrot sur toi (là où le cou rejoint les épaules), et tape sur la table le rythme des allures : 1-2-3-4 pour le pas, 1-2 pour le trot, 1-2-3 pour le galop !</div>`;
   wireTop();
   speak('Voici ta fiche pour réviser.');
   app.querySelectorAll('.fcard button').forEach(b => b.onclick = () => speak(FLASH[+b.dataset.j][1]));
+  let cur = 'pas';
+  const v = document.getElementById('alvid');
+  app.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+    cur = b.dataset.a; sfx.tap();
+    app.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    v.poster = `cheval/${cur}-poster.webp`; v.src = `cheval/${cur}.mp4`; v.setAttribute('aria-label', `Vidéo d'un cheval ${ALLURE[cur].du.replace('du ','au ')}`); v.play().catch(()=>{});
+    document.getElementById('altxt').innerHTML = ALLURE[cur].ex;
+  });
+  document.getElementById('alsound').onclick = () => { hush(); playAllure(cur); };
   document.getElementById('poster').onclick = () => { const d = document.getElementById('viewer'); document.getElementById('vImg').src = 'cheval/affiche-1000.webp'; document.getElementById('vImg').alt = 'Affiche « Le Cheval : tout savoir pour l\'exposé »'; if(d.showModal) d.showModal(); };
 }
 document.getElementById('vClose').onclick = () => document.getElementById('viewer').close();
