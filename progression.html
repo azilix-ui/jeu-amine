@@ -219,6 +219,13 @@ function legendesCard(S, player){
   const best = d.best || {}, legs = (d.skins || []).filter(k => LEG[k]).map(k => LEG[k]);
   return '<div class="subject"><h3>🐉 Serpent Légendes</h3><div class="kpis">' + kpi(Math.max(best.facile || 0, best.normal || 0, best.expert || 0), 'record (pommes)') + kpi((d.skins || []).length + ' / 19', 'skins') + (d.spentT ? kpi(d.spentT, 'tickets dépensés') : '') + kpi(d.games || 0, 'parties') + '</div><dl class="units"><dt>🐢 Facile</dt><dd>' + (best.facile || 0) + '</dd><dt>🐇 Normal</dt><dd>' + (best.normal || 0) + '</dd><dt>🐆 Expert</dt><dd>' + (best.expert || 0) + '</dd><dt>Légendaires</dt><dd>' + (legs.length ? legs.join(', ') : '—') + '</dd></dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
 }
+function ludoCard(S, player){
+  const p = prog(S, player, 'ludo3d');
+  const d = p && p.data ? p.data['ludo3d:' + player] || Object.values(p.data)[0] : null;
+  if(!d) return '<div class="subject"><h3>🎲 Ludo Légendes</h3><p class="none">Pas encore joué avec son prénom.</p></div>';
+  const legs = (d.owned || []).filter(x => ['p:dragon','p:licorne','p:phenix'].includes(x)).map(x => LEG[x.slice(2)]);
+  return '<div class="subject"><h3>🎲 Ludo Légendes</h3><div class="kpis">' + kpi(d.wins || 0, 'victoires') + kpi(d.games || 0, 'parties') + kpi((d.owned || []).length + ' / 19', 'objets') + '</div><dl class="units"><dt>Pions renvoyés</dt><dd>' + (d.caps || 0) + '</dd><dt>Six</dt><dd>' + (d.sixes || 0) + '</dd><dt>Légendes</dt><dd>' + (legs.length ? legs.join(', ') : '—') + '</dd></dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
+}
 function lastSeen(S, name){ const p = S.players.find(x => x.name.toLowerCase() === name.toLowerCase()); return p ? 'dernière visite ' + ago(p.last_seen) : 'pas encore de visite'; }
 
 /* ---------- Affichage ---------- */
@@ -232,11 +239,11 @@ function show(S){
   b.innerHTML =
     '<div class="bar"><span>Mis à jour ' + fmtDate(new Date().toISOString()) + '</span><button class="tool" id="reload">↻ Actualiser</button><button class="tool" id="logout">Se déconnecter</button></div>' +
     '<article class="child essil"><header><h2>Essil</h2><span>Allemand · Latin</span><span>· ' + lastSeen(S, 'Essil') + '</span></header><div class="subjects">' +
-      courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + legendesCard(S, 'Essil') + '</div></article>' +
+      courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + legendesCard(S, 'Essil') + ludoCard(S, 'Essil') + '</div></article>' +
     '<article class="child salma"><header><h2>Salma</h2><span>Anglais · Français · Maths · Exposé</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
-      salmaCard(S) + verbesCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + '</div></article>' +
+      salmaCard(S) + verbesCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + ludoCard(S, 'Salma') + '</div></article>' +
     '<article class="child amine"><header><h2>Amine</h2><span>Jeux · Grande section</span><span>· ' + lastSeen(S, 'Amine') + '</span></header><div class="subjects">' +
-      serpentCard(S, 'Amine') + legendesCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') + '</div></article>' +
+      serpentCard(S, 'Amine') + legendesCard(S, 'Amine') + ludoCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') + '</div></article>' +
     '<section class="panel"><h2>🏆 Serpentin : les records de tout le monde</h2>' + (variants.length
       ? '<div class="table-wrap"><table><thead><tr><th>Joueur</th>' + variants.map(v => '<th>' + vLabel(v) + '</th>').join('') + '</tr></thead><tbody>' +
         names.map(n => '<tr><td>' + esc(n) + '</td>' + variants.map(v => { const r = serp.find(x => x.player === n && x.variant === v); return '<td class="n">' + (r ? r.best : '—') + '</td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>'
@@ -244,7 +251,7 @@ function show(S){
       (others.length ? '<p class="when">Autres joueurs : ' + others.map(esc).join(', ') + '</p>' : '') + '</section>' +
     '<section class="panel"><h2>🕒 Dernières parties</h2>' + (S.recent.length
       ? '<div class="table-wrap"><table><thead><tr><th>Quand</th><th>Joueur</th><th>Jeu</th><th>Score</th></tr></thead><tbody>' +
-        S.recent.slice(0, 15).map(r => '<tr><td>' + fmtDate(r.created) + '</td><td>' + esc(r.player) + '</td><td>' + (r.game === 'serpent3d' ? '🐉 Légendes · ' + r.variant : '🐍 ' + vLabel(r.variant)) + '</td><td class="n">' + r.score + '</td></tr>').join('') + '</tbody></table></div>'
+        S.recent.slice(0, 15).map(r => '<tr><td>' + fmtDate(r.created) + '</td><td>' + esc(r.player) + '</td><td>' + (r.game === 'ludo3d' ? '🎲 Ludo · victoires' : r.game === 'serpent3d' ? '🐉 Légendes · ' + r.variant : '🐍 ' + vLabel(r.variant)) + '</td><td class="n">' + r.score + '</td></tr>').join('') + '</tbody></table></div>'
       : '<p class="none">Rien pour l\'instant.</p>') + '</section>' +
     '<p class="when">Les progrès des cours sont envoyés automatiquement quand l\'enfant les utilise sur missaoui-family.com. Ce qui a été fait avant la mise en place du suivi apparaît dès que l\'enfant rouvre le cours sur le même appareil.</p>';
   $('#reload').onclick = async () => { try{ show(await post({action:'summary', pass})); }catch(e){ loginForm(e.message); } };
