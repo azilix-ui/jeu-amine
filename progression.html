@@ -203,12 +203,21 @@ function serpentCard(S, player){
   return '<div class="subject"><h3>🐍 Serpentin</h3><div class="kpis">' + kpi(Math.max(...rows.map(r => +r.best)), 'meilleur score') + kpi(games, 'parties') + '</div><dl class="units">' + rows.sort((a,b) => b.best - a.best).map(r => '<dt>' + vLabel(r.variant) + '</dt><dd>' + r.best + ' pts</dd>').join('') + '</dl><p class="when">Dernière partie : ' + ago(last) + '</p></div>';
 }
 const LEG = {dragon:'Dragon d\'or', licorne:'Licorne étoilée', phenix:'Phénix'};
+const VSTEPS = [['paniers','Les trois paniers'],['nous','Le test du « nous »'],['g1','1er groupe'],['g2','2e groupe'],['g3','3e groupe'],['tableau','Les 12 verbes'],['cerger','-cer / -ger'],['phrases','Phrases à trous']];
+function verbesCard(S){
+  const p = prog(S, 'Salma', 'salma-verbes');
+  const d = p && p.data ? p.data['salma-verbes'] : null;
+  if(!d) return '<div class="subject"><h3>✍️ L\'Atelier des Verbes</h3><p class="none">Pas encore commencé.</p></div>';
+  const st = d.stars || {}, done = VSTEPS.filter(([k]) => st[k] > 0).length;
+  const review = Object.entries(d.verbs || {}).filter(([, v]) => v.ko > 0).sort((a, b) => b[1].ko - a[1].ko).slice(0, 6).map(([k, v]) => esc(k) + ' (' + v.ko + ' ✘)');
+  return '<div class="subject"><h3>✍️ L\'Atelier des Verbes</h3><div class="kpis">' + kpi(done + ' / 8', 'étapes réussies') + kpi(d.tickets || 0, 'tickets 🎟️ gagnés') + '</div><dl class="units">' + VSTEPS.map(([k, n]) => '<dt>' + n + '</dt><dd>' + (st[k] ? '★'.repeat(st[k]) + '☆'.repeat(3 - st[k]) : '—') + '</dd>').join('') + '<dt>Verbes à revoir</dt><dd>' + (review.length ? review.join(', ') : '—') + '</dd></dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
+}
 function legendesCard(S, player){
   const p = prog(S, player, 'serpent3d');
   const d = p && p.data ? p.data['serpent3d:' + player] || Object.values(p.data)[0] : null;
   if(!d) return '<div class="subject"><h3>🐉 Serpent Légendes</h3><p class="none">Pas encore joué avec son prénom.</p></div>';
   const best = d.best || {}, legs = (d.skins || []).filter(k => LEG[k]).map(k => LEG[k]);
-  return '<div class="subject"><h3>🐉 Serpent Légendes</h3><div class="kpis">' + kpi(Math.max(best.facile || 0, best.normal || 0, best.expert || 0), 'record (pommes)') + kpi((d.skins || []).length + ' / 18', 'skins') + kpi(d.games || 0, 'parties') + '</div><dl class="units"><dt>🐢 Facile</dt><dd>' + (best.facile || 0) + '</dd><dt>🐇 Normal</dt><dd>' + (best.normal || 0) + '</dd><dt>🐆 Expert</dt><dd>' + (best.expert || 0) + '</dd><dt>Légendaires</dt><dd>' + (legs.length ? legs.join(', ') : '—') + '</dd></dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
+  return '<div class="subject"><h3>🐉 Serpent Légendes</h3><div class="kpis">' + kpi(Math.max(best.facile || 0, best.normal || 0, best.expert || 0), 'record (pommes)') + kpi((d.skins || []).length + ' / 19', 'skins') + (d.spentT ? kpi(d.spentT, 'tickets dépensés') : '') + kpi(d.games || 0, 'parties') + '</div><dl class="units"><dt>🐢 Facile</dt><dd>' + (best.facile || 0) + '</dd><dt>🐇 Normal</dt><dd>' + (best.normal || 0) + '</dd><dt>🐆 Expert</dt><dd>' + (best.expert || 0) + '</dd><dt>Légendaires</dt><dd>' + (legs.length ? legs.join(', ') : '—') + '</dd></dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
 }
 function lastSeen(S, name){ const p = S.players.find(x => x.name.toLowerCase() === name.toLowerCase()); return p ? 'dernière visite ' + ago(p.last_seen) : 'pas encore de visite'; }
 
@@ -224,8 +233,8 @@ function show(S){
     '<div class="bar"><span>Mis à jour ' + fmtDate(new Date().toISOString()) + '</span><button class="tool" id="reload">↻ Actualiser</button><button class="tool" id="logout">Se déconnecter</button></div>' +
     '<article class="child essil"><header><h2>Essil</h2><span>Allemand · Latin</span><span>· ' + lastSeen(S, 'Essil') + '</span></header><div class="subjects">' +
       courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + legendesCard(S, 'Essil') + '</div></article>' +
-    '<article class="child salma"><header><h2>Salma</h2><span>Anglais · Maths · Exposé</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
-      salmaCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + '</div></article>' +
+    '<article class="child salma"><header><h2>Salma</h2><span>Anglais · Français · Maths · Exposé</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
+      salmaCard(S) + verbesCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + '</div></article>' +
     '<article class="child amine"><header><h2>Amine</h2><span>Jeux · Grande section</span><span>· ' + lastSeen(S, 'Amine') + '</span></header><div class="subjects">' +
       serpentCard(S, 'Amine') + legendesCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') + '</div></article>' +
     '<section class="panel"><h2>🏆 Serpentin : les records de tout le monde</h2>' + (variants.length

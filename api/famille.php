@@ -20,8 +20,8 @@ declare(strict_types=1);
 
 const GAMES   = ['serpentin', 'serpent3d'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
-const READABLE = ['serpent3d'];
-const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'serpent3d'];
+const READABLE = ['serpent3d', 'salma-verbes'];
+const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'serpent3d'];
 const MAX_DATA = 30000;
 const MAX_WRITES = 240;        // écritures par adresse…
 const WRITE_WINDOW = 600;      // …toutes les 10 minutes

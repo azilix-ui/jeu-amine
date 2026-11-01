@@ -79,6 +79,18 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
 .chest p{margin:2px 0 0;color:var(--mist);font-size:14px}
 .odds{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .odds span{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#0004}
+.rar-savoir{color:var(--mint)}
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.item{display:flex;flex-direction:column;gap:6px;background:var(--card);border-radius:20px;padding:12px;border:3px solid var(--line);text-align:left}
+.item .ic{font-size:34px;line-height:1}
+.item b{font-size:17px}
+.item small{color:var(--mist);font-size:13px}
+.item .buy{margin-top:auto;min-height:48px;border-radius:14px;background:var(--mint);color:#0d2a1d;font-weight:800;font-size:17px;box-shadow:0 4px 0 var(--mint-deep)}
+.item .buy:disabled{opacity:.45}
+.item.own{border-color:var(--mint)}
+.tickets{background:linear-gradient(135deg,#1d5e4a,#2b2457);border:3px solid var(--mint);border-radius:24px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.tickets p{margin:0;color:var(--mist);font-size:14px}
+.tickets a{color:var(--mint)}
 .rar-commun{color:var(--r-commun)}.rar-rare{color:var(--r-rare)}.rar-epique{color:var(--r-epique)}.rar-legendaire{color:var(--r-legendaire)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .skin{position:relative;display:flex;flex-direction:column;gap:6px;align-items:stretch;text-align:left;background:var(--card);border-radius:20px;padding:10px;border:3px solid var(--line);min-height:120px}
@@ -237,7 +249,7 @@ import * as THREE from '../lib/three-0.170.0.module.min.js';
    ===================================================================== */
 const N = 17;                               // taille du plateau (cases)
 const CHEST = 30;                           // prix d'un coffre
-const RAR = { commun:{label:'Commun', p:55}, rare:{label:'Rare', p:32}, epique:{label:'Épique', p:13}, legendaire:{label:'Légendaire', p:0} };
+const RAR = { commun:{label:'Commun', p:55}, rare:{label:'Rare', p:32}, epique:{label:'Épique', p:13}, legendaire:{label:'Légendaire', p:0}, savoir:{label:'Savoir', p:0} };
 const col = new THREE.Color(), col2 = new THREE.Color();
 const hex = h => new THREE.Color(h);
 const alt = (a, b, every = 2) => (i) => (Math.floor(i / every) % 2 ? b : a);
@@ -265,7 +277,8 @@ const SKINS = [
   { id:'licorne',name:'Licorne étoilée',rar:'legendaire', head:'#ffffff', anim:true, body:(i,n,t)=> col.setHSL(((i * .09 + t * .1) % 1 + 1) % 1, .75, .82), mat:{emissive:'#ffd6f5', ei:.12}, acc:['corne-licorne','criniere'],
     defi:{ text:'Gagne 600 pièces en tout', key:'total', goal:600 } },
   { id:'phenix', name:'Phénix',       rar:'legendaire', head:'#ffe066', anim:true, body:(i,n,t)=> col.set('#ffe066').lerp(col2.set('#ff3b1f'), Math.min(1, i / Math.max(1, n * .5))).lerp(col2.set('#a3122b'), Math.max(0, (i / n - .5) * 2)).multiplyScalar(.9 + .2 * Math.sin(t * 9 + i)), mat:{emissive:'#ff4400', ei:.45}, acc:['crete','ailes-feu'],
-    defi:{ text:'Mange 10 pommes d\'or', key:'gold', goal:10 } }
+    defi:{ text:'Mange 10 pommes d\'or', key:'gold', goal:10 } },
+  { id:'crayon', name:'Crayon magique', rar:'savoir', head:'#f2c38b', body:(i,n)=> i >= n - 1 ? '#ff8fb1' : i === n - 2 ? '#c9ccd1' : (i % 2 ? '#ffcf33' : '#f4b400'), acc:['mine'] }
 ];
 const SKIN = Object.fromEntries(SKINS.map(s => [s.id, s]));
 function skinColor(s, i, n, t){ const r = s.body(i, n, t); if(typeof r === 'string') col.set(r); return col; }
@@ -274,19 +287,43 @@ const WORLDS = [
   { id:'prairie', name:'Prairie', icon:'🌳', need:0,  sky:'#bfe6ff', fog:'#cfeaff', a:'#8fd16a', b:'#7fc45c', wall:'#4f8a3a', rock:'#8a8f98', ground:'#6fb24e' },
   { id:'plage',   name:'Plage',   icon:'🏖️', need:15, sky:'#8fd8ff', fog:'#b5e6ff', a:'#f4dca0', b:'#ebcf8c', wall:'#c79a5a', rock:'#b5946a', ground:'#e8d08f' },
   { id:'neige',   name:'Neige',   icon:'❄️', need:25, sky:'#cfe0f2', fog:'#dfe9f5', a:'#f3f8ff', b:'#e0eaf7', wall:'#9cc3e6', rock:'#a9d8ff', ground:'#eef4fb' },
-  { id:'espace',  name:'Espace',  icon:'🪐', need:40, sky:'#0b0820', fog:'#0b0820', a:'#3b3270', b:'#332a63', wall:'#7b5cff', rock:'#6a4a8f', ground:'#1a1438' }
+  { id:'espace',  name:'Espace',  icon:'🪐', need:40, sky:'#0b0820', fog:'#0b0820', a:'#3b3270', b:'#332a63', wall:'#7b5cff', rock:'#6a4a8f', ground:'#1a1438' },
+  { id:'livres',  name:'Bibliothèque', icon:'📚', need:Infinity, sky:'#efe4ff', fog:'#f1e9ff', a:'#f6ecd2', b:'#ecdfbf', wall:'#8a5a3b', rock:'#7a4fe0', ground:'#cdb8ea' }
 ];
 const WORLD = Object.fromEntries(WORLDS.map(w => [w.id, w]));
 const DIFF = { facile:{ ms:230, wrap:true, rocks:0 }, normal:{ ms:175, wrap:false, rocks:1 }, expert:{ ms:125, wrap:false, rocks:2 } };
 
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
-const fresh = () => ({ v:1, coins:0, total:0, skins:['vert'], skin:'vert', best:{ facile:0, normal:0, expert:0 }, maxLen:0, gold:0, games:0, t:0 });
+const fresh = () => ({ v:1, coins:0, total:0, skins:['vert'], skin:'vert', best:{ facile:0, normal:0, expert:0 }, maxLen:0, gold:0, games:0, spentT:0, bought:[], t:0 });
 let player = null, data = fresh();
 const prefs = store.get('serpent3d-prefs', { cam:'dessus', diff:'facile', world:'prairie' });
 const key = () => 'serpent3d:' + player;
 function save(){ data.t = Date.now(); if(player) store.set(key(), data); }
 const bestAll = () => Math.max(data.best.facile || 0, data.best.normal || 0, data.best.expert || 0);
 const tracked = new Set();
+
+/* ---------- Tickets du savoir : gagnés dans les exercices (L'Atelier des Verbes…), dépensés ici ---------- */
+const STUDY = { salma:[{ course:'salma-verbes', key:'salma-verbes', name:"L'Atelier des Verbes", href:'../salma/atelier-des-verbes.html' }] };
+const SHOP = [
+  { id:'w:plage',  icon:'🏖️', name:'Monde Plage',  sub:'Sans attendre le record 15', cost:15, world:'plage' },
+  { id:'w:neige',  icon:'❄️', name:'Monde Neige',  sub:'Sans attendre le record 25', cost:30, world:'neige' },
+  { id:'w:espace', icon:'🪐', name:'Monde Espace', sub:'Sans attendre le record 40', cost:50, world:'espace' },
+  { id:'w:livres', icon:'📚', name:'Monde Bibliothèque', sub:'Exclusif : seulement avec des tickets', cost:70, world:'livres' },
+  { id:'s:crayon', icon:'✏️', name:'Skin Crayon magique', sub:'Exclusif : seulement avec des tickets', cost:40, skin:'crayon' }
+];
+let studyEarned = 0;
+const studySources = () => STUDY[(player || '').toLowerCase()] || [];
+const ticketsLeft = () => Math.max(0, studyEarned - (data.spentT || 0));
+async function loadStudy(name){
+  let sum = 0;
+  for(const src of STUDY[name.toLowerCase()] || []){
+    let t = (store.get(src.key, null) || {}).tickets || 0;
+    if(window.Famille){ const r = await Famille.load(src.course, name); const d = r && r[src.key]; if(d && d.tickets > t) t = d.tickets; }
+    sum += t;
+  }
+  if(player === name){ studyEarned = sum; renderMenu(); if($('coll').classList.contains('on')) renderColl(); }
+}
+const worldOpen = w => bestAll() >= w.need || (data.bought || []).includes('w:' + w.id);
 
 async function setPlayer(name){
   player = name;
@@ -303,7 +340,10 @@ async function setPlayer(name){
     }
   }
   if(!SKIN[data.skin] || !data.skins.includes(data.skin)) data.skin = 'vert';
+  data.bought = data.bought || []; data.spentT = data.spentT || 0;
+  studyEarned = 0; for(const src of STUDY[name.toLowerCase()] || []) studyEarned += (store.get(src.key, null) || {}).tickets || 0;
   renderWho(); renderMenu(); setShowSkin(data.skin);
+  loadStudy(name);
 }
 
 /* =====================================================================
@@ -393,6 +433,13 @@ function decoItem(w){
   } else if(w.id === 'neige'){
     for(let k = 0; k < 3; k++){ const c = mesh(new THREE.ConeGeometry(.9 - k * .22, 1.1, 8), '#2f6b4f'); c.position.y = .7 + k * .65; g.add(c);
       const s = mesh(new THREE.ConeGeometry(.42 - k * .1, .35, 8), '#ffffff'); s.position.y = 1.15 + k * .65; g.add(s); }
+  } else if(w.id === 'livres'){
+    if(rnd.next() < .65){ let y = 0; const n = 2 + Math.floor(rnd.next() * 4);
+      for(let k = 0; k < n; k++){ const h = .35 + rnd.next() * .25, b = mesh(new THREE.BoxGeometry(1.6 - k * .12, h, 1.1 - k * .06), ['#e2483d','#2a7fb4','#2e9e6e','#ffb02e','#7a4fe0'][Math.floor(rnd.next() * 5)]);
+        b.position.y = y + h / 2; b.rotation.y = (rnd.next() - .5) * .5; y += h; g.add(b); } }
+    else { const c = mesh(new THREE.CylinderGeometry(.22, .22, 2.6, 6), ['#ffcf33','#ff6f91','#5cc8ff'][Math.floor(rnd.next() * 3)]); c.position.y = 1.3; g.add(c);
+      const tip = mesh(new THREE.ConeGeometry(.22, .5, 6), '#f2c38b'); tip.position.y = 2.85; g.add(tip);
+      const mine = mesh(new THREE.ConeGeometry(.07, .16, 6), '#333333'); mine.position.y = 3.06; g.add(mine); }
   } else {
     const p = mesh(new THREE.SphereGeometry(.5 + rnd.next() * .9, 16, 12), ['#ff7b5c','#5cc8ff','#b77bff','#ffd23f'][Math.floor(rnd.next() * 4)], { emissive:'#221144', emissiveIntensity:.4 });
     p.position.y = 1.5 + rnd.next() * 3; g.add(p);
@@ -484,6 +531,7 @@ function applySkin(id){
   if(acc.includes('aureole')) add(new THREE.TorusGeometry(.28, .04, 8, 24), stdMat('#fff4b0', { emissive:'#ffe066', emissiveIntensity:1 }), [0, .78, 0], [Math.PI / 2, 0, 0]);
   if(acc.includes('corne-licorne')){ const h = add(new THREE.ConeGeometry(.08, .6, 12), stdMat('#ffd76a', { metalness:.6, roughness:.25, emissive:'#ffb800', emissiveIntensity:.3 }), [0, .62, .22], [.45, 0, 0]); h.scale.set(1, 1, 1); }
   if(acc.includes('criniere')) for(let k = 0; k < 5; k++){ add(new THREE.SphereGeometry(.12, 8, 6), stdMat(new THREE.Color().setHSL(k / 5, .8, .72)), [0, .45 - k * .04, -.12 - k * .13]); }
+  if(acc.includes('mine')){ add(new THREE.ConeGeometry(.2, .32, 6), stdMat('#f2c38b'), [0, .02, .62], [Math.PI / 2, 0, 0]); add(new THREE.ConeGeometry(.08, .14, 6), stdMat('#333333'), [0, .02, .84], [Math.PI / 2, 0, 0]); }
   if(acc.includes('crete')) for(let k = -1; k <= 1; k++) add(new THREE.ConeGeometry(.07, .5 - Math.abs(k) * .12, 8), stdMat('#ffb300', { emissive:'#ff5500', emissiveIntensity:.8 }), [k * .1, .65, -.1 - Math.abs(k) * .05], [-.5, 0, -k * .4]);
   if(acc.includes('ailes') || acc.includes('ailes-feu')){
     wings = new THREE.Group();
@@ -508,8 +556,9 @@ function apple(gold){
 function rockMesh(){
   const w = curWorld;
   const m = w.id === 'neige' ? stdMat(w.rock, { roughness:.1, transparent:true, opacity:.85, emissive:'#5ab8ff', emissiveIntensity:.15 }) : stdMat(w.rock, { roughness:.95, flatShading:true, emissive: w.id === 'espace' ? '#3a1d6e' : '#000000', emissiveIntensity:.5 });
-  const r = new THREE.Mesh(w.id === 'neige' ? new THREE.BoxGeometry(.85, .85, .85) : new THREE.DodecahedronGeometry(.48, 0), m);
-  r.castShadow = true; r.receiveShadow = true; r.rotation.set(Math.random(), Math.random() * 6, 0);
+  if(w.id === 'livres') m.color.set(['#e2483d','#2a7fb4','#2e9e6e','#7a4fe0'][Math.floor(Math.random() * 4)]);
+  const r = new THREE.Mesh(w.id === 'neige' ? new THREE.BoxGeometry(.85, .85, .85) : w.id === 'livres' ? new THREE.BoxGeometry(.9, .5, .7) : new THREE.DodecahedronGeometry(.48, 0), m);
+  r.castShadow = true; r.receiveShadow = true; r.rotation.set(w.id === 'livres' ? 0 : Math.random(), Math.random() * 6, 0);
   return r;
 }
 
@@ -766,13 +815,13 @@ function seg(id, val, on){
   $(id).querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', b.dataset.v === val); b.onclick = () => { if(b.disabled) return; sfx.tap(); on(b.dataset.v); }; });
 }
 function renderMenu(){
-  if(!WORLD[prefs.world] || bestAll() < WORLD[prefs.world].need) prefs.world = 'prairie';
-  $('optWorld').innerHTML = WORLDS.map(w => { const ok = bestAll() >= w.need; return `<button data-v="${w.id}" ${ok ? '' : 'disabled'}><i>${ok ? w.icon : '🔒'}</i>${w.name}${ok ? '' : `<small>record ${w.need}</small>`}</button>`; }).join('');
+  if(!WORLD[prefs.world] || !worldOpen(WORLD[prefs.world])) prefs.world = 'prairie';
+  $('optWorld').innerHTML = WORLDS.filter(w => w.need !== Infinity || worldOpen(w)).map(w => { const ok = worldOpen(w); return `<button data-v="${w.id}" ${ok ? '' : 'disabled'}><i>${ok ? w.icon : '🔒'}</i>${w.name}${ok ? '' : `<small>record ${w.need}${studySources().length ? ' ou 🎟️' : ''}</small>`}</button>`; }).join('');
   seg('optCam', prefs.cam, v => { prefs.cam = v; store.set('serpent3d-prefs', prefs); renderMenu(); });
   seg('optDiff', prefs.diff, v => { prefs.diff = v; store.set('serpent3d-prefs', prefs); renderMenu(); buildWorld(prefs.world, DIFF[prefs.diff].wrap); });
   seg('optWorld', prefs.world, v => { prefs.world = v; store.set('serpent3d-prefs', prefs); renderMenu(); buildWorld(v, DIFF[prefs.diff].wrap); });
-  $('mCoins').textContent = '🪙 ' + data.coins;
-  $('chestDot').hidden = !(data.coins >= CHEST && chestPool().length);
+  $('mCoins').textContent = '🪙 ' + data.coins + (studySources().length ? '  🎟️ ' + ticketsLeft() : '');
+  $('chestDot').hidden = !((data.coins >= CHEST && chestPool().length) || SHOP.some(it => !owned(it) && ticketsLeft() >= it.cost));
 }
 function goMenu(){ clearGame(); state = 'menu'; hideHint(); buildWorld(prefs.world, DIFF[prefs.diff].wrap); applySkin(data.skin); renderMenu(); show('menu'); }
 
@@ -824,7 +873,22 @@ $('toColl').onclick = () => { sfx.tap(); clearGame(); state = 'menu'; buildWorld
 
 /* ---------- Collection et coffres ---------- */
 function swatch(s){ const cs = []; for(let i = 0; i < 8; i++){ cs.push('#' + skinColor(s, i + 1, 16, i * .15).getHexString()); } return `linear-gradient(90deg,${s.head},${cs.join(',')})`; }
-function chestPool(){ return SKINS.filter(s => s.rar !== 'legendaire' && !data.skins.includes(s.id)); }
+function chestPool(){ return SKINS.filter(s => s.rar !== 'legendaire' && s.rar !== 'savoir' && !data.skins.includes(s.id)); }
+const owned = it => it.skin ? data.skins.includes(it.skin) : (data.bought || []).includes(it.id) || (it.world && bestAll() >= WORLD[it.world].need);
+function shopHTML(){
+  const src = studySources(); if(!src.length) return '';
+  return `<div class="tickets"><div class="chead" style="gap:8px"><h3 style="font-size:24px">🎟️ Boutique du savoir</h3><span class="coins" style="color:var(--mint)">🎟️ ${ticketsLeft()}</span></div>
+    <p>Chaque bonne réponse dans ${src.map(x => `<a href="${x.href}">${x.name}</a>`).join(', ')} te donne un ticket. Dépense-les ici !</p>
+    <div class="shop">${SHOP.map(it => { const own = owned(it); return `<div class="item ${own ? 'own' : ''}"><span class="ic" aria-hidden="true">${it.icon}</span><b>${it.name}</b><small>${it.sub}</small>
+      <button class="buy" data-buy="${it.id}" ${own || ticketsLeft() < it.cost ? 'disabled' : ''}>${own ? '✔ Débloqué' : '🎟️ ' + it.cost}</button></div>`; }).join('')}</div></div>`;
+}
+function buy(id){
+  const it = SHOP.find(x => x.id === id); if(!it || owned(it) || ticketsLeft() < it.cost) return;
+  data.spentT = (data.spentT || 0) + it.cost; data.bought = (data.bought || []).concat(it.id);
+  if(it.skin){ data.skins.push(it.skin); save(); reveal(SKIN[it.skin], false, true); return; }
+  save(); sfx.win('epique'); prefs.world = it.world; store.set('serpent3d-prefs', prefs); buildWorld(it.world, DIFF[prefs.diff].wrap);
+  toast(it.icon + ' ' + it.name + ' débloqué !'); renderColl();
+}
 function openColl(){ state = 'menu'; renderColl(); show('coll'); }
 function renderColl(){
   $('cCoins').textContent = '🪙 ' + data.coins;
@@ -839,13 +903,15 @@ function renderColl(){
     <div class="chest"><span class="ic" aria-hidden="true">🎁</span><div><h3>Coffre mystère</h3><p>${pool.length ? `Un skin que tu n'as pas encore. Il te reste ${pool.length} skin${pool.length > 1 ? 's' : ''} à découvrir.` : 'Tu as tous les skins des coffres ! Il reste les légendaires.'}</p>
       <div class="odds"><span class="rar-commun">Commun ${RAR.commun.p}%</span><span class="rar-rare">Rare ${RAR.rare.p}%</span><span class="rar-epique">Épique ${RAR.epique.p}%</span></div></div>
       <button class="big alt" id="buyChest" style="padding:0 18px;font-size:20px" ${data.coins >= CHEST && pool.length ? '' : 'disabled style="opacity:.5;padding:0 18px;font-size:20px"'}>🪙 ${CHEST}</button></div>
+    ${shopHTML()}
     <div class="sect rar-legendaire">✨ Légendaires : à gagner avec un défi</div>${cards(SKINS.filter(s => s.rar === 'legendaire'))}
-    <div class="sect">Ma collection (${data.skins.length}/${SKINS.length})</div>${cards(SKINS.filter(s => s.rar !== 'legendaire'))}`;
+    <div class="sect">Ma collection (${data.skins.length}/${SKINS.length})</div>${cards(SKINS.filter(s => s.rar !== 'legendaire' && (s.rar !== 'savoir' || data.skins.includes(s.id))))}`;
+  $('collBody').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { sfx.tap(); buy(b.dataset.buy); });
   const b = $('buyChest'); if(b) b.onclick = () => { if(data.coins < CHEST || !pool.length) return; openChest(); };
   $('collBody').querySelectorAll('.skin').forEach(el => el.onclick = () => {
     const s = SKIN[el.dataset.id]; setShowSkin(s.id);
     if(data.skins.includes(s.id)){ data.skin = s.id; save(); sfx.tap(); renderColl(); }
-    else { sfx.turn(); toast(s.defi ? '🔒 ' + s.defi.text : '🔒 À gagner dans un coffre'); setTimeout(() => setShowSkin(data.skin), 2200); }
+    else { sfx.turn(); toast(s.defi ? '🔒 ' + s.defi.text : s.rar === 'savoir' ? '🔒 Dans la boutique du savoir' : '🔒 À gagner dans un coffre'); setTimeout(() => setShowSkin(data.skin), 2200); }
   });
 }
 $('openColl').onclick = () => { sfx.tap(); openColl(); };
@@ -862,12 +928,12 @@ function openChest(){
   data.coins -= CHEST; data.skins.push(s.id); save();
   reveal(s, false);
 }
-function reveal(s, legendary){
+function reveal(s, legendary, shop){
   if(G){ clearGame(); buildWorld(prefs.world, DIFF[prefs.diff].wrap); }
   const box = $('revealBox'), rays = $('rays');
-  rays.style.setProperty('--ray', { commun:'#9fb7a81c', rare:'#4fb3ff22', epique:'#b77bff2a', legendaire:'#ffc93c33' }[s.rar]);
+  rays.style.setProperty('--ray', { commun:'#9fb7a81c', rare:'#4fb3ff22', epique:'#b77bff2a', legendaire:'#ffc93c33', savoir:'#5fe0a830' }[s.rar]);
   rays.style.display = 'none';
-  box.innerHTML = legendary ? `<h2>Défi réussi !</h2><div class="chestbig">🏆</div><p>Tu as débloqué un skin légendaire…</p>` : `<h2>Coffre mystère</h2><div class="chestbig">🎁</div><p>Le coffre s'ouvre…</p>`;
+  box.innerHTML = shop ? `<h2>Boutique du savoir</h2><div class="chestbig">🎟️</div><p>Tes tickets t'offrent un skin exclusif…</p>` : legendary ? `<h2>Défi réussi !</h2><div class="chestbig">🏆</div><p>Tu as débloqué un skin légendaire…</p>` : `<h2>Coffre mystère</h2><div class="chestbig">🎁</div><p>Le coffre s'ouvre…</p>`;
   show('reveal'); state = 'menu'; sfx.chest();
   setTimeout(() => {
     setShowSkin(s.id); rays.style.display = '';

@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>L'Atelier des Verbes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A6%89%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* L'Atelier des Verbes reprend le monde du Jardin des Nombres (ciel, herbe, Ollie).
+   Ancien commentaire du Jardin : le monde de Salma (ciel, herbe, Ollie la chouette) — accueil = chemin de 8 étapes ; exercice = Ollie qui parle,
+   la soustraction posée sur une feuille de cahier à petits carreaux, retenues au stylo rouge, grand pavé de chiffres pour la tablette. */
+:root{
+  --sky:#7cc8f2; --sky2:#b8e4fb; --grass:#5dbb63; --grass2:#3f9a48;
+  --card:#ffffff; --ink:#23324a; --soft:#566781;
+  --coral:#ff6b5b; --coral-deep:#c8473a; --sun:#ffc93c; --plum:#7a4fe0; --mint:#1fa98e; --mint-deep:#147a66;
+  --paper:#fdfdf8; --grid:#cfe0f3; --margin:#f19a9a; --pen:#24407e; --red:#d32f2f;
+  --display:"Baloo 2","Comic Sans MS","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Trebuchet MS",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;margin:0}
+body{font-family:var(--body);color:var(--ink);font-size:18px;line-height:1.4;
+  background:linear-gradient(var(--sky) 0%,var(--sky2) 62%,var(--grass) 62%,var(--grass2) 100%) fixed;background-color:var(--sky)}
+::selection{background:var(--sun);color:var(--ink)}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:4px solid var(--plum);outline-offset:3px}
+[hidden]{display:none!important}
+.wrap{max-width:980px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(36px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:16px}
+
+/* barre du haut */
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{background:var(--card);border-radius:999px;min-height:48px;padding:10px 18px;font-weight:800;font-size:17px;box-shadow:0 4px 0 #0002;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.chip.round{width:48px;padding:0;justify-content:center;font-size:22px}
+.stars{margin-left:auto;font-family:var(--display);font-size:21px;font-variant-numeric:tabular-nums}
+
+/* Ollie et sa bulle */
+.teacher{display:flex;align-items:flex-end;gap:10px}
+.owl{width:96px;flex:none;transform-origin:50% 100%}
+.owl.talk{animation:bob .5s ease-in-out 2}
+@keyframes bob{50%{transform:translateY(-6px) rotate(-3deg)}}
+.bubble{position:relative;background:var(--card);border-radius:22px;padding:14px 18px;font-size:clamp(18px,2.4vw,22px);font-weight:800;box-shadow:0 5px 0 #0002;min-width:0;flex:1}
+.bubble::before{content:"";position:absolute;left:-14px;bottom:22px;border:10px solid transparent;border-right:16px solid var(--card)}
+.bubble b.n{font-family:var(--display);color:var(--pen);font-size:1.15em}
+.bubble b.r{color:var(--red)}
+.bubble small{display:block;font-weight:600;color:var(--soft);font-size:.82em;margin-top:4px}
+
+h1{font-family:var(--display);font-weight:800;font-size:clamp(36px,6.5vw,62px);line-height:1;margin:0;color:#fff;text-shadow:0 4px 0 #2a7fb4;text-wrap:balance}
+.lead{margin:6px 0 0;color:#fff;font-weight:800;font-size:19px;text-shadow:0 2px 0 #2a7fb4}
+
+/* chemin des étapes */
+.path{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:620px){.path{grid-template-columns:1fr}}
+.step{background:var(--card);border-radius:24px;padding:14px 16px;display:flex;align-items:center;gap:14px;text-align:left;box-shadow:0 6px 0 var(--edge,#0002);transition:transform .12s;min-width:0}
+.step:hover:not(:disabled){transform:translateY(-3px)}
+.step:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 var(--edge,#0002)}
+.step .ic{font-size:40px;line-height:1;width:58px;height:58px;display:grid;place-items:center;border-radius:18px;background:#eef7ff;flex:none}
+.step .tx{min-width:0;flex:1}
+.step .num{font-weight:800;color:var(--soft);font-size:14px}
+.step b{display:block;font-family:var(--display);font-size:23px;line-height:1.1}
+.step .sub{color:var(--soft);font-size:15px}
+.step .st{font-size:20px;letter-spacing:1px;color:#e0a100;white-space:nowrap}
+.step:disabled{opacity:.62;cursor:not-allowed}
+.step.next{outline:4px solid var(--sun);outline-offset:2px}
+
+/* cahier à petits carreaux */
+.sheet{--sq:clamp(46px,9vw,66px);align-self:center;background-color:var(--paper);
+  background-image:linear-gradient(90deg,transparent calc(var(--sq)*.9 - 1px),var(--margin) calc(var(--sq)*.9 - 1px),var(--margin) calc(var(--sq)*.9 + 1px),transparent calc(var(--sq)*.9 + 1px)),
+   linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:100% 100%,calc(var(--sq)/2) calc(var(--sq)/2),calc(var(--sq)/2) calc(var(--sq)/2);
+  border-radius:10px;box-shadow:0 10px 24px -10px rgba(20,40,70,.45),0 2px 0 #0001;padding:calc(var(--sq)*.35) calc(var(--sq)*.6) calc(var(--sq)*.4) calc(var(--sq)*1.3);display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap}
+.op{display:grid;grid-template-columns:var(--sq) repeat(var(--n),var(--sq));grid-auto-rows:auto;font-family:var(--display);font-weight:800;color:var(--pen);font-variant-numeric:tabular-nums}
+.op .lab{font-family:var(--body);font-size:15px;color:#7e8ca3;text-align:center;font-weight:800;height:26px}
+.op .cell{position:relative;height:var(--sq);display:grid;place-items:center;font-size:calc(var(--sq)*.72);line-height:1;border-radius:10px;transition:background .2s}
+.op .cell.on{background:rgba(255,201,60,.38)}
+.op .minus{font-size:calc(var(--sq)*.7)}
+.op .bar{grid-column:1 / -1;height:4px;background:var(--pen);border-radius:2px;margin:4px 0 6px}
+.op .res{border:3px dashed transparent}
+.op .res.on{border-color:var(--sun);background:#fff8de}
+.op .res.ok{color:var(--mint-deep)}
+.op .res.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.op .mk{position:absolute;font-size:calc(var(--sq)*.34);color:var(--red);font-family:var(--body);font-weight:800;line-height:1;animation:pen .5s cubic-bezier(.16,1,.3,1)}
+.op .mk.top{left:2px;top:6px}
+.op .mk.bot{left:calc(var(--sq)*-.14);top:calc(var(--sq)*-.06)}
+@keyframes pen{from{transform:scale(2.2);opacity:0}}
+.proof{font-family:var(--display);font-size:20px;color:var(--soft);text-align:center;margin:0}
+.proof b{color:var(--mint-deep)}
+
+/* boutons de réponse et pavé */
+.zone{display:flex;flex-direction:column;gap:12px;align-items:center}
+.choices{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:var(--display);font-weight:800;font-size:22px;min-height:56px;padding:10px 26px;border-radius:20px;background:var(--card);color:var(--ink);box-shadow:0 6px 0 #0002}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #0002}
+.btn.go{background:var(--coral);color:#fff;box-shadow:0 6px 0 var(--coral-deep)}
+.btn.ok{background:var(--mint-deep);color:#fff;box-shadow:0 6px 0 #0d5244}
+.btn.red{background:#fff;color:var(--red);border:3px solid var(--red)}
+.btn.red[aria-pressed="true"]{background:var(--red);color:#fff}
+.btn:disabled{opacity:.4}
+.pad{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:min(100%,520px)}
+.pad button{font-family:var(--display);font-weight:800;font-size:32px;height:64px;border-radius:18px;background:var(--card);color:var(--pen);box-shadow:0 5px 0 #0002}
+.pad button:active{transform:translateY(4px);box-shadow:0 1px 0 #0002}
+.tools{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:14px;height:14px;border-radius:50%;background:#fff8;box-shadow:inset 0 0 0 2px #fff}
+.dots i.done{background:var(--mint)}
+.dots i.now{background:var(--sun)}
+.hops{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-family:var(--display);font-weight:800}
+.hops span{background:#fff;border-radius:12px;padding:4px 10px;color:var(--pen);box-shadow:0 3px 0 #0002}
+.hops span.f{background:#eef7ff;color:var(--soft)}
+
+/* leçon */
+.card{background:var(--card);border-radius:24px;padding:18px 20px;box-shadow:0 6px 0 #0002;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+.ages{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;font-family:var(--display);font-weight:800;font-size:26px}
+.ages div{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ages .e{font-size:54px;line-height:1}
+.rule{background:#fff8de;border:3px solid var(--sun);border-radius:18px;padding:12px 16px;font-weight:800;font-size:20px;max-width:560px}
+
+/* résultats */
+.result{align-items:center;text-align:center}
+.result .big{font-size:64px;letter-spacing:6px;color:#e0a100;line-height:1}
+.problem{font-size:clamp(19px,2.6vw,23px);font-weight:800;max-width:640px}
+
+.float{position:fixed;font-size:38px;pointer-events:none;z-index:50;animation:rise 1.5s ease-out forwards}
+@keyframes rise{to{transform:translateY(-55vh) rotate(25deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------- Atelier des Verbes ---------- */
+:root{ --g1:#2a7fb4; --g2:#c8473a; --g3:#147a66 }
+.g1{color:var(--g1)} .g2{color:var(--g2)} .g3{color:var(--g3)} .r{color:var(--red)}
+.tk{margin-left:10px;color:var(--plum)}
+.tools{margin-top:-4px}
+.tkbtn{background:var(--plum);color:#fff;box-shadow:0 6px 0 #4b2a9c;text-decoration:none;display:inline-flex;align-items:center}
+.card.ex{gap:18px}
+.verb{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,54px);line-height:1.1;color:var(--pen);text-align:center}
+.verb small{font-family:var(--body);font-size:.42em;color:var(--soft);font-weight:800}
+.verb.phrase{font-size:clamp(24px,4vw,34px);color:var(--ink);max-width:720px}
+.blank{display:inline-block;min-width:2.6em;border-bottom:5px dotted var(--sun);color:transparent;text-align:center}
+.blank.filled{color:var(--mint-deep);border-bottom-color:var(--mint);min-width:0}
+.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,560px)}
+.answers.ends{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ans{font-family:var(--display);font-weight:800;font-size:clamp(22px,3.2vw,28px);min-height:64px;padding:10px 14px;border-radius:20px;background:#f5f8fc;border:3px solid #dde6f2;color:var(--ink);box-shadow:0 5px 0 #0001}
+.ans:active:not(:disabled){transform:translateY(3px)}
+.ans.good{background:#dcf7ec;border-color:var(--mint);color:var(--mint-deep)}
+.ans.bad{background:#ffe3e0;border-color:var(--coral);color:var(--coral-deep)}
+.ans.shake{animation:shake .4s}
+.ans:disabled:not(.good):not(.bad){opacity:.55}
+.baskets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:100%}
+@media (max-width:560px){.baskets{grid-template-columns:1fr}}
+.bk{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:120px;font-size:22px}
+.bk .bi{font-size:44px;line-height:1}
+.bk small{font-family:var(--body);font-size:14px;color:var(--soft)}
+.g1b{border-color:#9fd0f0}.g2b{border-color:#ffb3a8}.g3b{border-color:#8fd8c3}
+.bubble .plus{display:inline-block;background:var(--plum);color:#fff;border-radius:999px;padding:0 10px;font-size:.85em}
+.help{margin:0;text-align:center;color:#fff;font-weight:800;text-shadow:0 2px 0 #2a7fb4}
+.rule{line-height:1.6}
+.fiche,.carnet{align-items:stretch;text-align:left}
+.fiche h2,.carnet h2{font-family:var(--display);margin:0;font-size:28px}
+.fiche h2 small{font-size:16px;background:var(--ink);color:#fff;border-radius:8px;padding:2px 8px;vertical-align:middle}
+.fiche p{margin:0;font-weight:700}
+.fiche .btn{align-self:flex-start}
+.gtab{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:620px){.gtab{grid-template-columns:1fr}}
+.gc{border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:4px;font-weight:700}
+.gc b{font-family:var(--display);font-size:22px}
+.gc span{font-family:var(--display);font-size:24px;font-weight:800}
+.g1c{background:#e4f3fd;color:#1d5c84}.g2c{background:#ffe9e5;color:#9a3328}.g3c{background:#dff5ee;color:#0f5c4c}
+.tscroll{overflow-x:auto;border-radius:14px;border:2px solid #dde6f2}
+.tscroll table{border-collapse:collapse;width:100%;min-width:640px;font-size:16px}
+.tscroll th,.tscroll td{padding:7px 10px;border-bottom:1px solid #e6edf6;text-align:center}
+.tscroll thead th{background:#eef4fb;font-size:14px}
+.tscroll tbody th{text-align:left;font-family:var(--display);color:var(--pen)}
+.prog{height:16px;border-radius:8px;background:#eef4fb;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--mint);border-radius:8px}
+.clist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.clist li{display:grid;grid-template-columns:32px 1fr auto auto;gap:10px;align-items:center;background:#f5f8fc;border-radius:12px;padding:8px 12px}
+.clist .st{color:#e0a100;letter-spacing:1px}
+.clist small{color:var(--soft);font-weight:700;min-width:70px;text-align:right}
+.vlist{display:flex;flex-wrap:wrap;gap:8px}
+.vk{background:#ffe9e5;color:#9a3328;border-radius:999px;padding:6px 14px;font-weight:800}
+.vk small{color:var(--soft);font-weight:700}
+.vk.ok{background:#dcf7ec;color:var(--mint-deep)}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+/* ---------- Ollie, la chouette de Salma ---------- */
+const OWL = `<svg class="owl" viewBox="0 0 120 130" aria-hidden="true">
+  <ellipse cx="60" cy="124" rx="38" ry="5" fill="#0002"/>
+  <path d="M22 40 L30 14 L46 32 Z M98 40 L90 14 L74 32 Z" fill="#7a4b2a"/>
+  <ellipse cx="60" cy="74" rx="42" ry="50" fill="#9a6236"/>
+  <ellipse cx="60" cy="88" rx="28" ry="32" fill="#f3d9b1"/>
+  <path d="M44 84 q4 4 8 0 M56 92 q4 4 8 0 M68 84 q4 4 8 0 M50 100 q4 4 8 0 M62 100 q4 4 8 0" stroke="#d8b585" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="42" cy="52" r="17" fill="#fff"/><circle cx="78" cy="52" r="17" fill="#fff"/>
+  <circle cx="44" cy="54" r="8" fill="#23324a"/><circle cx="76" cy="54" r="8" fill="#23324a"/>
+  <circle cx="47" cy="51" r="2.5" fill="#fff"/><circle cx="79" cy="51" r="2.5" fill="#fff"/>
+  <path d="M54 64 L66 64 L60 74 Z" fill="#ffb02e"/>
+  <rect x="26" y="34" width="68" height="7" rx="3" fill="#23324a"/><path d="M36 34 L84 34 L60 20 Z" fill="#23324a"/>
+  <path d="M84 37 q10 6 6 18" stroke="#ffc93c" stroke-width="3" fill="none"/><circle cx="90" cy="56" r="4" fill="#ffc93c"/>
+  <path d="M18 74 q-6 22 10 34 M102 74 q6 22 -10 34" stroke="#7a4b2a" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M48 120 l-4 6 M52 120 l0 6 M68 120 l0 6 M72 120 l4 6" stroke="#ffb02e" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+
+/* ---------- outils ---------- */
+const app = document.getElementById('app');
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY = 'salma-verbes';
+let data = { stars:{}, done:{}, tickets:0, verbs:{}, t:0 };
+try{ Object.assign(data, JSON.parse(localStorage.getItem(KEY) || '{}')); }catch(e){}
+function save(){ data.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} }
+const totalStars = () => Object.values(data.stars).reduce((a,b) => a + b, 0);
+function note(inf, ok){ const v = data.verbs[inf] || (data.verbs[inf] = { ok:0, ko:0 }); ok ? v.ok++ : v.ko++; }
+
+/* ---------- son et voix ---------- */
+let muted = false; try{ muted = localStorage.getItem(KEY + '-muet') === '1'; }catch(e){}
+let ac = null, frVoice = null;
+function tone(f,d,t=0,type='triangle',vol=.12){ if(muted) return; try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); const o=ac.createOscillator(),g=ac.createGain(),s=ac.currentTime+t; o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g).connect(ac.destination);o.start(s);o.stop(s+d+.02); }catch(e){} }
+const sfx = { ok(){ tone(660,.12); tone(880,.16,.08); }, no(){ tone(240,.25,0,'sine',.1); }, tap(){ tone(900,.05,0,'triangle',.06); }, ticket(){ tone(1046,.08,0,'square',.05); tone(1318,.1,.07,'square',.05); }, win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.22,i*.1)); } };
+function pickVoice(){ try{ const vs = speechSynthesis.getVoices(); frVoice = vs.find(v=>/^fr[-_]FR/i.test(v.lang)) || vs.find(v=>/^fr/i.test(v.lang)) || null; }catch(e){} }
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(html){
+  talk();
+  if(muted || !('speechSynthesis' in window)) return;
+  const t = String(html).replace(/<small>.*?<\/small>/g,'').replace(/<[^>]+>/g,'').replace(/_{2,}/g,' ... ').replace(/«|»/g,'').replace(/🎟️|⭐/g,'');
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='fr-FR'; if(frVoice) u.voice=frVoice; u.rate=.95; u.pitch=1.1; speechSynthesis.speak(u); }catch(e){}
+}
+function hush(){ try{ speechSynthesis.cancel(); }catch(e){} }
+function talk(){ document.querySelectorAll('.owl').forEach(o => { o.classList.remove('talk'); void o.offsetWidth; o.classList.add('talk'); }); }
+function confetti(){ for(let i=0;i<10;i++){ const s=document.createElement('span'); s.className='float'; s.textContent=pick(['⭐','🎟️','🌷','🍀','🎉']); s.style.left=rnd(5,90)+'vw'; s.style.top=rnd(55,90)+'vh'; s.style.animationDelay=(i*60)+'ms'; document.body.appendChild(s); setTimeout(()=>s.remove(),1800); } }
+
+function topbar(back){
+  return `<div class="top">
+    ${back ? `<button class="chip" id="back">← L'atelier</button>` : `<a class="chip" href="./">← Espace Salma</a>`}
+    <button class="chip round" id="mute" aria-label="${muted ? 'Activer' : 'Couper'} le son">${muted ? '🔇' : '🔊'}</button>
+    <div class="chip stars" aria-label="Étoiles et tickets">⭐ ${totalStars()} <span class="tk">🎟️ ${data.tickets}</span></div></div>`;
+}
+function wireTop(back){
+  const b = document.getElementById('back'); if(b) b.onclick = () => { sfx.tap(); hush(); (back || home)(); };
+  document.getElementById('mute').onclick = e => { muted = !muted; try{ localStorage.setItem(KEY+'-muet', muted?'1':'0'); }catch(_){} e.currentTarget.textContent = muted ? '🔇' : '🔊'; if(muted) hush(); };
+}
+const teacher = html => `<div class="teacher">${OWL}<div class="bubble" id="say" aria-live="polite">${html}</div></div>`;
+function say(html, voice=true){ const s = document.getElementById('say'); if(s) s.innerHTML = html; if(voice) speak(html); }
+
+/* =====================================================================
+   La conjugaison (fiches C58 et C59 du cahier de Salma)
+   ===================================================================== */
+const V1 = ['danser','manger','jouer','chanter','parler','regarder','aimer','marcher','sauter','dessiner','écouter','arriver','travailler','colorier','nager','lancer','ranger','partager','commencer','voyager'];
+const V2 = ['finir','choisir','réussir','grandir','rougir','remplir','obéir','bâtir','applaudir','nourrir'];
+const V3 = ['prendre','boire','être','avoir','faire','dire','voir','venir','partir','pouvoir','vouloir','lire','écrire','mettre','courir','sortir','dormir','aller','attendre','répondre'];
+const IR3 = ['partir','sortir','dormir','venir','courir'];               // en -ir, mais 3e groupe
+const IRR = {
+  avoir:['ai','as','a','avons','avez','ont'], être:['suis','es','est','sommes','êtes','sont'], aller:['vais','vas','va','allons','allez','vont'],
+  finir:['finis','finis','finit','finissons','finissez','finissent'], partir:['pars','pars','part','partons','partez','partent'],
+  faire:['fais','fais','fait','faisons','faites','font'], venir:['viens','viens','vient','venons','venez','viennent'],
+  voir:['vois','vois','voit','voyons','voyez','voient'], dire:['dis','dis','dit','disons','dites','disent'],
+  prendre:['prends','prends','prend','prenons','prenez','prennent'], pouvoir:['peux','peux','peut','pouvons','pouvez','peuvent'],
+  vouloir:['veux','veux','veut','voulons','voulez','veulent'],
+  attendre:['attends','attends','attend','attendons','attendez','attendent'], répondre:['réponds','réponds','répond','répondons','répondez','répondent'],
+  sortir:['sors','sors','sort','sortons','sortez','sortent'], dormir:['dors','dors','dort','dormons','dormez','dorment'], courir:['cours','cours','court','courons','courez','courent']
+};
+const TABLE12 = ['avoir','être','aller','finir','partir','faire','venir','voir','dire','prendre','pouvoir','vouloir'];
+const FAKES = { faire:{3:'fesons',4:'faisez',5:'faisent'}, dire:{4:'disez'}, être:{3:'êtons',4:'êtez',5:'êtent'}, aller:{0:'alle',5:'allent'}, avoir:{0:'ais',2:'at'},
+  pouvoir:{0:'peus',1:'peut'}, vouloir:{0:'veus',1:'veut'}, prendre:{2:'prends',5:'prendent'}, venir:{5:'venent'}, voir:{3:'voions',5:'voyent'}, attendre:{2:'attent'}, répondre:{2:'répont'} };
+const E1 = ['e','es','e','ons','ez','ent'], E2 = ['is','is','it','issons','issez','issent'];
+const PR = ['je','tu','il','nous','vous','ils'];
+function group(inf){ if(inf === 'aller') return 3; if(inf.endsWith('er')) return 1; if(V2.includes(inf)) return 2; return 3; }
+function conj(inf){
+  if(IRR[inf]) return IRR[inf];
+  const st = inf.slice(0, -2);
+  if(group(inf) === 2) return E2.map(e => st + e);
+  return E1.map((e, p) => p === 3 ? (st.endsWith('c') ? st.slice(0,-1) + 'çons' : st.endsWith('g') ? st + 'eons' : st + 'ons') : st + e);
+}
+const vowel = s => /^[aeéèêiîoôuyh]/i.test(s);
+function pron(p, form){
+  if(p === 0) return form && vowel(form) ? "j'" : 'je';
+  if(p === 2) return pick(['il','elle','on']);
+  if(p === 5) return pick(['ils','elles']);
+  return PR[p];
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const join = (pr, f) => pr.endsWith("'") ? pr + f : pr + ' ' + f;
+function lev(a, b){ const m = a.length, n = b.length, d = Array.from({length:m+1}, (_, i) => [i]); for(let j=1;j<=n;j++) d[0][j] = j;
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1)); return d[m][n]; }
+function distractors(inf, p, k = 3){
+  const good = conj(inf)[p], c = new Set();
+  if(FAKES[inf] && FAKES[inf][p]) c.add(FAKES[inf][p]);
+  conj(inf).forEach(f => { if(f !== good) c.add(f); });
+  if(group(inf) === 3 && p <= 1) c.add(/ds$/.test(good) ? good.slice(0,-2) + 't' : /[sx]$/.test(good) ? good.slice(0,-1) + 't' : good + 's');
+  if(group(inf) === 1 && /[cg]er$/.test(inf)){
+    const st = inf.slice(0, -2);
+    if(p === 3) c.add(st + 'ons');
+    else c.add(inf.endsWith('cer') ? st.slice(0,-1) + 'ç' + E1[p] : st + 'e' + E1[p]);
+  }
+  c.delete(good);
+  const list = [...c].sort((a, b) => lev(a, good) - lev(b, good));
+  const out = list.slice(0, k - 1).concat(shuffle(list.slice(k - 1)).slice(0, 1));
+  return out.slice(0, k);
+}
+const GNAME = { 1:'1er groupe', 2:'2e groupe', 3:'3e groupe' };
+
+/* ---------- phrases à trous ---------- */
+const PHRASES = [
+  ['Le matin, je ___ mon petit-déjeuner.', 'prendre', 0], ['Tu ___ tes devoirs avant de jouer.', 'faire', 1],
+  ['Nous ___ à la cantine à midi.', 'manger', 3], ['Vous ___ le ballon très loin !', 'lancer', 4],
+  ['Les fleurs ___ au soleil.', 'grandir', 5], ["J'___ huit ans.", 'avoir', 0], ['Nous ___ en CE2.', 'être', 3],
+  ['Elles ___ à la piscine le mercredi.', 'aller', 5], ['Tu ___ toujours la vérité.', 'dire', 1],
+  ['Salma ___ son exposé sur le cheval.', 'finir', 2], ['Est-ce que vous ___ venir avec nous ?', 'pouvoir', 4],
+  ['Je ___ un gâteau au chocolat !', 'vouloir', 0], ['Mes amis ___ à la maison ce soir.', 'venir', 5],
+  ['On ___ la mer depuis la fenêtre.', 'voir', 2], ['Nous ___ notre goûter.', 'partager', 3],
+  ["Vous ___ à l'école à huit heures.", 'partir', 4], ["J'___ le bus avec papa.", 'attendre', 0],
+  ['Tu ___ le livre que tu préfères.', 'choisir', 1], ['Ollie ___ les élèves en classe.', 'regarder', 2],
+  ['Nous ___ la chorale de l’école.', 'commencer', 3]
+];
+
+/* ---------- les 8 étapes ---------- */
+const CH = [
+  { id:'paniers', icon:'🧺', name:'Les trois paniers', sub:'Ranger les verbes par groupe', n:10, edge:'#5dbb63', make:mkTri,
+    rule:`Regarde la <b>fin de l'infinitif</b> :<br><b class="g1">-er</b> → 1er groupe (danser) · <b class="g2">-ir</b> avec « nous …issons » → 2e groupe (finir) · <b class="g3">tous les autres</b> → 3e groupe (prendre, voir, être).<br>⚠️ <b>aller</b> finit par -er, mais c'est le <b class="g3">3e groupe</b> !` },
+  { id:'nous', icon:'🔑', name:'Le test du « nous »', sub:'-ir : 2e ou 3e groupe ?', n:8, edge:'#ffc93c', make:mkNous,
+    rule:`Un verbe en <b>-ir</b> ? Dis-le avec <b>nous</b> !<br>« nous fin<b class="g2">issons</b> » → <b class="g2">2e groupe</b>.<br>« nous part<b class="g3">ons</b> » (pas « partissons ») → <b class="g3">3e groupe</b>.` },
+  { id:'g1', icon:'🌱', name:'Le 1er groupe', sub:'je danse, nous dansons…', n:8, edge:'#7cc8f2', make:() => mkTerm(1),
+    rule:`Au présent, le <b class="g1">1er groupe</b> prend :<br><b>je</b> -e · <b>tu</b> -es · <b>il</b> -e · <b>nous</b> -ons · <b>vous</b> -ez · <b>ils</b> -ent` },
+  { id:'g2', icon:'🌻', name:'Le 2e groupe', sub:'je finis, nous finissons…', n:8, edge:'#ff6b5b', make:() => mkTerm(2),
+    rule:`Au présent, le <b class="g2">2e groupe</b> prend :<br><b>je</b> -is · <b>tu</b> -is · <b>il</b> -it · <b>nous</b> -issons · <b>vous</b> -issez · <b>ils</b> -issent` },
+  { id:'g3', icon:'🌳', name:'Le 3e groupe', sub:'-s, -s, -t et les pièges', n:8, edge:'#1fa98e', make:mkG3,
+    rule:`Le <b class="g3">3e groupe</b> prend le plus souvent : <b>-s, -s, -t</b> (je pars, tu pars, il part).<br>⚠️ Verbes en <b>-dre</b> : <b>-ds, -ds, -d</b> (je prends, il prend).<br>⚠️ <b>pouvoir, vouloir</b> : <b>-x, -x, -t</b> (je peux, il veut).` },
+  { id:'tableau', icon:'🌈', name:'Les 12 verbes du tableau', sub:'être, avoir, aller, faire…', n:10, edge:'#7a4fe0', make:mkTable },
+  { id:'cerger', icon:'🍪', name:'Le piège -cer / -ger', sub:'nous lançons, nous mangeons', n:7, edge:'#9a6236', make:mkCerGer,
+    rule:`Avec <b>nous</b>, les verbes en <b>-cer</b> prennent un <b>ç</b> : nous lan<b class="r">ç</b>ons.<br>Les verbes en <b>-ger</b> gardent un <b>e</b> : nous mang<b class="r">e</b>ons.<br>Avec les autres personnes, rien ne change : je lance, je mange.` },
+  { id:'phrases', icon:'🧩', name:'Phrases à trous', sub:'Le grand mélange', n:8, edge:'#e0a100', make:mkPhrase }
+];
+const unlocked = i => i === 0 || (data.stars[CH[i-1].id] || 0) > 0;
+
+function mkTri(){
+  const out = shuffle([...shuffle(V1).slice(0,3), ...shuffle(V2).slice(0,3), ...shuffle(V3.filter(v => v !== 'aller')).slice(0,3), 'aller']);
+  return out.map(inf => ({ t:'tri', inf }));
+}
+function mkNous(){ return shuffle([...shuffle(V2).slice(0,4), ...shuffle(IR3).slice(0,4)]).map(inf => ({ t:'nous', inf })); }
+function mkTerm(g){
+  const pool = g === 1 ? V1.filter(v => !/[cg]er$/.test(v)) : V2;
+  const ps = shuffle([0,1,2,3,4,5,0,2,5,3]);
+  return shuffle(pool).slice(0,8).map((inf, k) => ({ t:'term', g, inf, p:ps[k] }));
+}
+function mkG3(){
+  const pool = ['partir','sortir','dormir','prendre','attendre','répondre','pouvoir','vouloir','faire','dire','voir','courir'];
+  return shuffle(pool).slice(0,8).map(inf => ({ t:'forme', inf, p:pick([0,1,2,2,0,5]) }));
+}
+function mkTable(){ return shuffle(TABLE12).slice(0,10).map(inf => ({ t:'forme', inf, p:rnd(0,5) })); }
+function mkCerGer(){
+  const vs = shuffle(['manger','nager','ranger','partager','voyager','lancer','commencer','avancer','placer','bouger']);
+  return vs.slice(0,7).map((inf, k) => ({ t:'cerger', inf, p: k % 3 === 2 ? pick([0,1,2,4,5]) : 3 }));
+}
+function mkPhrase(){ return shuffle(PHRASES).slice(0,8).map(([txt, inf, p]) => ({ t:'phrase', txt, inf, p })); }
+
+/* =====================================================================
+   Accueil : l'atelier
+   ===================================================================== */
+function home(greet){
+  hush();
+  const next = CH.findIndex((c, i) => unlocked(i) && !(data.stars[c.id] > 0));
+  app.innerHTML = topbar(false) +
+    `<div><h1>L'Atelier des Verbes</h1><p class="lead">Les groupes du verbe et le présent (fiches C58 et C59)</p></div>` +
+    teacher(next === 0 && !totalStars()
+      ? `Bonjour Salma ! Bienvenue dans mon atelier. On va ranger les verbes dans leurs groupes, puis les conjuguer au présent. Chaque bonne réponse te donne un <b>ticket 🎟️</b> pour Serpent Légendes !`
+      : next >= 0 ? `Tu as déjà <b>${data.tickets} tickets 🎟️</b>, Salma ! Ta prochaine étape : <b class="n">${CH[next].name}</b>.` : `Tu as fini tout l'atelier, Salma ! Refais les étapes pour gagner 3 étoiles partout… et encore des tickets 🎟️.`) +
+    `<div class="tools"><button class="btn" id="fiche">📋 Ma fiche</button><button class="btn" id="carnet">📈 Mon carnet</button><a class="btn tkbtn" href="../jeux/serpent-legendes.html">🎟️ ${data.tickets} → Serpent Légendes</a></div>` +
+    `<div class="path">${CH.map((c, i) => {
+      const s = data.stars[c.id] || 0, open = unlocked(i);
+      return `<button class="step${i === next ? ' next' : ''}" data-i="${i}" style="--edge:${c.edge}" ${open ? '' : 'disabled aria-disabled="true"'}>
+        <span class="ic" aria-hidden="true">${open ? c.icon : '🔒'}</span>
+        <span class="tx"><span class="num">Étape ${i+1}</span><b>${c.name}</b><span class="sub">${open ? c.sub : 'Termine l\'étape d\'avant'}</span></span>
+        <span class="st" aria-label="${s} étoiles sur 3">${'★'.repeat(s)}${'☆'.repeat(3-s)}</span></button>`; }).join('')}</div>`;
+  wireTop();
+  app.querySelectorAll('.step').forEach(b => b.onclick = () => { if(b.disabled) return; sfx.tap(); start(+b.dataset.i); });
+  document.getElementById('fiche').onclick = () => { sfx.tap(); fiche(); };
+  document.getElementById('carnet').onclick = () => { sfx.tap(); carnet(); };
+  if(greet) speak(document.getElementById('say').innerHTML);
+}
+
+/* ---------- une séance ---------- */
+let S = null;
+function start(i){
+  const c = CH[i];
+  S = { i, c, k:0, errors:0, earned:0, list:c.make() };
+  if(c.rule){
+    app.innerHTML = topbar(true) + teacher(`Avant de commencer, voici la règle de l'étape <b class="n">${c.name}</b>.`) +
+      `<div class="card"><div class="rule">${c.rule}</div><button class="btn go" id="go">J'ai compris, on y va !</button></div>`;
+    wireTop(); speak(`Voici la règle. ` + c.rule);
+    document.getElementById('go').onclick = () => { sfx.tap(); hush(); next(); };
+  } else next();
+}
+function dots(){ return `<div class="dots" aria-label="Question ${S.k+1} sur ${S.list.length}">${S.list.map((_, j) => `<i class="${j < S.k ? 'done' : j === S.k ? 'now' : ''}"></i>`).join('')}</div>`; }
+function frame(q, body, help){
+  app.innerHTML = topbar(true) + teacher(q) + `<div class="card ex">${body}</div>` + (help ? `<p class="help">${help}</p>` : '') + dots();
+  wireTop(); speak(q);
+}
+function next(){
+  if(S.k >= S.list.length) return finish();
+  const q = S.list[S.k];
+  ({ tri:askTri, nous:askNous, term:askTerm, forme:askForme, cerger:askForme, phrase:askPhrase })[q.t](q);
+}
+function answered(ok, inf, expl, btn, goodSel){
+  app.querySelectorAll('.ans').forEach(x => { x.disabled = true; if(goodSel && x.matches(goodSel)) x.classList.add('good'); });
+  if(ok){ S.earned++; data.tickets++; sfx.ok(); setTimeout(sfx.ticket, 220); if(btn) btn.classList.add('good'); }
+  else { S.errors++; sfx.no(); if(btn){ btn.classList.add('bad'); btn.classList.add('shake'); } }
+  note(inf, ok); save();
+  const tk = app.querySelector('.tk'); if(tk) tk.textContent = '🎟️ ' + data.tickets;
+  const msg = (ok ? pick(['Bravo !', 'Exactement !', 'Super, Salma !', 'Oui !', 'Parfait !']) + ' <span class="plus">+1 🎟️</span> ' : 'Pas tout à fait. ') + expl;
+  say(msg);
+  const card = app.querySelector('.card.ex');
+  card.insertAdjacentHTML('beforeend', `<button class="btn ok" id="nx">${S.k + 1 < S.list.length ? 'Suivant →' : 'Terminer'}</button>`);
+  const nx = document.getElementById('nx'); nx.focus({ preventScroll:true });
+  nx.onclick = () => { sfx.tap(); hush(); S.k++; next(); };
+}
+function askTri(q){
+  frame(`Dans quel panier ranges-tu ce verbe ?`, `<div class="verb">${q.inf}</div>
+    <div class="baskets">${[1,2,3].map(g => `<button class="ans bk g${g}b" data-g="${g}"><span class="bi" aria-hidden="true">🧺</span><b>${GNAME[g]}</b><small>${g === 1 ? '-er' : g === 2 ? '-ir · nous …issons' : 'tous les autres'}</small></button>`).join('')}</div>`);
+  const g = group(q.inf);
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = +b.dataset.g === g;
+    const why = q.inf === 'aller' ? `<b>Aller</b> finit par -er, mais c'est l'exception : <b class="g3">3e groupe</b> !`
+      : g === 1 ? `<b>${q.inf}</b> finit par <b>-er</b> : <b class="g1">1er groupe</b>.`
+      : g === 2 ? `<b>${q.inf}</b> : nous ${conj(q.inf)[3]} → <b class="g2">2e groupe</b>.`
+      : IR3.includes(q.inf) ? `<b>${q.inf}</b> finit par -ir, mais on dit « nous ${conj(q.inf)[3]} » : <b class="g3">3e groupe</b>.`
+      : `<b>${q.inf}</b> ne finit ni par -er ni par -ir : <b class="g3">3e groupe</b>.`;
+    answered(ok, q.inf, why, b, `[data-g="${g}"]`);
+  });
+}
+function askNous(q){
+  const good = conj(q.inf)[3], st = q.inf.slice(0, -2), bad = group(q.inf) === 2 ? st + 'ons' : st + 'issons';
+  frame(`Comment dit-on avec <b>nous</b> ? <small>Le verbe : ${q.inf}</small>`, `<div class="verb">nous … <small>(${q.inf})</small></div>
+    <div class="answers">${shuffle([good, bad]).map(f => `<button class="ans" data-f="${f}">nous ${f}</button>`).join('')}</div>`);
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = b.dataset.f === good, g = group(q.inf);
+    answered(ok, q.inf, `On dit « nous ${good} » : <b>${q.inf}</b> est du <b class="g${g}">${GNAME[g]}</b>.`, b, `[data-f="${good}"]`);
+  });
+}
+function askTerm(q){
+  const forms = conj(q.inf), good = forms[q.p], st = q.inf.slice(0, -2), end = good.slice(st.length);
+  const pr = pron(q.p, good), ends = q.g === 1 ? ['e','es','ons','ez','ent'] : ['is','it','issons','issez','issent','ons'];
+  frame(`Choisis la bonne terminaison.`, `<div class="verb">${cap(join(pr, st))}<span class="blank">___</span> <small>(${q.inf})</small></div>
+    <div class="answers ends">${ends.map(e => `<button class="ans" data-e="${e}">-${e}</button>`).join('')}</div>`);
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = b.dataset.e === end;
+    app.querySelector('.blank').textContent = end; app.querySelector('.blank').classList.add('filled');
+    answered(ok, q.inf, `${cap(join(pr, good))}. Avec <b>${PR[q.p]}</b>, le ${GNAME[q.g]} prend <b>-${end}</b>.`, b, `[data-e="${end}"]`);
+  });
+}
+function why3(inf, p, good){
+  if(inf === 'pouvoir' || inf === 'vouloir') return p <= 1 ? `<b>${inf}</b> prend un <b>x</b> : je ${conj(inf)[0]}, tu ${conj(inf)[1]}.` : `${inf} : il ${conj(inf)[2]}, nous ${conj(inf)[3]}, ils ${conj(inf)[5]}.`;
+  if(/dre$/.test(inf) && p <= 2) return `Les verbes en <b>-dre</b> gardent le <b>d</b> : je ${conj(inf)[0]}, il ${conj(inf)[2]}.`;
+  if(TABLE12.includes(inf) && group(inf) === 3) return `C'est un verbe du tableau à connaître par cœur : ${conj(inf).map((f, i) => i === p ? `<b>${f}</b>` : f).join(', ')}.`;
+  return `Le ${GNAME[group(inf)]} : ${conj(inf).map((f, i) => i === p ? `<b>${f}</b>` : f).join(', ')}.`;
+}
+function askForme(q){
+  const good = conj(q.inf)[q.p], pr = pron(q.p, good);
+  const opts = shuffle([good, ...distractors(q.inf, q.p, 3)]);
+  const shown = pr.endsWith("'") ? (q.p === 0 ? 'je / j\'' : pr) : pr;
+  frame(`Quelle est la bonne forme ? <small>${q.inf}, au présent</small>`, `<div class="verb">${cap(shown)} <span class="blank">___</span> <small>(${q.inf})</small></div>
+    <div class="answers">${opts.map(f => `<button class="ans" data-f="${esc(f)}">${esc(f)}</button>`).join('')}</div>`);
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = b.dataset.f === good;
+    app.querySelector('.verb').innerHTML = `${cap(join(pron(q.p, good) === "j'" ? "j'" : pr, good))} <small>(${q.inf})</small>`;
+    const expl = q.t === 'cerger'
+      ? (q.p === 3 ? (q.inf.endsWith('cer') ? `Avec nous, <b>${q.inf}</b> prend un <b>ç</b> : nous ${good}.` : `Avec nous, <b>${q.inf}</b> garde un <b>e</b> : nous ${good}.`) : `Avec ${PR[q.p]}, rien ne change : ${join(pron(q.p, good), good)}. Le ç ou le e, c'est seulement avec <b>nous</b>.`)
+      : why3(q.inf, q.p, good);
+    answered(ok, q.inf, expl, b, `[data-f="${CSS.escape(good)}"]`);
+  });
+}
+function askPhrase(q){
+  const good = conj(q.inf)[q.p], opts = shuffle([good, ...distractors(q.inf, q.p, 3)]);
+  const txt = esc(q.txt).replace('___', '<span class="blank">___</span>');
+  frame(`Complète la phrase avec le verbe <b>${q.inf}</b>.`, `<div class="verb phrase">${txt}</div>
+    <div class="answers">${opts.map(f => `<button class="ans" data-f="${esc(f)}">${esc(f)}</button>`).join('')}</div>`);
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = b.dataset.f === good;
+    const bl = app.querySelector('.blank'); bl.textContent = good; bl.classList.add('filled');
+    const g = group(q.inf);
+    answered(ok, q.inf, `${esc(q.txt.replace('___', good))} <small>${q.inf} : ${GNAME[g]}${TABLE12.includes(q.inf) ? ', verbe du tableau' : ''}.</small>`, b, `[data-f="${CSS.escape(good)}"]`);
+  });
+}
+function finish(){
+  const total = S.list.length, good = total - S.errors, st = S.errors === 0 ? 3 : S.errors <= 2 ? 2 : 1;
+  const bonus = st === 3 ? 3 : 0;
+  data.stars[S.c.id] = Math.max(data.stars[S.c.id] || 0, st); data.done[S.c.id] = (data.done[S.c.id] || 0) + 1;
+  data.tickets += bonus; data.last = new Date().toISOString(); save();
+  sfx.win(); confetti();
+  const nextI = S.i + 1 < CH.length ? S.i + 1 : -1;
+  const msg = (st === 3 ? `Sans faute, Salma ! ` : `${good} bonnes réponses sur ${total}. `) + `Tu gagnes <b>${S.earned + bonus} tickets 🎟️</b>${bonus ? ' (dont 3 de bonus pour le sans-faute)' : ''}. Tu en as ${data.tickets} en tout pour Serpent Légendes !`;
+  app.innerHTML = topbar(true) + teacher(msg) +
+    `<div class="card result"><div class="big" aria-label="${st} étoiles sur 3">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>
+     <b style="font-family:var(--display);font-size:26px">${S.c.name}</b>
+     <div class="choices"><button class="btn" id="again">↻ Recommencer</button>${nextI >= 0 ? `<button class="btn go" id="nxt">Étape suivante →</button>` : `<button class="btn go" id="path">L'atelier</button>`}</div>
+     <a class="btn tkbtn" href="../jeux/serpent-legendes.html">🎟️ Dépenser mes tickets dans Serpent Légendes</a></div>`;
+  wireTop(); speak(msg);
+  document.getElementById('again').onclick = () => { sfx.tap(); start(S.i); };
+  const n = document.getElementById('nxt'); if(n) n.onclick = () => { sfx.tap(); start(nextI); };
+  const pth = document.getElementById('path'); if(pth) pth.onclick = () => { sfx.tap(); home(); };
+}
+
+/* ---------- la fiche (leçon C58 + C59) ---------- */
+function fiche(){
+  const row = inf => `<tr><th>${inf}</th>${conj(inf).map(f => `<td>${f}</td>`).join('')}</tr>`;
+  app.innerHTML = topbar(true) + teacher(`Voici ta fiche, comme dans ton cahier. Touche 🔊 pour que je la lise.`) +
+    `<div class="card fiche"><h2>Les groupes du verbe <small>C58</small></h2>
+      <div class="gtab"><div class="gc g1c"><b>1er groupe</b><span>-ER</span><small>danser, manger, jouer</small><small>je danse · nous dansons</small></div>
+      <div class="gc g2c"><b>2e groupe</b><span>-IR</span><small>finir, choisir, réussir</small><small>nous fin<b>issons</b></small></div>
+      <div class="gc g3c"><b>3e groupe</b><span>-IR, -IRE, -OIR, -OIRE, -DRE, -TRE</span><small>prendre, boire, être, faire, avoir</small><small>⚠️ <b>aller</b> aussi !</small></div></div>
+      <button class="btn" data-read="1">🔊 Lire</button></div>
+    <div class="card fiche"><h2>Le présent de l'indicatif <small>C59</small></h2>
+      <p>Le présent dit ce qui se passe <b>au moment où l'on parle</b>, mais aussi les habitudes et les vérités.</p>
+      <div class="gtab"><div class="gc g1c"><b>1er groupe</b><small>-e, -es, -e<br>-ons, -ez, -ent</small></div><div class="gc g2c"><b>2e groupe</b><small>-is, -is, -it<br>-issons, -issez, -issent</small></div><div class="gc g3c"><b>3e groupe</b><small>souvent -s, -s, -t<br>-ons, -ez, -ent</small><small>-dre : -ds, -ds, -d<br>pouvoir, vouloir : -x, -x, -t</small></div></div>
+      <p>⚠️ Avec <b>nous</b> : nous lan<b>ç</b>ons, nous mang<b>e</b>ons.</p>
+      <div class="tscroll"><table><thead><tr><th>Présent</th><th>je / j'</th><th>tu</th><th>il / elle / on</th><th>nous</th><th>vous</th><th>ils / elles</th></tr></thead><tbody>${TABLE12.map(row).join('')}</tbody></table></div>
+      <button class="btn" data-read="2">🔊 Lire</button></div>`;
+  wireTop();
+  const T = { 1:`Les verbes à l'infinitif sont classés selon leur terminaison. Premier groupe : les verbes en E R, comme danser. Deuxième groupe : les verbes en I R qui font issons avec nous, comme finir, nous finissons. Troisième groupe : tous les autres, comme prendre, boire, être. Attention, aller est du troisième groupe.`,
+              2:`Le présent dit ce qui se passe au moment où l'on parle. Premier groupe : e, es, e, ons, ez, ent. Deuxième groupe : is, is, it, issons, issez, issent. Troisième groupe : le plus souvent s, s, t, ons, ez, ent. Attention aux verbes en d r e, et à pouvoir et vouloir. Avec nous, on écrit nous lançons avec une cédille, et nous mangeons avec un e.` };
+  app.querySelectorAll('[data-read]').forEach(b => b.onclick = () => speak(T[b.dataset.read]));
+}
+
+/* ---------- le carnet de progression ---------- */
+function carnet(){
+  const review = Object.entries(data.verbs).filter(([, v]) => v.ko > 0).sort((a, b) => (b[1].ko - b[1].ok / 3) - (a[1].ko - a[1].ok / 3)).slice(0, 8);
+  const strong = Object.entries(data.verbs).filter(([, v]) => v.ok >= 3 && v.ko === 0).map(([k]) => k);
+  const doneN = CH.filter(c => data.stars[c.id] > 0).length;
+  app.innerHTML = topbar(true) + teacher(`Voici ton carnet, Salma : <b>${doneN} étape${doneN > 1 ? 's' : ''} sur ${CH.length}</b>, ${totalStars()} étoiles et ${data.tickets} tickets 🎟️.`) +
+    `<div class="card carnet"><h2>Mes étapes</h2><div class="prog"><i style="width:${Math.round(doneN / CH.length * 100)}%"></i></div>
+      <ul class="clist">${CH.map(c => { const s = data.stars[c.id] || 0; return `<li><span aria-hidden="true">${c.icon}</span><b>${c.name}</b><span class="st">${'★'.repeat(s)}${'☆'.repeat(3-s)}</span><small>${data.done[c.id] ? data.done[c.id] + ' fois' : 'pas encore'}</small></li>`; }).join('')}</ul></div>
+    <div class="card carnet"><h2>Verbes à revoir</h2>${review.length ? `<div class="vlist">${review.map(([k, v]) => `<span class="vk">${k} <small>${v.ok} ✔ · ${v.ko} ✘</small></span>`).join('')}</div>` : `<p>Rien à revoir pour l'instant. Bravo !</p>`}
+      ${strong.length ? `<h2>Verbes maîtrisés</h2><div class="vlist">${strong.map(k => `<span class="vk ok">${k}</span>`).join('')}</div>` : ''}</div>`;
+  wireTop(); speak(document.getElementById('say').innerHTML);
+}
+
+/* ---------- démarrage : reprendre les progrès gardés sur le serveur (autre tablette) ---------- */
+home(false);
+if(window.Famille){
+  Famille.track('salma-verbes', 'Salma', [KEY]);
+  Famille.load('salma-verbes', 'Salma').then(r => {
+    const d = r && r[KEY];
+    if(d && (d.t || 0) > (data.t || 0) && (d.tickets || 0) >= (data.tickets || 0)){ data = Object.assign({ stars:{}, done:{}, tickets:0, verbs:{} }, d); try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} if(!S) home(false); }
+  });
+}
+</script>
+</body></html>
