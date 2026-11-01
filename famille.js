@@ -1,7 +1,7 @@
 /*
  * Famille Missaoui — petit module commun à tous les jeux et cours.
  *   Famille.player()                     -> prénom du joueur sur cet appareil (ou null)
- *   Famille.choosePlayer({title})        -> ouvre « Qui joue ? », renvoie le prénom choisi
+ *   Famille.choosePlayer({title, extra, avatar}) -> ouvre « Qui joue ? » (extra : autres joueurs, ex. les parents ; avatar(k) : HTML de l'image), renvoie le prénom
  *   Famille.score(game, variant, score)  -> envoie une partie au serveur, renvoie {rank, best, personalBest} ou null
  *   Famille.highscores(game, variant, n) -> meilleurs scores en ligne, ou null hors ligne
  *   Famille.track(course, player, keys)  -> envoie régulièrement les progrès gardés dans le navigateur
@@ -58,6 +58,8 @@
       '@media (max-width:420px){.fm-kids{grid-template-columns:1fr}}' +
       '.fm-kid{border:0;cursor:pointer;color:#fff;font:inherit;border-radius:22px;padding:16px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 6px 0 rgba(0,0,0,.3);touch-action:manipulation}' +
       '.fm-kid span{font-size:46px;line-height:1}.fm-kid b{font-size:24px}' +
+      '.fm-kid img{width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;border:3px solid rgba(255,255,255,.6)}' +
+      '.fm-kids.fm-parents{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:-2px}.fm-parents .fm-kid{padding:10px 8px;flex-direction:row;justify-content:center;gap:10px}.fm-parents .fm-kid span{font-size:30px}.fm-parents .fm-kid img{width:44px;height:44px}.fm-parents .fm-kid b{font-size:20px}' +
       '.fm-kid.on{outline:5px solid #ffd23f;outline-offset:2px}' +
       '.fm-kid:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.3)}' +
       '.fm-other{display:flex;gap:8px;flex-wrap:wrap}' +
@@ -72,10 +74,13 @@
     css();
     return new Promise(function(resolve){
       var cur = get('famille-joueur', null);
+      var all = KIDS.concat(opts.extra || []);
+      function chip(k){ return '<button class="fm-kid' + (cur === k.name ? ' on' : '') + '" data-n="' + k.name + '" style="background:' + k.color + '"><span>' + (opts.avatar ? opts.avatar(k) : k.emoji) + '</span><b>' + k.name + '</b></button>'; }
       var back = document.createElement('div'); back.className = 'fm-back';
       back.innerHTML = '<div class="fm-box" role="dialog" aria-modal="true" aria-label="Qui joue ?"><h2>' + esc(opts.title || 'Qui joue ?') + '</h2>' +
-        '<div class="fm-kids">' + KIDS.map(function(k){ return '<button class="fm-kid' + (cur === k.name ? ' on' : '') + '" data-n="' + k.name + '" style="background:' + k.color + '"><span>' + k.emoji + '</span><b>' + k.name + '</b></button>'; }).join('') + '</div>' +
-        '<form class="fm-other"><input id="fm-name" maxlength="20" placeholder="Un autre prénom…" autocomplete="off" value="' + (cur && !KIDS.some(function(k){ return k.name === cur; }) ? esc(cur) : '') + '"><button type="submit">OK</button></form>' +
+        '<div class="fm-kids">' + KIDS.map(chip).join('') + '</div>' +
+        (opts.extra && opts.extra.length ? '<div class="fm-kids fm-parents">' + opts.extra.map(chip).join('') + '</div>' : '') +
+        '<form class="fm-other"><input id="fm-name" maxlength="20" placeholder="Un autre prénom…" autocomplete="off" value="' + (cur && !all.some(function(k){ return k.name === cur; }) ? esc(cur) : '') + '"><button type="submit">OK</button></form>' +
         '<div class="fm-msg" id="fm-msg"></div>' + (opts.cancel === false ? '' : '<button class="fm-cancel" type="button">Annuler</button>') + '</div>';
       document.body.appendChild(back);
       function done(name){ back.remove(); if(name){ set('famille-joueur', name); } resolve(name); }

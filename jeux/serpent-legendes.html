@@ -309,7 +309,7 @@ async function setPlayer(name){
 /* =====================================================================
    Avatars (images générées depuis les photos ; repli sur un émoji)
    ===================================================================== */
-const KNOWN = { essil:'🚆', salma:'🦉', amine:'🎃' };
+const KNOWN = { essil:'🚆', salma:'🦉', amine:'🎃', anis:'🧔', imen:'👩' };
 function avatarHTML(name, cls = 'av'){
   const k = (name || '').toLowerCase();
   const emo = KNOWN[k] || (name ? name[0].toUpperCase() : '🙂');
@@ -776,7 +776,8 @@ function renderMenu(){
 }
 function goMenu(){ clearGame(); state = 'menu'; hideHint(); buildWorld(prefs.world, DIFF[prefs.diff].wrap); applySkin(data.skin); renderMenu(); show('menu'); }
 
-$('who').onclick = async () => { sfx.tap(); const n = await Famille.choosePlayer({ title:'Qui joue à Serpent Légendes ?' }); if(n) setPlayer(n); };
+const PARENTS = [{ name:'Anis', color:'#0f766e', emoji:'🧔' }, { name:'Imen', color:'#b4235a', emoji:'👩' }];
+$('who').onclick = async () => { sfx.tap(); const n = await Famille.choosePlayer({ title:'Qui joue à Serpent Légendes ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) setPlayer(n); };
 $('play').onclick = () => { sfx.tap(); startGame(); };
 function startGame(){
   if(!player){ $('who').click(); return; }
