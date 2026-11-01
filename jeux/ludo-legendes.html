@@ -211,6 +211,8 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
   <h2>Partie en ligne</h2>
   <p style="margin:0;color:var(--mist)">Code à donner aux autres joueurs :</p>
   <div class="code" id="lCode">····</div>
+  <button class="big blue" id="lInvite" style="width:100%">📤 Inviter un ami<small>envoie le lien par WhatsApp ou SMS</small></button>
+  <div class="row" id="lShare" hidden><a class="big ghost" id="lWa" target="_blank" rel="noopener" style="text-decoration:none;font-size:18px">WhatsApp</a><a class="big ghost" id="lSms" style="text-decoration:none;font-size:18px">SMS</a><button class="big ghost" id="lCopy" style="font-size:18px">Copier le lien</button></div>
   <div class="seats" id="lSeats"></div>
   <p class="err" id="lMsg" style="color:var(--mist)"></p>
   <div class="row"><button class="big ghost" id="lLeave">Quitter</button><button class="big" id="lStart">▶ Lancer la partie</button></div>
@@ -837,6 +839,7 @@ $('codeIn').addEventListener('input', e => { e.target.value = e.target.value.toU
 
 /* ---------- salon ---------- */
 function showLobby(){
+  if(state !== 'lobby') $('lShare').hidden = true;
   state = 'lobby'; show('lobby');
   $('lCode').textContent = code || '····';
   const host = G.host === ME;
@@ -849,6 +852,18 @@ function showLobby(){
   $('lSeats').querySelectorAll('[data-bot]').forEach(b => b.onclick = () => { sfx.tap(); lobbyEdit(st => { st.seats[+b.dataset.bot] = { name:'Machine', bot:true, look:{ pawn:BOTPAWNS[+b.dataset.bot + 1], dice:'blanc' } }; }); });
   $('lSeats').querySelectorAll('[data-kick]').forEach(b => b.onclick = () => { sfx.tap(); lobbyEdit(st => { st.seats[+b.dataset.kick] = null; }); });
 }
+/* ---------- inviter un ami : un lien avec le code déjà dedans ---------- */
+const inviteURL = () => location.origin + location.pathname + '?code=' + code;
+const inviteText = () => `${player ? player + ' t\'invite' : 'Viens jouer'} au Ludo Légendes ! Ouvre ce lien, écris ton prénom et rejoins la partie (code ${code}) :`;
+$('lInvite').onclick = async () => {
+  sfx.tap();
+  if(navigator.share){ try{ await navigator.share({ title:'Ludo Légendes', text:inviteText(), url:inviteURL() }); return; }catch(e){ if(e && e.name === 'AbortError') return; } }
+  const msg = inviteText() + ' ' + inviteURL();
+  $('lWa').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+  $('lSms').href = 'sms:?&body=' + encodeURIComponent(msg);
+  $('lShare').hidden = false;
+};
+$('lCopy').onclick = async () => { sfx.tap(); try{ await navigator.clipboard.writeText(inviteText() + ' ' + inviteURL()); toast('Lien copié !'); }catch(e){ prompt('Copie ce lien :', inviteURL()); } };
 async function lobbyEdit(fn){ const st = clone(G); fn(st); await commit(st); if(G && G.status === 'lobby') showLobby(); }
 $('lStart').onclick = () => { sfx.tap(); lobbyEdit(st => { const g = newGameState(st.seats, st.opts); Object.assign(st, g); st.host = G.host; }); };
 $('lLeave').onclick = async () => { sfx.tap(); if(G && G.status === 'lobby'){ const i = G.seats.findIndex(s => s && s.client === ME); if(i >= 0 && G.host !== ME) await lobbyEdit(st => { st.seats[i] = null; }); } goMenu(); };
@@ -969,6 +984,13 @@ $('recBack').onclick = () => { sfx.tap(); show('menu'); };
 /* ---------- démarrage ---------- */
 buildBoard('jardin'); buildDice('blanc'); renderMenu(); show('menu'); requestAnimationFrame(frame);
 const p0 = window.Famille && Famille.player(); if(p0) setPlayer(p0); else renderWho();
+// arrivé par un lien d'invitation (…/ludo-legendes.html?code=ABCD) : on demande le prénom puis on rejoint
+const inv = (new URLSearchParams(location.search).get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+if(inv.length === 4){
+  history.replaceState(null, '', location.pathname);
+  $('codeIn').value = inv; $('joinErr').textContent = ''; show('join');
+  (async () => { if(p0) await setPlayer(p0); if(await needPlayer()) joinOnline(inv); })();
+}
 window.__ludo = { get G(){ return G; }, get data(){ return data; }, act, startLocal, setPlayer, reveal:id => reveal(ITEM[id], ITEM[id].rar === 'legendaire'), legal, prefs, get mode(){ return mode; }, get code(){ return code; } };
 </script>
 </body>

@@ -50,8 +50,8 @@
     if(cssDone) return; cssDone = true;
     var st = document.createElement('style');
     st.textContent =
-      '.fm-back{position:fixed;inset:0;z-index:100000;display:grid;place-items:center;padding:16px;background:rgba(16,12,32,.72);font-family:Fredoka,Nunito,ui-rounded,system-ui,sans-serif}' +
-      '.fm-box{background:#fffdf7;color:#1b1533;border-radius:30px;padding:24px;max-width:560px;width:100%;display:flex;flex-direction:column;gap:16px;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:fmPop .35s cubic-bezier(.2,1.5,.4,1)}' +
+      '.fm-back{position:fixed;inset:0;z-index:100000;display:grid;grid-template-columns:minmax(0,560px);justify-content:center;place-items:center;padding:16px;overflow:auto;background:rgba(16,12,32,.72);font-family:Fredoka,Nunito,ui-rounded,system-ui,sans-serif}' +
+      '.fm-box{background:#fffdf7;color:#1b1533;border-radius:30px;padding:24px;max-width:560px;width:100%;max-height:calc(100vh - 32px);overflow:auto;display:flex;flex-direction:column;gap:16px;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:fmPop .35s cubic-bezier(.2,1.5,.4,1)}' +
       '@keyframes fmPop{from{transform:scale(.6);opacity:0}}' +
       '.fm-box h2{margin:0;color:#1b1533;font-family:Sniglet,"Bricolage Grotesque",Fredoka,sans-serif;font-weight:800;font-size:clamp(28px,6vw,38px);text-align:center}' +
       '.fm-kids{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}' +
