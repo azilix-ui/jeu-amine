@@ -153,6 +153,8 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(38px,7vw,64px);lin
 .tabs button{font-family:var(--display);font-weight:800;font-size:19px;min-height:50px;padding:8px 18px;border-radius:16px;background:#f5f8fc;border:3px solid #dde6f2;color:var(--ink)}
 .tabs button[aria-pressed="true"]{background:var(--hay);border-color:var(--hay-deep)}
 .allures p{margin:0;font-weight:700}
+.rider{display:flex;flex-direction:column;gap:10px}
+.rider .row{justify-content:flex-start}
 </style>
 </head>
 <body>
@@ -323,6 +325,11 @@ function home(){
     : `Bravo Salma ! Tu as déjà ${got} Galop${got > 1 ? 's' : ''}. Continue le parcours !`;
   app.innerHTML = topbar(false) + `<div><h1>Le Grand Galop</h1><p class="lead">Le quiz de mon exposé sur le cheval</p></div><div class="fence" aria-hidden="true"></div>` +
     teacher(msg) +
+    `<section class="allures rider" aria-labelledby="rdh"><h2 id="rdh">🏇 Salma à cheval</h2>
+      <div class="tabs" role="group" aria-label="Choisir la version"><button data-v="cartoon" aria-pressed="true">Dessin animé</button><button data-v="realiste" aria-pressed="false">Réaliste</button></div>
+      <video class="vid" id="rdvid" src="cheval/salma-cartoon.mp4" poster="cheval/salma-cartoon-poster.webp" autoplay muted loop playsinline aria-label="Salma fait du cheval au pas, en dessin animé"></video>
+      <div class="row"><button class="btn play" id="rdsound">🔊 Écouter Salma compter</button></div>
+    </section>` +
     `<div class="galops" aria-label="Mes galops"><b>Mes Galops</b>${OBST.map((o, k) => flot(k, data.stars[o.id] > 0, 'Galop ' + (k+1) + (data.stars[o.id] > 0 ? ' gagné' : ' à gagner'))).join('')}${flot(6, data.gp > 0, data.gp ? 'Grand Prix gagné' : 'Grand Prix à gagner')}</div>` +
     `<div class="revise"><button class="chip" id="revise">📋 Revoir ma fiche</button></div>` +
     `<div class="course">${OBST.map((o, k) => { const s = data.stars[o.id] || 0;
@@ -330,6 +337,16 @@ function home(){
       <button class="obst gp" id="gp" style="--edge:${GP.edge}" ${allDone() ? '' : 'disabled aria-disabled="true"'}><span class="ic" aria-hidden="true">${allDone() ? GP.icon : '🔒'}</span><span class="tx"><span class="num">Finale</span><b>${GP.name}</b><span class="sub">${allDone() ? GP.sub + (data.gp ? ` · record : ${data.gp}/12` : '') : 'Gagne d\'abord tes 6 Galops'}</span></span></button></div>`;
   wireTop();
   speak(msg);
+  const rv = document.getElementById('rdvid'), rs = document.getElementById('rdsound');
+  const setSound = on => { rv.muted = !on; rs.textContent = on ? '🔇 Couper le son' : '🔊 Écouter Salma compter'; };
+  rs.onclick = () => { const on = rv.muted; if(on){ hush(); rv.currentTime = 0; } setSound(on); rv.play().catch(()=>{}); };
+  app.querySelectorAll('.rider .tabs button').forEach(b => b.onclick = () => {
+    sfx.tap(); const v = b.dataset.v;
+    app.querySelectorAll('.rider .tabs button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    rv.poster = `cheval/salma-${v}-poster.webp`; rv.src = `cheval/salma-${v}.mp4`;
+    rv.setAttribute('aria-label', `Salma fait du cheval au pas, ${v === 'cartoon' ? 'en dessin animé' : 'en vidéo réaliste'}`);
+    rv.play().catch(()=>{});
+  });
   app.querySelectorAll('.obst[data-k]').forEach(b => b.onclick = () => { sfx.tap(); run(+b.dataset.k); });
   document.getElementById('gp').onclick = () => { if(allDone()){ sfx.tap(); run(-1); } };
   document.getElementById('revise').onclick = () => { sfx.tap(); revise(); };
