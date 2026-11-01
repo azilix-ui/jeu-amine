@@ -5,112 +5,158 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Caveat:wght@600&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E">
 <title>Famille Missaoui</title>
-<meta name="description" content="Les cours et les jeux d'Essil, Salma et Amine.">
-<link rel="stylesheet" href="famille.css?v=5">
+<meta name="description" content="Les cours et les jeux d'Essil, Salma et Amine, et Serpent Légendes pour toute la famille.">
+<link rel="stylesheet" href="famille.css?v=6">
+<style>
+/* Accueil avec les avatars de la famille (maquette validée dans Claude Design, 01/11/2026).
+   Les avatars sont petits au repos et grandissent au survol ou au toucher. */
+:root{ --anis:#0f766e; --imen:#b4235a; --night:#14102b; --gold:#ffc93c; --mint:#5fe0a8; --mint-deep:#2e9e6e }
+.wrap{gap:52px}
+.hero{display:flex;flex-wrap:wrap;align-items:center;gap:32px 48px}
+.hero .top{flex:1 1 420px;min-width:0;gap:16px}
+.eyebrow{margin:0;font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.hero .lead{font-size:20px;max-width:46ch}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.cta{display:inline-flex;align-items:center;min-height:56px;padding:12px 26px;border-radius:18px;font-weight:800;font-size:18px;text-decoration:none;transition:transform .15s}
+.cta:active{transform:translateY(3px)}
+.cta.dark{background:var(--ink);color:var(--bg);box-shadow:0 6px 0 #000}
+.cta.gold{background:var(--gold);color:#3a2600;box-shadow:0 6px 0 #c99a00}
+
+/* portrait de famille */
+.portrait{flex:1 1 300px;min-width:0;margin:0;display:flex;flex-direction:column;align-items:center}
+.row{display:flex;justify-content:center;gap:14px}
+.row.kids-row{margin-top:8px;gap:12px}
+.person{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;text-decoration:none;color:inherit}
+.row.kids-row .person:nth-child(2){margin-top:10px}
+.av{display:block;width:var(--s,84px);height:var(--s,84px);border-radius:50%;object-fit:cover;border:4px solid var(--surface);background:var(--line);
+  box-shadow:0 0 0 3px var(--c),0 10px 18px -8px rgba(24,32,46,.45);transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .35s;position:relative;z-index:1}
+.kids-row .av{--s:70px}
+.person:hover .av,.person:focus-visible .av,.av.zoom:hover{transform:scale(1.9);z-index:5;box-shadow:0 0 0 2px var(--c),0 18px 30px -10px rgba(24,32,46,.55)}
+.person:hover,.person:focus-visible{z-index:5}
+.tag{font-family:var(--display);font-weight:800;font-size:15px;background:var(--c);color:#fff;border-radius:999px;padding:1px 12px;transition:transform .35s cubic-bezier(.16,1,.3,1)}
+.person:hover .tag,.person:focus-visible .tag{transform:translateY(34px)}
+.portrait figcaption{margin-top:12px;font-size:15px;color:var(--soft)}
+
+/* espaces des enfants */
+.spaces{display:flex;flex-direction:column;gap:20px}
+.spaces h2.sec,.fam h2{font-family:var(--display);font-weight:800;font-size:clamp(30px,4vw,40px);line-height:1;margin:0}
+.kids{gap:22px}
+.kid{min-height:0;padding-top:24px}
+.kid .who{display:flex;align-items:center;gap:14px}
+.kid .who .av{--s:56px;border-color:rgba(255,255,255,.9);box-shadow:0 0 0 3px rgba(255,255,255,.25),0 8px 14px -6px rgba(0,0,0,.5)}
+.kid .who:hover .av{transform:scale(1.9) translateX(6px)}
+.kid.salma{padding-top:96px}
+.kid.amine .lvl{margin-right:44px}
+.kid .lvl{margin-left:auto;font-size:14px;font-weight:800;background:rgba(255,255,255,.16);border-radius:999px;padding:3px 12px}
+
+/* bandeau famille */
+.fam{display:flex;flex-wrap:wrap;align-items:center;gap:24px 36px;background:var(--night);color:#fbf6ea;border-radius:32px;padding:32px;
+  background-image:radial-gradient(circle at 92% 20%,rgba(123,92,255,.45) 0,transparent 46%)}
+.stack{display:flex;padding:20px 0}
+.stack .av{--s:46px;border-color:var(--night);--c:var(--gold)}
+.stack .av + .av{margin-left:-12px}
+.stack .av:hover{transform:scale(2.1)}
+.fam .txt{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.fam .eyebrow{color:var(--gold)}
+.fam p{margin:0;color:#d6cff0;max-width:52ch}
+.play{display:inline-flex;align-items:center;min-height:60px;padding:12px 30px;border-radius:20px;background:var(--mint);color:#0d2a1d;font-weight:800;font-size:20px;text-decoration:none;box-shadow:0 6px 0 var(--mint-deep)}
+.play:active{transform:translateY(3px);box-shadow:0 3px 0 var(--mint-deep)}
+footer{display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;border-top:2px solid var(--line);padding-top:14px}
+@media (prefers-reduced-motion:reduce){.av,.tag{transition:none}}
+</style>
 </head>
 <body>
 <main class="wrap">
   <header class="hero">
     <div class="top">
+      <p class="eyebrow">Apprendre en s'amusant</p>
       <h1>Famille Missaoui<span class="dot">.</span></h1>
-      <p class="lead">Les cours et les jeux de la maison. Choisis ton espace !</p>
+      <p class="lead">Les cours d'Essil, les jeux de Salma, les aventures d'Amine, et un grand jeu pour toute la famille. Choisis ton espace !</p>
+      <div class="ctas">
+        <a class="cta dark" href="#espaces">Choisir mon espace</a>
+        <a class="cta gold" href="jeux/serpent-legendes.html">🐉 Serpent Légendes</a>
+      </div>
     </div>
-    <div class="fridge" role="group" aria-label="Photos de famille">
-      <button class="polaroid p1" type="button" data-full="photos/maison-900" aria-label="Agrandir la photo : Devant la maison">
-        <i class="magnet m-essil" aria-hidden="true"></i>
-        <picture>
-          <source type="image/webp" srcset="photos/maison-240.webp 240w, photos/maison-480.webp 480w" sizes="110px">
-          <img src="photos/maison-240.jpg" srcset="photos/maison-240.jpg 240w, photos/maison-480.jpg 480w" sizes="110px" width="840" height="1050" alt="Papa, maman, Essil, Salma et Amine sur les marches devant la maison, au soleil." decoding="async">
-        </picture>
-        <span class="cap">Devant la maison</span>
-      </button>
-      <button class="polaroid p2" type="button" data-full="photos/salon-900" aria-label="Agrandir la photo : Au salon">
-        <i class="magnet m-salma" aria-hidden="true"></i>
-        <picture>
-          <source type="image/webp" srcset="photos/salon-240.webp 240w, photos/salon-480.webp 480w" sizes="110px">
-          <img src="photos/salon-240.jpg" srcset="photos/salon-240.jpg 240w, photos/salon-480.jpg 480w" sizes="110px" width="870" height="696" alt="Toute la famille serrée sur le canapé du salon, Amine sur les genoux de maman." decoding="async">
-        </picture>
-        <span class="cap">Au salon</span>
-      </button>
-      <button class="polaroid p3" type="button" data-full="photos/canape-900" aria-label="Agrandir la photo : Fou rire !">
-        <i class="magnet m-amine" aria-hidden="true"></i>
-        <picture>
-          <source type="image/webp" srcset="photos/canape-240.webp 240w, photos/canape-480.webp 480w" sizes="110px">
-          <img src="photos/canape-240.jpg" srcset="photos/canape-240.jpg 240w, photos/canape-480.jpg 480w" sizes="110px" width="900" height="720" alt="Fou rire sur le canapé : Amine a les pieds en l'air." decoding="async">
-        </picture>
-        <span class="cap">Fou rire !</span>
-      </button>
-    </div>
+
+    <figure class="portrait" aria-label="La famille">
+      <div class="row">
+        <span class="person" tabindex="0" style="--c:var(--anis)"><img class="av" src="jeux/avatars/anis.webp" width="320" height="320" alt="Anis"><span class="tag">Anis</span></span>
+        <span class="person" tabindex="0" style="--c:var(--imen)"><img class="av" src="jeux/avatars/imen.webp" width="320" height="320" alt="Imen"><span class="tag">Imen</span></span>
+      </div>
+      <div class="row kids-row">
+        <a class="person" href="essil/" style="--c:var(--essil-card)"><img class="av" src="jeux/avatars/essil.webp" width="320" height="320" alt=""><span class="tag">Essil</span></a>
+        <a class="person" href="salma/" style="--c:var(--salma-card)"><img class="av" src="jeux/avatars/salma.webp" width="320" height="320" alt=""><span class="tag">Salma</span></a>
+        <a class="person" href="amine/" style="--c:var(--amine-card)"><img class="av" src="jeux/avatars/amine.webp" width="320" height="320" alt=""><span class="tag">Amine</span></a>
+      </div>
+      <figcaption>Papa, maman, Essil, Salma et Amine</figcaption>
+    </figure>
   </header>
 
-  <nav class="kids" aria-label="Les espaces des enfants">
-    <div class="kid essil">
-      <span class="initial" aria-hidden="true">E</span>
-      <h2><a href="essil/">Essil</a></h2>
-      <p class="what">Allemand · Latin</p>
-      <ul>
-        <li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li>
-        <li><a href="essil/deutsch-express.html"><span>🚆</span>Deutsch Express</a></li>
-        <li><a href="essil/via-romana.html"><span>🏛️</span>Via Romana</a></li>
-      </ul>
-      <a class="go" href="essil/">Voir l'espace d'Essil →</a>
-    </div>
-    <div class="kid salma">
-      <span class="initial" aria-hidden="true">S</span>
-      <h2><a href="salma/">Salma</a></h2>
-      <p class="what">Anglais · Maths · Exposé</p>
-      <ul>
-        <li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li>
-        <li><a href="salma/english-garden.html"><span>🦉</span>English Garden</a></li>
-        <li><a href="salma/jardin-des-nombres.html"><span>➖</span>Le Jardin des Nombres</a></li>
-        <li><a href="salma/le-grand-galop.html"><span>🐴</span>Le Grand Galop<em>Nouveau</em></a></li>
-      </ul>
-      <a class="go" href="salma/">Voir l'espace de Salma →</a>
-    </div>
-    <div class="kid amine">
-      <span class="initial" aria-hidden="true">A</span>
-      <h2><a href="amine/">Amine</a></h2>
-      <p class="what">Jeux · Grande section</p>
-      <ul>
-        <li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li>
-        <li><a href="amine/serpentin.html"><span>🐍</span>Serpentin</a></li>
-        <li><a href="amine/la-nuit-d-amine.html"><span>🎃</span>La Nuit d'Amine</a></li>
-        <li><a href="amine/la-nuit-d-amine-2.html"><span>🧛</span>La Nuit d'Amine 2</a></li>
-        <li><a href="amine/nahki-tounsi.html"><span><svg viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" style="vertical-align:middle;border-radius:4px"><rect width="60" height="40" fill="#e70013"/><circle cx="30" cy="20" r="11" fill="#fff"/><circle cx="31" cy="20" r="8" fill="#e70013"/><circle cx="33.2" cy="20" r="6.4" fill="#fff"/><path fill="#e70013" d="M34.4 16.6l1.1 2.4 2.6.3-1.9 1.8.5 2.6-2.3-1.3-2.3 1.3.5-2.6-1.9-1.8 2.6-.3z"/></svg></span>Nahki Tounsi</a></li>
-      </ul>
-      <a class="go" href="amine/">Voir l'espace d'Amine →</a>
-    </div>
-  </nav>
+  <section class="spaces" id="espaces">
+    <h2 class="sec">Choisis ton espace</h2>
+    <nav class="kids" aria-label="Les espaces des enfants">
+      <div class="kid essil">
+        <span class="initial" aria-hidden="true">E</span>
+        <div class="who"><img class="av" src="jeux/avatars/essil.webp" width="320" height="320" alt=""><h2><a href="essil/">Essil</a></h2><span class="lvl">Collège</span></div>
+        <p class="what">Allemand et latin</p>
+        <ul>
+          <li><a href="essil/deutsch-express.html"><span>🚆</span>Deutsch Express</a></li>
+          <li><a href="essil/via-romana.html"><span>🏛️</span>Via Romana</a></li>
+          <li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li>
+        </ul>
+        <a class="go" href="essil/">Voir l'espace d'Essil →</a>
+      </div>
+      <div class="kid salma">
+        <span class="initial" aria-hidden="true">S</span>
+        <div class="who"><img class="av" src="jeux/avatars/salma.webp" width="320" height="320" alt=""><h2><a href="salma/">Salma</a></h2><span class="lvl">CE2</span></div>
+        <p class="what">Anglais, maths et son exposé</p>
+        <ul>
+          <li><a href="salma/english-garden.html"><span>🦉</span>English Garden</a></li>
+          <li><a href="salma/jardin-des-nombres.html"><span>➖</span>Le Jardin des Nombres</a></li>
+          <li><a href="salma/le-grand-galop.html"><span>🐴</span>Le Grand Galop</a></li>
+          <li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li>
+        </ul>
+        <a class="go" href="salma/">Voir l'espace de Salma →</a>
+      </div>
+      <div class="kid amine">
+        <span class="initial" aria-hidden="true">A</span>
+        <div class="who"><img class="av" src="jeux/avatars/amine.webp" width="320" height="320" alt=""><h2><a href="amine/">Amine</a></h2><span class="lvl">GS</span></div>
+        <p class="what">Jeux de grande section et derja</p>
+        <ul>
+          <li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li>
+          <li><a href="amine/serpentin.html"><span>🐍</span>Serpentin</a></li>
+          <li><a href="amine/la-nuit-d-amine.html"><span>🎃</span>La Nuit d'Amine</a></li>
+          <li><a href="amine/la-nuit-d-amine-2.html"><span>🧛</span>La Nuit d'Amine 2</a></li>
+          <li><a href="amine/nahki-tounsi.html"><span><svg viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" style="vertical-align:middle;border-radius:4px"><rect width="60" height="40" fill="#e70013"/><circle cx="30" cy="20" r="11" fill="#fff"/><circle cx="31" cy="20" r="8" fill="#e70013"/><circle cx="33.2" cy="20" r="6.4" fill="#fff"/><path fill="#e70013" d="M34.4 16.6l1.1 2.4 2.6.3-1.9 1.8.5 2.6-2.3-1.3-2.3 1.3.5-2.6-1.9-1.8 2.6-.3z"/></svg></span>Nahki Tounsi</a></li>
+        </ul>
+        <a class="go" href="amine/">Voir l'espace d'Amine →</a>
+      </div>
+    </nav>
+  </section>
 
-  <footer>Fait à la maison, avec amour · missaoui-family.com · <a href="progression.html">📈 Progression (parents)</a></footer>
+  <section class="fam" aria-labelledby="famh">
+    <div class="stack" aria-hidden="true">
+      <img class="av" src="jeux/avatars/anis.webp" width="320" height="320" alt="">
+      <img class="av" src="jeux/avatars/imen.webp" width="320" height="320" alt="">
+      <img class="av" src="jeux/avatars/essil.webp" width="320" height="320" alt="">
+      <img class="av" src="jeux/avatars/salma.webp" width="320" height="320" alt="">
+      <img class="av" src="jeux/avatars/amine.webp" width="320" height="320" alt="">
+    </div>
+    <div class="txt">
+      <p class="eyebrow">Pour toute la famille</p>
+      <h2 id="famh">Serpent Légendes</h2>
+      <p>Le serpent en 3D : chacun son avatar, ses pièces et sa collection de skins. Qui gagnera le Dragon d'or en premier ?</p>
+    </div>
+    <a class="play" href="jeux/serpent-legendes.html">Jouer</a>
+  </section>
+
+  <footer>
+    <span>Fait à la maison, avec amour · missaoui-family.com</span>
+    <span><a href="progression.html">📈 Progression (parents)</a> · <a href="indexancien.html">Ancienne page d'accueil</a></span>
+  </footer>
 </main>
-
-<dialog class="viewer" id="viewer" aria-label="Photo de famille">
-  <figure>
-    <picture><source type="image/webp" id="vWebp"><img id="vImg" src="photos/maison-480.jpg" alt="" loading="lazy"></picture>
-    <figcaption id="vCap"></figcaption>
-  </figure>
-  <button class="close" type="button" id="vClose">Fermer</button>
-</dialog>
-<script>
-(function(){
-  var d = document.getElementById('viewer');
-  if(!d || typeof d.showModal !== 'function') return;
-  document.querySelectorAll('.polaroid').forEach(function(b){
-    b.addEventListener('click', function(){
-      var base = b.getAttribute('data-full'), img = b.querySelector('img');
-      document.getElementById('vWebp').srcset = base + '.webp';
-      var v = document.getElementById('vImg'); v.src = base + '.jpg'; v.alt = img.alt;
-      document.getElementById('vCap').textContent = b.querySelector('.cap').textContent;
-      d.showModal();
-    });
-  });
-  document.getElementById('vClose').addEventListener('click', function(){ d.close(); });
-  d.addEventListener('click', function(e){ if(e.target === d) d.close(); });
-})();
-</script>
 </body>
 </html>
