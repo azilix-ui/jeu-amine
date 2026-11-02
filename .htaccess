@@ -16,9 +16,11 @@ Redirect 301 /nahki-tounsi.html /amine/nahki-tounsi.html
   ExpiresByType text/css "access plus 0 seconds"
   ExpiresByType application/javascript "access plus 0 seconds"
 </IfModule>
+# Application installable : le manifeste et le service worker
+AddType application/manifest+json .webmanifest
 <IfModule mod_headers.c>
   Header always set X-Famille-Missaoui "1"
-  <FilesMatch "\.(html|css|js)$">
+  <FilesMatch "\.(html|css|js|webmanifest)$">
     Header set Cache-Control "no-cache, must-revalidate"
   </FilesMatch>
 </IfModule>

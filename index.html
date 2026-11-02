@@ -2,6 +2,14 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,6 +23,14 @@
    Les avatars sont petits au repos et grandissent au survol ou au toucher. */
 :root{ --anis:#0f766e; --imen:#b4235a; --night:#14102b; --gold:#ffc93c; --mint:#5fe0a8; --mint-deep:#2e9e6e }
 .wrap{gap:52px}
+.cta.install{font:inherit;font-weight:800;cursor:pointer;border:0;background:#7fd6ff;color:#062240}
+.inst-back{position:fixed;inset:0;z-index:50;background:rgba(10,14,30,.6);display:grid;place-items:center;padding:16px}
+.inst-back[hidden]{display:none}
+.inst{background:var(--surface);color:var(--ink);border-radius:28px;padding:22px;width:min(460px,100%);display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;box-shadow:0 20px 60px #0008}
+.inst img{border-radius:22px}
+.inst h2{font-family:var(--display);margin:0;font-size:26px}
+.inst ol{text-align:left;margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:18px}
+.inst .cta{border:0;font:inherit;font-weight:800;cursor:pointer}
 .hero{display:flex;flex-wrap:wrap;align-items:center;gap:32px 48px}
 .hero .top{flex:1 1 420px;min-width:0;gap:16px}
 .eyebrow{margin:0;font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
@@ -77,6 +93,7 @@ footer{display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;bo
       <div class="ctas">
         <a class="cta dark" href="#espaces">Choisir mon espace</a>
         <a class="cta gold" href="jeux/serpent-legendes.html">🐉 Serpent Légendes</a>
+        <button class="cta install" id="install" type="button" hidden>📲 Installer l'appli</button>
       </div>
     </div>
 
@@ -161,10 +178,36 @@ footer{display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;bo
     <span style="display:flex;gap:10px;flex-wrap:wrap"><a class="play" href="jeux/serpent-legendes.html">🐉 Serpent</a><a class="play" href="jeux/ludo-legendes.html" style="background:var(--gold);color:#3a2600;box-shadow:0 6px 0 #c99a00">🎲 Ludo</a><a class="play" href="jeux/grimpe-glace.html" style="background:#7fd6ff;color:#062240;box-shadow:0 6px 0 #3a8fc0">❄️ Grimpe-Glace</a></span>
   </section>
 
+  <div class="inst-back" id="instBox" hidden><div class="inst" role="dialog" aria-modal="true" aria-labelledby="instT">
+    <img src="icons/icon-192.png" width="96" height="96" alt="">
+    <h2 id="instT">Mettre le site sur l'écran d'accueil</h2>
+    <ol id="instSteps"></ol>
+    <button class="cta dark" id="instOk" type="button">J'ai compris</button>
+  </div></div>
   <footer>
     <span>Fait à la maison, avec amour · missaoui-family.com</span>
     <span><a href="progression.html">📈 Progression (parents)</a> · <a href="indexancien.html">Ancienne page d'accueil</a></span>
   </footer>
 </main>
+<script>
+// Bouton « Installer l'appli » : la vraie fenêtre d'installation sur Android et PC, les étapes à suivre sur iPad / iPhone.
+(function(){
+  const b = document.getElementById('install'), box = document.getElementById('instBox');
+  const A = () => window.FamilleApp || {};
+  function refresh(){ const a = A(); b.hidden = !!a.standalone || !(a.ios || (a.canPrompt && a.canPrompt()) || /Android|Chrome|Edg/i.test(navigator.userAgent)); }
+  document.addEventListener('famille-installable', refresh); document.addEventListener('famille-installed', () => { b.hidden = true; });
+  addEventListener('load', refresh); setTimeout(refresh, 1500);
+  b.onclick = async () => {
+    const a = A();
+    if(a.canPrompt && a.canPrompt()){ await a.install(); return; }
+    document.getElementById('instSteps').innerHTML = a.ios
+      ? '<li>Ouvre ce site dans <b>Safari</b>.</li><li>Touche le bouton <b>Partager</b> <span aria-hidden="true">⬆️</span> (le carré avec une flèche).</li><li>Choisis <b>« Sur l\'écran d\'accueil »</b>, puis <b>Ajouter</b>.</li>'
+      : '<li>Ouvre le menu du navigateur <b>⋮</b> (en haut à droite).</li><li>Choisis <b>« Installer l\'application »</b> ou <b>« Ajouter à l\'écran d\'accueil »</b>.</li>';
+    box.hidden = false; document.getElementById('instOk').focus();
+  };
+  document.getElementById('instOk').onclick = () => { box.hidden = true; };
+  box.addEventListener('click', e => { if(e.target === box) box.hidden = true; });
+})();
+</script>
 </body>
 </html>

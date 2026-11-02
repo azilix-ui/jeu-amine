@@ -10,12 +10,14 @@
  *   GET  ?action=highscores&game=serpentin&variant=V    -> meilleurs scores (un par joueur)
  *   GET  ?action=load&player=P&course=serpent3d         -> relit la collection d'un joueur
  *   GET  ?action=rewards&player=P                       -> cartes rares : jours d'apprentissage d'affilée, exploits mythiques
+ *   POST action=visit    page player app screen ref     -> journal des visites (site.js, toutes les pages)
  *   POST action=score    player game variant score      -> enregistre une partie
  *   POST action=progress player course data(JSON)       -> enregistre les progrès d'un cours
  * Parents (mot de passe parent, le même que pour les voix de Nahki Tounsi) :
  *   GET  ?action=auth                                   -> le mot de passe existe-t-il ?
  *   POST action=setup  newpass                          -> crée le mot de passe (une seule fois)
  *   POST action=summary pass                            -> tout pour la page Progression
+ *   POST action=visits  pass days                       -> journal des visites (IP, pays, ville, page, appareil), 60 jours au plus
  */
 declare(strict_types=1);
 
@@ -80,6 +82,9 @@ function db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY, player TEXT NOT NULL COLLATE NOCASE, course TEXT NOT NULL, data TEXT NOT NULL, created TEXT NOT NULL)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS history_pc ON history (player, course, created)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS writes (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS visits (id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, ip TEXT NOT NULL, cc TEXT, page TEXT NOT NULL, player TEXT, ua TEXT, app INTEGER, screen TEXT, ref TEXT)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS visits_ts ON visits (ts)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS geo (ip TEXT PRIMARY KEY, cc TEXT, country TEXT, region TEXT, city TEXT, isp TEXT, ts INTEGER)');
     return $pdo;
 }
 function now(): string { return gmdate('Y-m-d\TH:i:s\Z'); }
@@ -88,6 +93,40 @@ function clean_player($p): string {
     $p = trim(preg_replace('/\s+/u', ' ', (string)$p));
     if ($p === '' || mb_strlen($p) > 20 || !preg_match("/^[\p{L}][\p{L}\p{M} '\-]*$/u", $p)) fail(400, 'Prénom invalide.');
     return mb_strtoupper(mb_substr($p, 0, 1)) . mb_substr($p, 1);
+}
+// Adresse du visiteur : derrière un proxy (CDN), la première adresse publique de X-Forwarded-For.
+function client_ip(): string {
+    foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'] as $h) {
+        foreach (explode(',', (string)($_SERVER[$h] ?? '')) as $ip) {
+            $ip = trim($ip);
+            if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) return $ip;
+        }
+    }
+    return (string)($_SERVER['REMOTE_ADDR'] ?? '?');
+}
+const VISIT_DAYS = 60;   // le journal des visites est effacé au-delà
+// Pays et ville des adresses IP, demandés à ip-api.com (100 adresses par appel) et gardés dans la table geo.
+function resolve_geo(PDO $pdo, array $ips): void {
+    $todo = [];
+    foreach (array_unique($ips) as $ip) {
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            $pdo->prepare('INSERT OR REPLACE INTO geo (ip, cc, country, region, city, isp, ts) VALUES (?, ?, ?, ?, ?, ?, ?)')->execute([$ip, '', 'Réseau local', '', '', '', time()]);
+            continue;
+        }
+        $todo[] = $ip;
+    }
+    foreach (array_chunk(array_slice($todo, 0, 300), 100) as $chunk) {
+        $ctx = stream_context_create(['http' => ['method' => 'POST', 'header' => "Content-Type: application/json\r\n", 'content' => json_encode($chunk), 'timeout' => 5, 'ignore_errors' => true]]);
+        $raw = @file_get_contents('http://ip-api.com/batch?fields=status,countryCode,country,regionName,city,isp,query&lang=fr', false, $ctx);
+        $res = json_decode((string)$raw, true);
+        if (!is_array($res)) break;
+        foreach ($res as $g) {
+            if (!is_array($g) || empty($g['query'])) continue;
+            $ok = ($g['status'] ?? '') === 'success';
+            $pdo->prepare('INSERT OR REPLACE INTO geo (ip, cc, country, region, city, isp, ts) VALUES (?, ?, ?, ?, ?, ?, ?)')
+                ->execute([$g['query'], $ok ? ($g['countryCode'] ?? '') : '', $ok ? ($g['country'] ?? '') : 'Inconnu', $ok ? ($g['regionName'] ?? '') : '', $ok ? ($g['city'] ?? '') : '', $ok ? ($g['isp'] ?? '') : '', time()]);
+        }
+    }
 }
 function limit_writes(): void {
     $ip = hash('sha256', (string)($_SERVER['REMOTE_ADDR'] ?? '?'));
@@ -195,6 +234,44 @@ try {
     }
 
     if ($method !== 'POST') fail(405, 'Action inconnue.');
+
+    if ($action === 'visit') {
+        $pdo = db();
+        $ip = client_ip(); $t = time();
+        $page = (string)($_POST['page'] ?? '');
+        if (!preg_match('~^/[\w\-./%]{0,119}$~u', $page)) out(200, ['ok' => false]);
+        $st = $pdo->prepare('SELECT COUNT(*) FROM visits WHERE ip = ? AND ts > ?'); $st->execute([$ip, $t - 600]);
+        if ((int)$st->fetchColumn() > 150) out(200, ['ok' => false]);           // anti-abus
+        $st = $pdo->prepare('SELECT COUNT(*) FROM visits WHERE ip = ? AND page = ? AND ts > ?'); $st->execute([$ip, $page, $t - 120]);
+        if ((int)$st->fetchColumn() > 0) out(200, ['ok' => true]);              // déjà noté il y a moins de 2 minutes
+        $pl = trim((string)($_POST['player'] ?? ''));
+        $pl = ($pl !== '' && mb_strlen($pl) <= 20 && preg_match("/^[\p{L}][\p{L}\p{M} '\-]*$/u", $pl)) ? $pl : '';
+        $cc = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', (string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? $_SERVER['HTTP_X_COUNTRY_CODE'] ?? '')), 0, 2));
+        $screen = preg_match('/^\d{2,5}x\d{2,5}$/', (string)($_POST['screen'] ?? '')) ? (string)$_POST['screen'] : '';
+        $ref = preg_replace('/[^\w\-.:]/', '', substr((string)($_POST['ref'] ?? ''), 0, 80));
+        $pdo->prepare('INSERT INTO visits (ts, ip, cc, page, player, ua, app, screen, ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            ->execute([$t, $ip, $cc, $page, $pl, mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 300), ($_POST['app'] ?? '') === '1' ? 1 : 0, $screen, $ref]);
+        if (mt_rand(1, 40) === 1) {
+            $pdo->prepare('DELETE FROM visits WHERE ts < ?')->execute([$t - VISIT_DAYS * 86400]);
+            $pdo->exec('DELETE FROM geo WHERE ip NOT IN (SELECT DISTINCT ip FROM visits)');
+        }
+        out(200, ['ok' => true]);
+    }
+
+    if ($action === 'visits') {
+        check_pass();
+        $pdo = db();
+        $days = max(1, min(VISIT_DAYS, (int)($_POST['days'] ?? 7)));
+        $pdo->prepare('DELETE FROM visits WHERE ts < ?')->execute([time() - VISIT_DAYS * 86400]);
+        $st = $pdo->prepare('SELECT DISTINCT v.ip FROM visits v LEFT JOIN geo g ON g.ip = v.ip WHERE v.ts >= ? AND g.ip IS NULL'); $st->execute([time() - $days * 86400]);
+        $missing = $st->fetchAll(PDO::FETCH_COLUMN);
+        if ($missing) resolve_geo($pdo, $missing);
+        $st = $pdo->prepare('SELECT v.ts, v.ip, v.page, v.player, v.ua, v.app, v.screen, v.ref, COALESCE(NULLIF(g.cc, \'\'), v.cc) AS cc, g.country, g.region, g.city, g.isp FROM visits v LEFT JOIN geo g ON g.ip = v.ip WHERE v.ts >= ? ORDER BY v.ts DESC LIMIT 3000');
+        $st->execute([time() - $days * 86400]);
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as &$r) { $r['ts'] = (int)$r['ts']; $r['app'] = (int)$r['app']; } unset($r);
+        out(200, ['days' => $days, 'keep' => VISIT_DAYS, 'visits' => $rows]);
+    }
 
     if ($action === 'score') {
         limit_writes();
