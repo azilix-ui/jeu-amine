@@ -97,6 +97,9 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
 .card .sw img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
 .card.locked .sw img{filter:grayscale(1) brightness(.4) blur(1.5px)}
 .card.locked .sw::after{content:'?';position:absolute;inset:0;display:grid;place-items:center;font:700 44px var(--display);color:#fff9}
+.card.shiny{position:relative;overflow:hidden;border-color:#fff}
+.card.shiny::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 20%,#ff8fd855 32%,#ffe06655 40%,#7fffd455 48%,#8fc8ff55 56%,transparent 68%);background-size:250% 100%;animation:holo 2.6s linear infinite;mix-blend-mode:screen;z-index:1}
+@keyframes holo{from{background-position:120% 0}to{background-position:-130% 0}}
 #intro{flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(10,8,24,.55)}
 #intro img{width:min(900px,100%);max-height:68vh;object-fit:cover;border-radius:28px;border:5px solid var(--gold);box-shadow:0 18px 50px #0009}
 .card b{font-family:var(--display);font-size:20px}
@@ -597,7 +600,7 @@ function finishLesson(){
   data.stars[k] = Math.max(before, stars); data.done[k] = (data.done[k] || 0) + 1;
   const gain = data.stars[k] - before; data.tickets += gain + 1;
   const newCards = [];
-  while(data.cards.length < CARDS.length && totalStars() >= (data.cards.length + 1) * STARS_PER_CARD){ data.cards.push(CARDS[data.cards.length][0]); newCards.push(data.cards[data.cards.length - 1]); }
+  while(data.cards.length < CARDS.length && totalStars() >= (data.cards.length + 1) * STARS_PER_CARD){ data.cards.push(CARDS[data.cards.length][0]); newCards.push(data.cards[data.cards.length - 1]); if(Math.random() < .1) data.shiny = (data.shiny || []).concat(data.cards[data.cards.length - 1]); }
   save(); sfx.win();
   const txt = L.text.length > 1 ? 'ton prénom' : (L.style === 'caps' ? L.text : L.text);
   const box = $('winBox'); $('rays').style.setProperty('--ray', '#ffc93c22');
@@ -642,8 +645,8 @@ $('pickBack').onclick = () => { sfx.tap(); goHome(); };
 $('lesBack').onclick = () => { sfx.tap(); speechSynthesis && speechSynthesis.cancel(); L = null; dirty = true; openPick(curStyle); };
 
 /* ---------- cartes ---------- */
-function cardHTML(id, locked){ const c = CARDS.find(x => x[0] === id) || [id, id, 'commun'];
-  return `<div class="card ${locked ? 'locked' : ''}" style="--rc:${RARC[c[2]]}"><span class="sw" style="background:${swatch(id)}"><img src="../jeux/cartes/${id}.webp" alt="" loading="lazy" onerror="this.remove()"></span><b>${locked ? '?' : c[1]}</b><small style="color:${RARC[c[2]]}">${RARL[c[2]]}</small></div>`; }
+function cardHTML(id, locked){ const c = CARDS.find(x => x[0] === id) || [id, id, 'commun'], sh = !locked && (data.shiny || []).includes(id);
+  return `<div class="card ${locked ? 'locked' : ''} ${sh ? 'shiny' : ''}" style="--rc:${RARC[c[2]]}"><span class="sw" style="background:${swatch(id)}"><img src="../jeux/cartes/${id}.webp" alt="" loading="lazy" onerror="this.remove()"></span><b>${locked ? '?' : c[1]}</b><small style="color:${RARC[c[2]]}">${RARL[c[2]]}${sh ? ' · ✨ Brillante' : ''}</small></div>`; }
 function openCards(){
   const n = data.cards.length, tot = totalStars(), nextAt = (n + 1) * STARS_PER_CARD;
   $('cardBar').style.width = n >= CARDS.length ? '100%' : Math.round((tot - n * STARS_PER_CARD) / STARS_PER_CARD * 100) + '%';
@@ -657,7 +660,7 @@ function showCard(id, fresh){
   const c = CARDS.find(x => x[0] === id); $('rays').style.setProperty('--ray', RARC[c[2]] + '33');
   $('winBox').innerHTML = `<h2>Nouvelle carte !</h2><div class="burst">${cardHTML(id, false)}</div><p style="margin:0">Un nouveau serpent <b>${c[1]}</b> t'attend dans <b>Serpent Légendes</b> !</p>
     <div class="row"><button class="big ghost" id="cOk">Super !</button><a class="big alt" href="../jeux/serpent-legendes.html" style="text-decoration:none">🐉 Essayer</a></div>`;
-  show('win'); sfx.card(); paintSnake(id); hopping = 1.5; speak(`Nouvelle carte ! Le serpent ${c[1]} !`);
+  show('win'); sfx.card(); paintSnake(id); hopping = 1.5; speak((data.shiny || []).includes(id) ? `Waouh ! Une carte brillante ! Le serpent ${c[1]} !` : `Nouvelle carte ! Le serpent ${c[1]} !`);
   $('cOk').onclick = () => { sfx.tap(); goHome(); };
 }
 

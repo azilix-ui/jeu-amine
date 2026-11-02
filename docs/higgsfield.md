@@ -17,7 +17,7 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | `flux_3_image` (1k) | avatars, cartes, illustrations, avec images de référence (rôle `image_references`, jusqu'à 10) | 2 crédits / image |
 | `seedance_2_5` (5 s, 720p, 16:9) | vidéos ; `mode: omni_reference` + `start_image` pour animer une image | 35 crédits / vidéo |
 
-## Ce qui a été généré (790 → 569 crédits)
+## Ce qui a été généré (790 → 521 crédits)
 
 | Date | Quoi | Fichiers sur le site | Crédits |
 |---|---|---|---|
@@ -27,9 +27,13 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 01/11 | Cartes légendes des enfants (×3 légendes) | `jeux/avatars/<enfant>-{dragon,licorne,phenix}.webp` | 18 (une relance gratuite) |
 | 01/11 | Avatars Anis, Imen | `jeux/avatars/{anis,imen}.webp` | 4 |
 | 02/11 | Cartes légendes d'Anis et Imen + illustration Ludo (famille autour du plateau) | `jeux/avatars/{anis,imen}-*.webp`, `jeux/avatars/ludo-famille.webp` | 14 |
-| | **Total** | | **221** |
+| 02/11 | 15 cartes illustrées de l'Ardoise magique (un serpent par skin) + Amine devant son ardoise (écran d'accueil) | `jeux/cartes/<skin>.webp`, `amine/ardoise-amine.webp` | 32 |
+| 02/11 | Cartes rares : 4 mythiques (Amine, Salma, Essil, les 3 ensemble) + 4 secrètes | `jeux/cartes/{alphabet,polyglotte,hydre,aurore,tonnerre,arclune,tresor}.webp` | 16 |
+| | **Total** | | **269** |
 
-Originaux PNG sur le PC : `OneDrive\Amine\grande section\avatars serpent legendes\` (avatars, cartes, illustration) et `OneDrive\Salma etude\video-cheval\` (vidéos de Salma).
+**À refaire** : la carte mythique de Salma (`verbes`) n'est pas publiée : la crête de plumes du serpent ressemblait à une coiffe amérindienne. Le jeu affiche la couleur du skin en attendant. Prompt à reprendre avec « a single white quill pen tucked behind its head » (2 crédits).
+
+Originaux PNG sur le PC : `OneDrive\Amine\grande section\avatars serpent legendes\` (avatars, cartes, illustration ; sous-dossier `cartes ardoise\` pour les cartes des skins et les cartes rares) et `OneDrive\Salma etude\video-cheval\` (vidéos de Salma).
 
 ## Identifiants à réutiliser (même visage, même style)
 

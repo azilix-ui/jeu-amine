@@ -9,6 +9,7 @@
  *   GET  ?action=ping                                   -> état du serveur
  *   GET  ?action=highscores&game=serpentin&variant=V    -> meilleurs scores (un par joueur)
  *   GET  ?action=load&player=P&course=serpent3d         -> relit la collection d'un joueur
+ *   GET  ?action=rewards&player=P                       -> cartes rares : jours d'apprentissage d'affilée, exploits mythiques
  *   POST action=score    player game variant score      -> enregistre une partie
  *   POST action=progress player course data(JSON)       -> enregistre les progrès d'un cours
  * Parents (mot de passe parent, le même que pour les voix de Nahki Tounsi) :
@@ -22,6 +23,8 @@ const GAMES   = ['serpentin', 'serpent3d', 'ludo3d'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
 const READABLE = ['serpent3d', 'salma-verbes', 'ludo3d', 'amine-ecriture'];
 const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'serpent3d', 'ludo3d'];
+// Cours qui comptent comme « apprendre » (les jeux n'en font pas partie) : séries de jours et cartes secrètes.
+const LEARNING = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'amine-halloween', 'amine-tounsi', 'amine-ecriture'];
 const MAX_DATA = 30000;
 const MAX_WRITES = 240;        // écritures par adresse…
 const WRITE_WINDOW = 600;      // …toutes les 10 minutes
@@ -144,6 +147,51 @@ try {
         $st = db()->prepare('SELECT data, updated FROM progress WHERE player = ? AND course = ?'); $st->execute([$p, $course]);
         $r = $st->fetch(PDO::FETCH_ASSOC);
         out(200, ['data' => $r ? json_decode($r['data'], true) : null, 'updated' => $r ? $r['updated'] : null]);
+    }
+
+    if ($method === 'GET' && $action === 'rewards') {
+        $p = clean_player($_GET['player'] ?? '');
+        $pdo = db();
+        $tz = new DateTimeZone('Europe/Paris');
+        $in = implode(',', array_fill(0, count(LEARNING), '?'));
+        $since = gmdate('Y-m-d\TH:i:s\Z', time() - 120 * 86400);
+        $daysOf = function (string $who) use ($pdo, $tz, $in, $since): array {
+            $st = $pdo->prepare("SELECT created FROM history WHERE player = ? AND course IN ($in) AND created >= ?");
+            $st->execute(array_merge([$who], LEARNING, [$since]));
+            $d = [];
+            foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $c) { $d[(new DateTime((string)$c))->setTimezone($tz)->format('Y-m-d')] = true; }
+            $d = array_keys($d); sort($d); return $d;
+        };
+        // séries de jours d'affilée : une carte secrète par tranche de 5 jours
+        $days = $daysOf($p); $secrets = 0; $run = 0; $prev = null; $cur = 0;
+        foreach ($days as $d) {
+            $t = (new DateTime($d, $tz))->getTimestamp();
+            $run = ($prev !== null && abs($t - $prev - 86400) < 7200) ? $run + 1 : 1;
+            if ($run % 5 === 0) $secrets++;
+            $prev = $t;
+        }
+        $today = (new DateTime('now', $tz))->format('Y-m-d'); $yest = (new DateTime('yesterday', $tz))->format('Y-m-d');
+        if ($days && in_array(end($days), [$today, $yest], true)) $cur = $run;
+        // exploits mythiques
+        $prog = function (string $who, string $course) use ($pdo): array {
+            $st = $pdo->prepare('SELECT data FROM progress WHERE player = ? AND course = ?'); $st->execute([$who, $course]);
+            $d = json_decode((string)$st->fetchColumn(), true); return is_array($d) ? ($d[$course] ?? []) : [];
+        };
+        $e = $prog('Amine', 'amine-ecriture'); $alpha = 0;
+        foreach (($e['stars'] ?? []) as $k => $v) if (preg_match('/^c:[a-z]$/', (string)$k) && $v >= 2) $alpha++;
+        $vb = $prog('Salma', 'salma-verbes'); $verbes = count(array_filter($vb['stars'] ?? [], fn($v) => $v >= 3));
+        $units = function (array $d): int { $u = []; foreach (($d['best'] ?? []) as $k => $v) { if ($v && substr((string)$k, -4) !== ':lex') $u[explode(':', (string)$k)[0]] = true; } return count($u); };
+        $poly = min(14, $units($prog('Essil', 'essil-deutsch'))) + min(10, $units($prog('Essil', 'essil-latin')));
+        // Hydre : les trois enfants apprennent la même semaine
+        $weeks = []; $now = (new DateTime('now', $tz))->format('o-W'); $thisWeek = 0;
+        foreach (['Essil', 'Salma', 'Amine'] as $k) {
+            $w = array_unique(array_map(fn($d) => (new DateTime($d, $tz))->format('o-W'), $daysOf($k)));
+            $weeks[] = $w; if (in_array($now, $w, true)) $thisWeek++;
+        }
+        $together = count(array_intersect(...$weeks)) > 0;
+        out(200, ['days' => count($days), 'streak' => $cur, 'secrets' => min(4, $secrets),
+            'myth' => ['alphabet' => ['v' => min(26, $alpha), 'goal' => 26], 'verbes' => ['v' => min(8, $verbes), 'goal' => 8],
+                'polyglotte' => ['v' => $poly, 'goal' => 24], 'hydre' => ['v' => $thisWeek, 'goal' => 3, 'done' => $together]]]);
     }
 
     if ($method !== 'POST') fail(405, 'Action inconnue.');

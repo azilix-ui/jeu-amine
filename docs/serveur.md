@@ -12,6 +12,7 @@ Hébergement Hostinger (PHP + SQLite). Données hors du site public, à côté d
 
 - `GET ?action=ping` ; `GET ?action=highscores&game=G&variant=V&limit=N` ; `GET ?action=auth`.
 - `GET ?action=load&player=P&course=C` : relit les progrès gardés sur le serveur, **seulement pour les cours de `READABLE`** = `serpent3d`, `salma-verbes`, `ludo3d`, `amine-ecriture`.
+- `GET ?action=rewards&player=P` : pour les cartes rares de Serpent Légendes. Renvoie `days` (jours d'apprentissage sur 120 jours), `streak` (série en cours), `secrets` (nombre de tranches de 5 jours d'affilée, max 4) et `myth` {alphabet, verbes, polyglotte : {v, goal} ; hydre : {v = enfants actifs cette semaine, done}}. Un « jour d'apprentissage » = un instantané dans `history` pour un cours de `LEARNING` (tous les cours sauf les jeux), en heure de Paris.
 - `POST action=score` (player, game ∈ `GAMES` = serpentin, serpent3d, ludo3d ; variant ; score 0–5000).
 - `POST action=progress` (player, course ∈ `COURSES`, data JSON ≤ 30 000 caractères).
 - `POST action=setup` (création unique du mot de passe parent), `POST action=summary` (tout pour la page Progression, mot de passe parent).
