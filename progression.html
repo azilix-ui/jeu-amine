@@ -204,6 +204,15 @@ function serpentCard(S, player){
 }
 const LEG = {dragon:'Dragon d\'or', licorne:'Licorne étoilée', phenix:'Phénix'};
 const VSTEPS = [['paniers','Les trois paniers'],['nous','Le test du « nous »'],['g1','1er groupe'],['g2','2e groupe'],['g3','3e groupe'],['tableau','Les 12 verbes'],['cerger','-cer / -ger'],['phrases','Phrases à trous']];
+const GSTEPS = [['polygone','Polygone ou pas ?'],['compter','Sommets et côtés'],['angles',"L'angle droit"],['regle','Carré ou rectangle'],['devinette','Qui suis-je ?'],['decris','Décris-moi'],['construis','Construis-la']];
+function formesCard(S){
+  const p = prog(S, 'Salma', 'salma-geometrie');
+  const d = p && p.data ? p.data['salma-geometrie'] : null;
+  if(!d) return '<div class="subject"><h3>🔷 L\'Atelier des Formes</h3><p class="none">Pas encore commencé.</p></div>';
+  const st = d.stars || {}, done = GSTEPS.filter(([k]) => st[k] > 0).length;
+  const review = Object.entries(d.figs || {}).filter(([, v]) => v.ko > 0).sort((a, b) => b[1].ko - a[1].ko).slice(0, 6).map(([k, v]) => esc(k) + ' (' + v.ko + ' ✘)');
+  return '<div class="subject"><h3>🔷 L\'Atelier des Formes</h3><div class="kpis">' + kpi(done + ' / 7', 'étapes réussies') + kpi(d.tickets || 0, 'tickets 🎟️ gagnés') + '</div><dl class="units">' + GSTEPS.map(([k, n]) => '<dt>' + n + '</dt><dd>' + (st[k] ? '★'.repeat(st[k]) + '☆'.repeat(3 - st[k]) : '—') + '</dd>').join('') + '<dt>Figures à revoir</dt><dd>' + (review.length ? review.join(', ') : '—') + '</dd></dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
+}
 function verbesCard(S){
   const p = prog(S, 'Salma', 'salma-verbes');
   const d = p && p.data ? p.data['salma-verbes'] : null;
@@ -249,7 +258,7 @@ function show(S){
     '<article class="child essil"><header><h2>Essil</h2><span>Allemand · Latin</span><span>· ' + lastSeen(S, 'Essil') + '</span></header><div class="subjects">' +
       courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + legendesCard(S, 'Essil') + ludoCard(S, 'Essil') + '</div></article>' +
     '<article class="child salma"><header><h2>Salma</h2><span>Anglais · Français · Maths · Exposé</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
-      salmaCard(S) + verbesCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + ludoCard(S, 'Salma') + '</div></article>' +
+      salmaCard(S) + verbesCard(S) + formesCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + ludoCard(S, 'Salma') + '</div></article>' +
     '<article class="child amine"><header><h2>Amine</h2><span>Jeux · Grande section</span><span>· ' + lastSeen(S, 'Amine') + '</span></header><div class="subjects">' +
       serpentCard(S, 'Amine') + ecritureCard(S) + legendesCard(S, 'Amine') + ludoCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') + '</div></article>' +
     '<section class="panel"><h2>🏆 Serpentin : les records de tout le monde</h2>' + (variants.length

@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>L'Atelier des Formes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%94%B7%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* L'Atelier des Verbes reprend le monde du Jardin des Nombres (ciel, herbe, Ollie).
+   Ancien commentaire du Jardin : le monde de Salma (ciel, herbe, Ollie la chouette) — accueil = chemin de 8 étapes ; exercice = Ollie qui parle,
+   la soustraction posée sur une feuille de cahier à petits carreaux, retenues au stylo rouge, grand pavé de chiffres pour la tablette. */
+:root{
+  --sky:#7cc8f2; --sky2:#b8e4fb; --grass:#5dbb63; --grass2:#3f9a48;
+  --card:#ffffff; --ink:#23324a; --soft:#566781;
+  --coral:#ff6b5b; --coral-deep:#c8473a; --sun:#ffc93c; --plum:#7a4fe0; --mint:#1fa98e; --mint-deep:#147a66;
+  --paper:#fdfdf8; --grid:#cfe0f3; --margin:#f19a9a; --pen:#24407e; --red:#d32f2f;
+  --display:"Baloo 2","Comic Sans MS","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Trebuchet MS",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;margin:0}
+body{font-family:var(--body);color:var(--ink);font-size:18px;line-height:1.4;
+  background:linear-gradient(var(--sky) 0%,var(--sky2) 62%,var(--grass) 62%,var(--grass2) 100%) fixed;background-color:var(--sky)}
+::selection{background:var(--sun);color:var(--ink)}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:4px solid var(--plum);outline-offset:3px}
+[hidden]{display:none!important}
+.wrap{max-width:980px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(36px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:16px}
+
+/* barre du haut */
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{background:var(--card);border-radius:999px;min-height:48px;padding:10px 18px;font-weight:800;font-size:17px;box-shadow:0 4px 0 #0002;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.chip.round{width:48px;padding:0;justify-content:center;font-size:22px}
+.stars{margin-left:auto;font-family:var(--display);font-size:21px;font-variant-numeric:tabular-nums}
+
+/* Ollie et sa bulle */
+.teacher{display:flex;align-items:flex-end;gap:10px}
+.owl{width:96px;flex:none;transform-origin:50% 100%}
+.owl.talk{animation:bob .5s ease-in-out 2}
+@keyframes bob{50%{transform:translateY(-6px) rotate(-3deg)}}
+.bubble{position:relative;background:var(--card);border-radius:22px;padding:14px 18px;font-size:clamp(18px,2.4vw,22px);font-weight:800;box-shadow:0 5px 0 #0002;min-width:0;flex:1}
+.bubble::before{content:"";position:absolute;left:-14px;bottom:22px;border:10px solid transparent;border-right:16px solid var(--card)}
+.bubble b.n{font-family:var(--display);color:var(--pen);font-size:1.15em}
+.bubble b.r{color:var(--red)}
+.bubble small{display:block;font-weight:600;color:var(--soft);font-size:.82em;margin-top:4px}
+
+h1{font-family:var(--display);font-weight:800;font-size:clamp(36px,6.5vw,62px);line-height:1;margin:0;color:#fff;text-shadow:0 4px 0 #2a7fb4;text-wrap:balance}
+.lead{margin:6px 0 0;color:#fff;font-weight:800;font-size:19px;text-shadow:0 2px 0 #2a7fb4}
+
+/* chemin des étapes */
+.path{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:620px){.path{grid-template-columns:1fr}}
+.step{background:var(--card);border-radius:24px;padding:14px 16px;display:flex;align-items:center;gap:14px;text-align:left;box-shadow:0 6px 0 var(--edge,#0002);transition:transform .12s;min-width:0}
+.step:hover:not(:disabled){transform:translateY(-3px)}
+.step:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 var(--edge,#0002)}
+.step .ic{font-size:40px;line-height:1;width:58px;height:58px;display:grid;place-items:center;border-radius:18px;background:#eef7ff;flex:none}
+.step .tx{min-width:0;flex:1}
+.step .num{font-weight:800;color:var(--soft);font-size:14px}
+.step b{display:block;font-family:var(--display);font-size:23px;line-height:1.1}
+.step .sub{color:var(--soft);font-size:15px}
+.step .st{font-size:20px;letter-spacing:1px;color:#e0a100;white-space:nowrap}
+.step:disabled{opacity:.62;cursor:not-allowed}
+.step.next{outline:4px solid var(--sun);outline-offset:2px}
+
+/* cahier à petits carreaux */
+.sheet{--sq:clamp(46px,9vw,66px);align-self:center;background-color:var(--paper);
+  background-image:linear-gradient(90deg,transparent calc(var(--sq)*.9 - 1px),var(--margin) calc(var(--sq)*.9 - 1px),var(--margin) calc(var(--sq)*.9 + 1px),transparent calc(var(--sq)*.9 + 1px)),
+   linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:100% 100%,calc(var(--sq)/2) calc(var(--sq)/2),calc(var(--sq)/2) calc(var(--sq)/2);
+  border-radius:10px;box-shadow:0 10px 24px -10px rgba(20,40,70,.45),0 2px 0 #0001;padding:calc(var(--sq)*.35) calc(var(--sq)*.6) calc(var(--sq)*.4) calc(var(--sq)*1.3);display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap}
+.op{display:grid;grid-template-columns:var(--sq) repeat(var(--n),var(--sq));grid-auto-rows:auto;font-family:var(--display);font-weight:800;color:var(--pen);font-variant-numeric:tabular-nums}
+.op .lab{font-family:var(--body);font-size:15px;color:#7e8ca3;text-align:center;font-weight:800;height:26px}
+.op .cell{position:relative;height:var(--sq);display:grid;place-items:center;font-size:calc(var(--sq)*.72);line-height:1;border-radius:10px;transition:background .2s}
+.op .cell.on{background:rgba(255,201,60,.38)}
+.op .minus{font-size:calc(var(--sq)*.7)}
+.op .bar{grid-column:1 / -1;height:4px;background:var(--pen);border-radius:2px;margin:4px 0 6px}
+.op .res{border:3px dashed transparent}
+.op .res.on{border-color:var(--sun);background:#fff8de}
+.op .res.ok{color:var(--mint-deep)}
+.op .res.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.op .mk{position:absolute;font-size:calc(var(--sq)*.34);color:var(--red);font-family:var(--body);font-weight:800;line-height:1;animation:pen .5s cubic-bezier(.16,1,.3,1)}
+.op .mk.top{left:2px;top:6px}
+.op .mk.bot{left:calc(var(--sq)*-.14);top:calc(var(--sq)*-.06)}
+@keyframes pen{from{transform:scale(2.2);opacity:0}}
+.proof{font-family:var(--display);font-size:20px;color:var(--soft);text-align:center;margin:0}
+.proof b{color:var(--mint-deep)}
+
+/* boutons de réponse et pavé */
+.zone{display:flex;flex-direction:column;gap:12px;align-items:center}
+.choices{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:var(--display);font-weight:800;font-size:22px;min-height:56px;padding:10px 26px;border-radius:20px;background:var(--card);color:var(--ink);box-shadow:0 6px 0 #0002}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #0002}
+.btn.go{background:var(--coral);color:#fff;box-shadow:0 6px 0 var(--coral-deep)}
+.btn.ok{background:var(--mint-deep);color:#fff;box-shadow:0 6px 0 #0d5244}
+.btn.red{background:#fff;color:var(--red);border:3px solid var(--red)}
+.btn.red[aria-pressed="true"]{background:var(--red);color:#fff}
+.btn:disabled{opacity:.4}
+.pad{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:min(100%,520px)}
+.pad button{font-family:var(--display);font-weight:800;font-size:32px;height:64px;border-radius:18px;background:var(--card);color:var(--pen);box-shadow:0 5px 0 #0002}
+.pad button:active{transform:translateY(4px);box-shadow:0 1px 0 #0002}
+.tools{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:14px;height:14px;border-radius:50%;background:#fff8;box-shadow:inset 0 0 0 2px #fff}
+.dots i.done{background:var(--mint)}
+.dots i.now{background:var(--sun)}
+.hops{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-family:var(--display);font-weight:800}
+.hops span{background:#fff;border-radius:12px;padding:4px 10px;color:var(--pen);box-shadow:0 3px 0 #0002}
+.hops span.f{background:#eef7ff;color:var(--soft)}
+
+/* leçon */
+.card{background:var(--card);border-radius:24px;padding:18px 20px;box-shadow:0 6px 0 #0002;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+.ages{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;font-family:var(--display);font-weight:800;font-size:26px}
+.ages div{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ages .e{font-size:54px;line-height:1}
+.rule{background:#fff8de;border:3px solid var(--sun);border-radius:18px;padding:12px 16px;font-weight:800;font-size:20px;max-width:560px}
+
+/* résultats */
+.result{align-items:center;text-align:center}
+.result .big{font-size:64px;letter-spacing:6px;color:#e0a100;line-height:1}
+.problem{font-size:clamp(19px,2.6vw,23px);font-weight:800;max-width:640px}
+
+.float{position:fixed;font-size:38px;pointer-events:none;z-index:50;animation:rise 1.5s ease-out forwards}
+@keyframes rise{to{transform:translateY(-55vh) rotate(25deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------- reste du style de l'Atelier des Verbes ---------- */
+:root{ --g1:#2a7fb4; --g2:#c8473a; --g3:#147a66 }
+.g1{color:var(--g1)} .g2{color:var(--g2)} .g3{color:var(--g3)} .r{color:var(--red)}
+.tk{margin-left:10px;color:var(--plum)}
+.tools{margin-top:-4px}
+.tkbtn{background:var(--plum);color:#fff;box-shadow:0 6px 0 #4b2a9c;text-decoration:none;display:inline-flex;align-items:center}
+.card.ex{gap:18px}
+.verb{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,54px);line-height:1.1;color:var(--pen);text-align:center}
+.verb small{font-family:var(--body);font-size:.42em;color:var(--soft);font-weight:800}
+.verb.phrase{font-size:clamp(24px,4vw,34px);color:var(--ink);max-width:720px}
+.blank{display:inline-block;min-width:2.6em;border-bottom:5px dotted var(--sun);color:transparent;text-align:center}
+.blank.filled{color:var(--mint-deep);border-bottom-color:var(--mint);min-width:0}
+.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,560px)}
+.answers.ends{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ans{font-family:var(--display);font-weight:800;font-size:clamp(22px,3.2vw,28px);min-height:64px;padding:10px 14px;border-radius:20px;background:#f5f8fc;border:3px solid #dde6f2;color:var(--ink);box-shadow:0 5px 0 #0001}
+.ans:active:not(:disabled){transform:translateY(3px)}
+.ans.good{background:#dcf7ec;border-color:var(--mint);color:var(--mint-deep)}
+.ans.bad{background:#ffe3e0;border-color:var(--coral);color:var(--coral-deep)}
+.ans.shake{animation:shake .4s}
+.ans:disabled:not(.good):not(.bad){opacity:.55}
+.baskets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:100%}
+@media (max-width:560px){.baskets{grid-template-columns:1fr}}
+.bk{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:120px;font-size:22px}
+.bk .bi{font-size:44px;line-height:1}
+.bk small{font-family:var(--body);font-size:14px;color:var(--soft)}
+.g1b{border-color:#9fd0f0}.g2b{border-color:#ffb3a8}.g3b{border-color:#8fd8c3}
+.bubble .plus{display:inline-block;background:var(--plum);color:#fff;border-radius:999px;padding:0 10px;font-size:.85em}
+.help{margin:0;text-align:center;color:#fff;font-weight:800;text-shadow:0 2px 0 #2a7fb4}
+.rule{line-height:1.6}
+.fiche,.carnet{align-items:stretch;text-align:left}
+.fiche h2,.carnet h2{font-family:var(--display);margin:0;font-size:28px}
+.fiche h2 small{font-size:16px;background:var(--ink);color:#fff;border-radius:8px;padding:2px 8px;vertical-align:middle}
+.fiche p{margin:0;font-weight:700}
+.fiche .btn{align-self:flex-start}
+.gtab{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:620px){.gtab{grid-template-columns:1fr}}
+.gc{border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:4px;font-weight:700}
+.gc b{font-family:var(--display);font-size:22px}
+.gc span{font-family:var(--display);font-size:24px;font-weight:800}
+.g1c{background:#e4f3fd;color:#1d5c84}.g2c{background:#ffe9e5;color:#9a3328}.g3c{background:#dff5ee;color:#0f5c4c}
+.tscroll{overflow-x:auto;border-radius:14px;border:2px solid #dde6f2}
+.tscroll table{border-collapse:collapse;width:100%;min-width:640px;font-size:16px}
+.tscroll th,.tscroll td{padding:7px 10px;border-bottom:1px solid #e6edf6;text-align:center}
+.tscroll thead th{background:#eef4fb;font-size:14px}
+.tscroll tbody th{text-align:left;font-family:var(--display);color:var(--pen)}
+.prog{height:16px;border-radius:8px;background:#eef4fb;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--mint);border-radius:8px}
+.clist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.clist li{display:grid;grid-template-columns:32px 1fr auto auto;gap:10px;align-items:center;background:#f5f8fc;border-radius:12px;padding:8px 12px}
+.clist .st{color:#e0a100;letter-spacing:1px}
+.clist small{color:var(--soft);font-weight:700;min-width:70px;text-align:right}
+.vlist{display:flex;flex-wrap:wrap;gap:8px}
+.vk{background:#ffe9e5;color:#9a3328;border-radius:999px;padding:6px 14px;font-weight:800}
+.vk small{color:var(--soft);font-weight:700}
+.vk.ok{background:#dcf7ec;color:var(--mint-deep)}
+
+/* ---------- Atelier des Formes ---------- */
+.tk{margin-left:10px;color:var(--plum)}
+.tkbtn{background:var(--plum);color:#fff;box-shadow:0 6px 0 #4b2a9c;text-decoration:none;display:inline-flex;align-items:center}
+.card.ex{gap:16px}
+.fig{width:min(100%,460px);height:auto;max-height:46vh;touch-action:none;user-select:none;-webkit-user-select:none;background:var(--paper);border-radius:18px;box-shadow:inset 0 0 0 2px #dde6f2}
+.fig .f{fill:#e4f3fd;stroke:var(--pen);stroke-width:4;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.fig .f.open{fill:none}
+.fig .cod{fill:none;stroke:var(--red);stroke-width:2.5;vector-effect:non-scaling-stroke}
+.fig .vx{fill:var(--sun);stroke:#b07800;stroke-width:2;vector-effect:non-scaling-stroke}
+.fig .side{stroke:var(--mint);stroke-width:9;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.75}
+.fig .eq{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.fig .eq.good{stroke:var(--mint-deep)} .fig .eq.bad{stroke:var(--coral)}
+.fig text{font-family:var(--display);font-weight:800;fill:var(--pen);paint-order:stroke;stroke:#fff;stroke-width:.12;stroke-linejoin:round}
+.counter{font-family:var(--display);font-weight:800;font-size:26px;color:var(--pen)}
+.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,560px)}
+.answers.n4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:560px){.answers.n4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ans{font-family:var(--display);font-weight:800;font-size:clamp(20px,3vw,26px);min-height:64px;padding:10px 14px;border-radius:20px;background:#f5f8fc;border:3px solid #dde6f2;color:var(--ink);box-shadow:0 5px 0 #0001}
+.ans:active:not(:disabled){transform:translateY(3px)}
+.ans.good{background:#dcf7ec;border-color:var(--mint);color:var(--mint-deep)}
+.ans.bad{background:#ffe3e0;border-color:var(--coral);color:var(--coral-deep)}
+.ans.shake{animation:shake .4s}
+.ans:disabled:not(.good):not(.bad){opacity:.55}
+.ans.thumb{padding:6px;display:grid;place-items:center}
+.ans.thumb svg{width:100%;height:auto;max-height:130px;background:none;box-shadow:none}
+.riddle{font-family:var(--display);font-weight:800;font-size:clamp(22px,3.4vw,30px);color:var(--pen);max-width:640px;line-height:1.25}
+.two{display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%}
+.two .fig{width:min(100%,360px);max-height:40vh}
+.desc{display:grid;grid-template-columns:auto auto;gap:10px 16px;align-items:center;justify-items:start;font-weight:800;font-size:20px}
+.desc .lab{justify-self:end;text-align:right}
+.stepper{display:inline-flex;align-items:center;gap:8px;border-radius:18px;padding:4px;border:3px solid transparent}
+.stepper button{width:52px;height:52px;border-radius:16px;background:#eef4fb;font-size:28px;font-weight:800;color:var(--pen)}
+.stepper output{font-family:var(--display);font-size:32px;min-width:44px;text-align:center;color:var(--pen)}
+.seg{display:inline-flex;gap:8px;flex-wrap:wrap;border-radius:18px;padding:4px;border:3px solid transparent}
+.seg button{min-height:52px;padding:6px 16px;border-radius:16px;background:#eef4fb;font-weight:800;font-size:18px;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--pen);color:#fff}
+.stepper.bad,.seg.bad{border-color:var(--coral);background:#ffe3e0}
+.stepper.good,.seg.good{border-color:var(--mint);background:#dcf7ec}
+.fixme{grid-column:2;color:var(--coral-deep);font-size:16px;margin-top:-6px}
+.rule{line-height:1.6}
+.help{margin:0;text-align:center;color:#fff;font-weight:800;text-shadow:0 2px 0 #2a7fb4}
+.bubble .plus{display:inline-block;background:var(--plum);color:#fff;border-radius:999px;padding:0 10px;font-size:.85em}
+
+/* l'ardoise à figures */
+.slate{width:min(100%,calc(56vh * 1.43 + 28px));min-width:min(100%,420px);border-radius:24px;padding:14px;background:linear-gradient(135deg,#a8743e,#7b4f26);box-shadow:0 10px 0 #5a3517,0 18px 30px -10px #0008;display:flex;flex-direction:column;gap:10px}
+.board{width:100%;height:auto;display:block;border-radius:12px;background:#24483a;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:inset 0 0 30px #0007}
+.board .node{fill:#ffffff66}
+.board .gl{stroke:#ffffff14;stroke-width:1;vector-effect:non-scaling-stroke}
+.board .node.on{fill:var(--sun)}
+.board .pend{fill:none;stroke:var(--sun);stroke-width:3;vector-effect:non-scaling-stroke}
+.board .chalk{stroke:#f7f5ee;stroke-width:5;stroke-linecap:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 2px #fff6)}
+.board .rubber{stroke:#f7f5ee99;stroke-width:4;stroke-dasharray:8 8;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.board .fill{fill:#ffe06622}
+.board .ok{stroke:#7dffb0;fill:none;stroke-width:3;vector-effect:non-scaling-stroke}
+.board .ko{stroke:#ff6b5b;fill:none;stroke-width:5;vector-effect:non-scaling-stroke}
+.board .kofill{fill:#ff6b5b}
+.board text{font-family:var(--display);font-weight:800;fill:#ffe066}
+.slate .tools{margin:0}
+.slate .btn{min-height:52px;font-size:19px;padding:8px 18px}
+.goal{font-family:var(--display);font-weight:800;font-size:clamp(20px,3vw,26px);color:#fff;background:#0003;border-radius:14px;padding:8px 14px;text-align:center}
+.fiche,.carnet{align-items:stretch;text-align:left}
+.fiche h2,.carnet h2{font-family:var(--display);margin:0;font-size:28px}
+.fiche h2 small{font-size:16px;background:var(--ink);color:#fff;border-radius:8px;padding:2px 8px;vertical-align:middle}
+.fiche p{margin:0;font-weight:700}
+.fiche .btn{align-self:flex-start}
+.ftab{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:2px solid var(--ink);border-radius:12px;overflow:hidden}
+.ftab > div{border-right:2px solid var(--ink);display:flex;flex-direction:column}
+.ftab > div:last-child{border-right:0}
+.ftab svg{width:100%;height:auto;background:none;box-shadow:none;border-radius:0;max-height:none}
+.ftab span{border-top:2px solid var(--ink);padding:6px;text-align:center;font-weight:800}
+@media (max-width:560px){.ftab span{font-size:14px}}
+.defn{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.defn svg{width:220px;max-width:100%}
+.prog{height:16px;border-radius:8px;background:#eef4fb;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--mint);border-radius:8px}
+.clist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.clist li{display:grid;grid-template-columns:32px 1fr auto auto;gap:10px;align-items:center;background:#f5f8fc;border-radius:12px;padding:8px 12px}
+.clist .st{color:#e0a100;letter-spacing:1px}
+.clist small{color:var(--soft);font-weight:700;min-width:70px;text-align:right}
+.vlist{display:flex;flex-wrap:wrap;gap:8px}
+.vk{background:#ffe9e5;color:#9a3328;border-radius:999px;padding:6px 14px;font-weight:800}
+.vk small{color:var(--soft);font-weight:700}
+.vk.ok{background:#dcf7ec;color:var(--mint-deep)}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+/* ---------- Ollie, la chouette de Salma ---------- */
+const OWL = `<svg class="owl" viewBox="0 0 120 130" aria-hidden="true">
+  <ellipse cx="60" cy="124" rx="38" ry="5" fill="#0002"/>
+  <path d="M22 40 L30 14 L46 32 Z M98 40 L90 14 L74 32 Z" fill="#7a4b2a"/>
+  <ellipse cx="60" cy="74" rx="42" ry="50" fill="#9a6236"/>
+  <ellipse cx="60" cy="88" rx="28" ry="32" fill="#f3d9b1"/>
+  <path d="M44 84 q4 4 8 0 M56 92 q4 4 8 0 M68 84 q4 4 8 0 M50 100 q4 4 8 0 M62 100 q4 4 8 0" stroke="#d8b585" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="42" cy="52" r="17" fill="#fff"/><circle cx="78" cy="52" r="17" fill="#fff"/>
+  <circle cx="44" cy="54" r="8" fill="#23324a"/><circle cx="76" cy="54" r="8" fill="#23324a"/>
+  <circle cx="47" cy="51" r="2.5" fill="#fff"/><circle cx="79" cy="51" r="2.5" fill="#fff"/>
+  <path d="M54 64 L66 64 L60 74 Z" fill="#ffb02e"/>
+  <rect x="26" y="34" width="68" height="7" rx="3" fill="#23324a"/><path d="M36 34 L84 34 L60 20 Z" fill="#23324a"/>
+  <path d="M84 37 q10 6 6 18" stroke="#ffc93c" stroke-width="3" fill="none"/><circle cx="90" cy="56" r="4" fill="#ffc93c"/>
+  <path d="M18 74 q-6 22 10 34 M102 74 q6 22 -10 34" stroke="#7a4b2a" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M48 120 l-4 6 M52 120 l0 6 M68 120 l0 6 M72 120 l4 6" stroke="#ffb02e" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+
+/* ---------- outils ---------- */
+const app = document.getElementById('app');
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY = 'salma-geometrie';
+let data = { stars:{}, done:{}, tickets:0, figs:{}, t:0 };
+try{ Object.assign(data, JSON.parse(localStorage.getItem(KEY) || '{}')); }catch(e){}
+function save(){ data.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} }
+const totalStars = () => Object.values(data.stars).reduce((a,b) => a + b, 0);
+function note(tag, ok){ data.figs = data.figs || {}; const v = data.figs[tag] || (data.figs[tag] = { ok:0, ko:0 }); ok ? v.ok++ : v.ko++; }
+
+/* ---------- son et voix ---------- */
+let muted = false; try{ muted = localStorage.getItem(KEY + '-muet') === '1'; }catch(e){}
+let ac = null, frVoice = null;
+function tone(f,d,t=0,type='triangle',vol=.12){ if(muted) return; try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); const o=ac.createOscillator(),g=ac.createGain(),s=ac.currentTime+t; o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g).connect(ac.destination);o.start(s);o.stop(s+d+.02); }catch(e){} }
+const sfx = { ok(){ tone(660,.12); tone(880,.16,.08); }, no(){ tone(240,.25,0,'sine',.1); }, tap(){ tone(900,.05,0,'triangle',.06); }, ticket(){ tone(1046,.08,0,'square',.05); tone(1318,.1,.07,'square',.05); }, win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.22,i*.1)); } };
+function pickVoice(){ try{ const vs = speechSynthesis.getVoices(); frVoice = vs.find(v=>/^fr[-_]FR/i.test(v.lang)) || vs.find(v=>/^fr/i.test(v.lang)) || null; }catch(e){} }
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(html){
+  talk();
+  if(muted || !('speechSynthesis' in window)) return;
+  const t = String(html).replace(/<small>.*?<\/small>/g,'').replace(/<[^>]+>/g,'').replace(/_{2,}/g,' ... ').replace(/«|»/g,'').replace(/🎟️|⭐/g,'');
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='fr-FR'; if(frVoice) u.voice=frVoice; u.rate=.95; u.pitch=1.1; speechSynthesis.speak(u); }catch(e){}
+}
+function hush(){ try{ speechSynthesis.cancel(); }catch(e){} }
+function talk(){ document.querySelectorAll('.owl').forEach(o => { o.classList.remove('talk'); void o.offsetWidth; o.classList.add('talk'); }); }
+function confetti(){ for(let i=0;i<10;i++){ const s=document.createElement('span'); s.className='float'; s.textContent=pick(['⭐','🎟️','🔷','📐','🎉']); s.style.left=rnd(5,90)+'vw'; s.style.top=rnd(55,90)+'vh'; s.style.animationDelay=(i*60)+'ms'; document.body.appendChild(s); setTimeout(()=>s.remove(),1800); } }
+
+function topbar(back){
+  return `<div class="top">
+    ${back ? `<button class="chip" id="back">← L'atelier</button>` : `<a class="chip" href="./">← Espace Salma</a>`}
+    <button class="chip round" id="mute" aria-label="${muted ? 'Activer' : 'Couper'} le son">${muted ? '🔇' : '🔊'}</button>
+    <div class="chip stars" aria-label="Étoiles et tickets">⭐ ${totalStars()} <span class="tk">🎟️ ${data.tickets}</span></div></div>`;
+}
+function wireTop(back){
+  const b = document.getElementById('back'); if(b) b.onclick = () => { sfx.tap(); hush(); (back || home)(); };
+  document.getElementById('mute').onclick = e => { muted = !muted; try{ localStorage.setItem(KEY+'-muet', muted?'1':'0'); }catch(_){} e.currentTarget.textContent = muted ? '🔇' : '🔊'; if(muted) hush(); };
+}
+const teacher = html => `<div class="teacher">${OWL}<div class="bubble" id="say" aria-live="polite">${html}</div></div>`;
+function say(html, voice=true){ const s = document.getElementById('say'); if(s) s.innerHTML = html; if(voice) speak(html); }
+
+/* =====================================================================
+   La géométrie (leçon GEOM 6 du cahier de Salma : les polygones)
+   ===================================================================== */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+const crs = (a, b) => a[0] * b[1] - a[1] * b[0];
+const len = a => Math.hypot(a[0], a[1]);
+const EPS = 1e-6;
+function area2(P){ let s = 0; for(let i = 0; i < P.length; i++){ const a = P[i], b = P[(i + 1) % P.length]; s += a[0] * b[1] - a[1] * b[0]; } return s; }
+// angles droits « rentrants » seulement (un coin creux de 270° n'est pas un angle droit de la figure)
+function rightAngles(P){
+  const o = Math.sign(area2(P));
+  return P.map((v, i) => { const a = sub(P[(i + P.length - 1) % P.length], v), b = sub(P[(i + 1) % P.length], v);
+    return Math.abs(dot(a, b)) < EPS * Math.max(1, len(a) * len(b)) && Math.sign(crs(sub(v, P[(i + P.length - 1) % P.length]), sub(P[(i + 1) % P.length], v))) === o; });
+}
+function sides(P){ return P.map((v, i) => len(sub(P[(i + 1) % P.length], v))); }
+const allEqual = L => L.every(x => Math.abs(x - L[0]) < 1e-6 * Math.max(1, L[0]));
+function polyName(n, nr, eq){
+  if(n === 3) return nr === 1 ? 'triangle rectangle' : 'triangle';
+  if(n === 4) return nr === 4 ? (eq ? 'carré' : 'rectangle') : eq ? 'losange' : 'quadrilatère';
+  return ({ 5:'pentagone', 6:'hexagone', 7:'heptagone', 8:'octogone' })[n] || `polygone à ${n} côtés`;
+}
+const ART = { 'triangle rectangle':'un', triangle:'un', carré:'un', rectangle:'un', losange:'un', quadrilatère:'un', pentagone:'un', hexagone:'un', heptagone:'un', octogone:'un' };
+const withArt = nm => (ART[nm] ? ART[nm] + ' ' : 'un ') + nm;
+function rotate(P, deg){
+  const c = P.reduce((s, p) => [s[0] + p[0] / P.length, s[1] + p[1] / P.length], [0, 0]), r = deg * Math.PI / 180, cs = Math.cos(r), sn = Math.sin(r);
+  return P.map(p => { const x = p[0] - c[0], y = p[1] - c[1]; return [c[0] + x * cs - y * sn, c[1] + x * sn + y * cs]; });
+}
+function regular(n, r = 3, start = -90){ return Array.from({ length:n }, (_, i) => { const a = (start + i * 360 / n) * Math.PI / 180; return [r * Math.cos(a), r * Math.sin(a)]; }); }
+function star(){ return Array.from({ length:10 }, (_, i) => { const a = (-90 + i * 36) * Math.PI / 180, r = i % 2 ? 1.3 : 3.2; return [r * Math.cos(a), r * Math.sin(a)]; }); }
+
+/* ---------- la bibliothèque de figures ---------- */
+const KINDS = {
+  carre:     () => { const s = rnd(3, 5); return [[0,0],[s,0],[s,s],[0,s]]; },
+  rectangle: () => { const w = rnd(4, 7), h = rnd(2, w - 1); return [[0,0],[w,0],[w,h],[0,h]]; },
+  trirect:   () => { const a = rnd(3, 6), b = rnd(3, 5); return pick([[[0,0],[a,0],[0,b]], [[0,0],[a,0],[a,b]]]); },
+  triangle:  () => pick([[[0,0],[6,0],[4,4]], [[0,0],[5,0],[2,4]], [[0,0],[6,0],[1,3]], regular(3, 3)]),
+  quad:      () => pick([[[0,0],[5,0],[6,4],[1,3]], [[0,0],[6,0],[4,3],[0,3]], [[0,3],[2,0],[4,3],[2,6]], [[0,0],[4,1],[5,4],[1,5]]]),
+  penta:     () => pick([regular(5), [[0,2],[2,0],[4,2],[4,5],[0,5]], [[0,0],[5,0],[6,3],[3,5],[0,3]]]),
+  hexa:      () => pick([regular(6), [[0,0],[4,0],[4,2],[2,2],[2,5],[0,5]], [[1,0],[4,0],[5,2],[4,4],[1,4],[0,2]]]),
+  octo:      () => regular(8),
+  etoile:    () => star()
+};
+function makeFig(kind, deg){
+  const base = KINDS[kind](), P = deg ? rotate(base, deg) : base, R = rightAngles(base), L = sides(base);
+  const nr = R.filter(Boolean).length;
+  return { kind, base, P, R, L, n:base.length, nr, eq:allEqual(L), name:polyName(base.length, nr, allEqual(L)) };
+}
+const tilt = () => pick([0, 0, 15, -20, 30, 45, -35, 60, 90]);
+
+/* ---------- dessin d'une figure en SVG ---------- */
+function vb(P, pad = .9){
+  const xs = P.map(p => p[0]), ys = P.map(p => p[1]), x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad, w = Math.max(...xs) - x0 + pad, h = Math.max(...ys) - y0 + pad;
+  return [x0, y0, w, h];
+}
+function codage(P, R, k = .14){
+  const m = Math.min(...sides(P)) * k;
+  return R.map((r, i) => { if(!r) return ''; const v = P[i], a = P[(i + P.length - 1) % P.length], b = P[(i + 1) % P.length], u = sub(a, v), w = sub(b, v), lu = len(u), lw = len(w);
+    const p1 = [v[0] + u[0] / lu * m, v[1] + u[1] / lu * m], p3 = [v[0] + w[0] / lw * m, v[1] + w[1] / lw * m], p2 = [p1[0] + p3[0] - v[0], p1[1] + p3[1] - v[1]];
+    return `<polyline class="cod" points="${[p1, p2, p3].map(p => p.join(',')).join(' ')}"/>`; }).join('');
+}
+const ptsStr = P => P.map(p => p.map(x => +x.toFixed(3)).join(',')).join(' ');
+function figSVG(f, o = {}){
+  const box = vb(f.P, o.pad ?? 1);
+  return `<svg class="fig" ${o.id ? `id="${o.id}"` : ''} viewBox="${box.join(' ')}" role="img" aria-label="${o.label || 'une figure'}">
+    <polygon class="f" points="${ptsStr(f.P)}"/>${o.cod ? codage(f.P, f.R) : ''}<g class="layer"></g></svg>`;
+}
+// figures qui ne sont pas des polygones (dessinées dans un carré de 10)
+const NOTPOLY = [
+  { d:'M5 1 A4 4 0 1 1 4.99 1 Z', why:"C'est un <b>cercle</b> : il n'a que des courbes, pas de segments.", tag:'cercle' },
+  { d:'M2 2 L8 2 L8 8 L2 8', open:true, why:"La figure n'est <b>pas fermée</b> : il manque un côté.", tag:'ouverte' },
+  { d:'M2 8 L2 2 A6 6 0 0 1 8 8 Z', why:"Un de ses côtés est <b>courbe</b> : ce n'est pas un segment.", tag:'courbe' },
+  { d:'M1 8 L3 2 L5 8 L7 2 L9 8', open:true, why:"La figure n'est <b>pas fermée</b> : c'est une ligne brisée.", tag:'ouverte' },
+  { d:'M5 9 L1.5 4.5 A2.4 2.4 0 0 1 5 2.6 A2.4 2.4 0 0 1 8.5 4.5 Z', why:"Le cœur a des côtés <b>courbes</b>.", tag:'courbe' },
+  { d:'M2 3 L8 3 L5 9 Z M2 3 A3 2 0 0 1 8 3', why:"Le cornet a un bord <b>courbe</b> : la boule de glace n'est pas un segment.", tag:'courbe' },
+  { d:'M2 2 L8 2 L8 8 L3 8', open:true, why:"Les deux bouts ne se touchent pas : la figure n'est <b>pas fermée</b>.", tag:'ouverte' },
+  { d:'M1 5 Q5 0 9 5 Q5 10 1 5 Z', why:"La figure a des côtés <b>courbes</b>.", tag:'courbe' }
+];
+function pathSVG(o){ return `<svg class="fig" viewBox="0 0 10 10" role="img" aria-label="une figure"><path class="f ${o.open ? 'open' : ''}" d="${o.d}"/></svg>`; }
+function svgPoint(svg, e){ const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+const pxPerUnit = svg => { const m = svg.getScreenCTM(); return m ? Math.hypot(m.a, m.b) : 40; };
+function addSVG(svg, html){ svg.querySelector('.layer').insertAdjacentHTML('beforeend', html); }
+function distSeg(p, a, b){ const ab = sub(b, a), t = Math.max(0, Math.min(1, dot(sub(p, a), ab) / dot(ab, ab))); return len(sub(p, [a[0] + ab[0] * t, a[1] + ab[1] * t])); }
+const nice = x => Math.abs(x - Math.round(x)) < 1e-6 ? String(Math.round(x)) : x.toFixed(1).replace('.', ',');
+
+/* ---------- les 7 étapes + l'ardoise ---------- */
+const CH = [
+  { id:'polygone', icon:'🔷', name:'Polygone ou pas ?', sub:'Fermée, avec des segments', n:10, edge:'#5dbb63', make:mkPoly,
+    rule:`Un <b>polygone</b> est une figure <b>fermée</b> dont <b>tous les côtés sont des segments</b> (des traits droits).<br>❌ Pas fermée → pas un polygone.<br>❌ Un côté courbe (un rond) → pas un polygone.` },
+  { id:'compter', icon:'👆', name:'Sommets et côtés', sub:'Compter sans en oublier', n:6, edge:'#ffc93c', make:mkCount,
+    rule:`Un <b>sommet</b>, c'est une pointe de la figure. Un <b>côté</b>, c'est un segment entre deux sommets.<br>👆 Touche <b>chaque sommet</b> pour le marquer : tu n'en oublies aucun !<br>Un polygone a toujours <b>autant de côtés que de sommets</b>.` },
+  { id:'angles', icon:'📐', name:"La chasse à l'angle droit", sub:"Avec l'équerre", n:6, edge:'#7cc8f2', make:mkAngles,
+    rule:`Pour savoir si un angle est <b>droit</b>, on pose l'<b>équerre</b> dans le coin.<br>Si l'équerre colle parfaitement aux deux côtés, l'angle est droit. On le code avec un <b class="r">petit carré</b>.<br>Touche un coin pour y poser l'équerre !` },
+  { id:'regle', icon:'📏', name:'Carré ou rectangle ?', sub:'Mesurer les côtés', n:6, edge:'#ff6b5b', make:mkRuler,
+    rule:`Le <b>rectangle</b> et le <b>carré</b> ont tous les deux 4 côtés et <b>4 angles droits</b>.<br>La différence : le carré a <b>4 côtés égaux</b>.<br>📏 Touche les côtés pour les mesurer avec la règle.<br>⚠️ Une figure penchée reste la même figure !` },
+  { id:'devinette', icon:'❓', name:'Qui suis-je ?', sub:'Les devinettes', n:8, edge:'#7a4fe0', make:mkRiddle,
+    rule:`Lis bien chaque indice : le nombre de <b>sommets</b>, de <b>côtés</b>, d'<b>angles droits</b>, et si les côtés sont <b>égaux</b>.` },
+  { id:'decris', icon:'📝', name:'Décris-moi !', sub:'Le vocabulaire précis', n:6, edge:'#1fa98e', make:mkDescribe,
+    rule:`Pour <b>décrire</b> un polygone, je dis :<br>combien il a de <b>sommets</b>, de <b>côtés</b> et d'<b>angles droits</b>, si ses côtés sont <b>égaux</b>, puis son <b>nom</b>.<br>Les petits carrés rouges montrent les angles droits.` },
+  { id:'construis', icon:'🖍️', name:'Construis-la !', sub:"Sur l'ardoise", n:5, edge:'#9a6236', make:mkBuild,
+    rule:`Sur l'ardoise, relie les points pour tracer ta figure :<br>👆 <b>glisse ton doigt</b> d'un point à un autre, ou <b>touche un point puis un autre</b>.<br>Pense à <b>fermer</b> ta figure, puis touche <b>✔ Corrige-moi</b>.` }
+];
+const unlocked = i => i === 0 || (data.stars[CH[i-1].id] || 0) > 0;
+
+function mkPoly(){
+  const yes = shuffle(['carre','rectangle','triangle','penta','hexa','etoile','quad','trirect']).slice(0, 5).map(k => ({ t:'poly', fig:makeFig(k, tilt()) }));
+  const no = shuffle(NOTPOLY).slice(0, 5).map(o => ({ t:'poly', np:o }));
+  return shuffle([...yes, ...no]);
+}
+function mkCount(){ return shuffle(['triangle','quad','penta','hexa','octo','etoile']).map(k => ({ t:'count', fig:makeFig(k, tilt()) })); }
+function mkAngles(){ return shuffle(['carre','rectangle','trirect','triangle','quad','penta']).map(k => ({ t:'angles', fig:k === 'quad' ? figOfName('quadrilatère') : makeFig(k, tilt()) })); }
+function mkRuler(){
+  const sq = s => ({ base:[[0,0],[s,0],[s,s],[0,s]] }), rc = (w, h) => ({ base:[[0,0],[w,0],[w,h],[0,h]] });
+  const list = [sq(rnd(3,5)), sq(4), sq(rnd(3,5)), rc(5, 4), rc(6, 5), rc(rnd(5,7), rnd(2,3))].map((f, i) => { f.P = rotate(f.base, [45, 0, 20, 0, -30, 60][i]); f.R = [true, true, true, true]; f.L = sides(f.base); f.eq = allEqual(f.L); f.name = f.eq ? 'carré' : 'rectangle'; f.n = 4; f.nr = 4; return { t:'ruler', fig:f }; });
+  return shuffle(list);
+}
+const RIDDLES = {
+  'carré':['J\'ai <b>4 sommets</b> et <b>4 angles droits</b>. Mes <b>4 côtés sont égaux</b>.', 'Je suis un quadrilatère avec 4 angles droits et tous mes côtés ont la même longueur.'],
+  'rectangle':['J\'ai <b>4 côtés</b> et <b>4 angles droits</b>, mais mes côtés <b>ne sont pas tous égaux</b>.', 'J\'ai 4 angles droits. Deux de mes côtés sont longs, deux sont courts.'],
+  'triangle rectangle':['J\'ai <b>3 sommets</b>, <b>3 côtés</b> et <b>1 angle droit</b>.', 'Je suis un triangle, et un de mes coins est un angle droit.'],
+  'triangle':['J\'ai <b>3 côtés</b> et <b>aucun angle droit</b>.'],
+  'pentagone':['J\'ai <b>5 sommets</b> et <b>5 côtés</b>.'],
+  'hexagone':['J\'ai <b>6 côtés</b>. Je ressemble à une alvéole d\'abeille.'],
+  'quadrilatère':['J\'ai <b>4 côtés</b>, mais <b>seulement 2 angles droits</b>.']
+};
+const KIND_OF = { 'carré':'carre', rectangle:'rectangle', 'triangle rectangle':'trirect', triangle:'triangle', pentagone:'penta', hexagone:'hexa', 'quadrilatère':'quad' };
+const CONFUSE = { 'carré':['rectangle','quadrilatère','triangle rectangle','pentagone'], rectangle:['carré','quadrilatère','triangle rectangle'], 'triangle rectangle':['triangle','rectangle','carré'],
+  triangle:['triangle rectangle','quadrilatère','pentagone'], pentagone:['hexagone','quadrilatère','rectangle'], hexagone:['pentagone','quadrilatère','carré'], 'quadrilatère':['rectangle','carré','triangle rectangle'] };
+function figOfName(nm){
+  if(nm === 'quadrilatère'){ const base = [[0,0],[6,0],[4,3],[0,3]], f = { base, P:rotate(base, pick([0, 15, -20])), R:rightAngles(base), L:sides(base), n:4, nr:2, name:nm, kind:'quad' }; return f; }
+  for(let k = 0; k < 30; k++){ const f = makeFig(KIND_OF[nm], tilt()); if(f.name === nm) return f; }
+  return makeFig(KIND_OF[nm], 0);
+}
+function mkRiddle(){
+  const names = shuffle(['carré','rectangle','triangle rectangle','carré','rectangle','triangle','pentagone','hexagone','quadrilatère','triangle rectangle']).slice(0, 8);
+  return names.map(nm => ({ t:'riddle', nm, txt:pick(RIDDLES[nm]), opts:shuffle([nm, ...shuffle(CONFUSE[nm]).slice(0, 3)]).map(n => ({ nm:n, fig:figOfName(n) })) }));
+}
+function mkDescribe(){ return shuffle(['carre','rectangle','trirect','carre','rectangle','penta','triangle','trirect']).slice(0, 6).map(k => { let f; for(let j = 0; j < 20; j++){ f = makeFig(k, tilt()); if(k !== 'triangle' || f.nr === 0) break; } return { t:'describe', fig:f }; }); }
+function mkBuild(){ return [GOALS.carre3, GOALS.rect52, GOALS.trirect, GOALS.penta, pick([GOALS.carrePenche, GOALS.trirect43, GOALS.hexa])].map(g => ({ t:'build', g })); }
+
+/* ---------- une séance ---------- */
+let S = null;
+function start(i){
+  const c = CH[i];
+  S = { i, c, k:0, errors:0, earned:0, list:c.make() };
+  app.innerHTML = topbar(true) + teacher(`Avant de commencer, voici la règle de l'étape <b class="n">${c.name}</b>.`) +
+    `<div class="card"><div class="rule">${c.rule}</div><button class="btn go" id="go">J'ai compris, on y va !</button></div>`;
+  wireTop(); speak(`Voici la règle. ` + c.rule);
+  document.getElementById('go').onclick = () => { sfx.tap(); hush(); next(); };
+}
+function dots(){ return `<div class="dots" aria-label="Question ${S.k+1} sur ${S.list.length}">${S.list.map((_, j) => `<i class="${j < S.k ? 'done' : j === S.k ? 'now' : ''}"></i>`).join('')}</div>`; }
+function frame(q, body, help){
+  app.innerHTML = topbar(true) + teacher(q) + `<div class="card ex">${body}</div>` + (help ? `<p class="help">${help}</p>` : '') + dots();
+  wireTop(); speak(q);
+}
+function next(){
+  if(S.k >= S.list.length) return finish();
+  const q = S.list[S.k];
+  ({ poly:askPoly, count:askCount, angles:askAngles, ruler:askRuler, riddle:askRiddle, describe:askDescribe, build:askBuild })[q.t](q);
+}
+function answered(ok, tag, expl, btn, goodSel){
+  app.querySelectorAll('.ans').forEach(x => { x.disabled = true; if(goodSel && x.matches(goodSel)) x.classList.add('good'); });
+  if(ok){ S.earned++; data.tickets++; sfx.ok(); setTimeout(sfx.ticket, 220); if(btn) btn.classList.add('good'); }
+  else { S.errors++; sfx.no(); if(btn){ btn.classList.add('bad'); btn.classList.add('shake'); } }
+  note(tag, ok); save();
+  const tk = app.querySelector('.tk'); if(tk) tk.textContent = '🎟️ ' + data.tickets;
+  say((ok ? pick(['Bravo !', 'Exactement !', 'Super, Salma !', 'Oui !', 'Parfait !']) + ' <span class="plus">+1 🎟️</span> ' : 'Pas tout à fait. ') + expl);
+  const card = app.querySelector('.card.ex');
+  card.insertAdjacentHTML('beforeend', `<button class="btn ok" id="nx">${S.k + 1 < S.list.length ? 'Suivant →' : 'Terminer'}</button>`);
+  const nx = document.getElementById('nx'); nx.focus({ preventScroll:true }); setTimeout(() => nx.scrollIntoView({ block:'nearest', behavior:'smooth' }), 150);
+  nx.onclick = () => { sfx.tap(); hush(); S.k++; next(); };
+}
+
+/* 1. Polygone ou pas ? */
+function askPoly(q){
+  frame(`Cette figure est-elle un <b>polygone</b> ?`, `${q.np ? pathSVG(q.np) : figSVG(q.fig)}
+    <div class="answers"><button class="ans" data-v="1">✅ C'est un polygone</button><button class="ans" data-v="0">❌ Pas un polygone</button></div>`);
+  const good = q.np ? '0' : '1';
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = b.dataset.v === good;
+    const expl = q.np ? q.np.why : `Elle est <b>fermée</b> et tous ses côtés sont des <b>segments</b> : c'est un polygone${q.fig.kind === 'etoile' ? ' (même l\'étoile !)' : ''}.`;
+    answered(ok, q.np ? 'pas un polygone' : 'polygone', expl, b, `[data-v="${good}"]`);
+  });
+}
+/* 2. Sommets et côtés */
+function askCount(q){
+  const f = q.fig;
+  frame(`Touche <b>chaque sommet</b> de la figure pour le compter.`, `${figSVG(f, { id:'fg' })}<div class="counter" id="cnt">0 sommet</div><div id="zone"></div>`);
+  const svg = document.getElementById('fg'), seen = new Set();
+  const ask = () => {
+    say(`Tu as trouvé les <b>${f.n} sommets</b> ! Et combien a-t-elle de <b>côtés</b> ?`);
+    const opts = shuffle([f.n, f.n - 1, f.n + 1, f.n === 3 ? 5 : f.n - 2].filter((v, i, a) => v >= 3 && a.indexOf(v) === i)).slice(0, 4);
+    if(!opts.includes(f.n)) opts[0] = f.n;
+    document.getElementById('zone').innerHTML = `<div class="answers n4">${opts.map(v => `<button class="ans" data-v="${v}">${v} côtés</button>`).join('')}</div>`;
+    app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+      const ok = +b.dataset.v === f.n;
+      f.P.forEach((p, i) => { const r = f.P[(i + 1) % f.n]; addSVG(svg, `<line class="side" x1="${p[0]}" y1="${p[1]}" x2="${r[0]}" y2="${r[1]}"/>`); });
+      answered(ok, f.name, `${f.n} sommets et <b>${f.n} côtés</b> : un polygone a autant de côtés que de sommets. C'est ${withArt(f.name)}${f.kind === 'etoile' ? ' (une étoile à 10 côtés)' : ''}.`, b, `[data-v="${f.n}"]`);
+    });
+  };
+  svg.addEventListener('pointerdown', e => {
+    if(seen.size >= f.n) return;
+    const p = svgPoint(svg, e), u = pxPerUnit(svg); let best = -1, bd = 1e9;
+    f.P.forEach((v, i) => { const d = len(sub([p.x, p.y], v)); if(d < bd){ bd = d; best = i; } });
+    if(bd * u > 46){ sfx.no(); say('Touche bien une <b>pointe</b> de la figure.', false); return; }
+    if(seen.has(best)){ say('Celui-là, tu l\'as déjà compté !', false); return; }
+    seen.add(best); sfx.tap();
+    const v = f.P[best], r = 14 / u;
+    addSVG(svg, `<circle class="vx" cx="${v[0]}" cy="${v[1]}" r="${r}"/><text x="${v[0]}" y="${v[1] + r * .4}" font-size="${r * 1.2}" text-anchor="middle">${seen.size}</text>`);
+    document.getElementById('cnt').textContent = `${seen.size} sommet${seen.size > 1 ? 's' : ''}`;
+    if(seen.size === f.n) setTimeout(ask, 400);
+  });
+}
+/* 3. La chasse à l'angle droit */
+function equerre(svg, f, i){
+  const v = f.P[i], a = f.P[(i + f.n - 1) % f.n], b = f.P[(i + 1) % f.n], u = sub(b, v), lu = len(u), m = Math.min(...f.L) * .42;
+  const ux = [u[0] / lu, u[1] / lu], w = sub(a, v), s = Math.sign(crs(u, w)) || 1, px = [-ux[1] * s, ux[0] * s];
+  const p1 = [v[0] + ux[0] * m, v[1] + ux[1] * m], p3 = [v[0] + px[0] * m, v[1] + px[1] * m];
+  addSVG(svg, `<polygon class="eq ${f.R[i] ? 'good' : 'bad'}" points="${ptsStr([p1, v, p3])}" style="fill:${f.R[i] ? '#1fa98e33' : '#ff6b5b33'}"/>`);
+}
+function askAngles(q){
+  const f = q.fig, tried = new Set();
+  frame(`Pose l'<b>équerre</b> dans les coins, puis dis-moi : combien d'<b>angles droits</b> ?`, `${figSVG(f, { id:'fg' })}
+    <div class="answers n4">${[0,1,2,3,4,5].filter(v => v <= f.n).slice(0, 5).map(v => `<button class="ans" data-v="${v}">${v}</button>`).join('')}</div>`, `Touche un coin pour y poser l'équerre 📐`);
+  const svg = document.getElementById('fg');
+  svg.addEventListener('pointerdown', e => {
+    if(app.querySelector('#nx')) return;
+    const p = svgPoint(svg, e), u = pxPerUnit(svg); let best = -1, bd = 1e9;
+    f.P.forEach((v, i) => { const d = len(sub([p.x, p.y], v)); if(d < bd){ bd = d; best = i; } });
+    if(bd * u > 60 || tried.has(best)) return;
+    tried.add(best); equerre(svg, f, best);
+    if(f.R[best]){ sfx.ok(); say('L\'équerre colle bien : <b>angle droit</b> !', false); } else { sfx.no(); say('L\'équerre ne colle pas : <b>pas un angle droit</b>.', false); }
+  });
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = +b.dataset.v === f.nr;
+    f.P.forEach((_, i) => { if(!tried.has(i)) equerre(svg, f, i); });
+    answered(ok, f.name, `Cette figure a <b>${f.nr} angle${f.nr > 1 ? 's' : ''} droit${f.nr > 1 ? 's' : ''}</b>. C'est ${withArt(f.name)}.`, b, `[data-v="${f.nr}"]`);
+  });
+}
+/* 4. Carré ou rectangle ? */
+function askRuler(q){
+  const f = q.fig, measured = new Set();
+  frame(`Carré ou rectangle ? Touche les <b>côtés</b> pour les mesurer 📏`, `${figSVG(f, { id:'fg', cod:true, pad:1.6 })}
+    <div class="answers"><button class="ans" data-v="carré" disabled>C'est un carré</button><button class="ans" data-v="rectangle" disabled>C'est un rectangle</button></div>`, 'Mesure au moins deux côtés qui se touchent.');
+  const svg = document.getElementById('fg');
+  const label = i => { const a = f.P[i], b = f.P[(i + 1) % 4], c = f.P.reduce((s, p) => [s[0] + p[0] / 4, s[1] + p[1] / 4], [0, 0]), m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], o = sub(m, c), lo = len(o), u = pxPerUnit(svg);
+    const t = [m[0] + o[0] / lo * (26 / u), m[1] + o[1] / lo * (26 / u) + 7 / u];
+    addSVG(svg, `<line class="side" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/><text x="${t[0]}" y="${t[1]}" font-size="${22 / u}" text-anchor="middle">${nice(f.L[i])} cm</text>`); };
+  svg.addEventListener('pointerdown', e => {
+    if(app.querySelector('#nx')) return;
+    const p = svgPoint(svg, e), u = pxPerUnit(svg); let best = -1, bd = 1e9;
+    f.P.forEach((v, i) => { const d = distSeg([p.x, p.y], v, f.P[(i + 1) % 4]); if(d < bd){ bd = d; best = i; } });
+    if(bd * u > 40 || measured.has(best)) return;
+    measured.add(best); sfx.tap(); label(best);
+    const adj = [...measured].some(i => measured.has((i + 1) % 4));
+    if(adj) app.querySelectorAll('.ans').forEach(b => b.disabled = false);
+  });
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    if(b.disabled) return;
+    const ok = b.dataset.v === f.name;
+    [0,1,2,3].forEach(i => { if(!measured.has(i)){ measured.add(i); label(i); } });
+    answered(ok, f.name, f.eq ? `Ses 4 côtés mesurent <b>${nice(f.L[0])} cm</b> : ils sont égaux. C'est un <b>carré</b>${Math.abs(rotAngle(f)) > 1 ? ', même penché !' : '.'}` : `Ses côtés mesurent <b>${nice(f.L[0])} cm</b> et <b>${nice(f.L[1])} cm</b> : ils ne sont pas tous égaux. C'est un <b>rectangle</b>.`, b, `[data-v="${f.name}"]`);
+  });
+}
+const rotAngle = f => Math.atan2(f.P[1][1] - f.P[0][1], f.P[1][0] - f.P[0][0]) * 180 / Math.PI % 90;
+/* 5. Qui suis-je ? */
+function askRiddle(q){
+  frame(`Devinette : qui suis-je ?`, `<div class="riddle">${q.txt}</div>
+    <div class="answers">${q.opts.map((o, i) => `<button class="ans thumb" data-v="${esc(o.nm)}" aria-label="figure ${i + 1}">${figSVG(o.fig, { cod:true, pad:.8 })}</button>`).join('')}</div>`, 'Les petits carrés rouges montrent les angles droits.');
+  say(q.txt + ' <small>Touche la bonne figure.</small>');
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const ok = b.dataset.v === q.nm;
+    answered(ok, q.nm, `C'est ${withArt(q.nm)} !`, b, `[data-v="${CSS.escape(q.nm)}"]`);
+  });
+}
+/* 6. Décris-moi ! */
+function askDescribe(q){
+  const f = q.fig, names = ['triangle rectangle', 'rectangle', 'carré', 'un autre polygone'];
+  const goodName = ['triangle rectangle', 'rectangle', 'carré'].includes(f.name) ? f.name : 'un autre polygone';
+  const st = { s:3, c:3, a:0, e:null, n:null };
+  const stepper = (k, lab) => `<span class="lab">${lab}</span><span class="stepper" data-k="${k}"><button aria-label="moins">−</button><output>${st[k]}</output><button aria-label="plus">+</button></span>`;
+  frame(`Décris cette figure avec le <b>vocabulaire précis</b>.`, `<div class="two">${figSVG(f, { cod:true })}
+    <div class="desc">${stepper('s', 'Sommets')}${stepper('c', 'Côtés')}${stepper('a', 'Angles droits')}
+      <span class="lab">Côtés égaux ?</span><span class="seg" data-k="e"><button data-v="1">Tous égaux</button><button data-v="0">Pas tous égaux</button></span>
+      <span class="lab">C'est un…</span><span class="seg" data-k="n" style="max-width:360px">${names.map(n => `<button data-v="${n}">${n}</button>`).join('')}</span></div></div>
+    <button class="btn go" id="check">✔ Vérifier</button>`);
+  app.querySelectorAll('.stepper').forEach(sp => { const k = sp.dataset.k, out = sp.querySelector('output'), [m, p] = sp.querySelectorAll('button');
+    m.onclick = () => { sfx.tap(); st[k] = Math.max(0, st[k] - 1); out.textContent = st[k]; sp.className = 'stepper'; };
+    p.onclick = () => { sfx.tap(); st[k] = Math.min(10, st[k] + 1); out.textContent = st[k]; sp.className = 'stepper'; }; });
+  app.querySelectorAll('.seg').forEach(sg => sg.querySelectorAll('button').forEach(b => b.onclick = () => { sfx.tap(); sg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); st[sg.dataset.k] = b.dataset.v; sg.className = 'seg'; }));
+  document.getElementById('check').onclick = () => {
+    if(st.e === null || st.n === null){ say('Réponds à toutes les lignes de la fiche !'); return; }
+    const want = { s:f.n, c:f.n, a:f.nr, e:f.eq ? '1' : '0', n:goodName };
+    let wrong = 0;
+    Object.keys(want).forEach(k => { const el = app.querySelector(`[data-k="${k}"]`), ok = String(st[k]) === String(want[k]); el.classList.add(ok ? 'good' : 'bad'); if(!ok) wrong++; });
+    app.querySelectorAll('.desc button, #check').forEach(b => b.disabled = true);
+    const fiche = `${f.n} sommets, ${f.n} côtés${f.eq ? ' égaux' : ''}, ${f.nr} angle${f.nr > 1 ? 's' : ''} droit${f.nr > 1 ? 's' : ''} : c'est ${withArt(f.name)}.`;
+    answered(wrong === 0, f.name, wrong ? `La bonne fiche : <b>${fiche}</b>` : `<b>${fiche}</b>`);
+  };
+}
+
+/* ---------- l'ardoise à figures ---------- */
+const COLS = 13, ROWS = 9;
+const key = p => p[0] + ',' + p[1], unkey = k => k.split(',').map(Number);
+function analyse(segs){
+  if(!segs.length) return { err:'vide' };
+  const adj = new Map(); const link = (a, b) => { if(!adj.has(a)) adj.set(a, []); adj.get(a).push(b); };
+  segs.forEach(([a, b]) => { link(a, b); link(b, a); });
+  const open = [...adj].filter(([, v]) => v.length === 1).map(([k]) => k), branch = [...adj].filter(([, v]) => v.length > 2).map(([k]) => k);
+  if(open.length) return { err:'ouvert', pts:open };
+  if(branch.length) return { err:'branche', pts:branch };
+  const s0 = adj.keys().next().value, order = [s0]; let prev = null, cur = s0;
+  for(;;){ const nx = adj.get(cur).find(x => x !== prev); if(nx === s0) break; order.push(nx); prev = cur; cur = nx; if(order.length > adj.size) break; }
+  if(order.length !== adj.size) return { err:'plusieurs' };
+  const P0 = order.map(unkey), m = P0.length;
+  const inter = (a, b, c, d) => { const d1 = crs(sub(b, a), sub(c, a)), d2 = crs(sub(b, a), sub(d, a)), d3 = crs(sub(d, c), sub(a, c)), d4 = crs(sub(d, c), sub(b, c)); return d1 * d2 < 0 && d3 * d4 < 0; };
+  for(let i = 0; i < m; i++) for(let j = i + 2; j < m; j++){ if(i === 0 && j === m - 1) continue; if(inter(P0[i], P0[(i + 1) % m], P0[j], P0[(j + 1) % m])) return { err:'croise', seg:[i, j], P0 }; }
+  const P = P0.filter((v, i) => Math.abs(crs(sub(v, P0[(i + m - 1) % m]), sub(P0[(i + 1) % m], v))) > EPS);
+  if(P.length < 3) return { err:'plat' };
+  const R = rightAngles(P), L = sides(P), nr = R.filter(Boolean).length, eq = allEqual(L);
+  return { P, R, L, n:P.length, nr, eq, name:polyName(P.length, nr, eq), axis:P.every((v, i) => { const d = sub(P[(i + 1) % P.length], v); return d[0] === 0 || d[1] === 0; }) };
+}
+function describe(r){
+  return `Ta figure a <b>${r.n} sommets</b>, <b>${r.n} côtés</b>${r.eq ? ' <b>égaux</b>' : ''} et <b>${r.nr} angle${r.nr > 1 ? 's' : ''} droit${r.nr > 1 ? 's' : ''}</b> : c'est <b>${withArt(r.name)}</b>.`;
+}
+const carreaux = x => nice(x) + (Math.abs(x - Math.round(x)) < 1e-6 ? ' carreau' + (Math.round(x) > 1 ? 'x' : '') : '');
+const sortedL = r => [...r.L].sort((a, b) => a - b);
+const GOALS = {
+  carre3:     { txt:'un carré de 3 carreaux de côté', ok:r => r.name === 'carré' && Math.abs(r.L[0] - 3) < 1e-6,
+                why:r => r.name !== 'carré' ? `Il me faut un <b>carré</b> : 4 angles droits et 4 côtés égaux.` : `C'est bien un carré, mais ses côtés mesurent ${carreaux(r.L[0])}. Il en faut <b>3</b>.` },
+  rect52:     { txt:'un rectangle de 5 carreaux sur 2', ok:r => r.name === 'rectangle' && Math.abs(sortedL(r)[0] - 2) < 1e-6 && Math.abs(sortedL(r)[3] - 5) < 1e-6,
+                why:r => r.name !== 'rectangle' ? `Il me faut un <b>rectangle</b> : 4 angles droits, 2 côtés longs et 2 côtés courts.` : `C'est un rectangle de ${carreaux(sortedL(r)[3])} sur ${carreaux(sortedL(r)[0])}. Il faut <b>5 sur 2</b>.` },
+  trirect:    { txt:'un triangle rectangle', ok:r => r.name === 'triangle rectangle',
+                why:r => r.n !== 3 ? `Un triangle a <b>3 côtés</b>, le tien en a ${r.n}.` : `Ton triangle n'a pas d'angle droit. Trace deux côtés qui suivent les lignes du quadrillage, l'un tout droit vers le bas, l'autre vers le côté.` },
+  trirect43:  { txt:'un triangle rectangle dont les côtés de l\'angle droit mesurent 4 et 3 carreaux', ok:r => r.name === 'triangle rectangle' && (() => { const i = r.R.indexOf(true), a = r.L[(i + r.n - 1) % r.n], b = r.L[i]; return [a, b].sort().join() === [3, 4].join(); })(),
+                why:r => r.name !== 'triangle rectangle' ? `Il me faut un <b>triangle rectangle</b> (3 côtés, 1 angle droit).` : `C'est bien un triangle rectangle ! Mais les côtés de l'angle droit doivent mesurer <b>4 et 3 carreaux</b>.` },
+  penta:      { txt:'un pentagone (5 côtés)', ok:r => r.n === 5, why:r => `Ta figure a ${r.n} côtés. Un pentagone en a <b>5</b>.` },
+  hexa:       { txt:'un hexagone (6 côtés)', ok:r => r.n === 6, why:r => `Ta figure a ${r.n} côtés. Un hexagone en a <b>6</b>.` },
+  carrePenche:{ txt:'un carré penché (ses côtés ne suivent pas les lignes)', ok:r => r.name === 'carré' && !r.axis,
+                why:r => r.name === 'carré' ? `C'est un beau carré, mais il est droit. Penche-le : par exemple, avance de 2 carreaux et monte de 1 pour chaque côté.` : `Il me faut un <b>carré</b>, penché : 4 côtés égaux et 4 angles droits. Astuce : 2 à droite et 1 en haut, puis 1 à gauche et 2 en haut…` },
+  rectNonCarre:{ txt:'un rectangle qui n\'est pas un carré', ok:r => r.name === 'rectangle', why:r => r.name === 'carré' ? `Ça, c'est un carré ! Fais un côté plus long que l'autre.` : `Il me faut <b>4 angles droits</b>, avec des côtés pas tous égaux.` }
+};
+const ERRS = { vide:"Ton ardoise est vide ! Relie des points pour tracer ta figure.", ouvert:"Ta figure n'est <b>pas fermée</b> : les points en rouge ne sont reliés qu'à un seul trait.", branche:"Trop de traits partent des points en rouge : un sommet relie <b>exactement 2 côtés</b>.", plusieurs:"Tu as dessiné <b>plusieurs figures</b>. Garde-en une seule !", croise:"Deux côtés <b>se croisent</b> (en rouge). Trace une figure sans croisement.", plat:"Ta figure est toute plate ! Il faut au moins 3 sommets." };
+
+function slateHTML(goal){
+  let g = '';
+  for(let x = 0; x < COLS; x++) g += `<line class="gl" x1="${x}" y1="0" x2="${x}" y2="${ROWS - 1}"/>`;
+  for(let y = 0; y < ROWS; y++) g += `<line class="gl" x1="0" y1="${y}" x2="${COLS - 1}" y2="${y}"/>`;
+  for(let y = 0; y < ROWS; y++) for(let x = 0; x < COLS; x++) g += `<circle class="node" cx="${x}" cy="${y}" r=".08"/>`;
+  return `<div class="slate">${goal ? `<div class="goal">✏️ Trace ${goal.txt}</div>` : ''}
+    <svg class="board" id="board" viewBox="-.6 -.6 ${COLS - 1 + 1.2} ${ROWS - 1 + 1.2}" role="img" aria-label="Ardoise quadrillée : relie les points pour tracer une figure">
+      <g id="gfill"></g><g>${g}</g><g id="gseg"></g><g id="gfix"></g><line id="rubber" class="rubber" x1="0" y1="0" x2="0" y2="0" visibility="hidden"/><circle id="pend" class="pend" r=".28" visibility="hidden"/></svg>
+    <div class="tools"><button class="btn" id="undo">↶ Annuler</button><button class="btn" id="clear">🧽 Effacer</button><button class="btn go" id="fix">✔ Corrige-moi</button></div></div>`;
+}
+function slateWire(onCheck){
+  const svg = document.getElementById('board'), segs = [];
+  let pending = null, drag = null;
+  const nodeAt = e => { const p = svgPoint(svg, e), x = Math.round(p.x), y = Math.round(p.y); if(x < 0 || y < 0 || x >= COLS || y >= ROWS) return null; return Math.hypot(p.x - x, p.y - y) < .42 ? key([x, y]) : null; };
+  const draw = () => {
+    document.getElementById('gseg').innerHTML = segs.map(([a, b]) => { const A = unkey(a), B = unkey(b); return `<line class="chalk" x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}"/>`; }).join('');
+    document.getElementById('gfix').innerHTML = ''; document.getElementById('gfill').innerHTML = '';
+    const pd = document.getElementById('pend'); if(pending){ const P = unkey(pending); pd.setAttribute('cx', P[0]); pd.setAttribute('cy', P[1]); pd.setAttribute('visibility', 'visible'); } else pd.setAttribute('visibility', 'hidden');
+  };
+  const addSeg = (a, b) => { if(a === b || segs.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) return; segs.push([a, b]); sfx.tap(); };
+  svg.addEventListener('pointerdown', e => { const n = nodeAt(e); if(!n) return; e.preventDefault(); try{ svg.setPointerCapture(e.pointerId); }catch(_){} drag = n; });
+  svg.addEventListener('pointermove', e => { if(!drag) return; const p = svgPoint(svg, e), A = unkey(drag), r = document.getElementById('rubber');
+    r.setAttribute('x1', A[0]); r.setAttribute('y1', A[1]); r.setAttribute('x2', p.x); r.setAttribute('y2', p.y); r.setAttribute('visibility', 'visible'); });
+  svg.addEventListener('pointerup', e => {
+    document.getElementById('rubber').setAttribute('visibility', 'hidden');
+    const n = nodeAt(e), from = drag; drag = null; if(!from) return;
+    if(n && n !== from){ addSeg(from, n); pending = n; }
+    else if(n === from){ if(pending && pending !== from){ addSeg(pending, from); pending = from; } else pending = pending === from ? null : from; }
+    draw();
+  });
+  svg.addEventListener('pointercancel', () => { drag = null; document.getElementById('rubber').setAttribute('visibility', 'hidden'); });
+  document.getElementById('undo').onclick = () => { sfx.tap(); segs.pop(); pending = segs.length ? segs[segs.length - 1][1] : null; draw(); };
+  document.getElementById('clear').onclick = () => { sfx.tap(); segs.length = 0; pending = null; draw(); };
+  document.getElementById('fix').onclick = () => {
+    pending = null; draw();
+    const r = analyse(segs), fix = document.getElementById('gfix');
+    if(r.err){
+      if(r.pts) fix.innerHTML = r.pts.map(k => { const P = unkey(k); return `<circle class="kofill" cx="${P[0]}" cy="${P[1]}" r=".2"/>`; }).join('');
+      if(r.err === 'croise') fix.innerHTML = r.seg.map(i => { const a = r.P0[i], b = r.P0[(i + 1) % r.P0.length]; return `<line class="ko" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`; }).join('');
+    } else {
+      document.getElementById('gfill').innerHTML = `<polygon class="fill" points="${ptsStr(r.P)}"/>`;
+      fix.innerHTML = codage(r.P, r.R, .18).replace(/class="cod"/g, 'class="ok"') + r.P.map((v, i) => { const b = r.P[(i + 1) % r.n], c = r.P.reduce((s, p) => [s[0] + p[0] / r.n, s[1] + p[1] / r.n], [0, 0]), m = [(v[0] + b[0]) / 2, (v[1] + b[1]) / 2], o = sub(m, c), lo = len(o) || 1;
+        return `<text x="${m[0] + o[0] / lo * .45}" y="${m[1] + o[1] / lo * .45 + .14}" font-size=".42" text-anchor="middle">${nice(r.L[i])}</text>`; }).join('');
+    }
+    onCheck(r, segs);
+  };
+  draw();
+  return { segs, reset(){ segs.length = 0; pending = null; draw(); } };
+}
+/* 7. Construis-la ! */
+function askBuild(q){
+  let tries = 0;
+  frame(`Trace <b>${q.g.txt}</b> sur l'ardoise.`, slateHTML(q.g) + `<div id="zone"></div>`, 'Relie les points, ferme ta figure, puis touche ✔ Corrige-moi.');
+  slateWire(r => {
+    if(app.querySelector('#nx')) return;
+    if(r.err){ sfx.no(); say(ERRS[r.err]); return; }
+    if(q.g.ok(r)){ if(tries > 0) S.errors++; answered(true, r.name, `${describe(r)} C'est exactement ${q.g.txt} !`); return; }
+    tries++; sfx.no();
+    say(`${describe(r)} ${q.g.why(r)} Corrige ta figure et réessaie !`);
+    if(tries >= 2 && !document.getElementById('skip')){ document.getElementById('zone').innerHTML = `<button class="btn" id="skip">Je passe →</button>`;
+      document.getElementById('skip').onclick = () => { S.errors++; note(q.g.txt, false); save(); sfx.tap(); hush(); S.k++; next(); }; }
+  });
+}
+/* L'ardoise libre (accueil) */
+function slate(){
+  const goals = Object.values(GOALS); let goal = null;
+  const render = () => {
+    app.innerHTML = topbar(true) + teacher(goal ? `Défi : trace <b>${goal.txt}</b> !` : `Dessine la figure que tu veux en reliant les points. Je te dirai ce que c'est !`) +
+      slateHTML(goal) + `<div class="tools"><button class="btn tkbtn" id="defi">🎯 ${goal ? 'Un autre défi' : 'Donne-moi un défi'}</button>${goal ? `<button class="btn" id="libre">✏️ Dessin libre</button>` : ''}</div>`;
+    wireTop(); speak(document.getElementById('say').innerHTML);
+    document.getElementById('defi').onclick = () => { sfx.tap(); goal = pick(goals.filter(g => g !== goal)); render(); };
+    const lb = document.getElementById('libre'); if(lb) lb.onclick = () => { sfx.tap(); goal = null; render(); };
+    let done = false;
+    slateWire(r => {
+      if(r.err){ sfx.no(); say(ERRS[r.err]); return; }
+      if(!goal){ sfx.ok(); say(describe(r) + (r.name === 'carré' || r.name === 'rectangle' || r.name === 'triangle rectangle' ? ' Comme dans ta leçon !' : '')); return; }
+      if(goal.ok(r)){ if(!done){ done = true; data.tickets++; save(); const tk = app.querySelector('.tk'); if(tk) tk.textContent = '🎟️ ' + data.tickets; }
+        sfx.win(); confetti(); say(`${describe(r)} Défi réussi ! <span class="plus">+1 🎟️</span>`); note(goal.txt, true); save(); }
+      else { sfx.no(); say(`${describe(r)} ${goal.why(r)}`); }
+    });
+  };
+  render();
+}
+
+/* ---------- fin d'une étape ---------- */
+function finish(){
+  const total = S.list.length, good = total - S.errors, st = S.errors === 0 ? 3 : S.errors <= 2 ? 2 : 1;
+  const bonus = st === 3 ? 3 : 0;
+  data.stars[S.c.id] = Math.max(data.stars[S.c.id] || 0, st); data.done[S.c.id] = (data.done[S.c.id] || 0) + 1;
+  data.tickets += bonus; data.last = new Date().toISOString(); save();
+  sfx.win(); confetti();
+  const nextI = S.i + 1 < CH.length ? S.i + 1 : -1;
+  const msg = (st === 3 ? `Sans faute, Salma ! ` : `${good} bonnes réponses sur ${total}. `) + `Tu gagnes <b>${S.earned + bonus} tickets 🎟️</b>${bonus ? ' (dont 3 de bonus pour le sans-faute)' : ''}. Tu en as ${data.tickets} en tout pour Serpent Légendes !`;
+  app.innerHTML = topbar(true) + teacher(msg) +
+    `<div class="card result"><div class="big" aria-label="${st} étoiles sur 3">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>
+     <b style="font-family:var(--display);font-size:26px">${S.c.name}</b>
+     <div class="choices"><button class="btn" id="again">↻ Recommencer</button>${nextI >= 0 ? `<button class="btn go" id="nxt">Étape suivante →</button>` : `<button class="btn go" id="path">L'atelier</button>`}</div>
+     <a class="btn tkbtn" href="../jeux/serpent-legendes.html">🎟️ Dépenser mes tickets dans Serpent Légendes</a></div>`;
+  wireTop(); speak(msg);
+  document.getElementById('again').onclick = () => { sfx.tap(); start(S.i); };
+  const n = document.getElementById('nxt'); if(n) n.onclick = () => { sfx.tap(); start(nextI); };
+  const pth = document.getElementById('path'); if(pth) pth.onclick = () => { sfx.tap(); home(); };
+}
+
+/* =====================================================================
+   Accueil
+   ===================================================================== */
+function home(greet){
+  hush();
+  const next = CH.findIndex((c, i) => unlocked(i) && !(data.stars[c.id] > 0));
+  app.innerHTML = topbar(false) +
+    `<div><h1>L'Atelier des Formes</h1><p class="lead">Les polygones : décrire des polygones (leçon GEOM 6)</p></div>` +
+    teacher(next === 0 && !totalStars()
+      ? `Bonjour Salma ! Aujourd'hui, on devient des pros des <b>polygones</b> : sommets, côtés, angles droits, carrés et rectangles. Et tu as une <b>ardoise</b> pour dessiner tes figures ! Chaque bonne réponse te donne un <b>ticket 🎟️</b>.`
+      : next >= 0 ? `Tu as déjà <b>${data.tickets} tickets 🎟️</b>, Salma ! Ta prochaine étape : <b class="n">${CH[next].name}</b>.` : `Tu as fini tout l'atelier, Salma ! Refais les étapes pour gagner 3 étoiles partout, ou relève des défis sur ton ardoise.`) +
+    `<div class="tools"><button class="btn" id="fiche">📋 Ma leçon</button><button class="btn go" id="ardoise">🖍️ Mon ardoise</button><button class="btn" id="carnet">📈 Mon carnet</button><a class="btn tkbtn" href="../jeux/serpent-legendes.html">🎟️ ${data.tickets} → Serpent Légendes</a></div>` +
+    `<div class="path">${CH.map((c, i) => {
+      const s = data.stars[c.id] || 0, open = unlocked(i);
+      return `<button class="step${i === next ? ' next' : ''}" data-i="${i}" style="--edge:${c.edge}" ${open ? '' : 'disabled aria-disabled="true"'}>
+        <span class="ic" aria-hidden="true">${open ? c.icon : '🔒'}</span>
+        <span class="tx"><span class="num">Étape ${i+1}</span><b>${c.name}</b><span class="sub">${open ? c.sub : 'Termine l\'étape d\'avant'}</span></span>
+        <span class="st" aria-label="${s} étoiles sur 3">${'★'.repeat(s)}${'☆'.repeat(3-s)}</span></button>`; }).join('')}</div>`;
+  wireTop();
+  app.querySelectorAll('.step').forEach(b => b.onclick = () => { if(b.disabled) return; sfx.tap(); start(+b.dataset.i); });
+  document.getElementById('fiche').onclick = () => { sfx.tap(); fiche(); };
+  document.getElementById('ardoise').onclick = () => { sfx.tap(); slate(); };
+  document.getElementById('carnet').onclick = () => { sfx.tap(); carnet(); };
+  if(greet) speak(document.getElementById('say').innerHTML);
+}
+
+/* ---------- la leçon (GEOM 6) ---------- */
+function fiche(){
+  const pent = { P:regular(5, 3) }, rt = { base:[[0,0],[0,6],[4,6]] }, rc = { base:[[0,0],[6,0],[6,3],[0,3]] }, sq = { base:[[0,0],[4,0],[4,4],[0,4]] };
+  const cell = (b, deg, rows) => { const P = rotate(b, deg), f = { P, R:rightAngles(b) }; return `<div>${figSVG(f, { cod:true, pad:1 }).replace('class="fig"', 'class="fig" style="max-height:170px"')}${rows.map(r => `<span>${r}</span>`).join('')}</div>`; };
+  const pv = pent.P, sideMid = [(pv[3][0] + pv[4][0]) / 2, (pv[3][1] + pv[4][1]) / 2];
+  app.innerHTML = topbar(true) + teacher(`Voici ta leçon, comme dans ton cahier. Touche 🔊 pour que je la lise.`) +
+    `<div class="card fiche"><h2>Les polygones : décrire des polygones <small>GEOM 6</small></h2>
+      <div class="defn"><p style="flex:1;min-width:220px">Un <b>polygone</b> est une <b>figure fermée</b> dont <b>tous les côtés sont des segments</b>.<br><br>Pour décrire un polygone, je dois utiliser un <b>vocabulaire géométrique précis</b>.</p>
+      <svg class="fig" viewBox="-7.5 -4.4 17 8.6" role="img" aria-label="un pentagone : un côté, un sommet"><polygon class="f" points="${ptsStr(pv)}"/>
+        <circle class="vx" cx="${pv[1][0]}" cy="${pv[1][1]}" r=".28"/><text x="${pv[1][0] + .5}" y="${pv[1][1] - .4}" font-size=".95">un sommet</text>
+        <line class="side" x1="${pv[3][0]}" y1="${pv[3][1]}" x2="${pv[4][0]}" y2="${pv[4][1]}"/><text x="${sideMid[0] - 1}" y="${sideMid[1] + 1.4}" font-size=".95" text-anchor="end">un côté</text></svg></div>
+      <div class="ftab">${cell(rt.base, -25, ['3 sommets', '3 côtés', '1 angle droit', 'C\'est un <b>triangle rectangle</b>.'])}${cell(rc.base, -20, ['4 sommets', '4 côtés', '4 angles droits', 'C\'est un <b>rectangle</b>.'])}${cell(sq.base, 12, ['4 sommets', '4 côtés égaux', '4 angles droits', 'C\'est un <b>carré</b>.'])}</div>
+      <p>Les <b style="color:var(--red)">petits carrés rouges</b> codent les angles droits. On les vérifie avec l'<b>équerre</b>.</p>
+      <button class="btn" id="read">🔊 Lire</button></div>`;
+  wireTop();
+  document.getElementById('read').onclick = () => speak(`Les polygones. Un polygone est une figure fermée dont tous les côtés sont des segments. Les pointes s'appellent les sommets. Pour décrire un polygone, je dois utiliser un vocabulaire géométrique précis. Le triangle rectangle a 3 sommets, 3 côtés et 1 angle droit. Le rectangle a 4 sommets, 4 côtés et 4 angles droits. Le carré a 4 sommets, 4 côtés égaux et 4 angles droits.`);
+}
+
+/* ---------- le carnet ---------- */
+function carnet(){
+  const review = Object.entries(data.figs).filter(([, v]) => v.ko > 0).sort((a, b) => (b[1].ko - b[1].ok / 3) - (a[1].ko - a[1].ok / 3)).slice(0, 8);
+  const strong = Object.entries(data.figs).filter(([, v]) => v.ok >= 3 && v.ko === 0).map(([k]) => k);
+  const doneN = CH.filter(c => data.stars[c.id] > 0).length;
+  app.innerHTML = topbar(true) + teacher(`Voici ton carnet, Salma : <b>${doneN} étape${doneN > 1 ? 's' : ''} sur ${CH.length}</b>, ${totalStars()} étoiles et ${data.tickets} tickets 🎟️.`) +
+    `<div class="card carnet"><h2>Mes étapes</h2><div class="prog"><i style="width:${Math.round(doneN / CH.length * 100)}%"></i></div>
+      <ul class="clist">${CH.map(c => { const s = data.stars[c.id] || 0; return `<li><span aria-hidden="true">${c.icon}</span><b>${c.name}</b><span class="st">${'★'.repeat(s)}${'☆'.repeat(3-s)}</span><small>${data.done[c.id] ? data.done[c.id] + ' fois' : 'pas encore'}</small></li>`; }).join('')}</ul></div>
+    <div class="card carnet"><h2>Figures à revoir</h2>${review.length ? `<div class="vlist">${review.map(([k, v]) => `<span class="vk">${esc(k)} <small>${v.ok} ✔ · ${v.ko} ✘</small></span>`).join('')}</div>` : `<p>Rien à revoir pour l'instant. Bravo !</p>`}
+      ${strong.length ? `<h2>Figures maîtrisées</h2><div class="vlist">${strong.map(k => `<span class="vk ok">${esc(k)}</span>`).join('')}</div>` : ''}</div>`;
+  wireTop(); speak(document.getElementById('say').innerHTML);
+}
+
+/* ---------- démarrage : reprendre les progrès gardés sur le serveur (autre tablette) ---------- */
+home(false);
+window.__geo = { analyse, makeFig, rightAngles, start, get S(){ return S; }, get data(){ return data; }, slate, CH };
+if(window.Famille){
+  Famille.track('salma-geometrie', 'Salma', [KEY]);
+  Famille.load('salma-geometrie', 'Salma').then(r => {
+    const d = r && r[KEY];
+    if(d && (d.t || 0) > (data.t || 0) && (d.tickets || 0) >= (data.tickets || 0)){ data = Object.assign({ stars:{}, done:{}, tickets:0, figs:{} }, d); try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} if(!S) home(false); }
+  });
+}
+</script>
+</body></html>

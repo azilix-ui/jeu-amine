@@ -25,7 +25,7 @@ Ces fichiers `.md` sont bloqués en ligne par `.htaccess`. Une copie de cette fi
 | **Anis** | le papa, propriétaire du site (c'est lui qui parle à Claude) | vert sarcelle `#0f766e`, `jeux/avatars/anis.webp` |
 | **Imen** | la maman | framboise `#b4235a`, `jeux/avatars/imen.webp` |
 | **Essil** | 12 ans, collège : allemand, latin | bleu `#1f3c88` + rail rouge `#d7263d` |
-| **Salma** | 8 ans, CE2 : anglais, français, maths, exposé cheval | vert `#1f6b44` + ciel `#5aaedc` |
+| **Salma** | 8 ans, CE2 : anglais, français (conjugaison), maths (soustraction, géométrie), exposé cheval | vert `#1f6b44` + ciel `#5aaedc` |
 | **Amine** | 5 ans, grande section : jeux, écriture (Ardoise magique), derja tunisienne | nuit `#2a1f4f` + lune `#fff1bf` / citrouille `#ff8c1a` |
 
 Ordre d'affichage voulu : **Essil, Salma, Amine**. Les prénoms et les avatars peuvent apparaître sur le site (accord du papa).
@@ -39,7 +39,7 @@ famille.css            style commun accueil + espaces (version de cache : ?v=6)
 famille.js             module commun : « Qui joue ? », scores, classements, suivi et relecture des progrès
 progression.html       tableau de bord des parents (mot de passe parent)
 essil/  index.html, deutsch-express.html, via-romana.html
-salma/  index.html, english-garden.html, atelier-des-verbes.html, jardin-des-nombres.html, le-grand-galop.html, cheval/ (images et vidéos)
+salma/  index.html, english-garden.html, atelier-des-verbes.html, atelier-des-formes.html, jardin-des-nombres.html, le-grand-galop.html, cheval/ (images et vidéos)
 amine/  index.html, ardoise-magique.html (+ lettres.js : modèles des 78 lettres), la-nuit-d-amine.html, la-nuit-d-amine-2.html, nahki-tounsi.html, serpentin.html, voix/api.php
 jeux/   serpent-legendes.html, ludo-legendes.html, avatars/ (5 avatars, 15 cartes légendes, illustration du Ludo)
 lib/    three-0.170.0.module.min.js (Three.js, copié ici : aucune dépendance en ligne)
