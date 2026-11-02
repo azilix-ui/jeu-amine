@@ -95,6 +95,9 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .skin{position:relative;display:flex;flex-direction:column;gap:6px;align-items:stretch;text-align:left;background:var(--card);border-radius:20px;padding:10px;border:3px solid var(--line);min-height:120px}
 .skin .sw{height:44px;border-radius:22px;box-shadow:inset 0 -6px 0 #0003}
+.skin .art{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;display:block}
+.skin.locked .art{filter:grayscale(1) brightness(.4) blur(1.5px)}
+.skin .art + .sw{height:14px}
 .skin b{font-size:16px;line-height:1.1}
 .skin small{font-size:12px;font-weight:600}
 .skin.on{border-color:var(--gold);background:var(--card-hi)}
@@ -897,6 +900,7 @@ function buy(id){
   save(); sfx.win('epique'); prefs.world = it.world; store.set('serpent3d-prefs', prefs); buildWorld(it.world, DIFF[prefs.diff].wrap);
   toast(it.icon + ' ' + it.name + ' débloqué !'); renderColl();
 }
+const CARTES = new Set(['bleu','rose','orange','violet','menthe','zebre','abeille','pasteque','coccinelle','chat','arcenciel','lave','glace','galaxie','craie']);
 function openColl(){ state = 'menu'; renderColl(); show('coll'); }
 function renderColl(){
   $('cCoins').textContent = '🪙 ' + data.coins;
@@ -904,7 +908,7 @@ function renderColl(){
   const cards = (list) => `<div class="grid">${list.map(s => {
     const own = data.skins.includes(s.id), d = s.defi ? defiState(s) : null;
     return `<button class="skin ${own ? '' : 'locked'} ${data.skin === s.id ? 'on' : ''}" data-id="${s.id}" aria-label="${s.name}, ${RAR[s.rar].label}${own ? '' : ', pas encore gagné'}">
-      <span class="sw" style="background:${swatch(s)}"></span>${own ? '' : '<span class="lock" aria-hidden="true">🔒</span>'}
+      ${CARTES.has(s.id) ? `<img class="art" src="cartes/${s.id}.webp" alt="" loading="lazy" onerror="this.remove()">` : ''}<span class="sw" style="background:${swatch(s)}"></span>${own ? '' : '<span class="lock" aria-hidden="true">🔒</span>'}
       <b>${s.name}</b><small class="rar-${s.rar}">${RAR[s.rar].label}</small>
       ${d && !own ? `<span class="defi"><small style="color:var(--mist)">${s.defi.text}</small><span class="bar"><i style="width:${Math.round(d.v / d.goal * 100)}%"></i></span><small>${d.v}/${d.goal}</small></span>` : ''}</button>`; }).join('')}</div>`;
   $('collBody').innerHTML = `

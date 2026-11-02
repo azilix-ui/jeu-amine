@@ -93,13 +93,18 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
 .box h2{font-size:34px}
 .stars{font-size:62px;letter-spacing:6px;color:var(--gold);line-height:1}
 .card{width:190px;border-radius:20px;border:5px solid var(--rc,var(--gold));background:linear-gradient(170deg,#2b2457,#14102b);padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 0 34px var(--rc,#ffc93c88)}
-.card .sw{width:150px;height:150px;border-radius:50%;box-shadow:inset 0 -12px 0 #0003,0 8px 16px #0006}
+.card .sw{width:150px;height:150px;border-radius:16px;box-shadow:0 8px 16px #0006;background-size:cover;background-position:center;position:relative;overflow:hidden}
+.card .sw img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
+.card.locked .sw img{filter:grayscale(1) brightness(.4) blur(1.5px)}
+.card.locked .sw::after{content:'?';position:absolute;inset:0;display:grid;place-items:center;font:700 44px var(--display);color:#fff9}
+#intro{flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(10,8,24,.55)}
+#intro img{width:min(900px,100%);max-height:68vh;object-fit:cover;border-radius:28px;border:5px solid var(--gold);box-shadow:0 18px 50px #0009}
 .card b{font-family:var(--display);font-size:20px}
 .card small{font-weight:600}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;width:100%;overflow:auto;padding:4px}
 .cards .card{width:auto}
-.cards .card .sw{width:96px;height:96px}
-.cards .card.locked{filter:grayscale(1) brightness(.45)}
+.cards .card .sw{width:110px;height:110px}
+.cards .card.locked{filter:grayscale(.6) brightness(.7)}
 .bar{height:12px;border-radius:6px;background:#0006;overflow:hidden;width:100%}
 .bar i{display:block;height:100%;background:var(--gold)}
 .rays{position:fixed;inset:-50%;background:repeating-conic-gradient(from 0deg,var(--ray,#ffc93c22) 0 10deg,transparent 10deg 20deg);animation:spin 12s linear infinite;pointer-events:none}
@@ -123,6 +128,11 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
 <div id="stage" aria-hidden="true"></div>
 
 <!-- Accueil -->
+<div class="screen" id="intro">
+  <img src="ardoise-amine.webp" alt="Amine devant son ardoise magique, avec le serpent">
+  <button class="big alt" id="introGo" style="font-size:30px;padding:16px 40px">✍️ C'est parti !</button>
+</div>
+
 <div class="screen" id="home">
   <div class="top"><a class="back" href="./">← Les jeux d'Amine</a><div class="grp"><span class="pill gold" id="hStars">⭐ 0</span><span class="pill" id="hCards">🃏 0</span></div></div>
   <div class="title"><h1>L'Ardoise <span>magique</span></h1></div>
@@ -633,7 +643,7 @@ $('lesBack').onclick = () => { sfx.tap(); speechSynthesis && speechSynthesis.can
 
 /* ---------- cartes ---------- */
 function cardHTML(id, locked){ const c = CARDS.find(x => x[0] === id) || [id, id, 'commun'];
-  return `<div class="card ${locked ? 'locked' : ''}" style="--rc:${RARC[c[2]]}"><span class="sw" style="background:${locked ? '#444' : swatch(id)}"></span><b>${locked ? '?' : c[1]}</b><small style="color:${RARC[c[2]]}">${RARL[c[2]]}</small></div>`; }
+  return `<div class="card ${locked ? 'locked' : ''}" style="--rc:${RARC[c[2]]}"><span class="sw" style="background:${swatch(id)}"><img src="../jeux/cartes/${id}.webp" alt="" loading="lazy" onerror="this.remove()"></span><b>${locked ? '?' : c[1]}</b><small style="color:${RARC[c[2]]}">${RARL[c[2]]}</small></div>`; }
 function openCards(){
   const n = data.cards.length, tot = totalStars(), nextAt = (n + 1) * STARS_PER_CARD;
   $('cardBar').style.width = n >= CARDS.length ? '100%' : Math.round((tot - n * STARS_PER_CARD) / STARS_PER_CARD * 100) + '%';
@@ -680,7 +690,8 @@ function frame(now){
 buildFrame(); resize();
 const serp = store.get('serpent3d:Amine', null);
 paintSnake(serp && SKINCOL[serp.skin] ? serp.skin : 'vert');
-renderHome(); show('home'); requestAnimationFrame(frame);
+renderHome(); show('intro'); requestAnimationFrame(frame);
+$('introGo').onclick = () => { sfx.tap(); show('home'); speak("Bonjour Amine ! Choisis ton cahier."); };
 setTimeout(() => speak('Bonjour Amine ! Choisis : l\'écriture attachée, les majuscules, les minuscules, ou ton prénom.'), 600);
 if(window.Famille){
   try{ Famille.setPlayer && Famille.player() !== 'Amine' && null; }catch(e){}
