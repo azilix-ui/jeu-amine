@@ -31,7 +31,7 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 02/11 | Cartes rares : 4 mythiques (Amine, Salma, Essil, les 3 ensemble) + 4 secrètes | `jeux/cartes/{alphabet,polyglotte,hydre,aurore,tonnerre,arclune,tresor}.webp` | 16 |
 | | **Total** | | **269** |
 
-**À refaire** : la carte mythique de Salma (`verbes`) n'est pas publiée : la crête de plumes du serpent ressemblait à une coiffe amérindienne. Le jeu affiche la couleur du skin en attendant. Prompt à reprendre avec « a single white quill pen tucked behind its head » (2 crédits).
+La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 
 Originaux PNG sur le PC : `OneDrive\Amine\grande section\avatars serpent legendes\` (avatars, cartes, illustration ; sous-dossier `cartes ardoise\` pour les cartes des skins et les cartes rares) et `OneDrive\Salma etude\video-cheval\` (vidéos de Salma).
 
