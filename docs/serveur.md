@@ -11,12 +11,12 @@ Hébergement Hostinger (PHP + SQLite). Données hors du site public, à côté d
 ## `api/famille.php`
 
 - `GET ?action=ping` ; `GET ?action=highscores&game=G&variant=V&limit=N` ; `GET ?action=auth`.
-- `GET ?action=load&player=P&course=C` : relit les progrès gardés sur le serveur, **seulement pour les cours de `READABLE`** = `serpent3d`, `salma-verbes`, `ludo3d`.
+- `GET ?action=load&player=P&course=C` : relit les progrès gardés sur le serveur, **seulement pour les cours de `READABLE`** = `serpent3d`, `salma-verbes`, `ludo3d`, `amine-ecriture`.
 - `POST action=score` (player, game ∈ `GAMES` = serpentin, serpent3d, ludo3d ; variant ; score 0–5000).
 - `POST action=progress` (player, course ∈ `COURSES`, data JSON ≤ 30 000 caractères).
 - `POST action=setup` (création unique du mot de passe parent), `POST action=summary` (tout pour la page Progression, mot de passe parent).
 - Tables : `players`, `scores`, `progress` (dernier état par joueur et cours), `history` (un instantané par heure au plus), `writes` (anti-abus : **240 écritures par 10 min et par adresse** ; toute la maison partage souvent la même adresse).
-- `COURSES` : essil-deutsch, essil-latin, salma-english, salma-maths, salma-cheval, salma-verbes, amine-halloween, amine-tounsi, amine-serpentin, serpent3d, ludo3d.
+- `COURSES` : essil-deutsch, essil-latin, salma-english, salma-maths, salma-cheval, salma-verbes, amine-halloween, amine-tounsi, amine-serpentin, amine-ecriture, serpent3d, ludo3d.
 
 ## `api/ludo.php` (parties en ligne)
 
@@ -38,6 +38,7 @@ Hébergement Hostinger (PHP + SQLite). Données hors du site public, à côté d
 | `salma-maths`, `salma-cheval`, `salma-verbes` | idem | Salma |
 | `amine-bonbons` | amine-halloween | Amine |
 | `amine-tounsi-etoiles` | amine-tounsi | Amine |
+| `amine-ecriture` | amine-ecriture | Amine |
 | `serpentin-best`, `serpentin-pref` | (records `serpentin`) | — |
 | `serpent3d:<Prénom>` | serpent3d | chaque joueur |
 | `ludo3d:<Prénom>` | ludo3d | chaque joueur |
@@ -46,7 +47,7 @@ Synchronisation entre tablettes : pour les cours de `READABLE`, la page relit la
 
 ## `progression.html`
 
-Mot de passe parent (le même que les voix). Cartes : Essil (Deutsch, Latin, Serpentin, Serpent Légendes, Ludo), Salma (English Garden, Atelier des Verbes, Jardin des Nombres, Grand Galop, Serpentin, Serpent Légendes, Ludo), Amine (Serpentin, Serpent Légendes, Ludo, cagnotte, Nahki). Gains de la semaine, records Serpentin, dernières parties (tous jeux), autres joueurs (amis invités).
+Mot de passe parent (le même que les voix). Cartes : Essil (Deutsch, Latin, Serpentin, Serpent Légendes, Ludo), Salma (English Garden, Atelier des Verbes, Jardin des Nombres, Grand Galop, Serpentin, Serpent Légendes, Ludo), Amine (Ardoise magique, Serpentin, Serpent Légendes, Ludo, cagnotte, Nahki). Gains de la semaine, records Serpentin, dernières parties (tous jeux), autres joueurs (amis invités).
 
 **Mot de passe oublié** : supprimer `nahki-voix/auth.json` dans le gestionnaire de fichiers hPanel, puis en recréer un (les sons sont conservés).
 

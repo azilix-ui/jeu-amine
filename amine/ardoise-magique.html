@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#14102b">
+<title>L'Ardoise magique</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%9C%8F%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Fredoka:wght@400;500;600&display=swap">
+<style>
+/* L'Ardoise magique : Amine apprend à écrire les lettres sur une ardoise en 3D, dans le monde de Serpent Légendes.
+   Le serpent mascotte, posé sur l'ardoise, suit la craie des yeux. Panneaux sombres comme dans les jeux 3D. */
+:root{
+  --night:#14102b; --panel:rgba(24,19,52,.93); --card:#2b2457; --card-hi:#3a3175; --line:rgba(255,255,255,.14);
+  --ink:#fbf6ea; --mist:#bdb3dd; --gold:#ffc93c; --gold-deep:#c98f00; --mint:#5fe0a8; --mint-deep:#2e9e6e; --bad:#ff6b6b;
+  --r-commun:#9fb7a8; --r-rare:#4fb3ff; --r-epique:#b77bff; --r-legendaire:#ffc93c; --r-savoir:#5fe0a8;
+  --display:'Sniglet','Fredoka',ui-rounded,'Arial Rounded MT Bold',system-ui,sans-serif;
+  --body:'Fredoka',ui-rounded,system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--night);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.35;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation}
+button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+#stage{position:fixed;inset:0;touch-action:none}
+#stage canvas{display:block;width:100%;height:100%}
+.screen{position:fixed;inset:0;display:none;pointer-events:none;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+.screen.on{display:flex}
+.screen > *{pointer-events:auto}
+h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:28px;padding:16px;display:flex;flex-direction:column;gap:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.back{display:inline-flex;align-items:center;gap:6px;min-height:52px;padding:8px 18px;border-radius:999px;background:var(--panel);font-weight:600;text-decoration:none;color:var(--ink);border:2px solid var(--line)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-weight:800;font-size:22px;padding:6px 16px;border-radius:999px;background:var(--panel);border:2px solid var(--line);min-height:52px}
+.pill.gold{color:var(--gold)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%}
+.top .grp{display:flex;gap:8px;align-items:center}
+.av{width:52px;height:52px;border-radius:50%;overflow:hidden;border:3px solid var(--gold);background:var(--card-hi);display:grid;place-items:center;font-size:28px;flex:none}
+.av img{width:100%;height:100%;object-fit:cover}
+
+/* accueil */
+#home{flex-direction:column;justify-content:space-between;gap:10px}
+.title{text-align:center;pointer-events:none}
+.title h1{font-size:clamp(38px,7.5vw,66px);color:#fff;text-shadow:0 4px 0 #0006,0 0 26px #5fe0a888}
+.title h1 span{color:var(--gold)}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:132px;border-radius:24px;background:var(--card);border:3px solid var(--line);padding:8px;position:relative}
+.tile canvas{width:100%;max-width:150px;height:70px}
+.tile b{font-family:var(--display);font-size:20px}
+.tile small{color:var(--mist);font-size:13px}
+.tile.star{border-color:var(--gold);background:linear-gradient(160deg,#4a3a12,#2b2457)}
+.tile.star::before{content:"⭐ le plus important";position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:600;background:var(--gold);color:#3a2600;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.row{display:flex;gap:10px;width:100%}
+.row > *{flex:1}
+.big{font-family:var(--display);font-weight:800;font-size:22px;min-height:64px;border-radius:22px;background:var(--mint);color:#0d2a1d;box-shadow:0 6px 0 var(--mint-deep);display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px}
+.big:active{transform:translateY(4px);box-shadow:0 2px 0 var(--mint-deep)}
+.big.alt{background:var(--gold);color:#3a2600;box-shadow:0 6px 0 var(--gold-deep)}
+.big.ghost{background:var(--card-hi);color:var(--ink);box-shadow:0 6px 0 #1a1540}
+.big:disabled{opacity:.45}
+
+/* choix des lettres */
+#pick{flex-direction:column;gap:10px}
+.letters{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;overflow:auto;padding:14px 4px 10px}
+.lt{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:20px;background:#244a2f;border:4px solid #8a5a3b;padding:4px 4px 6px;min-height:118px}
+.lt canvas{width:100%;height:84px}
+.lt .st{font-size:15px;letter-spacing:1px;color:var(--gold)}
+.lt.next{outline:4px solid var(--gold);outline-offset:2px;animation:glow 1.4s ease-in-out infinite}
+@keyframes glow{50%{outline-color:#fff6c8}}
+
+/* leçon */
+#lesson{flex-direction:column;justify-content:space-between;pointer-events:none}
+#lesson > *{pointer-events:none}
+#lesson button,#lesson a{pointer-events:auto}
+.say{align-self:center;font-family:var(--display);font-weight:800;font-size:clamp(18px,3.4vw,26px);background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:8px 22px;max-width:92vw;text-align:center;margin-top:6px}
+.bottom{display:flex;flex-direction:column;gap:8px;align-items:center}
+.steps{display:flex;gap:8px;align-items:center}
+.steps i{width:16px;height:16px;border-radius:50%;background:#fff3;box-shadow:inset 0 0 0 2px #fff6;font-style:normal}
+.steps i.done{background:var(--mint)}
+.steps i.now{background:var(--gold);transform:scale(1.3)}
+.acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.acts .big{min-width:120px}
+.word{font-family:var(--display);font-size:20px;background:var(--panel);border-radius:999px;padding:4px 14px;border:2px solid var(--line)}
+
+/* fenêtres */
+.modal{align-items:center;justify-content:center;background:rgba(10,8,24,.55)}
+.box{position:relative;z-index:1;background:var(--panel);border:2px solid var(--line);border-radius:30px;padding:20px;width:min(560px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;text-align:center;align-items:center}
+.box h2{font-size:34px}
+.stars{font-size:62px;letter-spacing:6px;color:var(--gold);line-height:1}
+.card{width:190px;border-radius:20px;border:5px solid var(--rc,var(--gold));background:linear-gradient(170deg,#2b2457,#14102b);padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 0 34px var(--rc,#ffc93c88)}
+.card .sw{width:150px;height:150px;border-radius:50%;box-shadow:inset 0 -12px 0 #0003,0 8px 16px #0006}
+.card b{font-family:var(--display);font-size:20px}
+.card small{font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;width:100%;overflow:auto;padding:4px}
+.cards .card{width:auto}
+.cards .card .sw{width:96px;height:96px}
+.cards .card.locked{filter:grayscale(1) brightness(.45)}
+.bar{height:12px;border-radius:6px;background:#0006;overflow:hidden;width:100%}
+.bar i{display:block;height:100%;background:var(--gold)}
+.rays{position:fixed;inset:-50%;background:repeating-conic-gradient(from 0deg,var(--ray,#ffc93c22) 0 10deg,transparent 10deg 20deg);animation:spin 12s linear infinite;pointer-events:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.burst{animation:burst .6s cubic-bezier(.16,1,.3,1)}
+@keyframes burst{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+.opts{display:flex;flex-direction:column;gap:12px;width:100%;text-align:left}
+.opts h3{font-size:20px}
+.optrow{display:flex;gap:8px;flex-wrap:wrap}
+.optrow button{min-width:86px;min-height:70px;border-radius:16px;background:var(--card);border:3px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:600;font-size:14px;padding:6px}
+.optrow button .chip{width:36px;height:24px;border-radius:8px;border:2px solid #fff5}
+.optrow button[aria-pressed="true"]{border-color:var(--gold);background:var(--card-hi)}
+.optrow button:disabled{opacity:.5}
+.toast{position:fixed;left:50%;top:22%;transform:translate(-50%,0);font-family:var(--display);font-weight:800;font-size:clamp(30px,6vw,54px);color:#fff;text-shadow:0 4px 0 #0007;pointer-events:none;white-space:nowrap;animation:toast 1.4s cubic-bezier(.16,1,.3,1) forwards;z-index:30}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,20px) scale(.7)}18%{opacity:1;transform:translate(-50%,0) scale(1.08)}30%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-30px)}}
+@media (prefers-reduced-motion:reduce){.rays,.toast,.lt.next{animation:none}}
+@media (max-height:560px) and (orientation:landscape){.title h1{font-size:36px}.tile{min-height:96px}.tile canvas{height:48px}}
+</style>
+</head>
+<body>
+<div id="stage" aria-hidden="true"></div>
+
+<!-- Accueil -->
+<div class="screen" id="home">
+  <div class="top"><a class="back" href="./">← Les jeux d'Amine</a><div class="grp"><span class="pill gold" id="hStars">⭐ 0</span><span class="pill" id="hCards">🃏 0</span></div></div>
+  <div class="title"><h1>L'Ardoise <span>magique</span></h1></div>
+  <div class="panel" style="width:min(820px,100%);align-self:center">
+    <div class="tiles">
+      <button class="tile star" data-style="cursive"><canvas width="300" height="140" data-prev="cursive:a"></canvas><b>Attaché</b><small>pour écrire comme les grands</small></button>
+      <button class="tile" data-style="caps"><canvas width="300" height="140" data-prev="caps:A"></canvas><b>MAJUSCULES</b><small>les lettres bâton</small></button>
+      <button class="tile" data-style="script"><canvas width="300" height="140" data-prev="script:a"></canvas><b>minuscules</b><small>les lettres du livre</small></button>
+      <button class="tile" data-style="prenom"><canvas width="300" height="140" data-prev="cursive:amine"></canvas><b>Mon prénom</b><small>AMINE et amine</small></button>
+    </div>
+    <div class="row"><button class="big alt" id="openCards">🃏 Mes cartes</button><button class="big ghost" id="openSlate">🎨 Mon ardoise</button></div>
+  </div>
+</div>
+
+<!-- Choix de la lettre -->
+<div class="screen" id="pick">
+  <div class="top"><button class="back" id="pickBack">← Retour</button><h2 id="pickTitle" style="font-size:28px">Attaché</h2><span class="pill gold" id="pStars">⭐ 0</span></div>
+  <div class="panel" style="flex:1;min-height:0;width:min(980px,100%);align-self:center"><div class="letters" id="letters"></div></div>
+</div>
+
+<!-- Leçon -->
+<div class="screen" id="lesson">
+  <div class="top"><button class="back" id="lesBack">← Lettres</button><div class="say" id="say">…</div><span class="word" id="word"></span></div>
+  <div class="bottom">
+    <div class="steps" id="steps"></div>
+    <div class="acts">
+      <button class="big ghost" id="bDemo" aria-label="Revoir le modèle">👀 Revoir</button>
+      <button class="big ghost" id="bErase" aria-label="Effacer">🧽 Effacer</button>
+      <button class="big" id="bDone" hidden>✔ J'ai fini</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bravo -->
+<div class="screen modal" id="win"><div class="rays" id="rays"></div><div class="box" id="winBox"></div></div>
+
+<!-- Mes cartes -->
+<div class="screen modal" id="cardsScr"><div class="box" style="width:min(820px,100%)">
+  <h2>🃏 Mes cartes</h2>
+  <p style="margin:0;color:var(--mist)">Chaque carte donne un nouveau serpent dans <b>Serpent Légendes</b> !</p>
+  <div style="width:100%"><div class="bar"><i id="cardBar"></i></div><small id="cardTxt"></small></div>
+  <div class="cards" id="cardList"></div>
+  <div class="row"><button class="big ghost" id="cardsBack">Retour</button><a class="big alt" href="../jeux/serpent-legendes.html" style="text-decoration:none">🐉 Jouer au serpent</a></div>
+</div></div>
+
+<!-- Mon ardoise -->
+<div class="screen modal" id="slateScr"><div class="box">
+  <h2>🎨 Mon ardoise</h2>
+  <div class="opts" id="opts"></div>
+  <button class="big" id="slateBack" style="width:100%">C'est parfait !</button>
+</div></div>
+
+<script src="../famille.js"></script>
+<script src="lettres.js"></script>
+<script type="module">
+import * as THREE from '../lib/three-0.170.0.module.min.js';
+const $ = id => document.getElementById(id);
+const LT = window.LETTRES;
+const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
+const pick = a => a[Math.floor(Math.random() * a.length)];
+
+/* =====================================================================
+   Données et progression
+   ===================================================================== */
+const KEY = 'amine-ecriture';
+const fresh = () => ({ stars:{}, done:{}, tickets:0, cards:[], slate:{ frame:'bois', board:'vert', chalk:'blanche' }, t:0 });
+let data = Object.assign(fresh(), store.get(KEY, {}));
+function save(){ data.t = Date.now(); store.set(KEY, data); }
+const totalStars = () => Object.values(data.stars).reduce((a, b) => a + b, 0);
+const SK = { cursive:'c', caps:'M', script:'s' };
+const ORDER = {
+  cursive:['a','m','i','n','e','u','t','l','b','h','k','f','c','o','d','g','q','p','r','s','v','w','x','y','j','z'],
+  caps:['A','M','I','N','E','L','T','F','H','O','C','U','V','W','X','Z','K','Y','D','P','B','R','G','J','Q','S'],
+  script:['a','m','i','n','e','o','c','u','l','t','d','b','p','q','g','h','r','f','k','j','s','v','w','x','y','z']
+};
+const NAMES = { a:'a', b:'bé', c:'cé', d:'dé', e:'e', f:'èf', g:'jé', h:'hache', i:'i', j:'ji', k:'ka', l:'èl', m:'èm', n:'èn', o:'o', p:'pé', q:'ku', r:'èr', s:'èss', t:'té', u:'u', v:'vé', w:'double vé', x:'iks', y:'i grec', z:'zèd' };
+const WORDS = { a:['avion','✈️'], b:['ballon','🎈'], c:['chat','🐱'], d:['dragon','🐉'], e:['éléphant','🐘'], f:['fusée','🚀'], g:['gâteau','🎂'], h:['hibou','🦉'], i:['île','🏝️'], j:['jus','🧃'], k:['koala','🐨'], l:['lune','🌙'], m:['maison','🏠'], n:['nuage','☁️'], o:['orange','🍊'], p:['pomme','🍎'], q:['quatre','4️⃣'], r:['robot','🤖'], s:['serpent','🐍'], t:['tortue','🐢'], u:['usine','🏭'], v:['vélo','🚲'], w:['wagon','🚃'], x:['xylophone','🎶'], y:['yaourt','🥛'], z:['zèbre','🦓'] };
+// Cartes : une toutes les 6 étoiles, chacune donne un skin de Serpent Légendes.
+const STARS_PER_CARD = 6;
+const CARDS = [
+  ['bleu','Bleu lagon','commun'], ['rose','Rose bonbon','commun'], ['orange','Orange soleil','commun'], ['violet','Raisin','commun'], ['menthe','Menthe','commun'],
+  ['zebre','Zèbre','rare'], ['abeille','Abeille','rare'], ['pasteque','Pastèque','rare'], ['coccinelle','Coccinelle','rare'], ['chat','Chat tigré','rare'],
+  ['arcenciel','Arc-en-ciel','epique'], ['lave','Lave','epique'], ['glace','Cristal de glace','epique'], ['galaxie','Galaxie','epique'], ['craie','Craie magique','savoir']
+];
+const RARL = { commun:'Commun', rare:'Rare', epique:'Épique', savoir:'Savoir', legendaire:'Légendaire' };
+const RARC = { commun:'#9fb7a8', rare:'#4fb3ff', epique:'#b77bff', savoir:'#5fe0a8', legendaire:'#ffc93c' };
+const SKINCOL = { vert:['#5cc96b','#47b257'], bleu:['#3aa7e8','#2a8ccf'], rose:['#ff8fc8','#f46fb0'], orange:['#ffa53b','#f08a1c'], violet:['#9a6bff','#8152ef'], menthe:['#5fe0c2','#3cc9a8'],
+  zebre:['#f6f6f6','#232323'], abeille:['#ffcf33','#2a2a2a'], pasteque:['#ff4f63','#2f9e44'], coccinelle:['#e8333a','#1f1f1f'], chat:['#f7a24b','#c66a1c'],
+  arcenciel:['#ff5a5a','#ffd23f','#5fe0a8','#4fb3ff','#b77bff'], lave:['#ff3d00','#ffc400'], glace:['#d6f6ff','#8fd8ff'], galaxie:['#2b1c5e','#5b3fb0'],
+  craie:['#ffffff','#ffe3f1','#e3f4ff','#fff6d6'], dragon:['#ffd23f','#e0a000'], licorne:['#ffd6f5','#d6ecff','#fff6c8'], phenix:['#ffe066','#ff3b1f'], crayon:['#ffcf33','#f4b400'] };
+const swatch = id => { const c = SKINCOL[id] || SKINCOL.vert; return `linear-gradient(135deg,${c.concat(c).slice(0, 6).join(',')})`; };
+const SLATE = {
+  frame:[ ['bois','Bois',0,'#9a6236'], ['rouge','Rouge',3,'#c0392b'], ['bleu','Bleu',10,'#2a7fb4'], ['or','Or',25,'#ffc93c'], ['arcenciel','Arc-en-ciel',45,'rainbow'] ],
+  board:[ ['vert','Vert ardoise',0,'#244a2f'], ['noir','Noir',5,'#1d1f24'], ['nuit','Bleu nuit',15,'#1b2a4a'], ['violet','Violet',30,'#33204f'] ],
+  chalk:[ ['blanche','Blanche',0,'#f7f5ee'], ['jaune','Jaune',2,'#ffe066'], ['rose','Rose',8,'#ff9ccf'], ['bleue','Bleue',18,'#8fd8ff'], ['arcenciel','Arc-en-ciel',40,'rainbow'] ]
+};
+const slateOpt = (k, id) => SLATE[k].find(o => o[0] === id) || SLATE[k][0];
+
+/* =====================================================================
+   Voix et sons
+   ===================================================================== */
+let frVoice = null, AC = null;
+function pickVoice(){ try{ const vs = speechSynthesis.getVoices(); frVoice = vs.find(v => /^fr[-_]FR/i.test(v.lang)) || vs.find(v => /^fr/i.test(v.lang)) || null; }catch(e){} }
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(t){ try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; if(frVoice) u.voice = frVoice; u.rate = .92; u.pitch = 1.1; speechSynthesis.speak(u); }catch(e){} }
+function tone(f, d = .12, type = 'triangle', v = .14, at = 0){ try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if(AC.state === 'suspended') AC.resume(); const t = AC.currentTime + at, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + .02); }catch(e){} }
+const sfx = { tap(){ tone(700, .06, 'triangle', .08); }, ok(){ tone(660, .1); tone(990, .16, 'triangle', .14, .08); }, no(){ tone(230, .25, 'sine', .1); }, win(){ [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .22, 'triangle', .15, i * .1)); }, card(){ for(let i = 0; i < 8; i++) tone(220 + i * 60, .07, 'square', .05, i * .08); } };
+function say(t, voice = true){ $('say').textContent = t; if(voice) speak(t); }
+function toast(t){ const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 1500); }
+
+/* =====================================================================
+   Les lettres : échantillonnage des gestes
+   ===================================================================== */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const sampler = document.createElementNS(SVGNS, 'path');
+function sample(d, step = 1.2){
+  sampler.setAttribute('d', d); const L = sampler.getTotalLength(), n = Math.max(2, Math.ceil(L / step)), out = [];
+  for(let i = 0; i <= n; i++){ const p = sampler.getPointAtLength(L * i / n); out.push({ x:p.x, y:p.y }); }
+  return { pts:out, len:L };
+}
+// Une « pièce » = une lettre, ou un mot (prénom) fait de plusieurs lettres posées côte à côte.
+function piece(style, text){
+  const L = LT[style], strokes = []; let x = 0; const gap = style === 'cursive' ? -2 : 8;
+  [...text].forEach((ch, i) => {
+    const g = L[ch]; if(!g) return;
+    g.s.forEach(d => { const s = sample(d); strokes.push({ pts:s.pts.map(p => ({ x:p.x + x, y:p.y })), len:s.len, dot:s.len < 3, d, dx:x }); });
+    x += g.w + (i < text.length - 1 ? gap : 0);
+  });
+  return { style, text, w:x, strokes };
+}
+
+/* ---------- petits dessins des lettres (menus) ---------- */
+function drawThumb(cv, style, text, color = '#f7f5ee', lines = true){
+  const g = cv.getContext('2d'), P = piece(style, text), W = cv.width, H = cv.height;
+  g.clearRect(0, 0, W, H);
+  const s = Math.min((H - 10) / 100, (W - 16) / P.w), ox = (W - P.w * s) / 2, oy = (H - 100 * s) / 2 - 10 * s;
+  if(lines){ g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 1; [15, 50, 80, 105].forEach(y => { g.beginPath(); g.moveTo(4, oy + y * s); g.lineTo(W - 4, oy + y * s); g.stroke(); }); }
+  g.strokeStyle = color; g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = Math.max(2.5, 3.2 * s);
+  P.strokes.forEach(st => { g.beginPath(); st.pts.forEach((p, i) => g[i ? 'lineTo' : 'moveTo'](ox + p.x * s, oy + p.y * s)); st.dot && g.lineTo(ox + st.pts[0].x * s + .5, oy + st.pts[0].y * s + .5); g.stroke(); });
+}
+
+/* =====================================================================
+   Scène 3D : prairie de Serpent Légendes, ardoise sur chevalet, serpent mascotte
+   ===================================================================== */
+const stage = $('stage');
+const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#bfe6ff'); scene.fog = new THREE.Fog('#cfeaff', 30, 70);
+const camera = new THREE.PerspectiveCamera(40, 1, .1, 200);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x6fb24e, 1.2));
+const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(-6, 12, 9); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+Object.assign(sun.shadow.camera, { left:-10, right:10, top:10, bottom:-10, near:1, far:40 }); scene.add(sun);
+const mat = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color:c, roughness:.7 }, o));
+function mesh(geo, m, cast = true){ const o = new THREE.Mesh(geo, m); o.castShadow = cast; o.receiveShadow = true; return o; }
+const ground = mesh(new THREE.CircleGeometry(80, 48), mat('#6fb24e', { roughness:1 }), false); ground.rotation.x = -Math.PI / 2; scene.add(ground);
+// décor : arbres et fleurs (comme la Prairie du serpent)
+const rnd = (() => { let s = 11; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; })();
+for(let k = 0; k < 60; k++){
+  const a = rnd() * Math.PI * 2, r = 8 + rnd() * 26, g = new THREE.Group();
+  if(rnd() < .65){ const t = mesh(new THREE.CylinderGeometry(.2, .26, 1.1, 7), mat('#7a5230')); t.position.y = .55; g.add(t); const c = mesh(new THREE.SphereGeometry(1, 10, 8), mat(rnd() < .5 ? '#3f9b46' : '#57b04a', { roughness:.9 })); c.position.y = 1.8; g.add(c); }
+  else { const f = mesh(new THREE.SphereGeometry(.24, 8, 6), mat(['#ff6f91','#ffd23f','#ffffff','#b77bff'][Math.floor(rnd() * 4)])); f.position.y = .25; g.add(f); }
+  g.position.set(Math.cos(a) * r, 0, Math.sin(a) * r - 6); g.scale.setScalar(.8 + rnd() * .7); scene.add(g);
+}
+// ardoise
+const BW = 1200, BH = 900, SW = 4, SH = 3, SY = 2.35;
+const boardCv = document.createElement('canvas'); boardCv.width = BW; boardCv.height = BH;
+const bctx = boardCv.getContext('2d');
+const boardTex = new THREE.CanvasTexture(boardCv); boardTex.colorSpace = THREE.SRGBColorSpace; boardTex.anisotropy = 4;
+const board = mesh(new THREE.PlaneGeometry(SW, SH), new THREE.MeshStandardMaterial({ map:boardTex, roughness:.95 }), false);
+board.position.set(0, SY, .06); scene.add(board);
+const slateG = new THREE.Group(); scene.add(slateG);
+const frameMats = [];
+function buildFrame(){
+  slateG.clear(); frameMats.length = 0;
+  const f = slateOpt('frame', data.slate.frame), T = .2;
+  const fm = i => { const m = f[3] === 'rainbow' ? mat(new THREE.Color().setHSL(i / 4, .75, .55), { roughness:.4 }) : mat(f[3], { roughness: f[0] === 'or' ? .3 : .6, metalness: f[0] === 'or' ? .7 : 0 }); frameMats.push(m); return m; };
+  [[0, SY + SH / 2 + T / 2, SW + 2 * T, T], [0, SY - SH / 2 - T / 2, SW + 2 * T, T], [-SW / 2 - T / 2, SY, T, SH], [SW / 2 + T / 2, SY, T, SH]].forEach(([x, y, w, h], i) => {
+    const b = mesh(new THREE.BoxGeometry(w, h, .22), fm(i)); b.position.set(x, y, 0); slateG.add(b);
+  });
+  const back = mesh(new THREE.BoxGeometry(SW, SH, .06), mat('#1a1a1a')); back.position.set(0, SY, 0); slateG.add(back);
+  // chevalet et rebord avec craies
+  const wood = mat('#8a5a3b');
+  [[-1.6, .28], [1.6, -.28]].forEach(([x, rz]) => { const l = mesh(new THREE.CylinderGeometry(.07, .08, 4.3, 8), wood); l.position.set(x, 1.9, -.25); l.rotation.set(-.12, 0, rz * .4); slateG.add(l); });
+  const lb = mesh(new THREE.CylinderGeometry(.07, .08, 4.2, 8), wood); lb.position.set(0, 1.9, -1); lb.rotation.x = .45; slateG.add(lb);
+  const tray = mesh(new THREE.BoxGeometry(SW + .3, .08, .38), wood); tray.position.set(0, SY - SH / 2 - .26, .16); slateG.add(tray);
+  const ch = slateOpt('chalk', data.slate.chalk);
+  [-1.2, -.9].forEach((x, i) => { const c = mesh(new THREE.CylinderGeometry(.05, .05, .32, 10), mat(ch[3] === 'rainbow' ? ['#ff9ccf','#8fd8ff'][i] : ch[3])); c.rotation.z = Math.PI / 2; c.position.set(x, SY - SH / 2 - .17, .2); slateG.add(c); });
+  const sp = mesh(new THREE.BoxGeometry(.5, .16, .26), mat('#ffd23f', { roughness:1 })); sp.position.set(1.3, SY - SH / 2 - .14, .18); slateG.add(sp);
+}
+// serpent mascotte, enroulé sur le haut de l'ardoise ; il suit la craie des yeux
+const snake = new THREE.Group(); scene.add(snake);
+const segMat = new THREE.MeshStandardMaterial({ color:'#ffffff', roughness:.45 });
+const segs = new THREE.InstancedMesh(new THREE.SphereGeometry(.13, 14, 10), segMat, 26); segs.castShadow = true; snake.add(segs);
+const headG = new THREE.Group(); snake.add(headG);
+const headMat = mat('#5cc96b', { roughness:.45 });
+const headM = mesh(new THREE.SphereGeometry(.18, 20, 16), headMat); headM.scale.set(1, .9, 1.12); headG.add(headM);
+[-1, 1].forEach(sx => { const e = mesh(new THREE.SphereGeometry(.06, 12, 8), mat('#ffffff', { roughness:.2 })); e.position.set(sx * .075, .07, .11); headG.add(e); const p = mesh(new THREE.SphereGeometry(.032, 8, 6), mat('#111111')); p.position.set(sx * .078, .075, .155); headG.add(p); });
+let snakeSkin = 'vert';
+function paintSnake(id){
+  snakeSkin = id; const cs = SKINCOL[id] || SKINCOL.vert, c = new THREE.Color();
+  for(let i = 0; i < 26; i++){ c.set(cs[i % cs.length]); segs.setColorAt(i, c); }
+  segs.instanceColor.needsUpdate = true; headMat.color.set(cs[0]);
+}
+const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpV = new THREE.Vector3(), tmpS = new THREE.Vector3();
+const lookAt = new THREE.Vector3(0, SY, 1), lookCur = new THREE.Vector3(0, SY, 1);
+let hop = 0;
+function drawSnake(t){
+  const cx = 1.25, cy = SY + SH / 2 + .32, cz = .05;
+  for(let i = 0; i < 26; i++){
+    const a = i * .42 + t * .5, r = .42 - i * .006;
+    tmpV.set(cx + Math.cos(a) * r, cy + .02 * Math.sin(t * 3 + i), cz + Math.sin(a) * r * .55);
+    const sc = 1 - i * .018; tmpS.setScalar(sc); tmpM.compose(tmpV, tmpQ.identity(), tmpS); segs.setMatrixAt(i, tmpM);
+  }
+  segs.instanceMatrix.needsUpdate = true;
+  headG.position.set(cx - .3, cy + .26 + Math.abs(Math.sin(hop)) * .35, cz + .22);
+  lookCur.lerp(lookAt, .15); headG.lookAt(lookCur);
+}
+
+/* ---------- caméra ---------- */
+function frameCamera(){
+  const asp = camera.aspect, tan = Math.tan(THREE.MathUtils.degToRad(20));
+  const needW = 4.9, needH = 4.6;
+  const d = Math.max(needW / (2 * tan * asp), needH / (2 * tan)) * (asp < 1 ? 1.06 : 1.08);
+  camera.position.set(0, SY + .25, d); camera.lookAt(0, SY + (asp < 1 ? .1 : .05), 0); camera.updateProjectionMatrix();
+}
+function resize(){ renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); frameCamera(); }
+addEventListener('resize', resize);
+
+/* =====================================================================
+   Dessin sur l'ardoise
+   ===================================================================== */
+let L = null;                 // leçon en cours
+let lay = { s:6, ox:0, oy:0 };
+const U = p => ({ x:lay.ox + p.x * lay.s, y:lay.oy + p.y * lay.s });
+function layout(P){
+  const s = Math.min(7.4, (BW - 170) / P.w, (BH - 60) / 112);
+  lay = { s, ox:(BW - P.w * s) / 2, oy:(BH - 100 * s) / 2 - 10 * s };
+}
+let chalkHue = 0;
+function chalkStyle(g){
+  const c = slateOpt('chalk', data.slate.chalk)[3];
+  if(c === 'rainbow'){ chalkHue = (chalkHue + 2) % 360; return `hsl(${chalkHue},85%,72%)`; }
+  return c;
+}
+function drawUserStroke(g, pts, color, w){
+  if(pts.length < 1) return;
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  const rainbow = slateOpt('chalk', data.slate.chalk)[3] === 'rainbow' && !color;
+  for(let pass = 0; pass < 2; pass++){
+    g.lineWidth = pass ? w * .45 : w; g.globalAlpha = pass ? .5 : .92;
+    if(!rainbow){ g.strokeStyle = pass ? '#ffffff' : (color || slateOpt('chalk', data.slate.chalk)[3]); g.beginPath(); pts.forEach((p, i) => g[i ? 'lineTo' : 'moveTo'](p.x, p.y)); if(pts.length === 1) g.lineTo(pts[0].x + .1, pts[0].y); g.stroke(); }
+    else for(let i = 1; i < pts.length; i++){ g.strokeStyle = pass ? '#ffffff' : `hsl(${(i * 3) % 360},85%,72%)`; g.beginPath(); g.moveTo(pts[i-1].x, pts[i-1].y); g.lineTo(pts[i].x, pts[i].y); g.stroke(); }
+  }
+  g.globalAlpha = 1;
+}
+const smudges = Array.from({ length:40 }, () => [Math.random() * BW, Math.random() * BH, 40 + Math.random() * 120, Math.random() * .05]);
+function renderBoard(){
+  const g = bctx, bc = slateOpt('board', data.slate.board)[3];
+  g.fillStyle = bc; g.fillRect(0, 0, BW, BH);
+  smudges.forEach(([x, y, r, a]) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(255,255,255,${a})`); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); });
+  if(!L){ boardTex.needsUpdate = true; return idleBoard(); }
+  const s = lay.s;
+  // lignes d'écriture
+  [[15, 'rgba(255,255,255,.22)', 2], [50, 'rgba(143,216,255,.75)', 3], [80, 'rgba(255,120,120,.85)', 4], [105, 'rgba(255,255,255,.22)', 2]].forEach(([y, c, w]) => {
+    g.strokeStyle = c; g.lineWidth = w; g.setLineDash(y === 50 ? [14, 10] : []); g.beginPath(); g.moveTo(40, lay.oy + y * s); g.lineTo(BW - 40, lay.oy + y * s); g.stroke(); });
+  g.setLineDash([]);
+  const P = L.P;
+  // modèle en petit dans le coin (mode « tout seul »)
+  if(L.phase === 'free' && !L.feedback){
+    const ms = s * .32, mx = 34, my = 18;
+    g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(mx - 10, my, P.w * ms + 20, 108 * ms);
+    g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 4; g.lineCap = 'round';
+    P.strokes.forEach(st => { g.beginPath(); st.pts.forEach((p, i) => g[i ? 'lineTo' : 'moveTo'](mx + p.x * ms, my + (p.y - 8) * ms)); g.stroke(); });
+  }
+  // pointillés (repasser)
+  if(L.phase === 'trace'){
+    P.strokes.forEach((st, k) => {
+      if(k < L.si) return;
+      const cur = k === L.si;
+      g.fillStyle = cur ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.32)';
+      const step = Math.max(1, Math.round(4 / 1.2));
+      st.pts.forEach((p, i) => { if(i % step) return; const q = U(p); g.beginPath(); g.arc(q.x, q.y, cur ? s * .85 : s * .6, 0, 7); g.fill(); });
+      if(st.dot){ const q = U(st.pts[0]); g.beginPath(); g.arc(q.x, q.y, s * 1.4, 0, 7); g.fill(); }
+      if(cur){ // point de départ vert et flèche
+        const a = U(st.pts[0]), b = U(st.pts[Math.min(st.pts.length - 1, 7)]);
+        const pulse = 1 + .18 * Math.sin(performance.now() / 180);
+        g.fillStyle = '#3ddc84'; g.beginPath(); g.arc(a.x, a.y, s * 2 * pulse, 0, 7); g.fill();
+        g.strokeStyle = '#ffffff'; g.lineWidth = 3; g.stroke();
+        if(!st.dot){ const ang = Math.atan2(b.y - a.y, b.x - a.x), r = s * 4.5; g.strokeStyle = '#ffe066'; g.lineWidth = 5; g.beginPath(); g.moveTo(a.x + Math.cos(ang) * s * 2.6, a.y + Math.sin(ang) * s * 2.6); g.lineTo(a.x + Math.cos(ang) * r, a.y + Math.sin(ang) * r); g.stroke();
+          g.beginPath(); g.moveTo(a.x + Math.cos(ang) * r, a.y + Math.sin(ang) * r); g.lineTo(a.x + Math.cos(ang - 2.5) * s * 1.6 + Math.cos(ang) * r, a.y + Math.sin(ang - 2.5) * s * 1.6 + Math.sin(ang) * r); g.moveTo(a.x + Math.cos(ang) * r, a.y + Math.sin(ang) * r); g.lineTo(a.x + Math.cos(ang + 2.5) * s * 1.6 + Math.cos(ang) * r, a.y + Math.sin(ang + 2.5) * s * 1.6 + Math.sin(ang) * r); g.stroke(); }
+      }
+    });
+  }
+  // démonstration
+  if(L.phase === 'demo' && L.demo){
+    const { k, a } = L.demo;
+    P.strokes.forEach((st, j) => {
+      if(j > k) return; const n = j < k ? st.pts.length : Math.max(1, Math.floor(st.pts.length * a));
+      drawUserStroke(g, st.pts.slice(0, n).map(U), '#ffffff', s * 2.8);
+      if(j === k){ const h = U(st.pts[n - 1]); g.fillStyle = '#ffe066'; g.beginPath(); g.arc(h.x, h.y, s * 1.8, 0, 7); g.fill(); setLook(h); }
+    });
+  }
+  // ce que l'enfant a écrit
+  const w = s * 2.7;
+  L.ok.forEach(pts => drawUserStroke(g, pts, null, w));
+  L.cur.forEach(pts => drawUserStroke(g, pts, null, w));
+  // correction
+  if(L.feedback){
+    L.feedback.forEach(([p, good]) => { g.fillStyle = good ? 'rgba(61,220,132,.9)' : 'rgba(255,90,90,.95)'; g.beginPath(); g.arc(p.x, p.y, good ? s * .55 : s * .9, 0, 7); g.fill(); });
+  }
+  boardTex.needsUpdate = true;
+}
+function idleBoard(){
+  const g = bctx; g.save(); g.fillStyle = slateOpt('chalk', data.slate.chalk)[3] === 'rainbow' ? '#ffe066' : slateOpt('chalk', data.slate.chalk)[3];
+  g.globalAlpha = .9; const P = piece('cursive', 'amine'); const s = Math.min(5, (BW - 300) / P.w), ox = (BW - P.w * s) / 2, oy = BH * .5 - 70 * s;
+  g.strokeStyle = g.fillStyle; g.lineWidth = s * 2.6; g.lineCap = 'round'; g.lineJoin = 'round';
+  P.strokes.forEach(st => { g.beginPath(); st.pts.forEach((p, i) => g[i ? 'lineTo' : 'moveTo'](ox + p.x * s, oy + p.y * s)); if(st.dot) g.lineTo(ox + st.pts[0].x * s + .5, oy + st.pts[0].y * s); g.stroke(); });
+  g.restore(); boardTex.needsUpdate = true;
+}
+function setLook(q){ lookAt.set((q.x / BW - .5) * SW, SY + (.5 - q.y / BH) * SH, .1); }
+
+/* ---------- toucher l'ardoise ---------- */
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+function toBoard(e){
+  ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ptr, camera);
+  const h = ray.intersectObject(board, false)[0]; if(!h || !h.uv) return null;
+  return { x:h.uv.x * BW, y:(1 - h.uv.y) * BH };
+}
+let drawing = null;
+stage.addEventListener('pointerdown', e => {
+  if(!L || (L.phase !== 'trace' && L.phase !== 'free') || L.busy || drawing) return;
+  const p = toBoard(e); if(!p) return;
+  if(L.feedback){ L.feedback = null; if(L.phase === 'free'){ L.cur = []; } }
+  drawing = { id:e.pointerId, pts:[p] }; L.cur.push(drawing.pts); stage.setPointerCapture(e.pointerId); setLook(p); dirty = true;
+});
+stage.addEventListener('pointermove', e => {
+  if(!drawing || e.pointerId !== drawing.id) return;
+  const p = toBoard(e); if(!p) return; const q = drawing.pts[drawing.pts.length - 1];
+  if(Math.hypot(p.x - q.x, p.y - q.y) > 2.5){ drawing.pts.push(p); setLook(p); dirty = true; }
+});
+const endDraw = e => { if(!drawing || e.pointerId !== drawing.id) return; drawing = null; dirty = true; if(L && L.phase === 'trace') checkTrace(); };
+stage.addEventListener('pointerup', endDraw); stage.addEventListener('pointercancel', endDraw);
+
+/* =====================================================================
+   Correction
+   ===================================================================== */
+function nearest(p, arr){ let b = 1e9, bi = 0; for(let i = 0; i < arr.length; i++){ const d = (arr[i].x - p.x) ** 2 + (arr[i].y - p.y) ** 2; if(d < b){ b = d; bi = i; } } return [Math.sqrt(b), bi]; }
+function evalStroke(tpl, user, tol){
+  if(!user.length) return { cov:0, prec:0, dir:false };
+  const cov = tpl.filter(p => nearest(p, user)[0] <= tol).length / tpl.length;
+  const prec = user.filter(p => nearest(p, tpl)[0] <= tol * 1.5).length / user.length;
+  const idx = user.map(p => nearest(p, tpl)[1]); let up = 0, down = 0;
+  for(let i = 4; i < idx.length; i += 2){ const d = idx[i] - idx[i - 4]; if(d > 0) up++; else if(d < 0) down++; }
+  const startOk = nearest(tpl[0], user.slice(0, Math.max(3, Math.floor(user.length * .25))))[0] <= tol * 2.2;
+  const dir = (up + down === 0) ? startOk : (up / (up + down) >= .62 || (startOk && up >= down));
+  return { cov, prec, dir, startOk };
+}
+let fails = 0;
+function checkTrace(){
+  const st = L.P.strokes[L.si], tpl = st.pts.map(U), tol = lay.s * 7.5;
+  const user = L.cur.flat();
+  if(st.dot){
+    if(user.some(p => Math.hypot(p.x - tpl[0].x, p.y - tpl[0].y) <= tol * 2)){ L.ok.push(...L.cur); L.cur = []; return strokeOk(); }
+    return strokeFail('Mets le point juste au-dessus !');
+  }
+  const r = evalStroke(tpl, user, tol);
+  if(r.cov >= .78 && r.prec >= .68 && r.dir){ L.ok.push(...L.cur); L.cur = []; return strokeOk(); }
+  if(!r.dir) return strokeFail(r.startOk ? 'Attention au sens de la flèche !' : 'Commence au point vert !');
+  if(r.prec < .68) return strokeFail('Reste bien sur les points !');
+  // bon chemin, mais pas fini : on peut continuer
+  say('Continue jusqu\'au bout des points !', false); sfx.tap();
+}
+function strokeOk(){
+  fails = 0; sfx.ok(); L.si++;
+  if(L.si >= L.P.strokes.length){ L.busy = true; hop = 0; hopping = 1.2; setTimeout(nextStep, 700); say(pick(['Bravo !', 'Super !', 'Magnifique !', 'Très bien Amine !'])); }
+  else say(L.P.strokes.length > 1 ? 'Très bien ! Maintenant le trait suivant, au point vert.' : 'Très bien !');
+}
+function strokeFail(msg){
+  fails++; sfx.no(); say(msg); L.errors++;
+  const user = L.cur.flat(), tpl = L.P.strokes[L.si].pts.map(U), tol = lay.s * 7.5;
+  L.feedback = user.map(p => [p, nearest(p, tpl)[0] <= tol * 1.5]);
+  L.busy = true;
+  setTimeout(() => { L.cur = []; L.feedback = null; L.busy = false; dirty = true; if(fails >= 2){ fails = 0; demoStroke(L.si); } }, 1100);
+}
+// « tout seul » : on compare le dessin entier au modèle, après l'avoir recalé (place et taille)
+function checkFree(){
+  const user = L.cur.flat(); if(user.length < 5){ say('Écris la lettre sur l\'ardoise, puis appuie sur ✔.'); return; }
+  const tplAll = L.P.strokes.flatMap(st => st.dot ? [] : st.pts).map(U);
+  const box = a => { const xs = a.map(p => p.x), ys = a.map(p => p.y); return { x0:Math.min(...xs), x1:Math.max(...xs), y0:Math.min(...ys), y1:Math.max(...ys) }; };
+  const bu = box(user), bt = box(tplAll);
+  const sz = b => Math.max(b.x1 - b.x0, b.y1 - b.y0, 1);
+  const k = Math.min(1.7, Math.max(.55, sz(bt) / sz(bu)));
+  const cu = { x:(bu.x0 + bu.x1) / 2, y:(bu.y0 + bu.y1) / 2 }, ct = { x:(bt.x0 + bt.x1) / 2, y:(bt.y0 + bt.y1) / 2 };
+  const norm = user.map(p => ({ x:ct.x + (p.x - cu.x) * k, y:ct.y + (p.y - cu.y) * k }));
+  const size = sz(bt), tol = Math.max(lay.s * 4.5, size * .085);
+  const dT = tplAll.map(p => nearest(p, norm)[0]), dU = norm.map(p => nearest(p, tplAll)[0]);
+  const cov = dT.filter(d => d <= tol).length / dT.length, prec = dU.filter(d => d <= tol * 1.3).length / dU.length;
+  const mean = (dT.reduce((a, b) => a + b, 0) / dT.length + dU.reduce((a, b) => a + b, 0) / dU.length) / 2 / size;
+  const strokesOk = Math.abs(L.cur.length - L.P.strokes.filter(st => !st.dot).length) <= 2;
+  const asp = b => (b.x1 - b.x0 + 1) / (b.y1 - b.y0 + 1), ar = asp(bu) / asp(bt), shapeOk = ar > .55 && ar < 1.8;
+  L.dbg = { cov, prec, mean, ar, n:L.cur.length };
+  const stars = !strokesOk || !shapeOk || cov < .7 || prec < .65 ? 0 : mean <= .04 && cov >= .86 ? 3 : mean <= .06 && cov >= .78 ? 2 : mean <= .08 ? 1 : 0;
+  // montrer la correction : le modèle recalé sur son dessin, vert = bien suivi, rouge = oublié
+  const back = p => ({ x:cu.x + (p.x - ct.x) / k, y:cu.y + (p.y - ct.y) / k });
+  L.feedback = tplAll.map((p, i) => [p, i]).filter(([, i]) => i % 3 === 0).map(([p, i]) => [back(p), dT[i] <= tol]);
+  dirty = true;
+  if(stars === 0){ sfx.no(); L.errors++; say(pick(['Presque ! Regarde le modèle en haut et essaie encore.', 'Essaie encore, tu vas y arriver !'])); setTimeout(() => { if(L){ L.cur = []; L.feedback = null; dirty = true; } }, 1800); return; }
+  L.freeStars.push(stars); sfx.ok(); hopping = 1;
+  say(stars === 3 ? 'Parfait ! Trois étoiles !' : stars === 2 ? 'Très bien ! Deux étoiles !' : 'Bien ! Une étoile. Les points verts sont réussis.');
+  L.busy = true; setTimeout(() => { L.cur = []; L.feedback = null; nextStep(); }, 1700);
+}
+$('bDone').onclick = () => { sfx.tap(); if(L && L.phase === 'free' && !L.busy) checkFree(); };
+$('bErase').onclick = () => { sfx.tap(); if(!L || L.busy) return; L.cur = []; L.feedback = null; dirty = true; };
+$('bDemo').onclick = () => { sfx.tap(); if(!L || L.busy) return; const back = L.phase, me = L; runDemo().then(() => { if(L === me){ L.phase = back; $('bDone').hidden = back !== 'free'; if(back === 'trace') say('À toi ! Repasse sur les points, en partant du point vert.'); dirty = true; } }); };
+
+/* =====================================================================
+   Déroulé d'une leçon : regarder → repasser ×2 → tout seul ×2
+   ===================================================================== */
+function startLesson(style, text, key, planOverride){
+  const P = piece(style, text); layout(P);
+  const word = text.length > 1;
+  const plan = planOverride || (word ? ['demo', 'trace', 'free'] : ['demo', 'trace', 'trace', 'free', 'free']);
+  L = { style, text, key, P, plan, step:-1, phase:'demo', si:0, ok:[], cur:[], feedback:null, errors:0, freeStars:[], busy:false, demo:null };
+  show('lesson');
+  const w = !word ? WORDS[text.toLowerCase()] : null;
+  $('word').textContent = w ? `${w[1]} ${w[0]}` : (style === 'caps' ? 'AMINE' : 'amine');
+  nextStep();
+}
+function renderSteps(){ $('steps').innerHTML = L.plan.map((p, i) => `<i class="${i < L.step ? 'done' : i === L.step ? 'now' : ''}" title="${p}"></i>`).join(''); }
+async function nextStep(){
+  if(!L) return;
+  L.step++; L.busy = false; L.ok = []; L.cur = []; L.si = 0; L.feedback = null;
+  if(L.step >= L.plan.length) return finishLesson();
+  L.phase = L.plan[L.step]; renderSteps(); dirty = true;
+  $('bDone').hidden = L.phase !== 'free'; $('bErase').hidden = L.phase === 'demo';
+  const name = L.text.length > 1 ? 'ton prénom' : `la lettre ${L.style === 'caps' ? 'majuscule ' : ''}${NAMES[L.text.toLowerCase()]}`;
+  if(L.phase === 'demo'){ const me = L; say(`Regarde bien comment on écrit ${name}${L.style === 'cursive' ? ' en attaché' : ''}.`); await sleep(1600); if(L !== me) return; await runDemo(); if(L === me && L.phase === 'demo') nextStep(); }
+  else if(L.phase === 'trace'){ say(L.plan.indexOf('trace') === L.step ? 'À toi ! Repasse sur les points, en partant du point vert.' : 'Encore une fois, sur les points !'); }
+  else { say(L.plan.indexOf('free') === L.step ? `Maintenant, écris ${name} tout seul ! Puis appuie sur ✔.` : 'Encore une fois tout seul !'); }
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function runDemo(){
+  if(!L) return; const me = L; L.phase = 'demo'; L.busy = true; L.cur = []; L.ok = []; $('bDone').hidden = true;
+  for(let k = 0; k < L.P.strokes.length; k++){ if(L !== me) return; await animStroke(k); }
+  await sleep(500); if(L === me){ L.demo = null; L.busy = false; dirty = true; }
+}
+function animStroke(k){
+  return new Promise(res => { const st = L.P.strokes[k], dur = st.dot ? 250 : Math.max(700, st.len * 26), t0 = performance.now();
+    const f = now => { if(!L){ res(); return; } const a = Math.min(1, (now - t0) / dur); L.demo = { k, a }; dirty = true; if(Math.random() < .25) tone(900 + Math.random() * 300, .02, 'sine', .015); if(a < 1) requestAnimationFrame(f); else setTimeout(res, 220); };
+    requestAnimationFrame(f); });
+}
+async function demoStroke(k){ // revoir un seul trait après deux erreurs
+  if(!L) return; const back = L.phase; L.phase = 'demo'; L.busy = true; say('Regarde encore ce trait.');
+  const okSave = L.ok; L.ok = []; await animStroke(k); L.demo = null; L.ok = okSave; L.phase = back; L.busy = false; dirty = true; say('À toi, au point vert !');
+}
+function finishLesson(){
+  const fs = L.freeStars, stars = Math.max(1, Math.round(fs.reduce((a, b) => a + b, 0) / Math.max(1, fs.length)) - (L.errors > 6 ? 1 : 0));
+  const k = L.key, before = data.stars[k] || 0, oldTotal = totalStars();
+  data.stars[k] = Math.max(before, stars); data.done[k] = (data.done[k] || 0) + 1;
+  const gain = data.stars[k] - before; data.tickets += gain + 1;
+  const newCards = [];
+  while(data.cards.length < CARDS.length && totalStars() >= (data.cards.length + 1) * STARS_PER_CARD){ data.cards.push(CARDS[data.cards.length][0]); newCards.push(data.cards[data.cards.length - 1]); }
+  save(); sfx.win();
+  const txt = L.text.length > 1 ? 'ton prénom' : (L.style === 'caps' ? L.text : L.text);
+  const box = $('winBox'); $('rays').style.setProperty('--ray', '#ffc93c22');
+  box.innerHTML = `<h2>Bravo Amine !</h2><canvas width="420" height="190" id="winCv" style="width:min(320px,80vw);height:auto;background:#244a2f;border-radius:16px;border:6px solid #9a6236"></canvas>
+    <div class="stars" aria-label="${stars} étoiles sur 3">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
+    <p style="margin:0;color:var(--mist)">+${gain + 1} ticket${gain ? 's' : ''} 🎟️ pour Serpent Légendes · ${totalStars()} étoiles en tout</p>
+    <div class="row"><button class="big ghost" id="wAgain">↻ Encore</button><button class="big" id="wNext">Lettre suivante →</button></div>`;
+  drawThumb($('winCv'), L.style, L.text, slateOpt('chalk', data.slate.chalk)[3] === 'rainbow' ? '#ffe066' : slateOpt('chalk', data.slate.chalk)[3]);
+  show('win'); speak(`Bravo Amine ! ${stars} étoile${stars > 1 ? 's' : ''} !`);
+  const style = L.style, text = L.text, key = L.key; L = null; dirty = true;
+  $('wAgain').onclick = () => { sfx.tap(); startLesson(style, text, key); };
+  const nxt = nextLetter(style, text);
+  $('wNext').hidden = !nxt; if(nxt) $('wNext').onclick = () => { sfx.tap(); startLesson(style, nxt, SK[style] + ':' + nxt); };
+  if(newCards.length) setTimeout(() => showCard(newCards[0], true), 1400);
+}
+function nextLetter(style, text){ if(text.length > 1 || !ORDER[style]) return null; const o = ORDER[style], i = o.indexOf(text); return o[i + 1] || null; }
+
+/* =====================================================================
+   Écrans
+   ===================================================================== */
+function show(id){ document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
+function renderHome(){
+  $('hStars').textContent = '⭐ ' + totalStars(); $('hCards').textContent = '🃏 ' + data.cards.length;
+  document.querySelectorAll('#home canvas[data-prev]').forEach(cv => { const [st, tx] = cv.dataset.prev.split(':'); drawThumb(cv, st, tx); });
+}
+function goHome(){ L = null; dirty = true; renderHome(); show('home'); }
+let curStyle = 'cursive';
+const TITLES = { cursive:'✍️ Attaché', caps:'🅰️ MAJUSCULES', script:'🔤 minuscules', prenom:'🧒 Mon prénom' };
+function openPick(style){
+  curStyle = style; $('pickTitle').textContent = TITLES[style]; $('pStars').textContent = '⭐ ' + totalStars();
+  const items = style === 'prenom' ? [['caps', 'AMINE', 'p:caps'], ['cursive', 'amine', 'p:cur'], ['script', 'amine', 'p:script']] : ORDER[style].map(ch => [style, ch, SK[style] + ':' + ch]);
+  const next = items.find(([, , k]) => !data.stars[k]);
+  $('letters').innerHTML = items.map(([st, tx, k]) => { const s = data.stars[k] || 0;
+    return `<button class="lt ${next && next[2] === k ? 'next' : ''}" data-st="${st}" data-tx="${tx}" data-k="${k}" aria-label="${tx}" style="${st === 'cursive' && tx.length > 1 || tx.length > 1 ? 'grid-column:span 2' : ''}"><canvas width="${tx.length > 1 ? 400 : 200}" height="170"></canvas><span class="st">${'★'.repeat(s)}${'☆'.repeat(3 - s)}</span></button>`; }).join('');
+  $('letters').querySelectorAll('.lt').forEach(b => { drawThumb(b.querySelector('canvas'), b.dataset.st, b.dataset.tx); b.onclick = () => { sfx.tap(); startLesson(b.dataset.st, b.dataset.tx, b.dataset.k); }; });
+  show('pick');
+  const st = { cursive:'l\'écriture attachée', caps:'les majuscules', script:'les minuscules', prenom:'ton prénom' }[style];
+  speak(`Choisis une lettre${style === 'prenom' ? '' : ''} pour ${st}. La lettre qui brille, c'est la prochaine !`);
+}
+document.querySelectorAll('.tile').forEach(t => t.onclick = () => { sfx.tap(); openPick(t.dataset.style); });
+$('pickBack').onclick = () => { sfx.tap(); goHome(); };
+$('lesBack').onclick = () => { sfx.tap(); speechSynthesis && speechSynthesis.cancel(); L = null; dirty = true; openPick(curStyle); };
+
+/* ---------- cartes ---------- */
+function cardHTML(id, locked){ const c = CARDS.find(x => x[0] === id) || [id, id, 'commun'];
+  return `<div class="card ${locked ? 'locked' : ''}" style="--rc:${RARC[c[2]]}"><span class="sw" style="background:${locked ? '#444' : swatch(id)}"></span><b>${locked ? '?' : c[1]}</b><small style="color:${RARC[c[2]]}">${RARL[c[2]]}</small></div>`; }
+function openCards(){
+  const n = data.cards.length, tot = totalStars(), nextAt = (n + 1) * STARS_PER_CARD;
+  $('cardBar').style.width = n >= CARDS.length ? '100%' : Math.round((tot - n * STARS_PER_CARD) / STARS_PER_CARD * 100) + '%';
+  $('cardTxt').textContent = n >= CARDS.length ? 'Tu as toutes les cartes !' : `Encore ${nextAt - tot} étoile${nextAt - tot > 1 ? 's' : ''} pour la prochaine carte`;
+  $('cardList').innerHTML = CARDS.map(([id], i) => cardHTML(id, i >= n)).join('');
+  show('cardsScr'); speak(n ? `Tu as ${n} carte${n > 1 ? 's' : ''} ! Chaque carte te donne un serpent dans le jeu.` : 'Gagne des étoiles pour avoir des cartes !');
+}
+$('openCards').onclick = () => { sfx.tap(); openCards(); };
+$('cardsBack').onclick = () => { sfx.tap(); goHome(); };
+function showCard(id, fresh){
+  const c = CARDS.find(x => x[0] === id); $('rays').style.setProperty('--ray', RARC[c[2]] + '33');
+  $('winBox').innerHTML = `<h2>Nouvelle carte !</h2><div class="burst">${cardHTML(id, false)}</div><p style="margin:0">Un nouveau serpent <b>${c[1]}</b> t'attend dans <b>Serpent Légendes</b> !</p>
+    <div class="row"><button class="big ghost" id="cOk">Super !</button><a class="big alt" href="../jeux/serpent-legendes.html" style="text-decoration:none">🐉 Essayer</a></div>`;
+  show('win'); sfx.card(); paintSnake(id); hopping = 1.5; speak(`Nouvelle carte ! Le serpent ${c[1]} !`);
+  $('cOk').onclick = () => { sfx.tap(); goHome(); };
+}
+
+/* ---------- ardoise personnalisable ---------- */
+function openSlate(){
+  const tot = totalStars(), lab = { frame:'Le cadre', board:'L\'ardoise', chalk:'La craie' };
+  $('opts').innerHTML = Object.keys(SLATE).map(k => `<div><h3>${lab[k]}</h3><div class="optrow">${SLATE[k].map(([id, name, need, c]) => { const ok = tot >= need;
+    return `<button data-k="${k}" data-id="${id}" aria-pressed="${data.slate[k] === id}" ${ok ? '' : 'disabled'}><span class="chip" style="background:${c === 'rainbow' ? 'linear-gradient(90deg,#ff5a5a,#ffd23f,#5fe0a8,#4fb3ff,#b77bff)' : c}"></span>${ok ? name : '🔒 ' + need + ' ⭐'}</button>`; }).join('')}</div></div>`).join('');
+  $('opts').querySelectorAll('button').forEach(b => b.onclick = () => { sfx.tap(); data.slate[b.dataset.k] = b.dataset.id; save(); buildFrame(); dirty = true; openSlate(); });
+  show('slateScr');
+}
+$('openSlate').onclick = () => { sfx.tap(); openSlate(); };
+$('slateBack').onclick = () => { sfx.tap(); goHome(); };
+
+/* =====================================================================
+   Boucle
+   ===================================================================== */
+let dirty = true, T = 0, last = performance.now(), hopping = 0;
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
+  if(hopping > 0){ hopping -= dt; hop += dt * 9; } else hop = 0;
+  if(!L) lookAt.set(Math.sin(T * .6) * 1.2, SY + Math.cos(T * .4) * .4, 1);
+  drawSnake(T);
+  if(dirty || (L && L.phase === 'trace') || (L && L.phase === 'demo')){ renderBoard(); dirty = false; }
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- démarrage ---------- */
+buildFrame(); resize();
+const serp = store.get('serpent3d:Amine', null);
+paintSnake(serp && SKINCOL[serp.skin] ? serp.skin : 'vert');
+renderHome(); show('home'); requestAnimationFrame(frame);
+setTimeout(() => speak('Bonjour Amine ! Choisis : l\'écriture attachée, les majuscules, les minuscules, ou ton prénom.'), 600);
+if(window.Famille){
+  try{ Famille.setPlayer && Famille.player() !== 'Amine' && null; }catch(e){}
+  Famille.track('amine-ecriture', 'Amine', [KEY]);
+  Famille.load('amine-ecriture', 'Amine').then(r => { const d = r && r[KEY]; if(d && (d.t || 0) > (data.t || 0)){ data = Object.assign(fresh(), d); store.set(KEY, data); buildFrame(); renderHome(); dirty = true; } });
+}
+window.__ardoise = { toScreen(q){ const v = new THREE.Vector3((q.x / BW - .5) * SW, SY + (.5 - q.y / BH) * SH, .06).project(camera); return { x:(v.x + 1) / 2 * innerWidth, y:(1 - v.y) / 2 * innerHeight }; }, get L(){ return L; }, get data(){ return data; }, startLesson, U, piece, checkFree, nextStep, layout, get lay(){ return lay; } };
+</script>
+</body>
+</html>

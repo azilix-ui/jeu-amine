@@ -278,6 +278,7 @@ const SKINS = [
     defi:{ text:'Gagne 600 pièces en tout', key:'total', goal:600 } },
   { id:'phenix', name:'Phénix',       rar:'legendaire', head:'#ffe066', anim:true, body:(i,n,t)=> col.set('#ffe066').lerp(col2.set('#ff3b1f'), Math.min(1, i / Math.max(1, n * .5))).lerp(col2.set('#a3122b'), Math.max(0, (i / n - .5) * 2)).multiplyScalar(.9 + .2 * Math.sin(t * 9 + i)), mat:{emissive:'#ff4400', ei:.45}, acc:['crete','ailes-feu'],
     defi:{ text:'Mange 10 pommes d\'or', key:'gold', goal:10 } },
+  { id:'craie', name:'Craie magique', rar:'savoir', head:'#ffffff', body:(i)=> ['#ffffff','#ffe3f1','#e3f4ff','#fff6d6'][i % 4], mat:{ rough:.95, emissive:'#ffffff', ei:.08 }, acc:['aureole'] },
   { id:'crayon', name:'Crayon magique', rar:'savoir', head:'#f2c38b', body:(i,n)=> i >= n - 1 ? '#ff8fb1' : i === n - 2 ? '#c9ccd1' : (i % 2 ? '#ffcf33' : '#f4b400'), acc:['mine'] }
 ];
 const SKIN = Object.fromEntries(SKINS.map(s => [s.id, s]));
@@ -303,7 +304,8 @@ const bestAll = () => Math.max(data.best.facile || 0, data.best.normal || 0, dat
 const tracked = new Set();
 
 /* ---------- Tickets du savoir : gagnés dans les exercices (L'Atelier des Verbes…), dépensés ici ---------- */
-const STUDY = { salma:[{ course:'salma-verbes', key:'salma-verbes', name:"L'Atelier des Verbes", href:'../salma/atelier-des-verbes.html' }] };
+const STUDY = { salma:[{ course:'salma-verbes', key:'salma-verbes', name:"L'Atelier des Verbes", href:'../salma/atelier-des-verbes.html' }],
+  amine:[{ course:'amine-ecriture', key:'amine-ecriture', name:"L'Ardoise magique", href:'../amine/ardoise-magique.html', cards:true }] };
 const SHOP = [
   { id:'w:plage',  icon:'🏖️', name:'Monde Plage',  sub:'Sans attendre le record 15', cost:15, world:'plage' },
   { id:'w:neige',  icon:'❄️', name:'Monde Neige',  sub:'Sans attendre le record 25', cost:30, world:'neige' },
@@ -315,13 +317,19 @@ let studyEarned = 0;
 const studySources = () => STUDY[(player || '').toLowerCase()] || [];
 const ticketsLeft = () => Math.max(0, studyEarned - (data.spentT || 0));
 async function loadStudy(name){
-  let sum = 0;
+  let sum = 0; const cards = new Set();
   for(const src of STUDY[name.toLowerCase()] || []){
-    let t = (store.get(src.key, null) || {}).tickets || 0;
-    if(window.Famille){ const r = await Famille.load(src.course, name); const d = r && r[src.key]; if(d && d.tickets > t) t = d.tickets; }
-    sum += t;
+    let d = store.get(src.key, null) || {};
+    if(window.Famille){ const r = await Famille.load(src.course, name); const rd = r && r[src.key]; if(rd && (rd.tickets || 0) > (d.tickets || 0)) d = rd; }
+    sum += d.tickets || 0;
+    if(src.cards) (d.cards || []).forEach(c => cards.add(c));
   }
-  if(player === name){ studyEarned = sum; renderMenu(); if($('coll').classList.contains('on')) renderColl(); }
+  if(player !== name) return;
+  studyEarned = sum;
+  // cartes gagnées sur l'Ardoise magique : chacune donne son skin
+  const fresh = [...cards].filter(id => SKIN[id] && !data.skins.includes(id));
+  if(fresh.length){ fresh.forEach(id => data.skins.push(id)); save(); setTimeout(() => toast('🃏 ' + (fresh.length > 1 ? fresh.length + ' nouvelles cartes !' : SKIN[fresh[0]].name + ' !')), 900); }
+  renderMenu(); if($('coll').classList.contains('on')) renderColl();
 }
 const worldOpen = w => bestAll() >= w.need || (data.bought || []).includes('w:' + w.id);
 

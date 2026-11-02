@@ -11,7 +11,8 @@ Avatars et cartes : `jeux/avatars/<prénom>.webp` (essil, salma, amine, anis, im
 - **Mondes** : Prairie ; Plage, Neige, Espace débloqués par le record 15 / 25 / 40, ou achetés avec des tickets ; **Bibliothèque** uniquement avec des tickets.
 - **Pièces** : 2 par pomme, 10 par pomme d'or (rare, 8 s). **Coffre** 30 pièces : commun 55 %, rare 32 %, épique 13 %, toujours un skin nouveau.
 - **19 skins** : 6 communs, 5 rares (zèbre, abeille, pastèque, coccinelle, chat tigré), 4 épiques animés (arc-en-ciel, lave, cristal de glace, galaxie), 3 légendaires par défi (Dragon d'or : longueur 30 ; Licorne étoilée : 600 pièces gagnées en tout ; Phénix : 10 pommes d'or), 1 « Savoir » (Crayon magique, boutique).
-- **Boutique du savoir 🎟️** (écran Skins, visible seulement pour un joueur qui a une source de tickets) : Plage 15, Neige 30, Espace 50, Bibliothèque 70, Crayon magique 40. Sources déclarées dans `STUDY` (aujourd'hui : Salma ← `salma-verbes`). Tickets disponibles = tickets gagnés (le plus grand entre la copie locale et le serveur) − `spentT`.
+- **Cartes de l'Ardoise magique** : les cartes gagnées par Amine (`amine-ecriture.cards`) sont ajoutées à ses skins au chargement (« 🃏 nouvelle carte ! »). Skin exclusif **Craie magique** (rareté Savoir).
+- **Boutique du savoir 🎟️** (écran Skins, visible seulement pour un joueur qui a une source de tickets) : Plage 15, Neige 30, Espace 50, Bibliothèque 70, Crayon magique 40. Sources déclarées dans `STUDY` (Salma ← `salma-verbes` ; Amine ← `amine-ecriture`, tickets + cartes). Tickets disponibles = tickets gagnés (le plus grand entre la copie locale et le serveur) − `spentT`.
 - **Sauvegarde** `serpent3d:<Prénom>` {coins, total, skins, skin, best{facile,normal,expert}, maxLen, gold, games, spentT, bought, t}, préférences `serpent3d-prefs`. Records en ligne `serpent3d` par niveau.
 
 ## Ludo Légendes — `jeux/ludo-legendes.html`

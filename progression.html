@@ -219,6 +219,14 @@ function legendesCard(S, player){
   const best = d.best || {}, legs = (d.skins || []).filter(k => LEG[k]).map(k => LEG[k]);
   return '<div class="subject"><h3>🐉 Serpent Légendes</h3><div class="kpis">' + kpi(Math.max(best.facile || 0, best.normal || 0, best.expert || 0), 'record (pommes)') + kpi((d.skins || []).length + ' / 19', 'skins') + (d.spentT ? kpi(d.spentT, 'tickets dépensés') : '') + kpi(d.games || 0, 'parties') + '</div><dl class="units"><dt>🐢 Facile</dt><dd>' + (best.facile || 0) + '</dd><dt>🐇 Normal</dt><dd>' + (best.normal || 0) + '</dd><dt>🐆 Expert</dt><dd>' + (best.expert || 0) + '</dd><dt>Légendaires</dt><dd>' + (legs.length ? legs.join(', ') : '—') + '</dd></dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
 }
+function ecritureCard(S){
+  const p = prog(S, 'Amine', 'amine-ecriture');
+  const d = p && p.data ? p.data['amine-ecriture'] : null;
+  if(!d) return '<div class="subject"><h3>✏️ L\'Ardoise magique</h3><p class="none">Pas encore commencé.</p></div>';
+  const st = d.stars || {}, cnt = pre => Object.keys(st).filter(k => k.startsWith(pre)).length, sum = Object.values(st).reduce((a, b) => a + b, 0);
+  const weak = Object.entries(st).filter(([, v]) => v === 1).map(([k]) => (k.startsWith('c:') ? 'attaché ' : k.startsWith('M:') ? '' : k.startsWith('s:') ? 'script ' : 'prénom ') + k.split(':')[1]).slice(0, 8);
+  return '<div class="subject"><h3>✏️ L\'Ardoise magique</h3><div class="kpis">' + kpi(sum, 'étoiles') + kpi((d.cards || []).length + ' / 15', 'cartes') + '</div><dl class="units"><dt>Attaché</dt><dd>' + cnt('c:') + ' / 26 lettres</dd><dt>Majuscules</dt><dd>' + cnt('M:') + ' / 26</dd><dt>Minuscules</dt><dd>' + cnt('s:') + ' / 26</dd><dt>Prénom</dt><dd>' + (cnt('p:') ? cnt('p:') + ' / 3' : '—') + '</dd><dt>À retravailler (1 ★)</dt><dd>' + (weak.length ? esc(weak.join(', ')) : '—') + '</dd></dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
+}
 function ludoCard(S, player){
   const p = prog(S, player, 'ludo3d');
   const d = p && p.data ? p.data['ludo3d:' + player] || Object.values(p.data)[0] : null;
@@ -243,7 +251,7 @@ function show(S){
     '<article class="child salma"><header><h2>Salma</h2><span>Anglais · Français · Maths · Exposé</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
       salmaCard(S) + verbesCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + ludoCard(S, 'Salma') + '</div></article>' +
     '<article class="child amine"><header><h2>Amine</h2><span>Jeux · Grande section</span><span>· ' + lastSeen(S, 'Amine') + '</span></header><div class="subjects">' +
-      serpentCard(S, 'Amine') + legendesCard(S, 'Amine') + ludoCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') + '</div></article>' +
+      serpentCard(S, 'Amine') + ecritureCard(S) + legendesCard(S, 'Amine') + ludoCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') + '</div></article>' +
     '<section class="panel"><h2>🏆 Serpentin : les records de tout le monde</h2>' + (variants.length
       ? '<div class="table-wrap"><table><thead><tr><th>Joueur</th>' + variants.map(v => '<th>' + vLabel(v) + '</th>').join('') + '</tr></thead><tbody>' +
         names.map(n => '<tr><td>' + esc(n) + '</td>' + variants.map(v => { const r = serp.find(x => x.player === n && x.variant === v); return '<td class="n">' + (r ? r.best : '—') + '</td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>'

@@ -29,3 +29,4 @@ Une ligne par réalisation, la plus ancienne en premier. Ajouter une ligne à ch
 - **02/11** : cartes légendes d'Anis et Imen + illustration de la famille autour du Ludo (14 crédits ; solde 569).
 - **02/11** : bouton « 📤 Inviter un ami » dans le salon du Ludo (lien `?code=ABCD`) ; « Qui joue ? » corrigé pour les téléphones.
 - **02/11** : documentation réorganisée : `CLAUDE.md` + `docs/` (contenus, jeux 3D, serveur, Higgsfield, journal) ; fiche du projet Claude mise à jour.
+- **02/11** : **L'Ardoise magique** (Amine) : écrire les lettres en attaché, MAJUSCULES, minuscules et son prénom sur une ardoise 3D ; démonstration, pointillés corrigés geste par geste, écriture seule corrigée ; cartes → skins de Serpent Légendes (dont Craie magique), tickets, ardoise personnalisable.
