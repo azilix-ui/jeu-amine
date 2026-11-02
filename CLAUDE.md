@@ -37,7 +37,9 @@ index.html             accueil : titre « Famille Missaoui. » (point rouge), po
 indexancien.html       ancienne page d'accueil (photos aimantées sur le frigo), gardée en ligne, noindex
 famille.css            style commun accueil + espaces (version de cache : ?v=6)
 famille.js             module commun : « Qui joue ? », scores, classements, suivi et relecture des progrès
-progression.html       tableau de bord des parents (mot de passe parent)
+site.js                chargé par toutes les pages : appli installable (service worker) + journal des visites
+manifest.webmanifest, sw.js, icons/   l'application à installer sur l'écran d'accueil (voir docs/serveur.md)
+progression.html       tableau de bord des parents (mot de passe parent), avec le journal des visites
 essil/  index.html, deutsch-express.html, via-romana.html
 salma/  index.html, english-garden.html, atelier-des-verbes.html, atelier-des-formes.html, jardin-des-nombres.html, le-grand-galop.html, cheval/ (images et vidéos)
 amine/  index.html, ardoise-magique.html (+ lettres.js : modèles des 78 lettres), la-nuit-d-amine.html, la-nuit-d-amine-2.html, nahki-tounsi.html, serpentin.html, voix/api.php
@@ -60,7 +62,7 @@ package.json, build.js  copie le site dans dist/ si Hostinger lance un « build 
 
 ### Ajouter un cours ou un jeu
 1. Fichier dans le dossier de l'enfant (`salma/…`) ou dans `jeux/` s'il est pour toute la famille ; nom simple, sans accents.
-2. Pastille de retour en haut, `<script src="../famille.js">` et `Famille.track('<cours>', '<Prénom>', ['<clé localStorage>'])`.
+2. En tête de page, le bloc commun (manifeste, icône Apple, `<script src="/site.js" defer>`) copié d'une autre page ; pastille de retour en haut, `<script src="../famille.js">` et `Famille.track('<cours>', '<Prénom>', ['<clé localStorage>'])`.
 3. Déclarer le cours dans `COURSES` de `api/famille.php` (et dans `READABLE` s'il doit se relire sur une autre tablette), puis une carte dans `progression.html`.
 4. Une carte dans `<enfant>/index.html` et un lien dans la carte de l'enfant sur `index.html`.
 5. Tester (Playwright, portrait et paysage tablette), commit + push, vérifier en ligne, ajouter une ligne dans `docs/journal.md`.
