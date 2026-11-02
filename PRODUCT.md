@@ -8,11 +8,12 @@ web
 
 ## Users
 
-- **Essil**, au collège. Travaille l'allemand (Deutsch Express) et le latin (Via Romana) : vocabulaire, grammaire, civilisation, en étapes courtes avec correction immédiate.
-- **Salma**, en primaire. Débute l'anglais (Salma's English Garden) : vocabulaire de base, jours, mois, avec Ollie le hibou.
+- **Essil**, 12 ans, au collège. Travaille l'allemand (Deutsch Express) et le latin (Via Romana) : vocabulaire, grammaire, civilisation, en étapes courtes avec correction immédiate.
+- **Salma**, 8 ans, CE2. Anglais (English Garden), conjugaison (L'Atelier des Verbes), soustraction (Le Jardin des Nombres) et le quiz de son exposé sur le cheval (Le Grand Galop), avec Ollie le hibou.
 - **Amine**, 5 ans, grande section de maternelle. Joue à des jeux éducatifs : mémoire, compter jusqu'à 20, couleurs, suites logiques, une histoire interactive, la derja tunisienne (Nahki Tounsi) et Serpentin.
-- **Le papa** (propriétaire du site) : crée les contenus avec Claude, enregistre sa voix pour la derja, suit la progression des enfants sur la page Progression.
-- Le site est **réservé à la famille**. Serpentin accepte un autre prénom que ceux des enfants, mais il n'y a pas d'autre public visé (ni école, ni amis, ni grand public).
+- **Anis, le papa** (propriétaire du site) : crée les contenus avec Claude, enregistre sa voix pour la derja, suit la progression des enfants sur la page Progression, et joue aussi aux jeux de famille.
+- **Imen, la maman** : joue aux jeux de famille (Serpent Légendes, Ludo Légendes) avec son avatar.
+- Le site est **fait pour la famille**. Les jeux acceptent un autre prénom : un ami peut être invité à une partie de Ludo en ligne par un lien, mais il n'y a pas d'autre public visé (ni école, ni grand public).
 
 ## Product Purpose
 
@@ -38,7 +39,9 @@ Un site d'apprentissage **fait pour une seule famille** : chaque cours part du p
 - Les jeux d'Amine récompensent avec une cagnotte de bonbons partagée ; les cours d'Essil avec des XP et des grades ; celui de Salma avec des étoiles.
 - Pas de personnages protégés (jeux vidéo, dessins animés, marques) : on invente des personnages originaux.
 - Les voix de synthèse des navigateurs ne parlent pas la derja : c'est la voix enregistrée du papa qui fait foi.
-- Non décidé : synchroniser les progrès d'un appareil à l'autre (aujourd'hui, ils restent sur l'appareil où l'enfant a travaillé).
+- Synchronisation entre appareils : faite pour Serpent Légendes, Ludo Légendes et L'Atelier des Verbes ; les autres cours restent sur l'appareil (copie serveur pour la Progression seulement).
+- Jeux 3D (Three.js) pour toute la famille, avec collections (coffres, raretés, défis légendaires) ; les exercices rapportent des tickets 🎟️ dépensés dans les jeux.
+- Images et vidéos générées avec Higgsfield (avatars, cartes légendes, vidéos du cheval) : prix annoncé avant chaque génération.
 
 ## Brand Commitments
 
