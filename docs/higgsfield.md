@@ -17,7 +17,7 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | `flux_3_image` (1k) | avatars, cartes, illustrations, avec images de référence (rôle `image_references`, jusqu'à 10) | 2 crédits / image |
 | `seedance_2_5` (5 s, 720p, 16:9) | vidéos ; `mode: omni_reference` + `start_image` pour animer une image | 35 crédits / vidéo |
 
-## Ce qui a été généré (790 → 521 crédits)
+## Ce qui a été généré (790 → 519 crédits)
 
 | Date | Quoi | Fichiers sur le site | Crédits |
 |---|---|---|---|
@@ -29,7 +29,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 02/11 | Cartes légendes d'Anis et Imen + illustration Ludo (famille autour du plateau) | `jeux/avatars/{anis,imen}-*.webp`, `jeux/avatars/ludo-famille.webp` | 14 |
 | 02/11 | 15 cartes illustrées de l'Ardoise magique (un serpent par skin) + Amine devant son ardoise (écran d'accueil) | `jeux/cartes/<skin>.webp`, `amine/ardoise-amine.webp` | 32 |
 | 02/11 | Cartes rares : 4 mythiques (Amine, Salma, Essil, les 3 ensemble) + 4 secrètes | `jeux/cartes/{alphabet,polyglotte,hydre,aurore,tonnerre,arclune,tresor}.webp` | 16 |
-| | **Total** | | **269** |
+| 02/11 | Illustration de Grimpe-Glace (la famille saute dans la tour de glace, les 5 avatars en référence) | `jeux/avatars/grimpe-glace.webp` | 2 |
+| | **Total** | | **271** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 

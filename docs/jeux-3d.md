@@ -1,6 +1,6 @@
-# Les jeux 3D de la famille
+# Les jeux de la famille (3D et Grimpe-Glace)
 
-Les deux jeux utilisent Three.js 0.170 (`lib/three-0.170.0.module.min.js`), sans autre dépendance en ligne que Google Fonts. Ils partagent le même univers : panneaux sombres posés sur la scène 3D, raretés **commun** (gris-vert), **rare** (bleu), **épique** (violet), **légendaire** (or), coffres mystère, défis légendaires et **cartes légendes** Higgsfield.
+Serpent et Ludo utilisent Three.js 0.170 (`lib/three-0.170.0.module.min.js`), sans autre dépendance en ligne que Google Fonts. Ils partagent le même univers : panneaux sombres posés sur la scène 3D, raretés **commun** (gris-vert), **rare** (bleu), **épique** (violet), **légendaire** (or), coffres mystère, défis légendaires et **cartes légendes** Higgsfield.
 
 Avatars et cartes : `jeux/avatars/<prénom>.webp` (essil, salma, amine, anis, imen) et `jeux/avatars/<prénom>-<légende>.webp` (légende = dragon, licorne, phenix ; 15 cartes). Si l'image manque, le jeu affiche un émoji (🚆 🦉 🎃 🧔 👩) ou la première lettre du prénom.
 
@@ -29,6 +29,21 @@ Avatars et cartes : `jeux/avatars/<prénom>.webp` (essil, salma, amine, anis, im
 - **Collection** : pions (classique, bille de verre, champignon, petit roi, robot, fusée), dés (blanc, bois, doré, cristal, feu, galaxie), plateaux (Jardin, Désert tunisien, Château, Espace) ; **pions légendaires** par défi (Dragon d'or : 3 victoires ; Licorne étoilée : 15 pions renvoyés ; Phénix : 25 six) avec leur carte légende.
 - **Sauvegarde** `ludo3d:<Prénom>` {coins, total, owned[cat:id], pawn, dice, board, wins, games, caps, sixes, t}, préférences `ludo3d-prefs`, dernier code `ludo-last`. Records en ligne : victoires (`ludo3d`, variante `victoires`).
 - Illustration de l'écran d'accueil : `jeux/avatars/ludo-famille.webp` (la famille autour d'un plateau géant, Higgsfield).
+
+## Grimpe-Glace — `jeux/grimpe-glace.html` (2D)
+
+Jeu de plateformes vertical sans fin, inspiré des jeux de tour des années 2000 (nom et héros originaux). Moteur maison en Canvas 2D, sans dépendance ; physique à pas fixe (120 pas / s).
+- **Héros** : l'avatar du joueur (`avatars/<prénom>.webp`, visage dans un cercle) en tenue d'hiver streetwear (bonnet, sweat à sa couleur, pantalon large, baskets), dessiné et animé en code (course, saut, chute, glissade, vrille dans les grands sauts).
+- **Saut automatique** : le héros s'envole quand il dépasse le **bord** d'une plateforme, ou quand il court contre un mur. Hauteur = 790 + 0,86 × vitesse (vitesse max 560) : avec de l'élan on franchit 3 à 4 étages. Option « bouton Saut » dans les réglages (et Espace au clavier). Inertie et glisse : accélération progressive, freinage faible (glace bleu clair : très faible), rebond sur les murs en l'air.
+- **Étages** tous les 92 unités ; largeur qui diminue avec la hauteur ; types : normale, étroite, glace (glisse), mobile (◀ ▶), fragile (se casse 0,55 s après l'atterrissage), champignon-ressort (saut × 1,55) ; étoiles bonus (+50). Un grand palier tous les 50 étages, qui annonce un nouveau monde.
+- **6 mondes** : la Tour de Givre, la Grotte de Cristal, le Ciel d'Aurore, le Royaume des Nuages, le Palais du Dragon de Glace, le Cosmos Gelé (couleurs, aurore, cristaux ou braises, parallaxe).
+- **Tour qui monte** dès l'étage 5, un cran plus vite toutes les 30 s (8 vitesses, « Plus vite ! »). On perd en tombant sous l'écran.
+- **Score** = 10 × étage max + combos + étoiles. **Combo** : sauts de 2 étages ou plus enchaînés avant que la barre (3 s) se vide ; bonus = étages du combo². Messages « Bien ! Super ! Génial ! Fantastique ! Incroyable ! » et « Joli combo… Combo COSMIQUE ! ».
+- **Tenues** débloquées par l'étage record : Classique, Écharpe arc-en-ciel (25), Cape de givre (60), Couronne de glace (100), Ailes de cristal (160), Aura dorée (250).
+- **Sons** : bruitages et musique électro / hip-hop synthétisés en WebAudio (originaux), coupables séparément.
+- **Commandes** : boutons ◀ ▶ en bas sur tablette (multitouch), flèches ou Q / D au clavier, Échap pause, R recommencer, manette. Plein écran dans les réglages.
+- **Sauvegarde** `grimpeglace:<Prénom>` {best, bestFloor, bestCombo, games, tenue, t} (relue sur le serveur), préférences `grimpeglace-prefs`. Records en ligne `grimpeglace`, variantes `score` (jusqu'à 999 999) et `etages`.
+- Illustration du menu : `jeux/avatars/grimpe-glace.webp` (la famille saute dans la tour de glace, Higgsfield).
 
 ## Tester
 

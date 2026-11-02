@@ -268,7 +268,7 @@ function show(S){
       (others.length ? '<p class="when">Autres joueurs : ' + others.map(esc).join(', ') + '</p>' : '') + '</section>' +
     '<section class="panel"><h2>🕒 Dernières parties</h2>' + (S.recent.length
       ? '<div class="table-wrap"><table><thead><tr><th>Quand</th><th>Joueur</th><th>Jeu</th><th>Score</th></tr></thead><tbody>' +
-        S.recent.slice(0, 15).map(r => '<tr><td>' + fmtDate(r.created) + '</td><td>' + esc(r.player) + '</td><td>' + (r.game === 'ludo3d' ? '🎲 Ludo · victoires' : r.game === 'serpent3d' ? '🐉 Légendes · ' + r.variant : '🐍 ' + vLabel(r.variant)) + '</td><td class="n">' + r.score + '</td></tr>').join('') + '</tbody></table></div>'
+        S.recent.slice(0, 15).map(r => '<tr><td>' + fmtDate(r.created) + '</td><td>' + esc(r.player) + '</td><td>' + (r.game === 'ludo3d' ? '🎲 Ludo · victoires' : r.game === 'grimpeglace' ? '❄️ Grimpe-Glace · ' + (r.variant === 'etages' ? 'étages' : 'score') : r.game === 'serpent3d' ? '🐉 Légendes · ' + r.variant : '🐍 ' + vLabel(r.variant)) + '</td><td class="n">' + r.score + '</td></tr>').join('') + '</tbody></table></div>'
       : '<p class="none">Rien pour l\'instant.</p>') + '</section>' +
     '<p class="when">Les progrès des cours sont envoyés automatiquement quand l\'enfant les utilise sur missaoui-family.com. Ce qui a été fait avant la mise en place du suivi apparaît dès que l\'enfant rouvre le cours sur le même appareil.</p>';
   $('#reload').onclick = async () => { try{ show(await post({action:'summary', pass})); }catch(e){ loginForm(e.message); } };
