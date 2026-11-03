@@ -303,6 +303,7 @@ const SKINS = [
   { id:'phenix', name:'Phénix',       rar:'legendaire', head:'#ffe066', anim:true, body:(i,n,t)=> col.set('#ffe066').lerp(col2.set('#ff3b1f'), Math.min(1, i / Math.max(1, n * .5))).lerp(col2.set('#a3122b'), Math.max(0, (i / n - .5) * 2)).multiplyScalar(.9 + .2 * Math.sin(t * 9 + i)), mat:{emissive:'#ff4400', ei:.45}, acc:['crete','ailes-feu'],
     defi:{ text:'Mange 10 pommes d\'or', key:'gold', goal:10 } },
   { id:'craie', name:'Craie magique', rar:'savoir', head:'#ffffff', body:(i)=> ['#ffffff','#ffe3f1','#e3f4ff','#fff6d6'][i % 4], mat:{ rough:.95, emissive:'#ffffff', ei:.08 }, acc:['aureole'] },
+  { id:'monnaie', name:'Serpent Monnaie', rar:'savoir', anim:true, head:'#e2b84a', body:(i,n,t)=> col.set(['#e2b84a','#d8dde3','#c9773e','#e2b84a','#f6dc8a'][i % 5]).multiplyScalar(.85 + .25 * Math.max(0, Math.sin(t * 4 - i * .6))), mat:{ metal:.7, rough:.25, emissive:'#7a5a00', ei:.12 }, acc:['couronne'] },
   { id:'crayon', name:'Crayon magique', rar:'savoir', head:'#f2c38b', body:(i,n)=> i >= n - 1 ? '#ff8fb1' : i === n - 2 ? '#c9ccd1' : (i % 2 ? '#ffcf33' : '#f4b400'), acc:['mine'] },
   // Mythiques : le plus grand exploit de chaque enfant (et l'Hydre, gagnée ensemble)
   { id:'alphabet', name:"Serpent de l'Alphabet", rar:'mythique', owner:'amine', anim:true, head:'#ffe9a8', body:(i,n,t)=> col.set(i % 3 === 0 ? '#fff1c9' : '#ffd23f').lerp(col2.set('#ff5c9a'), Math.max(0, Math.sin(t * 3 - i * .4)) * .45), mat:{ metal:.5, rough:.3, emissive:'#ff9d00', ei:.25 }, acc:['couronne'],
@@ -346,14 +347,16 @@ const tracked = new Set();
 
 /* ---------- Tickets du savoir : gagnés dans les exercices (L'Atelier des Verbes…), dépensés ici ---------- */
 const STUDY = { salma:[{ course:'salma-verbes', key:'salma-verbes', name:"L'Atelier des Verbes", href:'../salma/atelier-des-verbes.html' },
-                       { course:'salma-geometrie', key:'salma-geometrie', name:"L'Atelier des Formes", href:'../salma/atelier-des-formes.html' }],
+                       { course:'salma-geometrie', key:'salma-geometrie', name:"L'Atelier des Formes", href:'../salma/atelier-des-formes.html' },
+                       { course:'salma-monnaie', key:'salma-monnaie', name:"Le Marché d'Ollie", href:'../salma/marche-d-ollie.html' }],
   amine:[{ course:'amine-ecriture', key:'amine-ecriture', name:"L'Ardoise magique", href:'../amine/ardoise-magique.html', cards:true }] };
 const SHOP = [
   { id:'w:plage',  icon:'🏖️', name:'Monde Plage',  sub:'Sans attendre le record 15', cost:15, world:'plage' },
   { id:'w:neige',  icon:'❄️', name:'Monde Neige',  sub:'Sans attendre le record 25', cost:30, world:'neige' },
   { id:'w:espace', icon:'🪐', name:'Monde Espace', sub:'Sans attendre le record 40', cost:50, world:'espace' },
   { id:'w:livres', icon:'📚', name:'Monde Bibliothèque', sub:'Exclusif : seulement avec des tickets', cost:70, world:'livres' },
-  { id:'s:crayon', icon:'✏️', name:'Skin Crayon magique', sub:'Exclusif : seulement avec des tickets', cost:40, skin:'crayon' }
+  { id:'s:crayon', icon:'✏️', name:'Skin Crayon magique', sub:'Exclusif : seulement avec des tickets', cost:40, skin:'crayon' },
+  { id:'s:monnaie', icon:'🪙', name:'Skin Serpent Monnaie', sub:"Exclusif : des pièces d'or, d'argent et de cuivre", cost:45, skin:'monnaie' }
 ];
 let studyEarned = 0, REW = null;
 // Donne un skin ; 1 chance sur 10 qu'il soit « brillant »
@@ -953,7 +956,7 @@ const owned = it => it.skin ? data.skins.includes(it.skin) : (data.bought || [])
 function shopHTML(){
   const src = studySources(); if(!src.length) return '';
   return `<div class="tickets"><div class="chead" style="gap:8px"><h3 style="font-size:24px">🎟️ Boutique du savoir</h3><span class="coins" style="color:var(--mint)">🎟️ ${ticketsLeft()}</span></div>
-    <p>Chaque bonne réponse dans ${src.map(x => `<a href="${x.href}">${x.name}</a>`).join(' et ')} te donne un ticket. Dépense-les ici !</p>
+    <p>Chaque bonne réponse dans ${src.map(x => `<a href="${x.href}">${x.name}</a>`).join(', ').replace(/, ([^,]*)$/, ' et $1')} te donne un ticket. Dépense-les ici !</p>
     <div class="shop">${SHOP.map(it => { const own = owned(it); return `<div class="item ${own ? 'own' : ''}"><span class="ic" aria-hidden="true">${it.icon}</span><b>${it.name}</b><small>${it.sub}</small>
       <button class="buy" data-buy="${it.id}" ${own || ticketsLeft() < it.cost ? 'disabled' : ''}>${own ? '✔ Débloqué' : '🎟️ ' + it.cost}</button></div>`; }).join('')}</div></div>`;
 }

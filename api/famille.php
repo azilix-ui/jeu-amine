@@ -23,10 +23,10 @@ declare(strict_types=1);
 
 const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
-const READABLE = ['serpent3d', 'salma-verbes', 'salma-geometrie', 'ludo3d', 'grimpeglace', 'amine-ecriture'];
-const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'serpent3d', 'ludo3d', 'grimpeglace'];
+const READABLE = ['serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'ludo3d', 'grimpeglace', 'amine-ecriture'];
+const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'serpent3d', 'ludo3d', 'grimpeglace'];
 // Cours qui comptent comme « apprendre » (les jeux n'en font pas partie) : séries de jours et cartes secrètes.
-const LEARNING = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'amine-halloween', 'amine-tounsi', 'amine-ecriture'];
+const LEARNING = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'amine-halloween', 'amine-tounsi', 'amine-ecriture'];
 const MAX_DATA = 30000;
 const MAX_WRITES = 240;        // écritures par adresse…
 const WRITE_WINDOW = 600;      // …toutes les 10 minutes
