@@ -348,8 +348,10 @@ const tracked = new Set();
 /* ---------- Tickets du savoir : gagnés dans les exercices (L'Atelier des Verbes…), dépensés ici ---------- */
 const STUDY = { salma:[{ course:'salma-verbes', key:'salma-verbes', name:"L'Atelier des Verbes", href:'../salma/atelier-des-verbes.html' },
                        { course:'salma-geometrie', key:'salma-geometrie', name:"L'Atelier des Formes", href:'../salma/atelier-des-formes.html' },
-                       { course:'salma-monnaie', key:'salma-monnaie', name:"Le Marché d'Ollie", href:'../salma/marche-d-ollie.html' }],
-  amine:[{ course:'amine-ecriture', key:'amine-ecriture', name:"L'Ardoise magique", href:'../amine/ardoise-magique.html', cards:true }] };
+                       { course:'salma-monnaie', key:'salma-monnaie', name:"Le Marché d'Ollie", href:'../salma/marche-d-ollie.html' },
+                       { course:'jasmin', key:'jasmin:Salma', name:'La Légende du Jasmin', href:'legende-du-jasmin.html' }],
+  amine:[{ course:'amine-ecriture', key:'amine-ecriture', name:"L'Ardoise magique", href:'../amine/ardoise-magique.html', cards:true }, { course:'jasmin', key:'jasmin:Amine', name:'La Légende du Jasmin', href:'legende-du-jasmin.html' }],
+  essil:[{ course:'jasmin', key:'jasmin:Essil', name:'La Légende du Jasmin', href:'legende-du-jasmin.html' }] };
 const SHOP = [
   { id:'w:plage',  icon:'🏖️', name:'Monde Plage',  sub:'Sans attendre le record 15', cost:15, world:'plage' },
   { id:'w:neige',  icon:'❄️', name:'Monde Neige',  sub:'Sans attendre le record 25', cost:30, world:'neige' },

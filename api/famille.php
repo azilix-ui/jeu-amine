@@ -21,10 +21,10 @@
  */
 declare(strict_types=1);
 
-const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace'];
+const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
-const READABLE = ['serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'ludo3d', 'grimpeglace', 'amine-ecriture'];
-const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'serpent3d', 'ludo3d', 'grimpeglace'];
+const READABLE = ['serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture'];
+const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin'];
 // Cours qui comptent comme « apprendre » (les jeux n'en font pas partie) : séries de jours et cartes secrètes.
 const LEARNING = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'amine-halloween', 'amine-tounsi', 'amine-ecriture'];
 const MAX_DATA = 30000;
@@ -280,7 +280,7 @@ try {
         $variant = (string)($_POST['variant'] ?? '');
         $score = (int)($_POST['score'] ?? -1);
         if (!in_array($game, GAMES, true) || !preg_match('/^[a-z0-9\-]{1,40}$/', $variant)) fail(400, 'Jeu inconnu.');
-        if ($score < 0 || $score > ($game === 'grimpeglace' ? 999999 : 5000)) fail(400, 'Score invalide.');
+        if ($score < 0 || $score > (in_array($game, ['grimpeglace', 'jasmin'], true) ? 999999 : 5000)) fail(400, 'Score invalide.');
         touch_player($p);
         $st = db()->prepare('SELECT MAX(score) FROM scores WHERE game = ? AND variant = ? AND player = ?'); $st->execute([$game, $variant, $p]);
         $best = (int)$st->fetchColumn();

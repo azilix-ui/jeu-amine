@@ -296,7 +296,7 @@ function show(S){
       (others.length ? '<p class="when">Autres joueurs : ' + others.map(esc).join(', ') + '</p>' : '') + '</section>' +
     '<section class="panel"><h2>🕒 Dernières parties</h2>' + (S.recent.length
       ? '<div class="table-wrap"><table><thead><tr><th>Quand</th><th>Joueur</th><th>Jeu</th><th>Score</th></tr></thead><tbody>' +
-        S.recent.slice(0, 15).map(r => '<tr><td>' + fmtDate(r.created) + '</td><td>' + esc(r.player) + '</td><td>' + (r.game === 'ludo3d' ? '🎲 Ludo · victoires' : r.game === 'grimpeglace' ? '❄️ Grimpe-Glace · ' + (r.variant === 'etages' ? 'étages' : 'score') : r.game === 'serpent3d' ? '🐉 Légendes · ' + r.variant : '🐍 ' + vLabel(r.variant)) + '</td><td class="n">' + r.score + '</td></tr>').join('') + '</tbody></table></div>'
+        S.recent.slice(0, 15).map(r => '<tr><td>' + fmtDate(r.created) + '</td><td>' + esc(r.player) + '</td><td>' + (r.game === 'ludo3d' ? '🎲 Ludo · victoires' : r.game === 'grimpeglace' ? '❄️ Grimpe-Glace · ' + (r.variant === 'etages' ? 'étages' : 'score') : r.game === 'jasmin' ? '🌼 Jasmin · ' + r.variant.replace('monde', 'monde ') : r.game === 'serpent3d' ? '🐉 Légendes · ' + r.variant : '🐍 ' + vLabel(r.variant)) + '</td><td class="n">' + r.score + '</td></tr>').join('') + '</tbody></table></div>'
       : '<p class="none">Rien pour l\'instant.</p>') + '</section>' +
     '<section class="panel" id="visits"><div class="vhead"><h2>🌍 Journal des visites</h2><span class="seg" id="vdays"><button data-d="1">24 h</button><button data-d="7" aria-pressed="true">7 jours</button><button data-d="30">30 jours</button><button data-d="60">60 jours</button></span></div><div id="vbody"><p class="none">Chargement…</p></div></section>' +
     '<p class="when">Les progrès des cours sont envoyés automatiquement quand l\'enfant les utilise sur missaoui-family.com. Ce qui a été fait avant la mise en place du suivi apparaît dès que l\'enfant rouvre le cours sur le même appareil.</p>';
@@ -309,7 +309,7 @@ function show(S){
 const PAGES = { '/':'Accueil', '/index.html':'Accueil', '/indexancien.html':'Ancienne accueil', '/progression.html':'Progression (parents)', '/essil/':'Espace Essil', '/salma/':'Espace Salma', '/amine/':'Espace Amine',
   '/essil/deutsch-express.html':'Deutsch Express', '/essil/via-romana.html':'Via Romana', '/salma/english-garden.html':'English Garden', '/salma/atelier-des-verbes.html':'Atelier des Verbes', '/salma/atelier-des-formes.html':'Atelier des Formes', '/salma/marche-d-ollie.html':"Marché d'Ollie",
   '/salma/jardin-des-nombres.html':'Jardin des Nombres', '/salma/le-grand-galop.html':'Le Grand Galop', '/amine/ardoise-magique.html':'Ardoise magique', '/amine/la-nuit-d-amine.html':"La Nuit d'Amine", '/amine/la-nuit-d-amine-2.html':"La Nuit d'Amine 2",
-  '/amine/nahki-tounsi.html':'Nahki Tounsi', '/amine/serpentin.html':'Serpentin', '/jeux/serpent-legendes.html':'Serpent Légendes', '/jeux/ludo-legendes.html':'Ludo Légendes', '/jeux/grimpe-glace.html':'Grimpe-Glace' };
+  '/amine/nahki-tounsi.html':'Nahki Tounsi', '/amine/serpentin.html':'Serpentin', '/jeux/serpent-legendes.html':'Serpent Légendes', '/jeux/ludo-legendes.html':'Ludo Légendes', '/jeux/grimpe-glace.html':'Grimpe-Glace', '/jeux/legende-du-jasmin.html':'La Légende du Jasmin' };
 const pageName = p => PAGES[p] || PAGES[p.replace(/index\.html$/, '')] || p;
 const flag = cc => cc && /^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map(c => 127397 + c.charCodeAt(0))) : '🏳️';
 function device(ua, screen){

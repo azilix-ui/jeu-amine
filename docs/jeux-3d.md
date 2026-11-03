@@ -1,4 +1,4 @@
-# Les jeux de la famille (3D et Grimpe-Glace)
+# Les jeux de la famille (3D, Grimpe-Glace, La Légende du Jasmin)
 
 Serpent et Ludo utilisent Three.js 0.170 (`lib/three-0.170.0.module.min.js`), sans autre dépendance en ligne que Google Fonts. Ils partagent le même univers : panneaux sombres posés sur la scène 3D, raretés **commun** (gris-vert), **rare** (bleu), **épique** (violet), **légendaire** (or), coffres mystère, défis légendaires et **cartes légendes** Higgsfield.
 
@@ -15,7 +15,7 @@ Avatars et cartes : `jeux/avatars/<prénom>.webp` (essil, salma, amine, anis, im
 - **Mythiques 🔥** (rose, au-dessus de Légendaire ; seulement pour Essil, Salma, Amine) : Serpent de l'Alphabet (Amine : 26 lettres attachées à 2 ⭐ ou plus), Serpent des Verbes (Salma : 3 ⭐ aux 8 étapes de l'Atelier), Serpent Polyglotte (Essil : chaque leçon de Deutsch Express et Via Romana, 24), **Hydre Missaoui** (les 3 enfants apprennent pendant une même semaine ; gagnée par chacun). Calculés par le serveur (`?action=rewards`).
 - **Secrets 🌙** : Aurore boréale, Tonnerre, Arc-de-Lune, Trésor ; un par tranche de **5 jours d'apprentissage d'affilée** (jours où un cours a changé, jeux exclus). Cachés (« ??? ») tant qu'ils ne sont pas gagnés ; la série du jour s'affiche en 5 pastilles.
 - **Cartes de l'Ardoise magique** : les cartes gagnées par Amine (`amine-ecriture.cards`) sont ajoutées à ses skins au chargement (« 🃏 nouvelle carte ! »). Skin exclusif **Craie magique** (rareté Savoir).
-- **Boutique du savoir 🎟️** (écran Skins, visible seulement pour un joueur qui a une source de tickets) : Plage 15, Neige 30, Espace 50, Bibliothèque 70, Crayon magique 40, Serpent Monnaie 45 (pièces d'or, d'argent et de cuivre). Sources déclarées dans `STUDY` (Salma ← `salma-verbes` + `salma-geometrie` + `salma-monnaie`, tickets additionnés ; Amine ← `amine-ecriture`, tickets + cartes). Tickets disponibles = tickets gagnés (le plus grand entre la copie locale et le serveur) − `spentT`.
+- **Boutique du savoir 🎟️** (écran Skins, visible seulement pour un joueur qui a une source de tickets) : Plage 15, Neige 30, Espace 50, Bibliothèque 70, Crayon magique 40, Serpent Monnaie 45 (pièces d'or, d'argent et de cuivre). Sources déclarées dans `STUDY` (Salma ← `salma-verbes` + `salma-geometrie` + `salma-monnaie` + `jasmin`, tickets additionnés ; Essil ← `jasmin` ; Amine ← `amine-ecriture` + `jasmin` ; Amine ← `amine-ecriture`, tickets + cartes). Tickets disponibles = tickets gagnés (le plus grand entre la copie locale et le serveur) − `spentT`.
 - **Sauvegarde** `serpent3d:<Prénom>` {coins, total, skins, shiny, skin, best{facile,normal,expert}, maxLen, gold, games, spentT, bought, t}, préférences `serpent3d-prefs`. Records en ligne `serpent3d` par niveau.
 
 ## Ludo Légendes — `jeux/ludo-legendes.html`
@@ -44,6 +44,21 @@ Jeu de plateformes vertical sans fin, inspiré des jeux de tour des années 2000
 - **Commandes** : boutons ◀ ▶ en bas sur tablette (multitouch), flèches ou Q / D au clavier, Échap pause, R recommencer, manette. Plein écran dans les réglages.
 - **Sauvegarde** `grimpeglace:<Prénom>` {best, bestFloor, bestCombo, games, tenue, t} (relue sur le serveur), préférences `grimpeglace-prefs`. Records en ligne `grimpeglace`, variantes `score` (jusqu'à 999 999) et `etages`.
 - Illustration du menu : `jeux/avatars/grimpe-glace.webp` (la famille saute dans la tour de glace, Higgsfield).
+
+## La Légende du Jasmin — `jeux/legende-du-jasmin.html` (plateforme 2.5D)
+
+Jeu de plateforme original à défilement horizontal, univers tunisien (cahier des charges du papa : `OneDrive\Amine\grande section\projet clone mario\`, version solo). Moteur maison Canvas 2D, physique à pas fixe, niveaux construits par morceaux (`buildLevel` : départ, trou, escalier, blocs, plateformes, pics, plateformes mobiles, dalles fragiles, maison secrète, lanterne, sortie).
+- **Héros** : l'avatar du joueur (visage) en tunique à ses couleurs. Saut variable (appui court / long), tolérance au bord (`coyote`) et appui mémorisé, contrôle en l'air, course qui accélère toute seule (ou B / Maj).
+- **5 mondes** (fonds Higgsfield en parallaxe, répétés en miroir) : Sidi Bou Saïd, l'Oasis de Tozeur, les Dunes du Sahara, les Montagnes d'Aïn Draham (glace), le Palais du Scorpion d'Or (boss). Effet 2.5D : chaque bloc a une face du dessus et une face de côté.
+- **Blocs** : 📚 savoir (question selon qui joue : Amine = compter, lettres, couleurs ; Salma = soustraction, monnaie, conjugaison, géométrie, anglais ; Essil = allemand, latin, multiplication ; parents et amis = Tunisie, calcul) ; 🪔 bonus (🎩 chéchia = un coup en plus, 🌶️ harissa = piments à lancer avec B, 🍵 thé à la menthe = vitesse) ; 🪙 dinars ; briques cassables.
+- **Ennemis** : scorpion, faucon, hérisson (en boule quand on saute dessus, on le fait rouler), cactus qui lance des figues de Barbarie. **Boss** : le Scorpion d'Or (fonce, se cogne au mur, sonné ⭐ : on lui saute sur le dos ; 3 coups ; en phase 2 il lance des braises).
+- **Dangers** : trous, eau / braises, pics (par paires). Plateformes mobiles, dalles fragiles, derbouka-tremplin. Lanternes 🏮 = points de sauvegarde. Porte bleue = sortie. 3 **jasmins dorés** 🌼 par niveau (dont un dans une maison secrète, derrière un faux mur).
+- **Fin de niveau** : temps, dinars, jasmins, ennemis, bonnes réponses, score, 1 à 3 étoiles (fini ; 60 % des dinars ; 3 jasmins). 5 vies par essai. Le monde suivant se débloque.
+- **Tickets 🎟️** : 1 par bonne réponse + 2 par jasmin trouvé la première fois ; ajoutés à la Boutique du savoir de Serpent Légendes (Essil, Salma et Amine).
+- **Commandes** : croix à gauche, A (saut) et B (tir / course) à droite, taille réglable ; clavier (flèches / Q D, Espace / Z, Maj / X, Échap) ; manette. Paysage (message « tourne la tablette » en portrait).
+- **Sons** : musique originale en mode hijaz avec rythme de darbouka (maqsoum), bruitages synthétisés.
+- **Sauvegarde** `jasmin:<Prénom>` {unlocked, best{n:{score,stars,time}}, gems{n:[…]}, tickets, answers{ok,ko}, games, t}, réglages `jasmin-prefs`. Records en ligne `jasmin`, variantes `monde1` à `monde5`.
+- Images : `jeux/jasmin/` (titre, monde1 à monde5, boss).
 
 ## Tester
 

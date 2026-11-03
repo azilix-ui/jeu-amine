@@ -17,7 +17,7 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | `flux_3_image` (1k) | avatars, cartes, illustrations, avec images de référence (rôle `image_references`, jusqu'à 10) | 2 crédits / image |
 | `seedance_2_5` (5 s, 720p, 16:9) | vidéos ; `mode: omni_reference` + `start_image` pour animer une image | 35 crédits / vidéo |
 
-## Ce qui a été généré (790 → 519 crédits)
+## Ce qui a été généré (790 → 505 crédits)
 
 | Date | Quoi | Fichiers sur le site | Crédits |
 |---|---|---|---|
@@ -30,7 +30,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 02/11 | 15 cartes illustrées de l'Ardoise magique (un serpent par skin) + Amine devant son ardoise (écran d'accueil) | `jeux/cartes/<skin>.webp`, `amine/ardoise-amine.webp` | 32 |
 | 02/11 | Cartes rares : 4 mythiques (Amine, Salma, Essil, les 3 ensemble) + 4 secrètes | `jeux/cartes/{alphabet,polyglotte,hydre,aurore,tonnerre,arclune,tresor}.webp` | 16 |
 | 02/11 | Illustration de Grimpe-Glace (la famille saute dans la tour de glace, les 5 avatars en référence) | `jeux/avatars/grimpe-glace.webp` | 2 |
-| | **Total** | | **271** |
+| 04/11 | La Légende du Jasmin : titre (la famille sur les toits de Sidi Bou Saïd, 5 avatars), 5 fonds de monde (21:9), le Scorpion d'Or | `jeux/jasmin/{titre,monde1…5,boss}.webp` | 14 |
+| | **Total** | | **285** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 
