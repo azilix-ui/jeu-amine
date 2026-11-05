@@ -501,7 +501,7 @@ function audio(){ if(!AC){ try{ AC = new (window.AudioContext || window.webkitAu
 function tone(f, d, { type = 'triangle', v = .12, at = 0, slide = 0, dest = null } = {}){ if(!AC) return; const t = AC.currentTime + at, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * slide), t + d); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0008, t + d); o.connect(g).connect(dest || master); o.start(t); o.stop(t + d + .03); }
 function noise(d, { v = .2, at = 0, hp = 800, lp = 0, dest = null } = {}){ if(!AC) return; if(!noiseBuf){ noiseBuf = AC.createBuffer(1, AC.sampleRate * .5, AC.sampleRate); const ch = noiseBuf.getChannelData(0); for(let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1; }
   const t = AC.currentTime + at, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; f.type = lp ? 'lowpass' : 'highpass'; f.frequency.value = lp || hp; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0008, t + d); s.connect(f).connect(g).connect(dest || master); s.start(t); s.stop(t + d + .02); }
-const S = (fn) => (...a) => { if(prefs.sound && AC) fn(...a); };
+const S = (fn) => (...a) => { if(prefs.sound && AC) try{ fn(...a); }catch(e){} };   // un souci de son (tablette) ne doit jamais bloquer un bouton
 const sfx = {
   jump:S(() => tone(330, .16, { type:'square', v:.06, slide:2.2 })), land:S(() => noise(.05, { v:.08, lp:700 })),
   coin:S(() => { tone(1318, .06, { type:'square', v:.05 }); tone(1975, .12, { type:'square', v:.05, at:.05 }); }),
@@ -566,7 +566,24 @@ function wirePad(el, k){
   const off = e => { touch[k].delete(e.pointerId); if(!touch[k].size) el.classList.remove('on'); };
   el.addEventListener('pointerdown', on); el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('lostpointercapture', off); el.addEventListener('contextmenu', e => e.preventDefault());
 }
-wirePad($('bL'), 'l'); wirePad($('bR'), 'r'); wirePad($('bA'), 'a'); wirePad($('bB'), 'b');
+wirePad($('bA'), 'a'); wirePad($('bB'), 'b');
+// la croix ◀ ▶ : une seule zone, on peut glisser le pouce d'une flèche à l'autre sans le lever
+(function(){
+  const cross = document.querySelector('.cross'), side = new Map();
+  const upd = () => { touch.l.clear(); touch.r.clear(); side.forEach((k, id) => touch[k].add(id)); $('bL').classList.toggle('on', touch.l.size > 0); $('bR').classList.toggle('on', touch.r.size > 0); };
+  const at = e => { const r = $('bR').getBoundingClientRect(), l = $('bL').getBoundingClientRect(); return e.clientX < (l.right + r.left) / 2 ? 'l' : 'r'; };
+  cross.addEventListener('pointerdown', e => { e.preventDefault(); side.set(e.pointerId, at(e)); try{ cross.setPointerCapture(e.pointerId); }catch(_){} upd(); });
+  cross.addEventListener('pointermove', e => { if(side.has(e.pointerId)){ side.set(e.pointerId, at(e)); upd(); } });
+  const off = e => { side.delete(e.pointerId); upd(); };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => cross.addEventListener(t, off));
+  cross.addEventListener('contextmenu', e => e.preventDefault());
+  window.__clearCross = () => { side.clear(); upd(); };
+})();
+// sécurité : quand plus aucun doigt ne touche l'écran, aucune touche ne reste « enfoncée »
+function releaseAll(){ Object.values(touch).forEach(t => t.clear()); document.querySelectorAll('.pbtn.on').forEach(b => b.classList.remove('on')); if(window.__clearCross) window.__clearCross(); }
+addEventListener('touchend', e => { if(!e.touches.length) releaseAll(); }, { passive:true });
+addEventListener('touchcancel', e => { if(!e.touches.length) releaseAll(); }, { passive:true });
+addEventListener('blur', releaseAll);
 if(matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window) document.body.classList.add('touch');
 addEventListener('touchstart', () => document.body.classList.add('touch'), { passive:true });
 document.addEventListener('gesturestart', e => e.preventDefault());
@@ -685,7 +702,10 @@ function step(dt){
   const dir = (R ? 1 : 0) - (L ? 1 : 0); if(dir) h.face = dir;
   h.runT = dir ? h.runT + dt : 0;
   const under = tileAt(Math.floor(h.x / T), Math.floor((h.y + 1) / T)), ice = g.W.ice && h.ground && !h.on && under !== '=' && under !== 'f', maxV = (B && !h.harissa) || h.runT > 1.1 || h.tea > 0 ? (h.tea > 0 ? 360 : PH.maxRun) : PH.max;
-  if(dir){ const rev = Math.sign(h.vx) === -dir && Math.abs(h.vx) > 20; h.vx += dir * (h.ground ? PH.acc * (rev ? (ice ? .55 : 1.6) : (ice ? .7 : 1)) : PH.accAir) * dt; if(Math.abs(h.vx) > maxV) h.vx = Math.sign(h.vx) * Math.max(maxV, Math.abs(h.vx) - 900 * dt); }
+  // vitesse : on accélère jusqu'à la vitesse maxi, sans la dépasser (avant, en tenant la flèche, la vitesse grimpait sans fin)
+  if(dir){ const rev = Math.sign(h.vx) === -dir && Math.abs(h.vx) > 20;
+    if(Math.sign(h.vx) === dir && Math.abs(h.vx) >= maxV) h.vx = dir * Math.max(maxV, Math.abs(h.vx) - 900 * dt);   // trop vite (fin du thé, ressort…) : on ralentit doucement
+    else { h.vx += dir * (h.ground ? PH.acc * (rev ? (ice ? .55 : 2.2) : (ice ? .7 : 1)) : PH.accAir * (rev ? 1.5 : 1)) * dt; if(Math.sign(h.vx) === dir && Math.abs(h.vx) > maxV) h.vx = dir * maxV; } }
   else if(h.ground){ const fr = ice ? PH.fricIce : PH.fric; h.vx -= Math.sign(h.vx) * Math.min(Math.abs(h.vx), fr * dt); }
   // Tabarka : dans la mer on nage (A = une brasse), et on sort de l'eau d'un bond
   const wasSwim = h.swim; h.swim = !!(g.lv.sea && g.lv.sea.some(([a, b]) => h.x >= a * T && h.x < b * T) && h.y - 20 > SEA_Y);
@@ -1129,7 +1149,7 @@ function frame(now){
 /* =====================================================================
    Écrans : menu, mondes, questions, fin de niveau
    ===================================================================== */
-function show(id){ document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); document.body.classList.toggle('menu', id === 'menu'); document.body.classList.toggle('playing', !id); }
+function show(id){ releaseAll(); keys.l = keys.r = keys.a = keys.b = false; document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); document.body.classList.toggle('menu', id === 'menu'); document.body.classList.toggle('playing', !id); }
 function renderMenu(){ $('who').innerHTML = player ? `${avatarHTML(player)}<span><b>${esc(player)}</b><small>Toucher pour changer de héros</small></span>` : `${avatarHTML('')}<span><b>Qui joue ?</b><small>Choisis ton héros</small></span>`; }
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 $('who').onclick = () => { audio(); sfx.tap(); choose(); };
