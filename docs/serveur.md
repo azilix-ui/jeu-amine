@@ -67,3 +67,7 @@ Mot de passe parent (le même que les voix). Cartes : Essil (Deutsch, Latin, Ser
 - Bloque en ligne tous les `.md`, `package.json`, `build.js`, `.gitignore`.
 - `Cache-Control: no-cache, must-revalidate` pour html/css/js (les tablettes voient toujours la dernière version).
 - Redirections 301 des anciens liens des jeux d'Amine vers `/amine/…`.
+
+## Têtes des invités (05/11)
+- `famille.js` : dans « Qui joue ? », un invité écrit son pseudo et choisit sa tête parmi les mascottes (`Famille.mascots` : nour, yasmine, fares). `Famille.head(nom)` renvoie la mascotte d'un invité (null pour la famille ; à défaut de choix, une mascotte tirée du pseudo). Gardé dans `localStorage['famille-tetes']` et envoyé au serveur comme progrès du « cours » `profil` (`{tete:id}`).
+- API : `GET ?action=heads` → `{heads:{pseudo:id}}` (lu par `Famille.loadHeads()` au démarrage des jeux, pour les classements). `profil` est dans `COURSES` et `READABLE` ; la page Progression l'ignore.

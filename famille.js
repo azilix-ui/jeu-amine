@@ -6,6 +6,8 @@
  *   Famille.highscores(game, variant, n) -> meilleurs scores en ligne, ou null hors ligne
  *   Famille.track(course, player, keys)  -> envoie régulièrement les progrès gardés dans le navigateur
  *   Famille.load(course, player)         -> relit les progrès gardés sur le serveur (jeux autorisés seulement)
+ *   Famille.head(name)                   -> la tête choisie par un joueur hors famille : {id, name, color, img} (null pour la famille)
+ *   Famille.loadHeads()                  -> relit sur le serveur les têtes de tous les joueurs (pour les classements), renvoie une promesse
  * Tout fonctionne aussi sans connexion : le jeu continue, les envois attendent le retour du réseau.
  */
 (function(){
@@ -18,6 +20,32 @@
     {name:'Salma', color:'#2e8b57', emoji:'🦉'},
     {name:'Amine', color:'#3a2a6e', emoji:'🎃'}
   ];
+  // Les têtes des invités : trois mascottes tunisiennes (Higgsfield), à choisir dans « Qui joue ? »
+  var BASE = script ? new URL('./', script.src).href : '/';
+  var MASCOTS = [
+    {id:'nour', name:'Nour', color:'#1fa3a8'},
+    {id:'yasmine', name:'Yasmine', color:'#d9466a'},
+    {id:'fares', name:'Farès', color:'#2a3f9a'}
+  ];
+  MASCOTS.forEach(function(m){ m.img = BASE + 'jeux/avatars/mascotte-' + m.id + '.webp'; });
+  var FAMILY = ['essil', 'salma', 'amine', 'anis', 'imen'];
+  function mascot(id){ for(var i = 0; i < MASCOTS.length; i++) if(MASCOTS[i].id === id) return MASCOTS[i]; return null; }
+  function head(name){
+    var k = String(name || '').toLowerCase(); if(!k || FAMILY.indexOf(k) >= 0) return null;
+    var m = mascot(get('famille-tetes', {})[k]); if(m) return m;
+    var h = 0; for(var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; return MASCOTS[h % MASCOTS.length];
+  }
+  function saveHead(name, id){
+    var t = get('famille-tetes', {}); t[String(name).toLowerCase()] = id; set('famille-tetes', t);
+    if(online) post({action:'progress', player:name, course:'profil', data:JSON.stringify({tete:id})}).catch(function(){});
+  }
+  function loadHeads(){
+    if(!online) return Promise.resolve(get('famille-tetes', {}));
+    return fetch(API + '?action=heads', {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+      if(j && j.heads){ var t = get('famille-tetes', {}); Object.keys(j.heads).forEach(function(n){ if(mascot(j.heads[n])) t[n.toLowerCase()] = j.heads[n]; }); set('famille-tetes', t); }
+      return get('famille-tetes', {});
+    }).catch(function(){ return get('famille-tetes', {}); });
+  }
   function get(k, d){ try{ var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }
   function set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -66,6 +94,12 @@
       '.fm-other input{flex:1 1 180px;min-width:0;font:inherit;font-size:20px;padding:12px 16px;border-radius:16px;border:3px solid #ddd3f0;background:#fff;color:#1b1533}' +
       '.fm-other button,.fm-cancel{font:inherit;font-size:20px;font-weight:600;border:0;cursor:pointer;border-radius:16px;padding:12px 18px;background:#8be08f;color:#14321a}' +
       '.fm-cancel{background:transparent;color:#6b6290;font-size:16px;align-self:center;padding:4px 10px}' +
+      '.fm-guest{background:#f3eefc;border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:10px}' +
+      '.fm-guest p{margin:0;font-weight:600;color:#4a3f78;text-align:center}' +
+      '.fm-heads{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}' +
+      '.fm-head{border:0;cursor:pointer;font:inherit;color:#fff;border-radius:18px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 5px 0 rgba(0,0,0,.25);touch-action:manipulation;opacity:.75}' +
+      '.fm-head img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.7)}.fm-head b{font-size:17px}' +
+      '.fm-head.on{opacity:1;outline:5px solid #ffd23f;outline-offset:2px}' +
       '.fm-msg{color:#d7263d;font-weight:600;text-align:center;min-height:1.2em;margin:-6px 0}';
     document.head.appendChild(st);
   }
@@ -80,17 +114,26 @@
       back.innerHTML = '<div class="fm-box" role="dialog" aria-modal="true" aria-label="Qui joue ?"><h2>' + esc(opts.title || 'Qui joue ?') + '</h2>' +
         '<div class="fm-kids">' + KIDS.map(chip).join('') + '</div>' +
         (opts.extra && opts.extra.length ? '<div class="fm-kids fm-parents">' + opts.extra.map(chip).join('') + '</div>' : '') +
-        '<form class="fm-other"><input id="fm-name" maxlength="20" placeholder="Un autre prénom…" autocomplete="off" value="' + (cur && !all.some(function(k){ return k.name === cur; }) ? esc(cur) : '') + '"><button type="submit">OK</button></form>' +
+        '<div class="fm-guest"><p>Un autre joueur ? Écris ton pseudo, puis choisis ta tête :</p>' +
+        '<form class="fm-other"><input id="fm-name" maxlength="20" placeholder="Ton pseudo…" autocomplete="off" value="' + (cur && !all.some(function(k){ return k.name === cur; }) ? esc(cur) : '') + '"><button type="submit">OK</button></form>' +
+        '<div class="fm-heads">' + MASCOTS.map(function(m){ return '<button type="button" class="fm-head" data-h="' + m.id + '" style="background:' + m.color + '"><img src="' + m.img + '" alt=""><b>' + esc(m.name) + '</b></button>'; }).join('') + '</div></div>' +
         '<div class="fm-msg" id="fm-msg"></div>' + (opts.cancel === false ? '' : '<button class="fm-cancel" type="button">Annuler</button>') + '</div>';
       document.body.appendChild(back);
       function done(name){ back.remove(); if(name){ set('famille-joueur', name); } resolve(name); }
       back.querySelectorAll('.fm-kid').forEach(function(b){ b.onclick = function(){ done(b.dataset.n); }; });
-      back.querySelector('form').onsubmit = function(e){
-        e.preventDefault();
-        var n = cleanName(back.querySelector('#fm-name').value);
-        if(!n){ back.querySelector('#fm-msg').textContent = 'Écris un prénom (des lettres seulement).'; return; }
-        done(n);
-      };
+      var inp = back.querySelector('#fm-name'), pick = null, msg = back.querySelector('#fm-msg');
+      function mark(id){ pick = id; back.querySelectorAll('.fm-head').forEach(function(b){ b.classList.toggle('on', b.dataset.h === id); }); }
+      function known(){ var n = cleanName(inp.value); var t = get('famille-tetes', {}); if(n && t[n.toLowerCase()]) mark(t[n.toLowerCase()]); }
+      inp.addEventListener('input', known); known(); loadHeads().then(known);
+      function go(){
+        var n = cleanName(inp.value);
+        if(!n){ msg.textContent = 'Écris ton pseudo (des lettres seulement).'; inp.focus(); return; }
+        if(FAMILY.indexOf(n.toLowerCase()) >= 0){ done(all.filter(function(k){ return k.name.toLowerCase() === n.toLowerCase(); }).map(function(k){ return k.name; })[0] || n); return; }
+        if(!pick){ msg.textContent = 'Choisis ta tête : Nour, Yasmine ou Farès 🙂'; return; }
+        saveHead(n, pick); done(n);
+      }
+      back.querySelectorAll('.fm-head').forEach(function(b){ b.onclick = function(){ mark(b.dataset.h); msg.textContent = ''; if(cleanName(inp.value)) go(); else inp.focus(); }; });
+      back.querySelector('form').onsubmit = function(e){ e.preventDefault(); go(); };
       var c = back.querySelector('.fm-cancel'); if(c) c.onclick = function(){ done(null); };
     });
   }
@@ -146,6 +189,9 @@
     player: function(){ return get('famille-joueur', null); },
     setPlayer: function(n){ n = cleanName(n); if(n) set('famille-joueur', n); return n; },
     choosePlayer: choosePlayer,
+    mascots: MASCOTS,
+    head: head,
+    loadHeads: loadHeads,
     score: score,
     highscores: highscores,
     track: track,

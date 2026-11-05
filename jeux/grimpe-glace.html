@@ -212,7 +212,8 @@ async function setPlayer(name){
   player = name; save = Object.assign(fresh(), store.get(skey(), {}) || {});
   const k = name.toLowerCase();
   avatarImg = null;
-  if(PEOPLE[k]){ const im = new Image(); im.onload = () => { avatarImg = im; renderMenu(); }; im.src = `avatars/${k}.webp`; }
+  const mh = !PEOPLE[k] && window.Famille && Famille.head ? Famille.head(name) : null;   // un invité : sa mascotte
+  if(PEOPLE[k] || mh){ const im = new Image(); im.onload = () => { if(player === name){ avatarImg = im; renderMenu(); } }; im.src = PEOPLE[k] ? `avatars/${k}.webp` : mh.img; }
   renderMenu();
   if(window.Famille){
     if(!tracked.has(name)){ tracked.add(name); Famille.track('grimpeglace', name, [skey()]); }
@@ -223,7 +224,8 @@ async function setPlayer(name){
 const pcol = () => (PEOPLE[(player || '').toLowerCase()] || { c:'#7a4fe0', c2:'#ffd23f', e:(player || '?')[0] });
 function avatarHTML(name){
   const k = (name || '').toLowerCase(), p = PEOPLE[k];
-  return p ? `<span class="av"><img src="avatars/${k}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${p.e}'))"></span>` : `<span class="av">${name ? esc(name[0].toUpperCase()) : '🙂'}</span>`;
+  const mh = p ? null : (window.Famille && Famille.head && name ? Famille.head(name) : null);   // un invité : sa mascotte (Nour, Yasmine ou Farès)
+  return p ? `<span class="av"><img src="avatars/${k}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${p.e}'))"></span>` : mh ? `<span class="av"><img src="${mh.img}" alt=""></span>` : `<span class="av">${name ? esc(name[0].toUpperCase()) : '🙂'}</span>`;
 }
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
@@ -771,5 +773,6 @@ const cur = window.Famille ? Famille.player() : null;
 if(cur) setPlayer(cur); else renderMenu();
 requestAnimationFrame(frame);
 window.__gg = { get G(){ return G0; }, keys, startGame, step, get state(){ return state; }, setPlayer, get save(){ return save; } };
+if(window.Famille && Famille.loadHeads) Famille.loadHeads();
 </script>
 </body></html>

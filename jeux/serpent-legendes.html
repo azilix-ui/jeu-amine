@@ -424,7 +424,8 @@ const KNOWN = { essil:'🚆', salma:'🦉', amine:'🎃', anis:'🧔', imen:'�
 function avatarHTML(name, cls = 'av'){
   const k = (name || '').toLowerCase();
   const emo = KNOWN[k] || (name ? name[0].toUpperCase() : '🙂');
-  if(!KNOWN[k]) return `<span class="${cls}">${emo}</span>`;
+  const mh = (window.Famille && Famille.head && name ? Famille.head(name) : null);   // un invité : sa mascotte (Nour, Yasmine ou Farès)
+  if(!KNOWN[k]) return mh ? `<span class="${cls}"><img src="${mh.img}" alt="" onerror="this.replaceWith(document.createTextNode('${emo}'))"></span>` : `<span class="${cls}">${emo}</span>`;
   return `<span class="${cls}"><img src="avatars/${k}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${emo}'))"></span>`;
 }
 function renderWho(){
@@ -1062,6 +1063,7 @@ requestAnimationFrame(frame);
 const p0 = window.Famille && Famille.player();
 if(p0) setPlayer(p0); else renderWho();
 window.__serpent = { get G(){ return G; }, get data(){ return data; }, prefs, setPlayer, startGame, reveal:(id) => reveal(SKIN[id], SKIN[id].rar === 'legendaire'), step:() => step(), die:() => die() };
+if(window.Famille && Famille.loadHeads) Famille.loadHeads();
 </script>
 </body>
 </html>

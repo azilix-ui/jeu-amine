@@ -23,8 +23,8 @@ declare(strict_types=1);
 
 const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
-const READABLE = ['serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture'];
-const COURSES = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin'];
+const READABLE = ['profil', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture'];
+const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin'];
 // Cours qui comptent comme « apprendre » (les jeux n'en font pas partie) : séries de jours et cartes secrètes.
 const LEARNING = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'amine-halloween', 'amine-tounsi', 'amine-ecriture'];
 const MAX_DATA = 30000;
@@ -167,6 +167,16 @@ try {
     if ($method === 'GET' && $action === 'auth') {
         $auth = read_json(auth_dir() . '/auth.json');
         out(200, ['setup' => empty($auth['hash'])]);
+    }
+
+    // La tête choisie par chaque invité (mascotte Nour, Yasmine ou Farès), pour l'afficher dans les classements
+    if ($method === 'GET' && $action === 'heads') {
+        $heads = [];
+        foreach (db()->query("SELECT player, data FROM progress WHERE course = 'profil'") as $r) {
+            $d = json_decode((string)$r['data'], true);
+            if (is_array($d) && in_array($d['tete'] ?? '', ['nour', 'yasmine', 'fares'], true)) $heads[$r['player']] = $d['tete'];
+        }
+        out(200, ['heads' => $heads]);
     }
 
     if ($method === 'GET' && $action === 'highscores') {

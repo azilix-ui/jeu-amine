@@ -170,9 +170,9 @@ const T = 32, ROWS = 15, GY = 12, VHL = ROWS * T, STEP = 1 / 120;
 const PH = { acc:1300, accAir:950, max:205, maxRun:285, fric:1700, fricIce:430, g:1550, gHold:1250, gFall:2100, gCut:3400, jump:560, jumpK:.22, maxFall:900, coyote:.1, buffer:.13, stomp:400 };
 const HW = 10, HH = 40;
 const PEOPLE = { essil:{ c:'#1f3c88', c2:'#d7263d', e:'🚆' }, salma:{ c:'#1f6b44', c2:'#5aaedc', e:'🦉' }, amine:{ c:'#ff8c1a', c2:'#2a1f4f', e:'🎃' }, anis:{ c:'#0f766e', c2:'#ff7aa8', e:'🧔' }, imen:{ c:'#b4235a', c2:'#ffb3c9', e:'👩' } };
-// Les mascottes : un vrai héros tunisien pour les invités (au lieu d'un rond avec une lettre). Nour (petit, au jasmin) ou Farès (grand) selon le prénom.
-const MASCOTS = [{ id:'nour', name:'Nour', c:'#1fa3a8', c2:'#c4122f', e:'🌼' }, { id:'fares', name:'Farès', c:'#2a3f9a', c2:'#c4122f', e:'🎩' }];
-const mascotOf = name => { let hs = 0; for(const ch of String(name || '').toLowerCase()) hs = (hs * 31 + ch.charCodeAt(0)) >>> 0; return MASCOTS[hs % 2]; };
+// Les mascottes des invités (Nour, Yasmine, Farès) : la tête est choisie dans « Qui joue ? » et gardée avec le pseudo (famille.js)
+const MASCOTS = { nour:{ id:'nour', c:'#1fa3a8', c2:'#c4122f', e:'🌼' }, yasmine:{ id:'yasmine', c:'#c4303a', c2:'#1fa3a8', e:'🌸' }, fares:{ id:'fares', c:'#2a3f9a', c2:'#c4122f', e:'🎩' } };
+const mascotOf = name => { const h = window.Famille && Famille.head ? Famille.head(name || 'Invité') : null; return MASCOTS[h ? h.id : 'nour'] || MASCOTS.nour; };
 const PARENTS = [{ name:'Anis', color:'#0f766e', emoji:'🧔' }, { name:'Imen', color:'#b4235a', emoji:'👩' }];
 const WORLDS = [
   { name:'Sidi Bou Saïd', sub:'Le village bleu et blanc', img:'jasmin/monde1.webp', sky:['#5fb6f0', '#d8f0ff'], ground:'#f4efe6', ground2:'#d9d2c4', edge:'#1f5fbf', top:'#7cc864', plat:'#1f5fbf', haz:'#2a8fd6', mid:'#ffffff', mid2:'#cfe3f7', music:{ bpm:112, root:62 } },
@@ -1171,6 +1171,7 @@ $('helpBack').onclick = () => { sfx.tap(); show('menu'); };
 /* ---------- démarrage ---------- */
 renderOpts();
 const cur = window.Famille ? Famille.player() : null; if(cur) setPlayer(cur); else renderMenu();
+if(window.Famille && Famille.loadHeads) Famille.loadHeads().then(() => { if(player && !PEOPLE[player.toLowerCase()]) setPlayer(player); });
 requestAnimationFrame(frame);
 window.__jasmin = { ORDER, tideY, get G(){ return G0; }, keys, touch, startLevel, buildLevel, get state(){ return state; }, get save(){ return save; }, step, winLevel, setJump(v){ keys.a = v; if(v) jumpPressed = true; } };
 </script>

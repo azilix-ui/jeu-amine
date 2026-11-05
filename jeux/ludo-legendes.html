@@ -355,7 +355,8 @@ const KNOWN = { essil:'🚆', salma:'🦉', amine:'🎃', anis:'🧔', imen:'�
 function avatarHTML(name, bot, style = ''){
   if(bot) return `<span class="av" style="${style}">🤖</span>`;
   const k = (name || '').toLowerCase(), emo = KNOWN[k] || (name ? esc(name[0].toUpperCase()) : '🙂');
-  if(!KNOWN[k]) return `<span class="av" style="${style}">${emo}</span>`;
+  const mh = (window.Famille && Famille.head && name ? Famille.head(name) : null);   // un invité : sa mascotte (Nour, Yasmine ou Farès)
+  if(!KNOWN[k]) return mh ? `<span class="av" style="${style}"><img src="${mh.img}" alt="" onerror="this.replaceWith(document.createTextNode('${emo}'))"></span>` : `<span class="av" style="${style}">${emo}</span>`;
   return `<span class="av" style="${style}"><img src="avatars/${k}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${emo}'))"></span>`;
 }
 function renderWho(){ $('whoName').textContent = player || 'Qui joue ?'; $('whoAv').outerHTML = avatarHTML(player).replace('class="av"', 'class="av" id="whoAv"'); }
@@ -999,6 +1000,7 @@ if(inv.length === 4){
   (async () => { if(p0) await setPlayer(p0); if(await needPlayer()) joinOnline(inv); })();
 }
 window.__ludo = { get G(){ return G; }, get data(){ return data; }, act, startLocal, setPlayer, reveal:id => reveal(ITEM[id], ITEM[id].rar === 'legendaire'), legal, prefs, get mode(){ return mode; }, get code(){ return code; } };
+if(window.Famille && Famille.loadHeads) Famille.loadHeads();
 </script>
 </body>
 </html>

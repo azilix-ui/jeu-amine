@@ -60,7 +60,7 @@ Jeu de plateforme original à défilement horizontal, univers tunisien (cahier d
 - **Sauvegarde** `jasmin:<Prénom>` {unlocked, best{n:{score,stars,time}}, gems{n:[…]}, tickets, answers{ok,ko}, games, t}, réglages `jasmin-prefs`. Records en ligne `jasmin`, variantes `monde1` à `monde13`.
 - Images : `jeux/jasmin/` (titre, monde1 à monde13, boss).
 
-- **Mascottes** (joueurs hors famille) : au lieu d'un rond avec l'initiale, un vrai héros tunisien Higgsfield : **Nour** (garçon à la chéchia et au jasmin, gilet turquoise) ou **Farès** (jeune homme à la chéchia, gilet bleu roi), choisi selon le prénom (`mascotOf`). Images `jeux/avatars/mascotte-{nour,fares}.webp`.
+- **Mascottes** (joueurs hors famille) : trois héros tunisiens Higgsfield, **Nour** (garçon au jasmin, gilet turquoise), **Yasmine** (fille à la tresse et au jasmin, gilet corail) et **Farès** (jeune homme, gilet bleu roi). Dans « Qui joue ? », l'invité écrit son **pseudo** puis touche sa tête ; le choix est gardé avec le pseudo (et son historique) et retrouvé sur les autres tablettes (voir `docs/serveur.md`). Images `jeux/avatars/mascotte-{nour,yasmine,fares}.webp`. Les mascottes s'affichent aussi dans Serpent Légendes, Ludo Légendes et Grimpe-Glace (classements, bouton du joueur, et le héros de Grimpe-Glace).
 
 ### Secrets et astuces (pour les parents, à ne pas dévoiler tout de suite)
 Dans **chaque monde** il y a trois sortes de secrets :
