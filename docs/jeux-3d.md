@@ -60,6 +60,19 @@ Jeu de plateforme original à défilement horizontal, univers tunisien (cahier d
 - **Sauvegarde** `jasmin:<Prénom>` {unlocked, best{n:{score,stars,time}}, gems{n:[…]}, tickets, answers{ok,ko}, games, t}, réglages `jasmin-prefs`. Records en ligne `jasmin`, variantes `monde1` à `monde9`.
 - Images : `jeux/jasmin/` (titre, monde1 à monde9, boss).
 
+### Secrets et astuces (pour les parents, à ne pas dévoiler tout de suite)
+- **Une maison secrète par monde** : une petite maison blanche de 3 cases de haut. Son mur du bas est un **faux mur** : on marche à travers et un jasmin doré 🌼 + un dinar attendent dedans. On peut aussi simplement sauter sur son toit.
+- **Les 3 jasmins** de chaque monde : un au-dessus d'un escalier de plateformes (en haut, il faut monter), un dans la maison secrète, un troisième selon le monde (ressort-derbouka, cuvette de Djerba à marée basse, au-dessus d'un trou…). Dans le noir de Matmata, les jasmins brillent un peu.
+- **Bloc 🪔** = bonus (chéchia : un coup en plus ; harissa : touche B / Maj / X pour lancer des piments ; thé à la menthe : on court très vite 9 s). Un seul par monde.
+- **Briques** : on les casse en tapant dessous ; un ennemi posé dessus tombe en même temps.
+- **Hérisson** : on saute dessus, il se roule en boule ; on le pousse et il renverse tous les ennemis sur son chemin (+200).
+- **Saut** : appui court = petit saut, appui long = grand saut ; en courant (B ou 1 s d'élan) on saute plus loin. On peut encore sauter une fraction de seconde après le bord, et un appui juste avant d'atterrir est gardé.
+- **Sauter sur un ennemi en tenant A** fait rebondir très haut.
+- **Boss** : il fonce, se cogne au mur et reste sonné ⭐ : c'est seulement là qu'on lui saute sur le dos (3 fois). Les piments de harissa l'abîment aussi.
+- **Blocs savoir désactivés** (Réglages) : chaque bloc 📚 donne directement 3 dinars, mais plus de tickets.
+- **Étoiles** : 1 = fini, 2 = 60 % des dinars, 3 = les 3 jasmins. Les jasmins trouvés une première fois rapportent 2 tickets chacun.
+- **Il n'y a pas encore** de tuyau / raccourci caché ni de bloc invisible façon Mario (idées possibles pour la suite).
+
 ## Tester
 
 - Local : `php -S 127.0.0.1:8770 -t <lien vers le dépôt>` puis Playwright avec `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader` (WebGL logiciel, animations lentes mais justes). Les crochets de test : `window.__serpent`, `window.__ludo`.
