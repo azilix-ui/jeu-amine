@@ -108,7 +108,7 @@ body.menu .back{display:inline-flex}
 <div class="screen on" id="menu"><div class="box">
   <img class="title-img" src="jasmin/titre.webp" alt="La famille dans un village tunisien bleu et blanc" onerror="this.style.display='none'">
   <h1>La Légende <span>du Jasmin</span></h1>
-  <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse cinq mondes pour les rapporter !</p>
+  <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse neuf mondes pour les rapporter !</p>
   <button class="who" id="who"></button>
   <button class="big" id="play">▶ Jouer</button>
   <div class="row"><button class="big ghost" id="openRecs">🏆 Records</button><button class="big ghost" id="openOpts">⚙️ Réglages</button><button class="big ghost" id="openHelp">❓ Comment jouer</button></div>
@@ -175,8 +175,15 @@ const WORLDS = [
   { name:"L'Oasis de Tozeur", sub:'Palmiers et eau fraîche', img:'jasmin/monde2.webp', sky:['#7cc8e8', '#e8f6d8'], ground:'#c98f5a', ground2:'#a8723f', edge:'#7a4a22', top:'#5cb84a', plat:'#8a5a2a', haz:'#2fa8c8', mid:'#3f8a3a', mid2:'#2f6a2a', music:{ bpm:104, root:60 } },
   { name:'Les Dunes du Sahara', sub:'Sable brûlant et cactus', img:'jasmin/monde3.webp', sky:['#f0a85a', '#fde3b0'], ground:'#e8c27a', ground2:'#d2a65a', edge:'#a8763a', top:'#f4d79b', plat:'#a8763a', haz:'#f4d79b', mid:'#e0a85a', mid2:'#c98a3e', music:{ bpm:118, root:57 } },
   { name:"Les Montagnes d'Aïn Draham", sub:'Neige et glace', img:'jasmin/monde4.webp', sky:['#8fc8f0', '#eef8ff'], ground:'#8a9aae', ground2:'#6a7a8e', edge:'#4a5a6e', top:'#ffffff', plat:'#7a5a3a', haz:'#5fb6e0', mid:'#ffffff', mid2:'#c8dcef', ice:true, music:{ bpm:100, root:64 } },
-  { name:"Le Palais du Scorpion d'Or", sub:'Mosaïques, lanternes et braises', img:'jasmin/monde5.webp', sky:['#3a1a5a', '#e07a4a'], ground:'#b88a5a', ground2:'#8a5a3a', edge:'#1f7a8a', top:'#2fa58f', plat:'#c99a2e', haz:'#ff6a1a', mid:'#5a2a6a', mid2:'#3a1a4a', music:{ bpm:124, root:55 } }
+  { name:"Le Palais du Scorpion d'Or", sub:'Mosaïques, lanternes et braises', img:'jasmin/monde5.webp', sky:['#3a1a5a', '#e07a4a'], ground:'#b88a5a', ground2:'#8a5a3a', edge:'#1f7a8a', top:'#2fa58f', plat:'#c99a2e', haz:'#ff6a1a', mid:'#5a2a6a', mid2:'#3a1a4a', music:{ bpm:124, root:55 } },
+  { name:'La Médina de Tunis', sub:'Toits, souks et tapis volants', img:'jasmin/monde6.webp', sky:['#6fb8ea', '#f6e6c8'], ground:'#efe4d0', ground2:'#cdbb9c', edge:'#2f6fa8', top:'#c8643a', plat:'#2f6fa8', haz:'#2a8fd6', mid:'#ffffff', mid2:'#e8dcc4', music:{ bpm:116, root:61 } },
+  { name:'Les Ruines de Carthage', sub:'Colonnes, mer et pierres qui s\'effritent', img:'jasmin/monde7.webp', sky:['#7ec4ec', '#f4ead2'], ground:'#dcc59a', ground2:'#b89c6c', edge:'#8a6a3a', top:'#8cbf5a', plat:'#9a7a4a', haz:'#1f9ec4', mid:'#e8d8b0', mid2:'#c8b48a', music:{ bpm:108, root:59 } },
+  { name:"L'Île de Djerba", sub:'Plage, poteries et marées', img:'jasmin/monde8.webp', sky:['#6cc4f0', '#e6f7ff'], ground:'#f1dfb0', ground2:'#d8c08a', edge:'#b89a5a', top:'#fff3cf', plat:'#3f86c8', haz:'#27b6c8', mid:'#ffffff', mid2:'#d8f0f4', music:{ bpm:110, root:63 } },
+  { name:'Les Maisons de Matmata', sub:'Tunnels et lumière des lampes', img:'jasmin/monde9.webp', sky:['#e0a060', '#f8dcb0'], ground:'#b8834e', ground2:'#8a5a30', edge:'#6a4020', top:'#d9a066', plat:'#7a4a22', haz:'#3a2412', mid:'#a8703e', mid2:'#7a4a22', music:{ bpm:96, root:58 } }
 ];
+// L'ordre du voyage (les numéros des mondes restent fixes pour les sauvegardes et les records) : le palais reste la fin
+const ORDER = [1, 6, 7, 2, 8, 9, 3, 4, 5];
+const posOf = id => ORDER.indexOf(id) + 1;
 
 /* =====================================================================
    Les niveaux : construits par « morceaux » (départ, trou, escalier, blocs…)
@@ -206,11 +213,14 @@ function buildLevel(n){
       ent('gem', x + 5, GY - 1); ent('coin', x + 4, GY - 1); x += 10; },
     check(){ ent('lamp', x + 1, GY - 1); },
     spring(){ ent('spring', x + 1, GY - 1); },
-    door(){ ground(x, 8); ent('door', x + 4, GY - 1); x += 8; }
+    door(){ ground(x, 8); ent('door', x + 4, GY - 1); x += 8; },
+    tide(k){ ground(x, k, 13, 'w'); x += k; },   // une cuvette de sable mouillé : la marée la remplit puis la vide
+    roof(k){ for(let i = x; i < x + k; i++) for(let y = 0; y <= GY - 5; y++) set(i, y, '#'); for(let i = x + 3; i < x + k - 2; i += 8) ent('deco', i, GY - 3, { kind:'torch' }); }   // un tunnel (ne fait pas avancer)
   };
   const e = (t, dx, cy = GY - 1, o) => ent(t, x + dx, cy, o);
   const gem = (dx, cy) => ent('gem', x + dx, cy);
   const sign = (dx, txt) => ent('sign', x + dx, GY - 1, { txt });
+  const deco = (dx, kind, cy = GY - 1) => ent('deco', x + dx, cy, { kind });
   // ---- niveau par niveau ----
   if(n === 1){
     sign(3, '→ cours, A saute'); M.flat(14, { coins:6 });
@@ -241,6 +251,37 @@ function buildLevel(n){
     M.mover(9, GY - 2, 4, 'x', true); M.flat(5, { coins:3 }); M.mover(9, GY - 4, 4, 'x', true); M.flat(6); e('hog', 3); M.blocks('cSc', 8);
     M.stairs(4); M.step(4, 3); M.fragile(5, GY - 4, true); M.step(4, 3); M.stairs(4, -1); gem(-6, GY - 7); M.flat(8, { coins:4 }); e('bird', 4, GY - 4); e('cactus', 6);
     M.secret(); M.spring(); M.flat(5); M.gap(5, true); M.flat(4); M.mover(10, GY - 3, 5, 'x', true); M.flat(6); M.blocks('S', 6); M.spikes(10); M.door();
+  } else if(n === 6){   // la médina : les toits, les chats, les tapis volants
+    sign(3, 'Les toits de la médina !'); deco(8, 'jar'); M.flat(12, { coins:5 });
+    M.blocks('bSb', 8); e('scorp', -3); M.step(2, 6, { coins:4 }); M.step(4, 5); deco(-2, 'jar', GY - 5);
+    M.mover(10, GY - 4, 4, 'x'); M.step(4, 6, { coins:4 }); M.stairs(4, -1); M.check(); M.flat(8); e('scorp', 4);
+    M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13); gem(10, GY - 9); M.flat(6);
+    M.blocks('cpc', 8); M.secret(); e('bird', 3, GY - 5); M.step(3, 6, { coins:4 }); M.mover(10, GY - 3, 4, 'x'); M.step(3, 5); M.step(2, 4);
+    M.check(); M.flat(8, { coins:4 }); e('scorp', 3); e('scorp', 6); deco(-1, 'jar'); M.spring(); M.flat(6); gem(-4, GY - 8);
+    M.mover(10, GY - 2, 4, 'x'); M.flat(6, { coins:3 }); M.blocks('S', 6); M.stairs(4); M.step(4, 4); M.gap(2); M.stairs(4, -1); M.flat(4); M.door();
+  } else if(n === 7){   // Carthage : les ruines qui s'effritent, les crabes, les mouettes
+    sign(3, 'Les vieilles pierres s\'effritent !'); deco(9, 'column'); M.flat(12, { coins:5 });
+    M.blocks('bSb', 8); e('scorp', -3); M.gap(3, true); M.flat(5); M.fragile(5); M.flat(6, { coins:3 }); e('bird', 2, GY - 5); deco(-2, 'column');
+    M.stairs(3); M.step(3, 4); M.plats([[1, GY - 4, 2, 'f'], [5, GY - 5, 2, 'f'], [9, GY - 4, 2]], 12, true); gem(-7, GY - 7); M.step(3, 4); M.stairs(3, -1); M.check(); M.flat(8, { coins:4 }); e('scorp', 4); deco(-6, 'column');
+    M.blocks('cpc', 8); M.spikes(10); M.mover(10, GY - 3, 5, 'x', true); M.flat(6); M.secret(); e('bird', 3, GY - 6);
+    M.fragile(4, GY, true); M.flat(4); M.fragile(6, GY - 2, true); M.flat(6, { coins:4 }); M.check(); deco(3, 'column');
+    M.plats([[1, GY - 3, 2], [4, GY - 6, 2], [8, GY - 9, 3]], 13); gem(9, GY - 11); M.flat(6);
+    M.blocks('S', 6); e('scorp', -2); M.stairs(4); M.step(4, 4); M.gap(3, true); M.stairs(4, -1); M.flat(4); M.door();
+  } else if(n === 8){   // Djerba : la marée monte et descend dans les cuvettes, les crabes, les mouettes
+    sign(3, 'La marée monte… attends qu\'elle redescende !'); deco(9, 'jar'); M.flat(12, { coins:5 });
+    M.blocks('bSb', 8); e('scorp', -3); M.tide(4); M.flat(6, { coins:3 }); M.tide(6); M.flat(5); e('bird', 2, GY - 5); deco(3, 'jar');
+    M.plats([[0, GY - 3, 3], [5, GY - 5, 3], [10, GY - 3, 3]], 14, true); gem(-8, GY - 7); M.flat(6); M.check();
+    M.blocks('cpc', 8); e('scorp', -2); M.tide(7); gem(-4, GY); M.flat(6, { coins:4 }); M.mover(10, GY - 3, 5, 'x', true); M.flat(5); e('scorp', 2);
+    M.secret(); M.check(); M.flat(3); M.tide(5); M.flat(4); M.tide(5); M.flat(6, { coins:4 }); e('bird', 3, GY - 6); deco(1, 'jar');
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.tide(6); M.flat(4); M.door();
+  } else if(n === 9){   // Matmata : les maisons creusées sous la terre, dans le noir
+    sign(3, 'Les maisons sous la terre…'); M.flat(10, { coins:4 });
+    M.roof(30); M.flat(8, { coins:5 }); M.blocks('bSb', 8); e('scorp', -3); M.gap(2); M.flat(6, { coins:4 }); e('bird', 3, GY - 3); M.flat(6); deco(-3, 'jar');
+    M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13); gem(10, GY - 9); M.flat(6); M.check();
+    M.roof(36); M.flat(6); M.spikes(10); M.blocks('cpc', 8); e('scorp', -2); M.gap(3); M.flat(9, { coins:4 }); e('bird', 4, GY - 3);
+    M.flat(6); M.secret(); M.spring(); M.flat(6); gem(-4, GY - 8); M.check();
+    M.roof(28); M.flat(6, { coins:3 }); M.mover(9, GY - 2, 4, 'x'); M.flat(5); e('scorp', 2); M.blocks('S', 8); deco(-2, 'jar');
+    M.stairs(4); M.step(4, 4); M.gap(3); M.stairs(4, -1); M.flat(4); M.door();
   } else {
     sign(3, 'Le palais du Scorpion…'); M.flat(12, { coins:5 });
     M.blocks('bpbSb', 10); e('cactus', -2); M.gap(3, true); M.spikes(10); e('hog', -4); M.fragile(6); M.flat(5); e('bird', 2, GY - 5);
@@ -285,7 +326,7 @@ const Q = {
     () => { const a = rnd(12, 25), b = rnd(3, 9); return { q:`${a} × ${b} = ?`, a:String(a * b), o:shuffle([a * b, ...near(a * b, b)]).map(String) }; }
   ],
   autre:[
-    () => pick([{ q:'Quelle est la capitale de la Tunisie ?', a:'Tunis', o:['Sfax', 'Tunis', 'Sousse', 'Tozeur'] }, { q:'De quelles couleurs sont les portes de Sidi Bou Saïd ?', a:'bleu', o:['rouge', 'vert', 'bleu', 'jaune'] }, { q:'Quelle fleur est un symbole de la Tunisie ?', a:'le jasmin', o:['la tulipe', 'le jasmin', 'la rose', 'le tournesol'] }, { q:'De quelles couleurs est le drapeau tunisien ?', a:'rouge et blanc', o:['bleu et blanc', 'rouge et blanc', 'vert et rouge', 'noir et or'] }, { q:'Quel désert touche le sud de la Tunisie ?', a:'le Sahara', o:['le Sahara', 'le Gobi', 'l\'Atacama', 'le Kalahari'] }]),
+    () => pick([{ q:'Quelle est la capitale de la Tunisie ?', a:'Tunis', o:['Sfax', 'Tunis', 'Sousse', 'Tozeur'] }, { q:'De quelles couleurs sont les portes de Sidi Bou Saïd ?', a:'bleu', o:['rouge', 'vert', 'bleu', 'jaune'] }, { q:'Quelle fleur est un symbole de la Tunisie ?', a:'le jasmin', o:['la tulipe', 'le jasmin', 'la rose', 'le tournesol'] }, { q:'De quelles couleurs est le drapeau tunisien ?', a:'rouge et blanc', o:['bleu et blanc', 'rouge et blanc', 'vert et rouge', 'noir et or'] }, { q:'Quel désert touche le sud de la Tunisie ?', a:'le Sahara', o:['le Sahara', 'le Gobi', 'l\'Atacama', 'le Kalahari'] }, { q:'Djerba est…', a:'une île', o:['une montagne', 'une île', 'un désert', 'une forêt'] }, { q:'À Matmata, les maisons sont creusées…', a:'dans la terre', o:['dans les arbres', 'dans la terre', 'dans la glace', 'sur l\'eau'] }, { q:'Carthage était une grande ville…', a:'antique', o:['antique', 'toute neuve', 'sous la mer', 'en Amérique'] }, { q:'Comment s\'appelle la vieille ville de Tunis ?', a:'la médina', o:['la médina', 'la plage', 'l\'oasis', 'le port'] }]),
     () => { const a = rnd(11, 49), b = rnd(11, 49); return { q:`${a} + ${b} = ?`, a:String(a + b), o:shuffle([a + b, ...near(a + b, 10)]).map(String) }; }
   ]
 };
@@ -405,19 +446,19 @@ addEventListener('resize', resize); addEventListener('orientationchange', () => 
 const BG = WORLDS.map(w => { const im = new Image(); im.src = w.img; return im; });
 const hash = n => { n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; };
 function rr(c, x, y, w, h, r){ c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
-function shade(hex, k){ const p = parseInt(hex.slice(1), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${f(p >> 16 & 255)},${f(p >> 8 & 255)},${f(p & 255)})`; }
+function shade(hex, k){ const f = v => Math.max(0, Math.min(255, Math.round(v * k))); if(hex[0] !== '#'){ const [r, g, b] = hex.match(/\d+/g).map(Number); return `rgb(${f(r)},${f(g)},${f(b)})`; } const p = parseInt(hex.slice(1, 7), 16); return `rgb(${f(p >> 16 & 255)},${f(p >> 8 & 255)},${f(p & 255)})`; }   // accepte aussi « rgb(…) » (les dalles fragiles étaient noires)
 
 /* =====================================================================
    La partie
    ===================================================================== */
 let state = 'menu', G0 = null;
-const SOLID = new Set(['#', 'b', 'S', 'c', 'p', 'U', 'f', 'B', 'X']);
+const SOLID = new Set(['#', 'b', 'S', 'c', 'p', 'U', 'f', 'B', 'X', 'w']);
 // Le sol sûr d'une colonne : la première case pleine (pas fragile) sous du vide, sans eau ni pics. -1 s'il n'y en a pas.
 function groundRow(G, cx){
   if(cx < 0 || cx >= G[0].length) return -1;
   for(let y = 1; y < ROWS; y++){ const c = G[y][cx], up = G[y - 1][cx];
-    if(c === '~') return -1;
-    if(SOLID.has(c) && c !== 'f' && c !== 'B' && (up === ' ' || up === '=' ) && G[y - 1][cx] !== '^'){ return (y >= 2 && SOLID.has(G[y - 2][cx])) ? -1 : y; } }
+    if(c === '~' || c === 'w') return -1;
+    if(SOLID.has(c) && c !== 'f' && c !== 'B' && c !== 'w' && (up === ' ' || up === '=' ) && G[y - 1][cx] !== '^'){ return (y >= 2 && SOLID.has(G[y - 2][cx])) ? -1 : y; } }
   return -1;
 }
 // Cherche un sol sûr en partant d'une colonne et en reculant (puis en avançant si besoin).
@@ -443,6 +484,8 @@ function newLevel(n, fromCheck){
   g.hero = { x:3 * T, y:GY * T, vx:0, vy:0, ground:false, face:1, phase:0, coyote:0, buffer:0, inv:0, chechia:false, harissa:false, tea:0, dead:false, deadT:0, squash:0, runT:0, on:null };
   return g;
 }
+// Djerba : la surface de la marée (en pixels), entre la marée basse (cuvette à sec) et la marée haute (au ras du sol)
+const tideY = t => { const s = Math.max(-1, Math.min(1, Math.sin(t * .8) * 1.5)); return (12.78 + s * .62) * T; };
 const tileAt = (cx, cy) => { const g = G0; if(cy < 0) return ' '; if(cy >= ROWS || cx < 0) return cx < 0 ? '#' : ' '; const c = g.lv.G[cy][cx] || ' '; if(c === 'f' && g.frag.has(cx + ',' + cy) && g.frag.get(cx + ',' + cy).gone) return ' '; return c; };
 const solidAt = (cx, cy) => SOLID.has(tileAt(cx, cy));
 function boxHitsSolid(x0, y0, x1, y1){ for(let cy = Math.floor(y0 / T); cy <= Math.floor((y1 - .01) / T); cy++) for(let cx = Math.floor(x0 / T); cx <= Math.floor((x1 - .01) / T); cx++) if(solidAt(cx, cy)) return [cx, cy]; return null; }
@@ -534,6 +577,7 @@ function step(dt){
   const footC = tileAt(Math.floor(h.x / T), Math.floor((h.y - 2) / T)), midC = tileAt(Math.floor(h.x / T), Math.floor((h.y - 20) / T));
   if(footC === '^' || midC === '^') hurt();
   if(footC === '~' || h.y > ROWS * T + 40){ h.inv = 0; h.chechia = false; h.harissa = false; die(); return; }
+  if(g.lv.n === 8 && tileAt(Math.floor(h.x / T), 13) === 'w' && h.y > tideY(g.t) + 10){ h.inv = 0; h.chechia = false; h.harissa = false; die(); return; }
   // entités
   for(const e of g.ents){
     if(!e.alive){ if(e.dying){ e.dying -= dt; e.vy += 1500 * dt; e.y += e.vy * dt; } continue; }
@@ -550,7 +594,7 @@ function step(dt){
         if(e.kind === 'harissa'){ h.harissa = true; addText('🌶️ Harissa : B pour lancer !', h.x, h.y - 60, '#ff8a5a'); }
         if(e.kind === 'tea'){ h.tea = 9; addText('🍵 Thé à la menthe : vite !', h.x, h.y - 60, '#7dffb0'); } }
       continue; }
-    if(e.t === 'mover' || e.t === 'sign') continue;
+    if(e.t === 'mover' || e.t === 'sign' || e.t === 'deco') continue;
     // ennemis
     if(e.t === 'scorp' || (e.t === 'hog' && !e.ball)){
       e.vy += 1500 * dt; e.x += e.dir * e.sp * dt; e.y += e.vy * dt;
@@ -641,6 +685,7 @@ function drawBackground(g){
 const DX = 6, DY = -6;   // profondeur des blocs (effet 2.5D)
 function drawTiles(g, t){
   const W = g.W, c0 = Math.max(0, Math.floor(g.camX / T) - 1), c1 = Math.min(g.lv.W, Math.ceil((g.camX + VW) / T) + 1);
+  if(g.lv.n === 9){ ctx.fillStyle = '#5e3c22'; for(let cx = c0; cx < c1; cx++) if(g.lv.G[GY - 5][cx] === '#'){ ctx.fillRect(cx * T, (GY - 4) * T, T + 1, 4 * T); ctx.fillStyle = '#6e4a2c'; if(cx % 5 === 0) ctx.fillRect(cx * T + 6, (GY - 3) * T, 18, 26); ctx.fillStyle = '#5e3c22'; } }
   const bumpOf = (cx, cy) => { const b = (g.bumps || []).find(b => b.cx === cx && b.cy === cy); return b ? Math.sin(b.t / .2 * Math.PI) * -8 : 0; };
   for(let cy = 0; cy < ROWS; cy++) for(let cx = c0; cx < c1; cx++){
     const c = tileAt(cx, cy); if(c === ' ' || c === 'h') continue;
@@ -648,11 +693,12 @@ function drawTiles(g, t){
     if(c === '~'){ const top = tileAt(cx, cy - 1) !== '~'; ctx.fillStyle = W.haz; ctx.globalAlpha = .9; ctx.fillRect(x, y + (top ? 8 + Math.sin(t * 3 + cx) * 3 : 0), T, T); if(top){ ctx.fillStyle = '#ffffff88'; ctx.fillRect(x, y + 8 + Math.sin(t * 3 + cx) * 3, T, 3); } ctx.globalAlpha = 1; continue; }
     if(c === '^'){ ctx.fillStyle = '#c8ccd4'; for(let k = 0; k < 3; k++){ ctx.beginPath(); ctx.moveTo(x + k * 11, y + T); ctx.lineTo(x + k * 11 + 5.5, y + 10); ctx.lineTo(x + k * 11 + 11, y + T); ctx.fill(); } ctx.fillStyle = '#8a8f98'; ctx.fillRect(x, y + T - 4, T, 4); continue; }
     if(c === '='){ ctx.fillStyle = shade(W.plat, .7); ctx.fillRect(x + DX, y + DY, T, 10); ctx.fillStyle = W.plat; rr(ctx, x, y, T, 12, 3); ctx.fill(); ctx.fillStyle = '#ffffff44'; ctx.fillRect(x + 2, y + 2, T - 4, 2);
-      if(g.lv.n <= 2 || g.lv.n === 5){ ctx.fillStyle = '#ffc93c'; ctx.fillRect(x, y + 10, T, 2); } continue; }
+      if(g.lv.n <= 2 || g.lv.n === 5 || g.lv.n === 6){ ctx.fillStyle = '#ffc93c'; ctx.fillRect(x, y + 10, T, 2); } continue; }
     const fr = c === 'f' ? g.frag.get(cx + ',' + cy) : null, shk = fr ? Math.sin(t * 60) * 1.5 : 0;
     const openTop = !SOLID.has(tileAt(cx, cy - 1)) && tileAt(cx, cy - 1) !== 'h', openRight = !SOLID.has(tileAt(cx + 1, cy)) && tileAt(cx + 1, cy) !== 'h';
     let face = W.ground, side = W.ground2;
-    if(c === 'b'){ face = ['#6fa8e8', '#b07a44', '#d2a65a', '#9aa8b8', '#c99a2e'][g.lv.n - 1]; side = shade(face, .7); }
+    if(c === 'b'){ face = ['#6fa8e8', '#b07a44', '#d2a65a', '#9aa8b8', '#c99a2e', '#3f8fc0', '#c8b48a', '#e0b46a', '#a8703e'][g.lv.n - 1]; side = shade(face, .7); }
+    if(c === 'w'){ face = shade(W.ground, .86); side = shade(W.ground, .7); }
     if(c === 'S' || c === 'p' || c === 'c'){ face = c === 'S' ? '#2a7fd6' : c === 'p' ? '#1fa98e' : '#e0a12e'; side = shade(face, .65); }
     if(c === 'U'){ face = '#9a8a72'; side = '#6a5a42'; }
     if(c === 'B'){ face = '#5a3a6a'; side = '#3a1a4a'; }
@@ -668,10 +714,15 @@ function drawTiles(g, t){
       else if(g.lv.n === 2 && c === '#'){ ctx.fillStyle = shade(face, .88); ctx.fillRect(x + (cy % 2) * 16, y + 15, 16, 2); ctx.fillRect(x + 15, y, 2, 15); }
       else if(g.lv.n === 3 && c === '#'){ ctx.fillStyle = shade(face, 1.08); ctx.beginPath(); ctx.arc(x + 10 + (cx % 3) * 6, y + 20, 2, 0, 7); ctx.fill(); }
       else if(g.lv.n === 4 && c === '#'){ ctx.fillStyle = shade(face, 1.1); ctx.fillRect(x + 3, y + 6, 8, 3); }
+      else if(g.lv.n === 6 && c === '#'){ if(hash(cx * 7 + cy) > .8){ ctx.fillStyle = (cx + cy) % 2 ? '#2f6fa8' : '#1f9a7a'; ctx.fillRect(x + 9, y + 12, 14, 14); ctx.fillStyle = '#fff'; ctx.fillRect(x + 14, y + 17, 4, 4); } else { ctx.fillStyle = shade(face, .95); ctx.fillRect(x + 4, y + 20, 6, 4); } }
+      else if(g.lv.n === 7 && c === '#'){ ctx.fillStyle = shade(face, .85); ctx.fillRect(x, y + 15, T, 2); ctx.fillRect(x + ((cx + cy) % 2) * 16, y, 2, T); }
+      else if(g.lv.n === 8 && c === '#'){ ctx.fillStyle = shade(face, .9); ctx.beginPath(); ctx.arc(x + 8 + (cx * 5 % 16), y + 18, 1.6, 0, 7); ctx.arc(x + 20, y + 26 - (cy % 2) * 8, 1.4, 0, 7); ctx.fill(); }
+      else if(g.lv.n === 9 && c === '#'){ ctx.fillStyle = shade(face, .88); ctx.fillRect(x, y + 10 + (cx % 3) * 4, T, 3); }
       else if(c === '#' || c === 'B'){ // mosaïque du palais
         ctx.fillStyle = (cx + cy) % 2 ? '#1f7a8a' : '#c99a2e'; ctx.save(); ctx.translate(x + 16, y + 16); ctx.rotate(Math.PI / 4); ctx.fillRect(-6, -6, 12, 12); ctx.restore(); }
       if(c === 'f'){ ctx.strokeStyle = '#5a4636'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 6, y + 2); ctx.lineTo(x + 14, y + 14); ctx.lineTo(x + 10, y + 28); ctx.moveTo(x + 22, y + 4); ctx.lineTo(x + 18, y + 18); ctx.stroke(); }
-      if(openTop && c === '#'){ ctx.fillStyle = W.top; ctx.fillRect(x, y, T, 6); if(g.lv.n === 1 || g.lv.n === 2){ ctx.fillStyle = shade(W.top, .8); for(let k = 0; k < 4; k++) ctx.fillRect(x + k * 8 + 2, y + 5, 3, 3 + (k % 2) * 2); }
+      if(openTop && c === '#'){ ctx.fillStyle = W.top; ctx.fillRect(x, y, T, 6); if(g.lv.n === 6){ ctx.fillStyle = shade(W.top, .75); for(let k = 0; k < 4; k++) ctx.fillRect(x + k * 8, y + 3, 1.5, 4); }
+        if(g.lv.n === 1 || g.lv.n === 2 || g.lv.n === 7){ ctx.fillStyle = shade(W.top, .8); for(let k = 0; k < 4; k++) ctx.fillRect(x + k * 8 + 2, y + 5, 3, 3 + (k % 2) * 2); }
         if(g.lv.n === 1 && hash(cx) > .82){ ctx.fillStyle = '#d6337a'; ctx.beginPath(); ctx.arc(x + 16, y - 2, 4, 0, 7); ctx.fill(); } }
       if(g.lv.n === 1 && openTop && tileAt(cx, cy + 1) !== '#' ){ ctx.fillStyle = W.edge; ctx.fillRect(x, y + T - 4, T, 4); }
     } else if(c === 'b'){ ctx.strokeStyle = shade(face, .78); ctx.lineWidth = 1.5; ctx.strokeRect(x + 1, y + 1, T - 2, T - 2); ctx.beginPath(); ctx.moveTo(x, y + 16); ctx.lineTo(x + T, y + 16); ctx.moveTo(x + 16, y); ctx.lineTo(x + 16, y + 16); ctx.moveTo(x + 8, y + 16); ctx.lineTo(x + 8, y + T); ctx.moveTo(x + 24, y + 16); ctx.lineTo(x + 24, y + T); ctx.stroke(); }
@@ -684,6 +735,8 @@ function drawTiles(g, t){
     ctx.restore();
     // faux mur : un peu transparent quand on est dedans
   }
+  if(g.lv.n === 8){ const ys = tideY(g.t); for(let cx = c0; cx < c1; cx++){ if(g.lv.G[13][cx] !== 'w') continue; const x = cx * T, wy = ys + Math.sin(t * 3 + cx) * 2;
+      ctx.globalAlpha = .82; ctx.fillStyle = W.haz; ctx.fillRect(x, wy, T + 1, ROWS * T - wy); ctx.globalAlpha = 1; ctx.fillStyle = '#ffffffcc'; ctx.fillRect(x, wy, T + 1, 3); } }
   // faux murs dessinés comme des murs (sauf quand le héros est dedans)
   for(let cy = 0; cy < ROWS; cy++) for(let cx = c0; cx < c1; cx++){ if(tileAt(cx, cy) !== 'h') continue; const x = cx * T, y = cy * T, inside = Math.abs(g.hero.x - (x + 16)) < 40 && g.hero.y > y - 10 && g.hero.y - HH < y + T + 10;
     ctx.globalAlpha = inside ? .35 : 1; ctx.fillStyle = g.W.ground; ctx.fillRect(x, y, T, T); if(g.lv.n === 5){ ctx.fillStyle = (cx + cy) % 2 ? '#1f7a8a' : '#c99a2e'; ctx.save(); ctx.translate(x + 16, y + 16); ctx.rotate(Math.PI / 4); ctx.fillRect(-6, -6, 12, 12); ctx.restore(); } ctx.globalAlpha = 1; }
@@ -702,16 +755,40 @@ function drawEnt(e, g, t){
     case 'door': { ctx.fillStyle = '#f4efe6'; rr(ctx, -30, -96, 60, 96, 6); ctx.fill(); ctx.fillStyle = '#1f5fbf'; ctx.beginPath(); ctx.moveTo(-22, 0); ctx.lineTo(-22, -60); ctx.arc(0, -60, 22, Math.PI, 0); ctx.lineTo(22, 0); ctx.fill(); ctx.fillStyle = '#ffc93c'; for(let k = 0; k < 4; k++) for(let j = 0; j < 3; j++){ ctx.beginPath(); ctx.arc(-12 + j * 12, -54 + k * 14, 2, 0, 7); ctx.fill(); }
       ctx.fillStyle = '#fff'; ctx.font = '800 13px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(g.bossAlive ? '🔒' : 'SORTIE', 0, -100); break; }
     case 'sign': { ctx.fillStyle = '#7a4a22'; ctx.fillRect(-2, -40, 4, 40); ctx.fillStyle = '#f4efe6'; rr(ctx, -60, -64, 120, 28, 6); ctx.fill(); ctx.fillStyle = '#1f5fbf'; ctx.font = '800 13px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(e.txt, 0, -45); break; }
-    case 'mover': ctx.restore(); { const x = e.px, y = e.py, w = e.w * T; ctx.fillStyle = shade(W.plat, .7); ctx.fillRect(x + DX, y + DY, w, 12); ctx.fillStyle = '#c2185b'; rr(ctx, x, y, w, 14, 4); ctx.fill(); ctx.fillStyle = '#ffc93c'; for(let k = 0; k < w; k += 12) ctx.fillRect(x + k + 2, y + 4, 6, 6); ctx.fillStyle = '#7a1040'; ctx.fillRect(x, y + 12, w, 3); } return;
+    case 'deco': {
+      if(e.kind === 'jar'){ ctx.fillStyle = '#b8582e'; ctx.beginPath(); ctx.ellipse(0, -16, 12, 15, 0, 0, 7); ctx.fill(); ctx.fillRect(-6, -36, 12, 8); ctx.fillStyle = '#e8c070'; ctx.fillRect(-12, -18, 24, 3); ctx.fillStyle = '#8a3a1a'; ctx.fillRect(-8, -38, 16, 3); }
+      else if(e.kind === 'column'){ ctx.globalAlpha = .9; ctx.fillStyle = '#e8d8b0'; ctx.fillRect(-12, -92, 24, 92); ctx.fillStyle = '#c8b48a'; for(let k = -8; k <= 8; k += 6) ctx.fillRect(k - 1, -88, 2, 86); ctx.fillStyle = '#d8c49a'; ctx.fillRect(-16, -8, 32, 8); ctx.beginPath(); ctx.moveTo(-14, -92); ctx.lineTo(-4, -100); ctx.lineTo(4, -94); ctx.lineTo(14, -102); ctx.lineTo(14, -92); ctx.fill(); }
+      else if(e.kind === 'torch'){ ctx.fillStyle = '#3a2412'; ctx.fillRect(-3, -30, 6, 18); ctx.fillStyle = '#ffb02e'; ctx.shadowColor = '#ffb02e'; ctx.shadowBlur = 14; ctx.beginPath(); ctx.ellipse(0, -38 - Math.sin(t * 9 + e.x) * 1.5, 6, 10 + Math.sin(t * 13 + e.x) * 2, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#fff2b0'; ctx.beginPath(); ctx.ellipse(0, -35, 3, 5, 0, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }
+      break; }
+    case 'mover': ctx.restore(); if(g.lv.n === 6){ const x = e.px, y = e.py, w = e.w * T, wv = k => Math.sin(t * 4 + k * .25) * 2.5;   // un tapis volant
+        ctx.fillStyle = '#7a1424'; ctx.fillRect(x + DX, y + DY + 4, w, 8); ctx.beginPath(); ctx.moveTo(x, y + wv(0)); for(let k = 0; k <= w; k += 8) ctx.lineTo(x + k, y + wv(k)); for(let k = w; k >= 0; k -= 8) ctx.lineTo(x + k, y + 12 + wv(k)); ctx.closePath(); ctx.fillStyle = '#b3262e'; ctx.fill();
+        ctx.fillStyle = '#ffc93c'; for(let k = 6; k < w - 4; k += 14){ ctx.beginPath(); ctx.moveTo(x + k, y + 6 + wv(k)); ctx.lineTo(x + k + 5, y + 2 + wv(k)); ctx.lineTo(x + k + 10, y + 6 + wv(k)); ctx.lineTo(x + k + 5, y + 10 + wv(k)); ctx.fill(); }
+        ctx.fillStyle = '#1f6fa8'; ctx.fillRect(x, y + 10 + wv(0), w, 2); ctx.strokeStyle = '#ffe9c8'; ctx.lineWidth = 1.5; ctx.beginPath(); for(const ex of [x, x + w]) for(let k = 2; k < 12; k += 3){ ctx.moveTo(ex, y + k + wv(ex - x)); ctx.lineTo(ex + (ex === x ? -5 : 5), y + k + 1 + wv(ex - x)); } ctx.stroke(); return; }
+      { const x = e.px, y = e.py, w = e.w * T; ctx.fillStyle = shade(W.plat, .7); ctx.fillRect(x + DX, y + DY, w, 12); ctx.fillStyle = '#c2185b'; rr(ctx, x, y, w, 14, 4); ctx.fill(); ctx.fillStyle = '#ffc93c'; for(let k = 0; k < w; k += 12) ctx.fillRect(x + k + 2, y + 4, 6, 6); ctx.fillStyle = '#7a1040'; ctx.fillRect(x, y + 12, w, 3); } return;
     case 'power': { ctx.translate(0, -12); ctx.font = '24px serif'; ctx.textAlign = 'center'; ctx.fillText(e.kind === 'chechia' ? '🎩' : e.kind === 'harissa' ? '🌶️' : '🍵', 0, 9); break; }
-    case 'scorp': { const f = e.dir; ctx.scale(f, 1); const lg = Math.sin(t * 14) * 2; ctx.fillStyle = '#c47a2a'; ctx.beginPath(); ctx.ellipse(0, -8, 14, 8, 0, 0, 7); ctx.fill();
+    case 'scorp': if(g.lv.n === 6){ ctx.scale(e.dir, 1); const lg = Math.sin(t * 12) * 3; ctx.fillStyle = '#e8963a';   // un chat de la médina
+        ctx.fillRect(-10, -8, 3, 8 + lg * .3); ctx.fillRect(6, -8, 3, 8 - lg * .3); ctx.beginPath(); ctx.ellipse(0, -12, 13, 7, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(13, -18, 7, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(8, -22); ctx.lineTo(10, -30); ctx.lineTo(14, -24); ctx.moveTo(14, -24); ctx.lineTo(18, -30); ctx.lineTo(19, -21); ctx.fill();
+        ctx.strokeStyle = '#e8963a'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-12, -14); ctx.quadraticCurveTo(-22, -16, -20, -28 + lg); ctx.stroke(); ctx.lineCap = 'butt';
+        ctx.fillStyle = '#b8642a'; ctx.fillRect(-4, -18, 3, 6); ctx.fillRect(2, -18, 3, 6); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(16, -19, 1.6, 0, 7); ctx.fill(); ctx.fillStyle = '#ff8aa8'; ctx.beginPath(); ctx.arc(20, -17, 1.4, 0, 7); ctx.fill(); break; }
+      else if(g.lv.n === 7 || g.lv.n === 8){ const lg = Math.sin(t * 16) * 2; ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2;   // un crabe
+        for(let k = -1; k <= 1; k += 2) for(let j = 0; j < 3; j++){ ctx.beginPath(); ctx.moveTo(k * 8, -7); ctx.lineTo(k * (14 + j * 2), -2 + (j % 2 ? lg : -lg)); ctx.stroke(); }
+        ctx.fillStyle = '#e04a2e'; ctx.beginPath(); ctx.ellipse(0, -9, 13, 8, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(-16, -16 + lg, 5, 0, 7); ctx.arc(16, -16 - lg, 5, 0, 7); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-4, -19, 3, 0, 7); ctx.arc(4, -19, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(-4 + e.dir, -19, 1.5, 0, 7); ctx.arc(4 + e.dir, -19, 1.5, 0, 7); ctx.fill(); break; }
+      { const f = e.dir; ctx.scale(f, 1); const lg = Math.sin(t * 14) * 2; ctx.fillStyle = '#c47a2a'; ctx.beginPath(); ctx.ellipse(0, -8, 14, 8, 0, 0, 7); ctx.fill();
       ctx.strokeStyle = '#8a4a12'; ctx.lineWidth = 2; for(let k = -1; k <= 1; k++){ ctx.beginPath(); ctx.moveTo(k * 6, -4); ctx.lineTo(k * 6 - 4, 0 + (k ? lg : -lg)); ctx.stroke(); }
       ctx.fillStyle = '#c47a2a'; ctx.beginPath(); ctx.arc(14, -10, 5, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(-12, -10); ctx.quadraticCurveTo(-22, -26, -8, -30); ctx.lineWidth = 5; ctx.strokeStyle = '#c47a2a'; ctx.stroke(); ctx.fillStyle = '#5a2a0a'; ctx.beginPath(); ctx.moveTo(-8, -30); ctx.lineTo(-2, -26); ctx.lineTo(-6, -24); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(8, -12, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(9, -12, 1.5, 0, 7); ctx.fill(); break; }
     case 'hog': { if(e.ball){ ctx.translate(0, -11); ctx.rotate(e.spin || 0); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0; k < 8; k++){ const a = k * Math.PI / 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8); ctx.lineTo(Math.cos(a) * 14, Math.sin(a) * 14); ctx.stroke(); } break; }
       ctx.scale(e.dir, 1); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.ellipse(-2, -11, 14, 11, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0; k < 7; k++){ const a = Math.PI + k * .4; ctx.beginPath(); ctx.moveTo(-2 + Math.cos(a) * 10, -11 + Math.sin(a) * 9); ctx.lineTo(-2 + Math.cos(a) * 17, -11 + Math.sin(a) * 15); ctx.stroke(); }
       ctx.fillStyle = '#e8c8a0'; ctx.beginPath(); ctx.ellipse(10, -8, 7, 6, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(16, -9, 2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(10, -11, 1.5, 0, 7); ctx.fill(); break; }
-    case 'bird': { ctx.scale(e.dir, 1); const fl = Math.sin(t * 16) * .7; ctx.fillStyle = '#8a6a4a'; ctx.beginPath(); ctx.ellipse(0, -10, 13, 8, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#6a4a2a'; ctx.save(); ctx.translate(-2, -12); ctx.rotate(-fl); ctx.beginPath(); ctx.ellipse(-4, -8, 6, 13, -.4, 0, 7); ctx.fill(); ctx.restore();
+    case 'bird': if(g.lv.n === 9){ const fl = Math.sin(t * 18); ctx.fillStyle = '#4a3a6a';   // une chauve-souris
+        ctx.beginPath(); ctx.ellipse(0, -12, 7, 8, 0, 0, 7); ctx.fill(); for(const k of [-1, 1]){ ctx.beginPath(); ctx.moveTo(k * 5, -14); ctx.quadraticCurveTo(k * 16, -24 - fl * 8, k * 24, -12 - fl * 6); ctx.quadraticCurveTo(k * 16, -10, k * 5, -8); ctx.fill(); }
+        ctx.beginPath(); ctx.moveTo(-5, -18); ctx.lineTo(-3, -24); ctx.lineTo(-1, -18); ctx.moveTo(1, -18); ctx.lineTo(3, -24); ctx.lineTo(5, -18); ctx.fill(); ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.arc(-2.5, -14, 1.6, 0, 7); ctx.arc(2.5, -14, 1.6, 0, 7); ctx.fill(); break; }
+      if(g.lv.n === 7 || g.lv.n === 8){ ctx.scale(e.dir, 1); const fl = Math.sin(t * 10) * .6; ctx.fillStyle = '#ffffff';   // une mouette
+        ctx.beginPath(); ctx.ellipse(0, -10, 13, 7, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(11, -13, 5.5, 0, 7); ctx.fill(); ctx.fillStyle = '#9aa8b8'; ctx.save(); ctx.translate(-2, -12); ctx.rotate(-fl); ctx.beginPath(); ctx.ellipse(-6, -6, 14, 5, -.5, 0, 7); ctx.fill(); ctx.restore();
+        ctx.fillStyle = '#ffb02e'; ctx.beginPath(); ctx.moveTo(15, -13); ctx.lineTo(22, -11); ctx.lineTo(15, -10); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(12, -14, 1.5, 0, 7); ctx.fill(); break; }
+      { ctx.scale(e.dir, 1); const fl = Math.sin(t * 16) * .7; ctx.fillStyle = '#8a6a4a'; ctx.beginPath(); ctx.ellipse(0, -10, 13, 8, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#6a4a2a'; ctx.save(); ctx.translate(-2, -12); ctx.rotate(-fl); ctx.beginPath(); ctx.ellipse(-4, -8, 6, 13, -.4, 0, 7); ctx.fill(); ctx.restore();
       ctx.fillStyle = '#f4efe6'; ctx.beginPath(); ctx.arc(11, -14, 6, 0, 7); ctx.fill(); ctx.fillStyle = '#ffb02e'; ctx.beginPath(); ctx.moveTo(16, -14); ctx.lineTo(22, -12); ctx.lineTo(16, -11); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(12, -15, 1.6, 0, 7); ctx.fill(); break; }
     case 'cactus': { ctx.fillStyle = '#4a9a4a'; rr(ctx, -8, -44, 16, 44, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(-12, -24, 6, 10, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(12, -30, 6, 10, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#c2185b'; [[-12, -34], [12, -40], [0, -46]].forEach(([a, b]) => { ctx.beginPath(); ctx.ellipse(a, b, 4, 5, 0, 0, 7); ctx.fill(); });
       ctx.fillStyle = '#fff'; [[-3, -30], [3, -30]].forEach(([a, b]) => { ctx.beginPath(); ctx.arc(a, b, 2.5, 0, 7); ctx.fill(); }); ctx.fillStyle = '#222'; [[-3, -30], [3, -30]].forEach(([a, b]) => { ctx.beginPath(); ctx.arc(a, b, 1.2, 0, 7); ctx.fill(); }); break; }
@@ -777,17 +854,34 @@ function render(t){
   drawBackground(g);
   ctx.translate(-g.camX, 0);
   drawTiles(g, t);
-  g.ents.forEach(e => { if(e.t === 'mover' || ['door', 'lamp', 'sign', 'spring'].includes(e.t)) drawEnt(e, g, t); });
-  g.ents.forEach(e => { if(!(e.t === 'mover' || ['door', 'lamp', 'sign', 'spring'].includes(e.t))) drawEnt(e, g, t); });
+  const BACK = ['mover', 'door', 'lamp', 'sign', 'spring', 'deco'];
+  g.ents.forEach(e => { if(BACK.includes(e.t)) drawEnt(e, g, t); });
+  g.ents.forEach(e => { if(!BACK.includes(e.t)) drawEnt(e, g, t); });
   g.shots.forEach(s => { ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(t * 12); ctx.fillStyle = '#e8331a'; ctx.beginPath(); ctx.ellipse(0, 0, 9, 4, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#2f9e44'; ctx.fillRect(7, -2, 4, 4); ctx.restore(); });
   drawHero(ctx, g.hero, t);
   g.parts.forEach(p => { ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 2)); if(p.coin){ ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.ellipse(p.x, p.y, 7, 9, 0, 0, 7); ctx.fill(); } else { ctx.fillStyle = p.c; ctx.fillRect(p.x - p.r / 2, p.y - p.r / 2, p.r, p.r); } }); ctx.globalAlpha = 1;
+  drawDark(g, t);
   g.texts.forEach(x => { ctx.globalAlpha = Math.min(1, x.life * 1.5); ctx.font = `800 ${x.size}px "Baloo 2", sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 5; ctx.strokeStyle = '#0b1e46'; ctx.strokeText(x.s, x.x, x.y); ctx.fillStyle = x.c; ctx.fillText(x.s, x.x, x.y); }); ctx.globalAlpha = 1;
   // premier plan : herbes, jasmins (parallaxe 1,25)
   const fp = g.camX * 1.25;
-  for(let k = Math.floor(fp / 220) - 1; k < Math.floor((fp + VW) / 220) + 2; k++){ const r = hash(k * 13 + 5); if(r < .45) continue; const x = k * 220 - fp + g.camX; ctx.globalAlpha = .7; ctx.fillStyle = g.lv.n === 4 ? '#ffffff' : g.lv.n === 3 ? '#d2a65a' : '#2f7a3a';
+  for(let k = Math.floor(fp / 220) - 1; k < Math.floor((fp + VW) / 220) + 2; k++){ const r = hash(k * 13 + 5); if(r < .45) continue; const x = k * 220 - fp + g.camX; ctx.globalAlpha = .7; ctx.fillStyle = ({ 4:'#ffffff', 3:'#d2a65a', 8:'#e8d29a', 9:'#6a4020', 6:'#c8643a' })[g.lv.n] || '#2f7a3a';
     ctx.beginPath(); ctx.ellipse(x, VHL + 6, 46 + r * 30, 26 + r * 12, 0, Math.PI, 0); ctx.fill(); if(g.lv.n <= 2){ ctx.fillStyle = '#fffaf0'; for(let j = 0; j < 4; j++){ ctx.beginPath(); ctx.arc(x - 20 + j * 13, VHL - 14 - (j % 2) * 8, 3, 0, 7); ctx.fill(); } } ctx.globalAlpha = 1; }
   drawHUD(g, t);
+}
+// Matmata : il fait sombre dans les tunnels ; le héros, les lampes, les torches et les jasmins éclairent autour d'eux
+let dk = null;
+function drawDark(g, t){
+  if(g.lv.n !== 9) return;
+  const h = g.hero, inside = g.lv.G[GY - 5][Math.max(0, Math.floor(h.x / T))] === '#';
+  g.dark = g.dark === undefined ? .3 : g.dark + ((inside ? .74 : .28) - g.dark) * .04;
+  const w = Math.ceil(VW / 2), hh = Math.ceil(VHL / 2);
+  if(!dk) dk = document.createElement('canvas'); if(dk.width !== w || dk.height !== hh){ dk.width = w; dk.height = hh; }
+  const d = dk.getContext('2d'); d.globalCompositeOperation = 'source-over'; d.clearRect(0, 0, w, hh); d.fillStyle = `rgba(14,7,2,${g.dark.toFixed(3)})`; d.fillRect(0, 0, w, hh);
+  d.globalCompositeOperation = 'destination-out';
+  const hole = (x, y, r) => { x = (x - g.camX) / 2; y /= 2; r /= 2; if(x < -r || x > w + r) return; const gr = d.createRadialGradient(x, y, r * .3, x, y, r); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); d.fillStyle = gr; d.beginPath(); d.arc(x, y, r, 0, 7); d.fill(); };
+  hole(h.x, h.y - 24, 210 + Math.sin(t * 5) * 5);
+  g.ents.forEach(e => { if(e.t === 'deco' && e.kind === 'torch') hole(e.x, e.y - 38, 130 + Math.sin(t * 9 + e.x) * 6); else if(e.t === 'lamp') hole(e.x, e.y - 66, e.on ? 150 : 70); else if(e.t === 'gem' && e.alive) hole(e.x, e.y - 18, 70); else if(e.t === 'door') hole(e.x, e.y - 50, 110); });
+  ctx.drawImage(dk, g.camX, 0, VW, VHL);
 }
 function drawHUD(g){
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -821,12 +915,15 @@ function show(id){ document.querySelectorAll('.screen').forEach(s => s.classList
 function renderMenu(){ $('who').innerHTML = player ? `${avatarHTML(player)}<span><b>${esc(player)}</b><small>Toucher pour changer de héros</small></span>` : `<span class="av">🙂</span><span><b>Qui joue ?</b><small>Choisis ton héros</small></span>`; }
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 $('who').onclick = () => { audio(); sfx.tap(); choose(); };
+// un monde est ouvert s'il est le premier du voyage, s'il l'était déjà avec l'ancien ordre (1 à 5), ou si le monde d'avant est réussi
+function isOpen(id){ const i = ORDER.indexOf(id); return i === 0 || (id <= 5 && id <= save.unlocked) || !!save.best[ORDER[i - 1]]; }
 async function openLevels(){
   audio(); if(!player){ const n = await choose(); if(!n) return; }
-  $('levels').innerHTML = WORLDS.map((w, i) => { const n = i + 1, b = save.best[n], open = n <= save.unlocked, g = (save.gems[n] || []).length;
-    return `<button class="lvl ${n === save.unlocked && !b ? 'next' : ''}" data-n="${n}" ${open ? '' : 'disabled'} style="background-image:url('${w.img}')"><span class="num">${n}</span><b>${open ? w.name : '🔒 ' + w.name}</b><small>${w.sub}</small><span class="st">${b ? '★'.repeat(b.stars) + '☆'.repeat(3 - b.stars) : '☆☆☆'} <small>🌼 ${g}/3${b ? ' · ' + b.score : ''}</small></span></button>`; }).join('');
+  const nextId = ORDER.find(id => isOpen(id) && !save.best[id]);
+  $('levels').innerHTML = ORDER.map(n => { const w = WORLDS[n - 1], b = save.best[n], open = isOpen(n), g = (save.gems[n] || []).length;
+    return `<button class="lvl ${n === nextId ? 'next' : ''}" data-n="${n}" ${open ? '' : 'disabled'} style="background-image:url('${w.img}')"><span class="num">${posOf(n)}</span><b>${open ? w.name : '🔒 ' + w.name}</b><small>${w.sub}</small><span class="st">${b ? '★'.repeat(b.stars) + '☆'.repeat(3 - b.stars) : '☆☆☆'} <small>🌼 ${g}/3${b ? ' · ' + b.score : ''}</small></span></button>`; }).join('');
   const totG = Object.values(save.gems).reduce((a, x) => a + x.length, 0);
-  $('lvlStats').innerHTML = `<span>🌼 Jasmins : ${totG}/15</span><span>🎟️ Tickets : ${save.tickets}</span><span>📚 Bonnes réponses : ${save.answers.ok}</span>`;
+  $('lvlStats').innerHTML = `<span>🌼 Jasmins : ${totG}/${WORLDS.length * 3}</span><span>🎟️ Tickets : ${save.tickets}</span><span>📚 Bonnes réponses : ${save.answers.ok}</span>`;
   document.querySelectorAll('.lvl').forEach(b => b.onclick = () => { if(b.disabled) return; sfx.tap(); intro(+b.dataset.n); });
   show('levelsScr');
 }
@@ -836,11 +933,15 @@ const STORY = ["Le Scorpion d'Or a volé les jasmins dorés de Sidi Bou Saïd ! 
   "Les traces du scorpion mènent à l'oasis de Tozeur. Attention à l'eau, et aux faucons qui gardent les palmiers !",
   "Dans le grand désert, les cactus lancent des figues de Barbarie et les hérissons roulent dans le sable.",
   "Surprise : il neige à Aïn Draham ! Le sol glisse… prends ton élan avec prudence.",
-  "Voici le palais du Scorpion d'Or. Évite les braises, et attends qu'il soit sonné contre un mur pour lui sauter sur le dos !"];
+  "Voici le palais du Scorpion d'Or. Évite les braises, et attends qu'il soit sonné contre un mur pour lui sauter sur le dos !",
+  "Le Scorpion d'Or s'est caché dans la médina de Tunis ! Saute de toit en toit, et monte sur les tapis volants pour passer au-dessus des ruelles.",
+  "À Carthage, les vieilles pierres sont fragiles : ne reste pas trop longtemps dessus ! Les crabes sortent de la mer et les mouettes volent bas.",
+  "Sur l'île de Djerba, la mer monte et descend dans les cuvettes de sable. Attends la marée basse pour passer… ou saute par-dessus !",
+  "À Matmata, les maisons sont creusées sous la terre. Dans les tunnels il fait noir : les torches et les lanternes t'éclairent. Attention aux chauves-souris !"];
 function intro(n){
   const w = WORLDS[n - 1];
   $('introBox').innerHTML = `${n === 5 ? `<img class="boss-img" src="jasmin/boss.webp" alt="Le Scorpion d'Or" onerror="this.remove()">` : `<img class="title-img" src="${w.img}" alt="" onerror="this.remove()" style="aspect-ratio:21/9">`}
-    <h2>Monde ${n} · ${w.name}</h2><p class="sub">${STORY[n - 1]}</p><button class="big" id="go">▶ C'est parti !</button>`;
+    <h2>Monde ${posOf(n)} · ${w.name}</h2><p class="sub">${STORY[n - 1]}</p><button class="big" id="go">▶ C'est parti !</button>`;
   show('intro'); $('go').onclick = () => { sfx.tap(); startLevel(n); };
 }
 function startLevel(n){ audio(); newLevel(n); state = 'play'; show(null); last = performance.now(); acc = 0; musicStart(); }
@@ -880,25 +981,25 @@ async function showEnd(won){
   if(won){ stars = 1 + (g.dinars >= g.dinarTotal * .6 ? 1 : 0) + (gemsNow.length >= 3 ? 1 : 0);
     save.gems[n] = [...new Set([...prevG, ...gemsNow])]; const b = save.best[n];
     save.best[n] = { score:Math.max(score, b ? b.score : 0), stars:Math.max(stars, b ? b.stars : 0), time:Math.min(Math.floor(g.t), b ? b.time : 1e9) };
-    if(n >= save.unlocked && n < 5) save.unlocked = n + 1; }
+  }
   const tk = g.tickets + newG.length * 2; save.tickets += tk; save.games++; persist();
   $('endBox').innerHTML = won
     ? `<h2>${n === 5 ? "🏆 Tu as vaincu le Scorpion d'Or !" : '🎉 Niveau réussi !'}</h2><div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
        <div class="stats"><span>⏱️ ${Math.floor(g.t / 60)} min ${String(Math.floor(g.t % 60)).padStart(2, '0')}</span><span>🪙 ${g.dinars}/${g.dinarTotal}</span><span>🌼 ${gemsNow.length}/3</span><span>🦂 ${g.kills}</span><span>📚 ${g.okQ}/${g.okQ + g.koQ}</span></div>
        <div style="font-family:var(--display);font-size:40px;font-weight:800;color:var(--gold)">${score}</div>
        <p class="sub">${tk ? `Tu gagnes <b>${tk} tickets 🎟️</b> pour la boutique de Serpent Légendes !` : 'Réponds aux blocs savoir 📚 pour gagner des tickets 🎟️.'}</p>
-       ${n === 5 ? `<p class="sub">Les cinq jasmins dorés sont rentrés à Sidi Bou Saïd. Bravo, ${esc(player)} !</p>` : ''}
-       <div class="row"><button class="big" id="eNext">${n < 5 ? 'Monde suivant ▶' : 'Les mondes'}</button><button class="big ghost" id="eAgain">↻ Rejouer</button></div><div class="list" id="eRecs"></div>`
+       ${n === 5 ? `<p class="sub">Tous les jasmins dorés sont rentrés à Sidi Bou Saïd. Bravo, ${esc(player)} !</p>` : ''}
+       <div class="row"><button class="big" id="eNext">${n !== 5 ? 'Monde suivant ▶' : 'Les mondes'}</button><button class="big ghost" id="eAgain">↻ Rejouer</button></div><div class="list" id="eRecs"></div>`
     : `<h2>Plus de vies…</h2><p class="sub">Ce n'est pas grave : chaque essai te rend plus fort. Les lanternes 🏮 gardent ta place.</p><div class="stats"><span>🪙 ${g.dinars}</span><span>🌼 ${gemsNow.length}/3</span><span>📚 ${g.okQ}</span></div>
        <div class="row"><button class="big" id="eAgain">↻ Réessayer</button><button class="big ghost" id="eNext">Les mondes</button></div>`;
   show('end');
   $('eAgain').onclick = () => { sfx.tap(); startLevel(n); };
-  $('eNext').onclick = () => { sfx.tap(); if(won && n < 5) intro(n + 1); else { G0 = null; openLevels(); } };
+  $('eNext').onclick = () => { sfx.tap(); if(won && n !== 5) intro(ORDER[ORDER.indexOf(n) + 1]); else { G0 = null; openLevels(); } };
   if(won && window.Famille){ await Famille.score('jasmin', 'monde' + n, Math.min(999999, score), player);
     const list = await Famille.highscores('jasmin', 'monde' + n, 5); if(list && $('eRecs')) $('eRecs').innerHTML = list.map((r, i) => `<div class="${r.player.toLowerCase() === (player || '').toLowerCase() ? 'me' : ''}"><span>${['🥇', '🥈', '🥉'][i] || i + 1}</span>${avatarHTML(r.player)}<span>${esc(r.player)}</span><b>${r.score}</b></div>`).join(''); }
 }
 // records
-$('recTabs').innerHTML = WORLDS.map((w, i) => `<button class="big ghost" style="min-height:44px;font-size:17px;flex:1 1 60px" data-n="${i + 1}">${i + 1}</button>`).join('');
+$('recTabs').innerHTML = ORDER.map(id => `<button class="big ghost" style="min-height:44px;font-size:17px;flex:1 1 44px" data-n="${id}">${posOf(id)}</button>`).join('');
 async function loadRecs(n){ document.querySelectorAll('#recTabs button').forEach(b => b.style.background = +b.dataset.n === n ? '#3f86e8' : ''); $('recList').innerHTML = `<div>${WORLDS[n - 1].name} — chargement…</div>`;
   const list = window.Famille ? await Famille.highscores('jasmin', 'monde' + n, 10) : null;
   $('recList').innerHTML = `<div style="justify-content:center;background:none"><b style="margin:0">${WORLDS[n - 1].name}</b></div>` + (!list ? '<div>Records indisponibles hors connexion.</div>' : !list.length ? '<div>Pas encore de record ici !</div>' : list.map((r, i) => `<div class="${player && r.player.toLowerCase() === player.toLowerCase() ? 'me' : ''}"><span>${['🥇', '🥈', '🥉'][i] || i + 1}</span>${avatarHTML(r.player)}<span>${esc(r.player)}</span><b>${r.score}</b></div>`).join('')); }
@@ -919,6 +1020,6 @@ $('helpBack').onclick = () => { sfx.tap(); show('menu'); };
 renderOpts();
 const cur = window.Famille ? Famille.player() : null; if(cur) setPlayer(cur); else renderMenu();
 requestAnimationFrame(frame);
-window.__jasmin = { get G(){ return G0; }, keys, touch, startLevel, buildLevel, get state(){ return state; }, get save(){ return save; }, step, winLevel, setJump(v){ keys.a = v; if(v) jumpPressed = true; } };
+window.__jasmin = { ORDER, tideY, get G(){ return G0; }, keys, touch, startLevel, buildLevel, get state(){ return state; }, get save(){ return save; }, step, winLevel, setJump(v){ keys.a = v; if(v) jumpPressed = true; } };
 </script>
 </body></html>
