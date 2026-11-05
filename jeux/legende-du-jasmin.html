@@ -412,6 +412,19 @@ function shade(hex, k){ const p = parseInt(hex.slice(1), 16); const f = v => Mat
    ===================================================================== */
 let state = 'menu', G0 = null;
 const SOLID = new Set(['#', 'b', 'S', 'c', 'p', 'U', 'f', 'B', 'X']);
+// Le sol sûr d'une colonne : la première case pleine (pas fragile) sous du vide, sans eau ni pics. -1 s'il n'y en a pas.
+function groundRow(G, cx){
+  if(cx < 0 || cx >= G[0].length) return -1;
+  for(let y = 1; y < ROWS; y++){ const c = G[y][cx], up = G[y - 1][cx];
+    if(c === '~') return -1;
+    if(SOLID.has(c) && c !== 'f' && c !== 'B' && (up === ' ' || up === '=' ) && G[y - 1][cx] !== '^'){ return (y >= 2 && SOLID.has(G[y - 2][cx])) ? -1 : y; } }
+  return -1;
+}
+// Cherche un sol sûr en partant d'une colonne et en reculant (puis en avançant si besoin).
+function safeSpot(G, cx){
+  for(let d = 0; d < 40; d++) for(const c of [cx - d, cx + d]){ const y = groundRow(G, c), y2 = groundRow(G, c - 1), y3 = groundRow(G, c + 1); if(y >= 0 && y2 === y && y3 === y) return { x:c * T + T / 2, y:y * T }; }
+  return { x:3 * T, y:GY * T };
+}
 function newLevel(n, fromCheck){
   const lv = buildLevel(n), W = WORLDS[n - 1];
   const g = { lv, W, t:0, camX:0, look:0, ents:[], parts:[], texts:[], shots:[], frag:new Map(), dinars:0, dinarTotal:0, gems:new Set(), kills:0, okQ:0, koQ:0, tickets:0,
@@ -426,6 +439,7 @@ function newLevel(n, fromCheck){
     if(e.t === 'boss'){ o.w = 120; o.h = 70; o.hp = 3; o.st = 'wait'; o.timer = 0; o.dir = -1; o.inv = 0; }
     g.ents.push(o);
   });
+  g.ents.forEach(e => { if(e.t === 'lamp'){ const s = safeSpot(lv.G, Math.floor(e.x / T)); e.x = s.x; e.y = s.y; } });
   g.hero = { x:3 * T, y:GY * T, vx:0, vy:0, ground:false, face:1, phase:0, coyote:0, buffer:0, inv:0, chechia:false, harissa:false, tea:0, dead:false, deadT:0, squash:0, runT:0, on:null };
   return g;
 }
@@ -449,7 +463,7 @@ function die(){
   }, 1300);
 }
 function respawn(){
-  const g = G0, h = g.hero, c = g.check;
+  const g = G0, h = g.hero, c0 = g.check, c = c0 ? safeSpot(g.lv.G, Math.floor(c0.x / T)) : null;
   Object.assign(h, { x:c ? c.x : 3 * T, y:c ? c.y : GY * T, vx:0, vy:0, dead:false, inv:1.5, chechia:false, harissa:false, tea:0, ground:false });
   g.ents.forEach(e => { if(e.t === 'boss' && e.alive){ e.st = 'wait'; e.timer = 0; e.x = e.home || e.x; } });
   if(g.bossOn){ const b = g.ents.find(e => e.t === 'boss'); if(b && b.alive){ h.x = b.ax0 + 3 * T; } }
@@ -529,7 +543,7 @@ function step(dt){
     if(e.t === 'lamp'){ if(!e.on && Math.abs(h.x - e.x) < 24){ e.on = true; g.check = { x:e.x, y:e.y }; sfx.lamp(); addText('Sauvegarde !', e.x, e.y - 60, '#ffe066'); } continue; }
     if(e.t === 'spring'){ if(h.vy > 0 && Math.abs(h.x - e.x) < 22 && h.y >= e.y - 20 && h.y <= e.y + 2){ h.y = e.y - 20; h.vy = -900; h.held = true; e.sq = 1; sfx.spring(); } e.sq = Math.max(0, (e.sq || 0) - dt * 4); continue; }
     if(e.t === 'door'){ if(Math.abs(h.x - e.x) < 20 && h.ground && !g.bossAlive){ winLevel(); } continue; }
-    if(e.t === 'bossgate'){ if(!g.bossOn && h.x > e.x + 3 * T){ g.bossOn = true; for(let y = GY - 4; y < GY; y++) g.lv.G[y][Math.floor(e.x / T)] = 'B'; const b = g.ents.find(x => x.t === 'boss'); if(b){ b.st = 'intro'; b.timer = 1.5; b.home = b.x; } g.bossAlive = true; sfx.boss(); addText("Le Scorpion d'Or !", h.x + 120, h.y - 120, '#ffc93c', 30); g.check = { x:e.x + 3 * T, y:GY * T }; } continue; }
+    if(e.t === 'bossgate'){ if(!g.bossOn && h.x > e.x + 3 * T){ g.bossOn = true; for(let y = GY - 4; y < GY; y++) g.lv.G[y][Math.floor(e.x / T)] = 'B'; const b = g.ents.find(x => x.t === 'boss'); if(b){ b.st = 'intro'; b.timer = 1.5; b.home = b.x; } g.bossAlive = true; sfx.boss(); addText("Le Scorpion d'Or !", h.x + 120, h.y - 120, '#ffc93c', 30); g.check = { x:e.x + 4 * T, y:GY * T }; } continue; }
     if(e.t === 'power'){ e.rise -= dt; if(e.rise <= 0){ e.vy += 1300 * dt; e.x += e.vx * dt; const ny = e.y + e.vy * dt; if(e.vy > 0 && solidAt(Math.floor(e.x / T), Math.floor(ny / T))){ e.y = Math.floor(ny / T) * T; e.vy = 0; } else e.y = ny; if(solidAt(Math.floor((e.x + Math.sign(e.vx) * 12) / T), Math.floor((e.y - 8) / T))) e.vx *= -1; } else e.y -= 60 * dt;
       if(Math.abs(h.x - e.x) < 24 && Math.abs(h.y - 20 - (e.y - 12)) < 30){ e.alive = false; sfx.power(); g.score += 200;
         if(e.kind === 'chechia'){ h.chechia = true; addText('🎩 Chéchia : un coup en plus !', h.x, h.y - 60, '#ffb3bd'); }
