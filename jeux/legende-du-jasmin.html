@@ -398,7 +398,77 @@ const Q = {
     () => { const a = rnd(11, 49), b = rnd(11, 49); return { q:`${a} + ${b} = ?`, a:String(a + b), o:shuffle([a + b, ...near(a + b, 10)]).map(String) }; }
   ]
 };
-function question(){ const k = (player || '').toLowerCase(); const bank = Q[k] || (k === 'anis' || k === 'imen' ? Q.autre : Q.autre); const q = pick(bank)(); if(!q.o.includes(q.a)) q.o[0] = q.a; q.o = [...new Set(q.o)]; return q; }
+// Les invités : des questions de culture sur la Tunisie, niveau adulte, en français (pas de calcul, pas de latin ni d'allemand : c'est pour la famille)
+const QUIZ_TN = [
+  ['En quelle année la Tunisie est-elle devenue indépendante ?', '1956', ['1946', '1956', '1962', '1969']],
+  ['Qui fut le premier président de la République tunisienne ?', 'Habib Bourguiba', ['Habib Bourguiba', 'Farhat Hached', 'Hédi Nouira', 'Tahar Haddad']],
+  ['Quelle est la monnaie de la Tunisie ?', 'le dinar', ['le dirham', 'le dinar', 'la livre', 'le riyal']],
+  ['Quels sont les deux pays voisins de la Tunisie ?', 'l\'Algérie et la Libye', ['le Maroc et l\'Algérie', 'l\'Algérie et la Libye', 'la Libye et l\'Égypte', 'le Maroc et la Libye']],
+  ['Quel est le plus haut sommet de la Tunisie ?', 'le Jebel Chambi', ['le Jebel Zaghouan', 'le Jebel Chambi', 'le Jebel Bou Kornine', 'le Jebel Ressas']],
+  ['Quel est le plus long fleuve de Tunisie ?', 'la Medjerda', ['la Medjerda', 'l\'oued Miliane', 'le Nil', 'l\'oued Zeroud']],
+  ['Combien la Tunisie compte-t-elle de gouvernorats ?', '24', ['18', '22', '24', '30']],
+  ['Quelle est la langue officielle de la Tunisie ?', 'l\'arabe', ['le français', 'l\'arabe', 'le berbère', 'l\'italien']],
+  ['Quelle est la plus grande île d\'Afrique du Nord ?', 'Djerba', ['Kerkennah', 'Djerba', 'Malte', 'la Galite']],
+  ['Quel archipel se trouve au large de Sfax ?', 'les îles Kerkennah', ['les îles Kerkennah', 'les îles Kuriat', 'les îles Zembra', 'les Baléares']],
+  ['Quelle ville tunisienne est la plus au nord du pays (et presque de l\'Afrique) ?', 'Bizerte', ['Tabarka', 'Bizerte', 'Kélibia', 'Nabeul']],
+  ['Quelle ville surnomme-t-on « la perle du Sahel » ?', 'Sousse', ['Mahdia', 'Monastir', 'Sousse', 'Hammamet']],
+  ['Quel peuple a fondé Carthage ?', 'les Phéniciens', ['les Romains', 'les Grecs', 'les Phéniciens', 'les Vandales']],
+  ['Selon la légende, quelle reine a fondé Carthage ?', 'Élyssa (Didon)', ['Cléopâtre', 'Élyssa (Didon)', 'la Kahena', 'Sophonisbe']],
+  ['Quel général carthaginois a traversé les Alpes avec des éléphants ?', 'Hannibal', ['Hamilcar', 'Hannibal', 'Jugurtha', 'Massinissa']],
+  ['Comment s\'appellent les guerres entre Carthage et Rome ?', 'les guerres puniques', ['les guerres médiques', 'les guerres puniques', 'les croisades', 'les guerres gauloises']],
+  ['En quelle année Carthage a-t-elle été détruite par Rome ?', '146 av. J.-C.', ['814 av. J.-C.', '146 av. J.-C.', '44 av. J.-C.', '476 apr. J.-C.']],
+  ['Quel grand monument romain se trouve à El Jem ?', 'un amphithéâtre', ['un aqueduc', 'un amphithéâtre', 'un phare', 'une pyramide']],
+  ['Quel musée de Tunis est célèbre pour ses mosaïques romaines ?', 'le musée du Bardo', ['le musée du Bardo', 'le musée de Carthage', 'le Louvre', 'le musée Dar Ben Abdallah']],
+  ['Quel site romain du nord-ouest, classé à l\'UNESCO, garde un Capitole très bien conservé ?', 'Dougga', ['Dougga', 'Sbeïtla', 'Utique', 'Kerkouane']],
+  ['Quelle ville abrite la Grande Mosquée fondée par Oqba ibn Nafi ?', 'Kairouan', ['Tunis', 'Kairouan', 'Mahdia', 'Monastir']],
+  ['Quelle pâtisserie à la semoule et aux dattes est la spécialité de Kairouan ?', 'le makroudh', ['la baklawa', 'le makroudh', 'le bambalouni', 'la zlabia']],
+  ['Quelle ville fut la première capitale des Fatimides ?', 'Mahdia', ['Mahdia', 'Kairouan', 'Le Caire', 'Sfax']],
+  ['Quelle grande mosquée de la médina de Tunis fut aussi une université ?', 'la Zitouna', ['la Zitouna', 'la mosquée Okba', 'la mosquée Hammouda Pacha', 'la Kasbah']],
+  ['Quel historien, auteur de la « Muqaddima », est né à Tunis ?', 'Ibn Khaldoun', ['Ibn Battuta', 'Ibn Khaldoun', 'Averroès', 'Ibn Sina']],
+  ['Quel poète tunisien a écrit « La volonté de vivre », dont des vers sont dans l\'hymne national ?', 'Aboul-Qacem Chebbi', ['Aboul-Qacem Chebbi', 'Mahmoud Darwich', 'Nizar Qabbani', 'Tahar Haddad']],
+  ['En quelle année la Tunisie a-t-elle aboli l\'esclavage, avant la France ?', '1846', ['1792', '1846', '1881', '1920']],
+  ['Le Code du statut personnel (droits des femmes) date de…', '1956', ['1936', '1956', '1975', '2011']],
+  ['Quel jour fête-t-on la femme en Tunisie ?', 'le 13 août', ['le 8 mars', 'le 20 mars', 'le 13 août', 'le 25 juillet']],
+  ['Quel jour est la fête de l\'Indépendance ?', 'le 20 mars', ['le 20 mars', 'le 9 avril', 'le 25 juillet', 'le 15 octobre']],
+  ['En quelle année la République tunisienne a-t-elle été proclamée ?', '1957', ['1956', '1957', '1959', '1987']],
+  ['Quel groupe tunisien a reçu le prix Nobel de la paix en 2015 ?', 'le Quartet du dialogue national', ['le Quartet du dialogue national', 'le Croissant-Rouge tunisien', 'l\'UGTT seule', 'Médecins sans frontières']],
+  ['La révolution tunisienne de 2011 est aussi appelée…', 'la révolution du jasmin', ['la révolution des œillets', 'la révolution du jasmin', 'la révolution orange', 'le printemps de Prague']],
+  ['Qu\'est-ce que la harissa ?', 'une purée de piments', ['une soupe de pois chiches', 'une purée de piments', 'un gâteau au miel', 'un thé à la menthe']],
+  ['Qu\'est-ce que le lablabi ?', 'une soupe de pois chiches', ['une soupe de pois chiches', 'un beignet', 'une salade de poivrons', 'un plat de poisson']],
+  ['Que trouve-t-on traditionnellement dans une brik ?', 'un œuf', ['du chocolat', 'un œuf', 'des dattes', 'du riz']],
+  ['Comment s\'appelle la salade tunisienne de poivrons et tomates grillés ?', 'la méchouia', ['le taboulé', 'la méchouia', 'la chakchouka', 'l\'ojja']],
+  ['Quelle célèbre variété de dattes vient du sud tunisien ?', 'la Deglet Nour', ['la Medjool', 'la Deglet Nour', 'la Barhi', 'l\'Ajwa']],
+  ['Comment appelle-t-on le petit bouquet de jasmin porté à l\'oreille ?', 'le machmoum', ['le machmoum', 'la fouta', 'le kholkhal', 'la chéchia']],
+  ['La chéchia est…', 'un bonnet de laine rouge', ['une babouche', 'un bonnet de laine rouge', 'un tapis', 'une pâtisserie']],
+  ['Quelle musique traditionnelle tunisienne vient de l\'Andalousie ?', 'le malouf', ['le raï', 'le malouf', 'le gnaoua', 'le flamenco']],
+  ['Le mezoued est une musique jouée avec…', 'une cornemuse', ['un violon', 'une cornemuse', 'un piano', 'une guitare électrique']],
+  ['Quelle joueuse de tennis tunisienne a disputé des finales à Wimbledon ?', 'Ons Jabeur', ['Ons Jabeur', 'Selima Sfar', 'Serena Williams', 'Amélie Mauresmo']],
+  ['Quel nageur tunisien a été champion olympique du 1 500 m en 2008 ?', 'Oussama Mellouli', ['Oussama Mellouli', 'Ahmed Hafnaoui', 'Mohammed Gammoudi', 'Michael Phelps']],
+  ['Quel nageur tunisien a gagné l\'or olympique du 400 m nage libre à Tokyo ?', 'Ahmed Hafnaoui', ['Oussama Mellouli', 'Ahmed Hafnaoui', 'Ayoub Hafnaoui', 'Ali Zaïdi']],
+  ['Quel coureur tunisien est champion olympique du 5 000 m (Mexico 1968) ?', 'Mohammed Gammoudi', ['Mohammed Gammoudi', 'Hicham El Guerrouj', 'Haile Gebreselassie', 'Saïd Aouita']],
+  ['Quelle équipe la Tunisie a-t-elle battue 1-0 à la Coupe du monde 2022 ?', 'la France', ['le Brésil', 'la France', 'l\'Allemagne', 'l\'Argentine']],
+  ['En quelle année la Tunisie a-t-elle gagné la Coupe d\'Afrique des nations de football ?', '2004', ['1965', '1996', '2004', '2019']],
+  ['La planète Tatooine de « Star Wars » doit son nom à quelle ville tunisienne ?', 'Tataouine', ['Tozeur', 'Tataouine', 'Tabarka', 'Tunis']],
+  ['Dans quelle ville du sud se trouvent des maisons troglodytes creusées dans la terre ?', 'Matmata', ['Matmata', 'Douz', 'Gabès', 'Nefta']],
+  ['Quelle ville est appelée « la porte du Sahara » ?', 'Douz', ['Douz', 'Bizerte', 'Nabeul', 'Sousse']],
+  ['Dans quelles gorges circule le train du Lézard Rouge ?', 'les gorges de Selja', ['les gorges de Selja', 'les gorges du Verdon', 'le canyon de Mides', 'les gorges du Tarn']],
+  ['Quelle ville du nord-ouest est célèbre pour son corail et son festival de jazz ?', 'Tabarka', ['Tabarka', 'Monastir', 'Kélibia', 'Zarzis']],
+  ['Quelle ville de la côte est célèbre pour ses poteries et céramiques ?', 'Nabeul', ['Nabeul', 'Kasserine', 'Tozeur', 'Siliana']],
+  ['Dans quelle ville se trouve le mausolée de Habib Bourguiba ?', 'Monastir', ['Tunis', 'Monastir', 'Sousse', 'Kairouan']],
+  ['Quel temple romain alimentait Carthage en eau par un long aqueduc ?', 'le temple des Eaux de Zaghouan', ['le temple des Eaux de Zaghouan', 'le Capitole de Dougga', 'le temple de Saturne', 'les thermes d\'Antonin']],
+  ['Quelle région tunisienne est célèbre pour ses mines de phosphate ?', 'Gafsa', ['Gafsa', 'le cap Bon', 'Bizerte', 'Djerba']],
+  ['Pour quel produit agricole la Tunisie est-elle l\'un des premiers exportateurs mondiaux ?', 'l\'huile d\'olive', ['le café', 'l\'huile d\'olive', 'le cacao', 'le riz']],
+  ['Quelle presqu\'île tunisienne est connue pour ses agrumes et sa harissa ?', 'le cap Bon', ['le cap Bon', 'Zarzis', 'le cap Serrat', 'la Galite']],
+  ['Quel est l\'indicatif téléphonique de la Tunisie ?', '+216', ['+212', '+213', '+216', '+218']],
+  ['Que représente le centre du drapeau tunisien ?', 'un croissant et une étoile', ['un aigle', 'un croissant et une étoile', 'un cèdre', 'deux épées']],
+  ['Quelle synagogue très ancienne de Djerba attire chaque année des pèlerins ?', 'la Ghriba', ['la Ghriba', 'la Zitouna', 'la Grande Synagogue de Tunis', 'Sainte-Croix']],
+  ['Comment appelle-t-on les greniers fortifiés du sud tunisien (Ksar Ouled Soltane) ?', 'des ghorfas', ['des ghorfas', 'des riads', 'des medersas', 'des hammams']],
+  ['Quel grand lac salé se trouve entre Tozeur et Kébili ?', 'le Chott el-Jérid', ['le Chott el-Jérid', 'le lac Ichkeul', 'le lac de Bizerte', 'la Sebkha d\'Ariana']],
+  ['Quel parc national du nord, classé à l\'UNESCO, accueille des milliers d\'oiseaux migrateurs ?', 'l\'Ichkeul', ['l\'Ichkeul', 'le Bou Hedma', 'le Chambi', 'le Feija']]
+];
+let tnDeck = [];
+function questionTN(){ if(!tnDeck.length) tnDeck = shuffle(QUIZ_TN.map((_, i) => i)); const [q, a, o] = QUIZ_TN[tnDeck.pop()]; return { q, a, o:shuffle(o) }; }
+function question(){ const k = (player || '').toLowerCase(); if(!Q[k] && k !== 'anis' && k !== 'imen') return questionTN(); const q = pick(Q[k] || Q.autre)(); if(!q.o.includes(q.a)) q.o[0] = q.a; q.o = [...new Set(q.o)]; return q; }   // la famille : ses propres questions ; les invités : la culture tunisienne
 
 /* =====================================================================
    Sauvegarde, joueur, sons
