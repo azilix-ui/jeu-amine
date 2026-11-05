@@ -32,7 +32,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 02/11 | Illustration de Grimpe-Glace (la famille saute dans la tour de glace, les 5 avatars en référence) | `jeux/avatars/grimpe-glace.webp` | 2 |
 | 04/11 | La Légende du Jasmin : titre (la famille sur les toits de Sidi Bou Saïd, 5 avatars), 5 fonds de monde (21:9), le Scorpion d'Or | `jeux/jasmin/{titre,monde1…5,boss}.webp` | 14 |
 | 05/11 | La Légende du Jasmin : 4 nouveaux fonds de monde (21:9, `flux_3_image`) : médina de Tunis, Carthage, Djerba, Matmata (jobs 18469668…, 379786bb…, 4a552b16…, a1aa2957…) | `jeux/jasmin/monde6…9.webp` | 8 |
-| | **Total** | | **293** |
+| 05/11 | La Légende du Jasmin : 4 fonds de plus (21:9, `flux_3_image`) : Tabarka, El Jem, Chott el-Jérid, Lézard Rouge (jobs 9f3b5685…, f6f2202d…, 1c4d4753…, 7bbe527c…) | `jeux/jasmin/monde10…13.webp` | 8 |
+| | **Total** | | **301** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 

@@ -49,7 +49,7 @@ Jeu de plateformes vertical sans fin, inspiré des jeux de tour des années 2000
 
 Jeu de plateforme original à défilement horizontal, univers tunisien (cahier des charges du papa : `OneDrive\Amine\grande section\projet clone mario\`, version solo). Moteur maison Canvas 2D, physique à pas fixe, niveaux construits par morceaux (`buildLevel` : départ, trou, escalier, blocs, plateformes, pics, plateformes mobiles, dalles fragiles, maison secrète, lanterne, sortie).
 - **Héros** : l'avatar du joueur (visage) en tunique à ses couleurs. Saut variable (appui court / long), tolérance au bord (`coyote`) et appui mémorisé, contrôle en l'air, course qui accélère toute seule (ou B / Maj).
-- **9 mondes** (fonds Higgsfield en parallaxe, répétés en miroir), dans l'ordre du voyage `ORDER = [1, 6, 7, 2, 8, 9, 3, 4, 5]` : Sidi Bou Saïd, la Médina de Tunis (toits, chats, **tapis volants** = plateformes mobiles), les Ruines de Carthage (pierres qui s'effritent, crabes, mouettes, colonnes), l'Oasis de Tozeur, l'Île de Djerba (**marée** : les cuvettes de sable mouillé `w` se remplissent et se vident ; sous la surface `tideY(t)` on tombe à l'eau), les Maisons de Matmata (**tunnels** `M.roof` dans le noir : le héros, les torches, les lanternes et les jasmins éclairent ; chauves-souris), les Dunes du Sahara, les Montagnes d'Aïn Draham (glace), le Palais du Scorpion d'Or (boss, toujours la fin). Les numéros de monde (1 à 9) ne changent pas : ils servent aux sauvegardes et aux records ; seul le numéro affiché suit l'ordre du voyage. Effet 2.5D : chaque bloc a une face du dessus et une face de côté.
+- **13 mondes** (fonds Higgsfield en parallaxe, répétés en miroir), dans l'ordre du voyage `ORDER = [1, 6, 7, 10, 11, 2, 12, 13, 8, 9, 3, 4, 5]` : Sidi Bou Saïd · la Médina de Tunis (toits, chats, **tapis volants**) · les Ruines de Carthage (pierres qui s'effritent, crabes, mouettes) · la Côte de Tabarka (criques `M.sea` : on **nage**, A = une brasse, bond hors de l'eau ; poissons, corail) · l'Amphithéâtre d'El Jem (**pierres qui tombent** `stone` : elles tremblent 0,45 s puis tombent, remontent ; ascenseurs de pierre) · l'Oasis de Tozeur · le Chott el-Jérid (**mirages** `m` : plateformes qui pâlissent puis disparaissent, chacune à son rythme) · le Lézard Rouge (**le petit train** `M.train` traverse les gorges et s'arrête à chaque quai) · l'Île de Djerba (**marée** dans les cuvettes `w`) · les Maisons de Matmata (**tunnels** dans le noir) · les Dunes du Sahara · les Montagnes d'Aïn Draham (glace) · le Palais du Scorpion d'Or (boss, toujours la fin). Les numéros de monde (1 à 13) ne changent pas : ils servent aux sauvegardes et aux records ; seul le numéro affiché suit l'ordre du voyage. Effet 2.5D : chaque bloc a une face du dessus et une face de côté.
 - **Blocs** : 📚 savoir (question selon qui joue : Amine = compter, lettres, couleurs ; Salma = soustraction, monnaie, conjugaison, géométrie, anglais ; Essil = allemand, latin, multiplication ; parents et amis = Tunisie, calcul) ; 🪔 bonus (🎩 chéchia = un coup en plus, 🌶️ harissa = piments à lancer avec B, 🍵 thé à la menthe = vitesse) ; 🪙 dinars ; briques cassables.
 - **Ennemis** : scorpion, faucon, hérisson (en boule quand on saute dessus, on le fait rouler), cactus qui lance des figues de Barbarie. **Boss** : le Scorpion d'Or (fonce, se cogne au mur, sonné ⭐ : on lui saute sur le dos ; 3 coups ; en phase 2 il lance des braises).
 - **Dangers** : trous, eau / braises, pics (par paires). Plateformes mobiles, dalles fragiles, derbouka-tremplin. Lanternes 🏮 = points de sauvegarde (chaque lanterne se pose sur un sol sûr, et la réapparition cherche toujours un sol sans eau ni pics : `safeSpot`). Porte bleue = sortie. 3 **jasmins dorés** 🌼 par niveau (dont un dans une maison secrète, derrière un faux mur).
@@ -57,23 +57,25 @@ Jeu de plateforme original à défilement horizontal, univers tunisien (cahier d
 - **Tickets 🎟️** : 1 par bonne réponse + 2 par jasmin trouvé la première fois ; ajoutés à la Boutique du savoir de Serpent Légendes (Essil, Salma et Amine).
 - **Commandes** : croix à gauche, A (saut) et B (tir / course) à droite, taille réglable ; clavier (flèches / Q D, Espace / Z, Maj / X, Échap) ; manette. Paysage (message « tourne la tablette » en portrait).
 - **Sons** : musique originale en mode hijaz avec rythme de darbouka (maqsoum), bruitages synthétisés.
-- **Sauvegarde** `jasmin:<Prénom>` {unlocked, best{n:{score,stars,time}}, gems{n:[…]}, tickets, answers{ok,ko}, games, t}, réglages `jasmin-prefs`. Records en ligne `jasmin`, variantes `monde1` à `monde9`.
-- Images : `jeux/jasmin/` (titre, monde1 à monde9, boss).
+- **Sauvegarde** `jasmin:<Prénom>` {unlocked, best{n:{score,stars,time}}, gems{n:[…]}, tickets, answers{ok,ko}, games, t}, réglages `jasmin-prefs`. Records en ligne `jasmin`, variantes `monde1` à `monde13`.
+- Images : `jeux/jasmin/` (titre, monde1 à monde13, boss).
 
 ### Secrets et astuces (pour les parents, à ne pas dévoiler tout de suite)
-- **Une maison secrète par monde** : une petite maison blanche de 3 cases de haut. Son mur du bas est un **faux mur** : on marche à travers et un jasmin doré 🌼 + un dinar attendent dedans. On peut aussi simplement sauter sur son toit.
-- **Les 3 jasmins** de chaque monde : un au-dessus d'un escalier de plateformes (en haut, il faut monter), un dans la maison secrète, un troisième selon le monde (ressort-derbouka, cuvette de Djerba à marée basse, au-dessus d'un trou…). Dans le noir de Matmata, les jasmins brillent un peu.
+Dans **chaque monde** il y a trois sortes de secrets :
+- **Le bloc invisible ❤️** (`i`, posé par `hid()`) : rien ne se voit, mais en sautant au bon endroit on tape un bloc caché qui apparaît : **une vie en plus**, 3 dinars, +500. Il est toujours à 4 cases au-dessus du sol, au-dessus d'un chemin plat : presque toujours **juste à la fin du premier long passage plat** (au début du monde), parfois un deuxième plus loin.
+- **La jarre magique 🏺** (`warp`) : une grande jarre décorée, posée sur un passage plat après la première lanterne (dans le palais : juste avant la lanterne). Quand on s'arrête devant, elle brille et une flèche ⬇ apparaît : **on ne bouge plus une seconde** (ou flèche du bas / S au clavier) et on est aspiré dans la **salle secrète** : une vingtaine de dinars, une rangée de blocs dinars et un cœur ❤️. La jarre au bout de la salle ramène **plus loin dans le niveau** (raccourci). Les dinars de la salle ne comptent pas dans les 60 % de l'étoile : c'est du bonus.
+- **La maison au faux mur** : une petite maison blanche de 3 cases ; son mur du bas se traverse et cache un jasmin doré 🌼 + un dinar.
+
+Autres astuces :
+- **Les 3 jasmins** de chaque monde : un au-dessus d'un escalier de plateformes, un dans la maison au faux mur, un troisième selon le monde (ressort-derbouka, cuvette de Djerba à marée basse, fond de la crique de Tabarka, au-dessus du train ou de l'ascenseur…). Dans le noir de Matmata, les jasmins brillent un peu.
 - **Bloc 🪔** = bonus (chéchia : un coup en plus ; harissa : touche B / Maj / X pour lancer des piments ; thé à la menthe : on court très vite 9 s). Un seul par monde.
 - **Briques** : on les casse en tapant dessous ; un ennemi posé dessus tombe en même temps.
 - **Hérisson** : on saute dessus, il se roule en boule ; on le pousse et il renverse tous les ennemis sur son chemin (+200).
-- **Saut** : appui court = petit saut, appui long = grand saut ; en courant (B ou 1 s d'élan) on saute plus loin. On peut encore sauter une fraction de seconde après le bord, et un appui juste avant d'atterrir est gardé.
-- **Sauter sur un ennemi en tenant A** fait rebondir très haut.
+- **Saut** : appui court = petit saut, appui long = grand saut ; en courant (B ou 1 s d'élan) on saute plus loin. On peut encore sauter une fraction de seconde après le bord. **Sauter sur un ennemi en tenant A** fait rebondir très haut.
+- **Nager** (Tabarka) : chaque appui sur A = une brasse ; sans appuyer on coule doucement (pour attraper ce qui est au fond) ; en remontant contre un rocher, on bondit hors de l'eau.
+- **Pierres d'El Jem** : elles tremblent avant de tomber : on passe vite, ou on attend qu'elles remontent.
+- **Mirages** : une plateforme qui pâlit va disparaître : saute !
+- **Le Lézard Rouge** s'arrête 2 s à chaque quai : on monte en marchant, on descend en marchant.
 - **Boss** : il fonce, se cogne au mur et reste sonné ⭐ : c'est seulement là qu'on lui saute sur le dos (3 fois). Les piments de harissa l'abîment aussi.
 - **Blocs savoir désactivés** (Réglages) : chaque bloc 📚 donne directement 3 dinars, mais plus de tickets.
 - **Étoiles** : 1 = fini, 2 = 60 % des dinars, 3 = les 3 jasmins. Les jasmins trouvés une première fois rapportent 2 tickets chacun.
-- **Il n'y a pas encore** de tuyau / raccourci caché ni de bloc invisible façon Mario (idées possibles pour la suite).
-
-## Tester
-
-- Local : `php -S 127.0.0.1:8770 -t <lien vers le dépôt>` puis Playwright avec `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader` (WebGL logiciel, animations lentes mais justes). Les crochets de test : `window.__serpent`, `window.__ludo`.
-- Ludo en ligne : deux contextes Playwright (deux « tablettes ») sur le même serveur local ; vérifier que `G.ev.n` et `G.pawns` sont identiques des deux côtés.

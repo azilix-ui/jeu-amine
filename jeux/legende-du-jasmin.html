@@ -58,8 +58,9 @@ h2{font-family:var(--display);margin:0;font-size:30px;line-height:1.05}
 .av img{width:100%;height:100%;object-fit:cover}
 .who b{font-family:var(--display);font-size:22px}
 .who small{display:block;color:var(--mist);font-size:13px;text-align:left}
-.levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;width:100%}
-.lvl{position:relative;border-radius:18px;overflow:hidden;border:3px solid var(--line);min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;text-align:left;padding:8px 10px;background:#1b2a5e center/cover no-repeat}
+.levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;width:100%}
+#levelsScr .box{width:min(960px,100%)}
+.lvl{position:relative;border-radius:18px;overflow:hidden;border:3px solid var(--line);min-height:112px;display:flex;flex-direction:column;justify-content:flex-end;text-align:left;padding:8px 10px;background:#1b2a5e center/cover no-repeat}
 .lvl::before{content:"";position:absolute;inset:0;background:linear-gradient(transparent 30%,#0b1e46ee)}
 .lvl > *{position:relative}
 .lvl b{font-family:var(--display);font-size:19px;line-height:1.1}
@@ -108,7 +109,7 @@ body.menu .back{display:inline-flex}
 <div class="screen on" id="menu"><div class="box">
   <img class="title-img" src="jasmin/titre.webp" alt="La famille dans un village tunisien bleu et blanc" onerror="this.style.display='none'">
   <h1>La Légende <span>du Jasmin</span></h1>
-  <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse neuf mondes pour les rapporter !</p>
+  <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse treize mondes pour les rapporter !</p>
   <button class="who" id="who"></button>
   <button class="big" id="play">▶ Jouer</button>
   <div class="row"><button class="big ghost" id="openRecs">🏆 Records</button><button class="big ghost" id="openOpts">⚙️ Réglages</button><button class="big ghost" id="openHelp">❓ Comment jouer</button></div>
@@ -179,10 +180,14 @@ const WORLDS = [
   { name:'La Médina de Tunis', sub:'Toits, souks et tapis volants', img:'jasmin/monde6.webp', sky:['#6fb8ea', '#f6e6c8'], ground:'#efe4d0', ground2:'#cdbb9c', edge:'#2f6fa8', top:'#c8643a', plat:'#2f6fa8', haz:'#2a8fd6', mid:'#ffffff', mid2:'#e8dcc4', music:{ bpm:116, root:61 } },
   { name:'Les Ruines de Carthage', sub:'Colonnes, mer et pierres qui s\'effritent', img:'jasmin/monde7.webp', sky:['#7ec4ec', '#f4ead2'], ground:'#dcc59a', ground2:'#b89c6c', edge:'#8a6a3a', top:'#8cbf5a', plat:'#9a7a4a', haz:'#1f9ec4', mid:'#e8d8b0', mid2:'#c8b48a', music:{ bpm:108, root:59 } },
   { name:"L'Île de Djerba", sub:'Plage, poteries et marées', img:'jasmin/monde8.webp', sky:['#6cc4f0', '#e6f7ff'], ground:'#f1dfb0', ground2:'#d8c08a', edge:'#b89a5a', top:'#fff3cf', plat:'#3f86c8', haz:'#27b6c8', mid:'#ffffff', mid2:'#d8f0f4', music:{ bpm:110, root:63 } },
-  { name:'Les Maisons de Matmata', sub:'Tunnels et lumière des lampes', img:'jasmin/monde9.webp', sky:['#e0a060', '#f8dcb0'], ground:'#b8834e', ground2:'#8a5a30', edge:'#6a4020', top:'#d9a066', plat:'#7a4a22', haz:'#3a2412', mid:'#a8703e', mid2:'#7a4a22', music:{ bpm:96, root:58 } }
+  { name:'Les Maisons de Matmata', sub:'Tunnels et lumière des lampes', img:'jasmin/monde9.webp', sky:['#e0a060', '#f8dcb0'], ground:'#b8834e', ground2:'#8a5a30', edge:'#6a4020', top:'#d9a066', plat:'#7a4a22', haz:'#3a2412', mid:'#a8703e', mid2:'#7a4a22', music:{ bpm:96, root:58 } },
+  { name:'La Côte de Tabarka', sub:'Corail, aiguilles et plongée', img:'jasmin/monde10.webp', sky:['#5fb0e8', '#dff3ff'], ground:'#9a8a7a', ground2:'#76685a', edge:'#4a5a6a', top:'#6aa84f', plat:'#8a5a3a', haz:'#2a8fd6', mid:'#ffffff', mid2:'#cfe3f7', music:{ bpm:108, root:60 } },
+  { name:"L'Amphithéâtre d'El Jem", sub:'Arcades et pierres qui tombent', img:'jasmin/monde11.webp', sky:['#7ec4ec', '#f6e8c8'], ground:'#d8b483', ground2:'#b08a5a', edge:'#8a6a3a', top:'#e8cf9a', plat:'#a8763a', haz:'#c99a5a', mid:'#e8d8b0', mid2:'#c8b48a', music:{ bpm:114, root:57 } },
+  { name:'Le Chott el-Jérid', sub:'Le lac de sel et ses mirages', img:'jasmin/monde12.webp', sky:['#b8c8f0', '#fbe8f0'], ground:'#efe9df', ground2:'#cfc6b8', edge:'#9aa0a8', top:'#ffffff', plat:'#9a7ac8', haz:'#e8a8c0', mid:'#ffffff', mid2:'#f0e0f0', music:{ bpm:100, root:62 } },
+  { name:'Le Lézard Rouge', sub:'Le petit train des gorges', img:'jasmin/monde13.webp', sky:['#f0a070', '#fde0b8'], ground:'#c0603a', ground2:'#93432a', edge:'#6a2a1a', top:'#d89a5a', plat:'#7a4a22', haz:'#5a2a1a', mid:'#c0603a', mid2:'#93432a', music:{ bpm:122, root:59 } }
 ];
 // L'ordre du voyage (les numéros des mondes restent fixes pour les sauvegardes et les records) : le palais reste la fin
-const ORDER = [1, 6, 7, 2, 8, 9, 3, 4, 5];
+const ORDER = [1, 6, 7, 10, 11, 2, 12, 13, 8, 9, 3, 4, 5];
 const posOf = id => ORDER.indexOf(id) + 1;
 
 /* =====================================================================
@@ -191,11 +196,12 @@ const posOf = id => ORDER.indexOf(id) + 1;
            ^ pics · ~ eau / braises · h faux mur (on passe à travers) · f dalle fragile · B mur du boss
    ===================================================================== */
 function buildLevel(n){
-  const W = 230, G = Array.from({ length:ROWS }, () => Array(W).fill(' ')), E = [];
+  const W = 280, G = Array.from({ length:ROWS }, () => Array(W).fill(' ')), E = [];
   let x = 0;
   const set = (cx, cy, c) => { if(cx >= 0 && cx < W && cy >= 0 && cy < ROWS) G[cy][cx] = c; };
   const ground = (x0, n0, top = GY, c = '#') => { for(let i = x0; i < x0 + n0; i++) for(let y = top; y < ROWS; y++) set(i, y, c); };
-  const ent = (t, cx, cy, o = {}) => E.push(Object.assign({ t, x:cx * T + T / 2, y:cy * T + T }, o));
+  const ent = (t, cx, cy, o = {}) => { const v = Object.assign({ t, x:cx * T + T / 2, y:cy * T + T }, o); E.push(v); return v; };
+  const sea = [], mir = new Map(); let wIn = null, wOut = null;
   const coins = (cx, cy, k, arc) => { for(let i = 0; i < k; i++) ent('coin', cx + i, cy - (arc ? Math.round(Math.sin(i / (k - 1 || 1) * Math.PI) * 2) : 0)); };
   const M = {
     flat(k, o = {}){ ground(x, k); if(o.coins) coins(x + 1, GY - 2, Math.min(o.coins, k - 2)); x += k; },
@@ -203,7 +209,7 @@ function buildLevel(n){
     step(h, k, o = {}){ ground(x, k, GY - h); if(o.coins) coins(x + 1, GY - h - 2, k - 2); x += k; },
     stairs(h, dir = 1){ for(let i = 0; i < h; i++) ground(x + i, 1, GY - (dir > 0 ? i + 1 : h - i)); x += h; },
     blocks(pat, k = pat.length + 4, y = GY - 4){ ground(x, k); [...pat].forEach((c, i) => c !== ' ' && set(x + 2 + i, y, c)); x += k; },
-    plats(list, k, haz){ if(haz) for(let i = x; i < x + k; i++){ set(i, 13, '~'); set(i, 14, '~'); } list.forEach(([dx, y, w, c = '=']) => { for(let i = 0; i < w; i++) set(x + dx + i, y, c); }); x += k; },
+    plats(list, k, haz){ if(haz) for(let i = x; i < x + k; i++){ set(i, 13, '~'); set(i, 14, '~'); } list.forEach(([dx, y, w, c = '='], k2) => { for(let i = 0; i < w; i++){ set(x + dx + i, y, c); if(c === 'm') mir.set((x + dx + i) + ',' + y, k2 * 2.3 + x * .37); } }); x += k; },
     spikes(k, at = 2){ ground(x, k); for(let i = at; i < k - at; i++) if((i - at) % 4 < 2) set(x + i, GY - 1, '^'); x += k; },   // des pics par paires, à sauter un par un
     mover(k, y = GY - 3, dist = 4, axis = 'x', haz){ if(haz) for(let i = x; i < x + k; i++){ set(i, 13, '~'); set(i, 14, '~'); } ent('mover', x + 1, y, { w:3, dist, axis }); x += k; },
     fragile(k, y = GY, haz = true){ if(haz) for(let i = x; i < x + k; i++){ set(i, 13, '~'); set(i, 14, '~'); } for(let i = 0; i < k; i++) set(x + i, y, 'f'); x += k; },
@@ -214,6 +220,8 @@ function buildLevel(n){
     check(){ ent('lamp', x + 1, GY - 1); },
     spring(){ ent('spring', x + 1, GY - 1); },
     door(){ ground(x, 8); ent('door', x + 4, GY - 1); x += 8; },
+    sea(k){ ground(x, k, 14); sea.push([x, x + k]); x += k; },   // une crique : on plonge et on nage
+    train(dist){ ent('mover', x, GY, { w:5, dist, axis:'x', kind:'train' }); x += dist + 5; },   // collé aux deux quais : on monte et on descend en marchant   // le Lézard Rouge traverse la gorge
     tide(k){ ground(x, k, 13, 'w'); x += k; },   // une cuvette de sable mouillé : la marée la remplit puis la vide
     roof(k){ for(let i = x; i < x + k; i++) for(let y = 0; y <= GY - 5; y++) set(i, y, '#'); for(let i = x + 3; i < x + k - 2; i += 8) ent('deco', i, GY - 3, { kind:'torch' }); }   // un tunnel (ne fait pas avancer)
   };
@@ -221,72 +229,117 @@ function buildLevel(n){
   const gem = (dx, cy) => ent('gem', x + dx, cy);
   const sign = (dx, txt) => ent('sign', x + dx, GY - 1, { txt });
   const deco = (dx, kind, cy = GY - 1) => ent('deco', x + dx, cy, { kind });
-  // ---- niveau par niveau ----
+  const hid = (dx, cy = GY - 4) => set(x + dx, cy, 'i');                        // bloc invisible : il apparaît quand on saute dessous
+  const warpIn = dx => { wIn = ent('warp', x + dx, GY - 1, {}); };              // la jarre magique vers la salle secrète
+  const warpOut = dx => { wOut = ent('warp', x + dx, GY - 1, { exit:true }); }; // la jarre d'où l'on ressort
+  const coral = (dx, top) => { for(let y = top; y < 14; y++) set(x + dx, y, '#'); };
+  const stone = dx => ent('stone', x + dx, 2);
+  // ---- niveau par niveau ----   (hid = bloc invisible ❤️, warpIn / warpOut = la jarre magique vers la salle secrète et la jarre où l'on ressort)
   if(n === 1){
-    sign(3, '→ cours, A saute'); M.flat(14, { coins:6 });
+    sign(3, '→ cours, A saute'); M.flat(14, { coins:6 }); hid(-5);
     M.blocks(' c S c ', 10); e('scorp', -3);
     M.gap(2); M.flat(6); M.step(1, 5, { coins:3 }); M.step(2, 5); M.gap(3); gem(1, GY - 5); M.flat(8, { coins:4 }); e('scorp', -3);
-    M.blocks('bbpbb', 10); M.stairs(4); M.step(4, 3); M.gap(3); M.stairs(4, -1); M.check(); M.flat(10, { coins:5 });
+    M.blocks('bbpbb', 10); M.stairs(4); M.step(4, 3); M.gap(3); M.stairs(4, -1); M.check(); M.flat(10, { coins:5 }); warpIn(-4);
     M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13); gem(10, GY - 9); M.flat(6);
     e('scorp', 4); e('scorp', 7); M.flat(12, { coins:6 }); M.blocks('cSc', 8); M.spring(); M.flat(6); coins(x - 4, GY - 8, 4, false);
-    M.secret(); e('bird', 3, GY - 5); M.flat(10, { coins:4 }); M.gap(2); M.flat(4); M.gap(3); M.flat(6, { coins:3 }); M.blocks('S', 6); M.stairs(5); M.step(5, 4); M.gap(2); M.stairs(5, -1); M.flat(6); M.door();
+    M.secret(); e('bird', 3, GY - 5); M.flat(10, { coins:4 }); warpOut(-4); hid(-7); M.gap(2); M.flat(4); M.gap(3); M.flat(6, { coins:3 }); M.blocks('S', 6); M.stairs(5); M.step(5, 4); M.gap(2); M.stairs(5, -1); M.flat(6); M.door();
   } else if(n === 2){
-    sign(3, 'Attention à l\'eau !'); M.flat(12, { coins:5 });
+    sign(3, 'Attention à l\'eau !'); M.flat(12, { coins:5 }); hid(-4);
     M.blocks('bpbSb', 10); e('scorp', -3); M.mover(9, GY - 2, 3, 'x', true); M.flat(6); e('bird', 2, GY - 4);
-    M.plats([[0, GY - 2, 3], [5, GY - 4, 3], [10, GY - 3, 3]], 15, true); gem(6, GY - 6); M.flat(8, { coins:4 }); M.check();
+    M.plats([[0, GY - 2, 3], [5, GY - 4, 3], [10, GY - 3, 3]], 15, true); gem(6, GY - 6); M.flat(8, { coins:4 }); warpIn(-3); M.check();
     M.blocks('cSc', 8); e('scorp', -2); M.step(2, 6, { coins:4 }); M.mover(10, GY - 3, 5, 'x', true); M.step(1, 6); e('bird', 2, GY - 6);
-    M.flat(4); M.plats([[2, GY - 3, 2], [6, GY - 6, 2], [10, GY - 9, 3]], 14); gem(11, GY - 11); M.flat(4); M.mover(6, GY - 4, 3, 'y'); M.flat(8, { coins:5 }); M.spring(); M.flat(5);
-    e('scorp', 3); e('bird', 6, GY - 5); M.blocks('bbSbb', 10); M.secret(); M.mover(10, GY - 2, 5, 'x', true); M.flat(8, { coins:4 }); M.stairs(3); M.step(3, 5); M.gap(3, true); M.step(3, 4); M.stairs(3, -1); M.door();
+    M.flat(4); M.plats([[2, GY - 3, 2], [6, GY - 6, 2], [10, GY - 9, 3]], 14); gem(11, GY - 11); M.flat(4); M.mover(6, GY - 4, 3, 'y'); M.flat(8, { coins:5 }); warpOut(-4); M.spring(); M.flat(5);
+    e('scorp', 3); e('bird', 6, GY - 5); M.blocks('bbSbb', 10); M.secret(); M.mover(10, GY - 2, 5, 'x', true); M.flat(8, { coins:4 }); hid(-4); M.stairs(3); M.step(3, 5); M.gap(3, true); M.step(3, 4); M.stairs(3, -1); M.door();
   } else if(n === 3){
-    sign(3, 'Les cactus piquent !'); M.flat(12, { coins:5 });
+    sign(3, 'Les cactus piquent !'); M.flat(12, { coins:5 }); hid(-4);
     e('cactus', -3); M.spikes(10); M.blocks('pSc', 8); e('hog', -2); M.fragile(6); M.flat(6); e('cactus', 4);
-    M.plats([[1, GY - 3, 2, 'f'], [5, GY - 5, 2, 'f'], [9, GY - 4, 2]], 13, true); gem(5.5, GY - 7); M.flat(6, { coins:4 }); M.check();
+    M.plats([[1, GY - 3, 2, 'f'], [5, GY - 5, 2, 'f'], [9, GY - 4, 2]], 13, true); gem(5.5, GY - 7); M.flat(6, { coins:4 }); warpIn(-3); M.check();
     M.spikes(12, 3); e('hog', -5); M.blocks('bSb', 7); e('cactus', -1); M.fragile(8, GY - 2); M.flat(6); e('hog', 3); M.step(2, 4); M.gap(3, true); M.step(3, 4);
-    gem(1, GY - 7); M.gap(4, true); M.flat(10, { coins:6 }); e('cactus', 7); M.spring(); M.flat(4); M.secret(); e('hog', 2);
-    M.plats([[1, GY - 2, 2], [4, GY - 4, 1], [7, GY - 6, 1], [10, GY - 4, 2]], 13, true); M.flat(6); M.blocks('cSc', 8); M.spikes(9); M.door();
+    gem(1, GY - 7); M.gap(4, true); M.flat(10, { coins:6 }); warpOut(-5); e('cactus', 7); M.spring(); M.flat(4); M.secret(); e('hog', 2);
+    M.plats([[1, GY - 2, 2], [4, GY - 4, 1], [7, GY - 6, 1], [10, GY - 4, 2]], 13, true); M.flat(6); hid(-3); M.blocks('cSc', 8); M.spikes(9); M.door();
   } else if(n === 4){
-    sign(3, 'Ça glisse !'); M.flat(14, { coins:6 });
+    sign(3, 'Ça glisse !'); M.flat(14, { coins:6 }); hid(-5);
     M.blocks('bpbSb', 10); e('hog', -3); M.gap(3, true); M.flat(5); M.gap(4, true); M.flat(5); e('bird', 2, GY - 5);
     M.plats([[0, GY - 3, 3], [4, GY - 5, 3], [8, GY - 7, 3], [12, GY - 5, 3]], 16, true); gem(9, GY - 9); M.flat(6); M.check();
-    M.mover(9, GY - 2, 4, 'x', true); M.flat(5, { coins:3 }); M.mover(9, GY - 4, 4, 'x', true); M.flat(6); e('hog', 3); M.blocks('cSc', 8);
-    M.stairs(4); M.step(4, 3); M.fragile(5, GY - 4, true); M.step(4, 3); M.stairs(4, -1); gem(-6, GY - 7); M.flat(8, { coins:4 }); e('bird', 4, GY - 4); e('cactus', 6);
-    M.secret(); M.spring(); M.flat(5); M.gap(5, true); M.flat(4); M.mover(10, GY - 3, 5, 'x', true); M.flat(6); M.blocks('S', 6); M.spikes(10); M.door();
+    M.mover(9, GY - 2, 4, 'x', true); M.flat(5, { coins:3 }); warpIn(-2); M.mover(9, GY - 4, 4, 'x', true); M.flat(6); e('hog', 3); M.blocks('cSc', 8);
+    M.stairs(4); M.step(4, 3); M.fragile(5, GY - 4, true); M.step(4, 3); M.stairs(4, -1); gem(-6, GY - 7); M.flat(8, { coins:4 }); warpOut(-4); e('bird', 4, GY - 4); e('cactus', 6);
+    M.secret(); M.spring(); M.flat(5); M.gap(5, true); M.flat(4); M.mover(10, GY - 3, 5, 'x', true); M.flat(6); hid(-3); M.blocks('S', 6); M.spikes(10); M.door();
   } else if(n === 6){   // la médina : les toits, les chats, les tapis volants
-    sign(3, 'Les toits de la médina !'); deco(8, 'jar'); M.flat(12, { coins:5 });
+    sign(3, 'Les toits de la médina !'); deco(8, 'jar'); M.flat(12, { coins:5 }); hid(-4);
     M.blocks('bSb', 8); e('scorp', -3); M.step(2, 6, { coins:4 }); M.step(4, 5); deco(-2, 'jar', GY - 5);
-    M.mover(10, GY - 4, 4, 'x'); M.step(4, 6, { coins:4 }); M.stairs(4, -1); M.check(); M.flat(8); e('scorp', 4);
+    M.mover(10, GY - 4, 4, 'x'); M.step(4, 6, { coins:4 }); M.stairs(4, -1); M.check(); M.flat(8); warpIn(-3); e('scorp', 4);
     M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13); gem(10, GY - 9); M.flat(6);
     M.blocks('cpc', 8); M.secret(); e('bird', 3, GY - 5); M.step(3, 6, { coins:4 }); M.mover(10, GY - 3, 4, 'x'); M.step(3, 5); M.step(2, 4);
-    M.check(); M.flat(8, { coins:4 }); e('scorp', 3); e('scorp', 6); deco(-1, 'jar'); M.spring(); M.flat(6); gem(-4, GY - 8);
-    M.mover(10, GY - 2, 4, 'x'); M.flat(6, { coins:3 }); M.blocks('S', 6); M.stairs(4); M.step(4, 4); M.gap(2); M.stairs(4, -1); M.flat(4); M.door();
+    M.check(); M.flat(8, { coins:4 }); warpOut(-5); e('scorp', 3); e('scorp', 6); deco(-1, 'jar'); M.spring(); M.flat(6); gem(-4, GY - 8);
+    M.mover(10, GY - 2, 4, 'x'); M.flat(6, { coins:3 }); hid(-3); M.blocks('S', 6); M.stairs(4); M.step(4, 4); M.gap(2); M.stairs(4, -1); M.flat(4); M.door();
   } else if(n === 7){   // Carthage : les ruines qui s'effritent, les crabes, les mouettes
-    sign(3, 'Les vieilles pierres s\'effritent !'); deco(9, 'column'); M.flat(12, { coins:5 });
+    sign(3, 'Les vieilles pierres s\'effritent !'); deco(9, 'column'); M.flat(12, { coins:5 }); hid(-4);
     M.blocks('bSb', 8); e('scorp', -3); M.gap(3, true); M.flat(5); M.fragile(5); M.flat(6, { coins:3 }); e('bird', 2, GY - 5); deco(-2, 'column');
-    M.stairs(3); M.step(3, 4); M.plats([[1, GY - 4, 2, 'f'], [5, GY - 5, 2, 'f'], [9, GY - 4, 2]], 12, true); gem(-7, GY - 7); M.step(3, 4); M.stairs(3, -1); M.check(); M.flat(8, { coins:4 }); e('scorp', 4); deco(-6, 'column');
+    M.stairs(3); M.step(3, 4); M.plats([[1, GY - 4, 2, 'f'], [5, GY - 5, 2, 'f'], [9, GY - 4, 2]], 12, true); gem(-7, GY - 7); M.step(3, 4); M.stairs(3, -1); M.check(); M.flat(8, { coins:4 }); warpIn(-3); e('scorp', 4); deco(-6, 'column');
     M.blocks('cpc', 8); M.spikes(10); M.mover(10, GY - 3, 5, 'x', true); M.flat(6); M.secret(); e('bird', 3, GY - 6);
-    M.fragile(4, GY, true); M.flat(4); M.fragile(6, GY - 2, true); M.flat(6, { coins:4 }); M.check(); deco(3, 'column');
-    M.plats([[1, GY - 3, 2], [4, GY - 6, 2], [8, GY - 9, 3]], 13); gem(9, GY - 11); M.flat(6);
+    M.fragile(4, GY, true); M.flat(4); M.fragile(6, GY - 2, true); M.flat(6, { coins:4 }); warpOut(-3); M.check(); deco(3, 'column');
+    M.plats([[1, GY - 3, 2], [4, GY - 6, 2], [8, GY - 9, 3]], 13); gem(9, GY - 11); M.flat(6); hid(-3);
     M.blocks('S', 6); e('scorp', -2); M.stairs(4); M.step(4, 4); M.gap(3, true); M.stairs(4, -1); M.flat(4); M.door();
   } else if(n === 8){   // Djerba : la marée monte et descend dans les cuvettes, les crabes, les mouettes
-    sign(3, 'La marée monte… attends qu\'elle redescende !'); deco(9, 'jar'); M.flat(12, { coins:5 });
+    sign(3, 'La marée monte… attends qu\'elle redescende !'); deco(9, 'jar'); M.flat(12, { coins:5 }); hid(-4);
     M.blocks('bSb', 8); e('scorp', -3); M.tide(4); M.flat(6, { coins:3 }); M.tide(6); M.flat(5); e('bird', 2, GY - 5); deco(3, 'jar');
     M.plats([[0, GY - 3, 3], [5, GY - 5, 3], [10, GY - 3, 3]], 14, true); gem(-8, GY - 7); M.flat(6); M.check();
-    M.blocks('cpc', 8); e('scorp', -2); M.tide(7); gem(-4, GY); M.flat(6, { coins:4 }); M.mover(10, GY - 3, 5, 'x', true); M.flat(5); e('scorp', 2);
-    M.secret(); M.check(); M.flat(3); M.tide(5); M.flat(4); M.tide(5); M.flat(6, { coins:4 }); e('bird', 3, GY - 6); deco(1, 'jar');
-    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.tide(6); M.flat(4); M.door();
+    M.blocks('cpc', 8); e('scorp', -2); M.tide(7); gem(-4, GY); M.flat(6, { coins:4 }); warpIn(-3); M.mover(10, GY - 3, 5, 'x', true); M.flat(5); e('scorp', 2);
+    M.secret(); M.check(); M.flat(3); M.tide(5); M.flat(4); M.tide(5); M.flat(6, { coins:4 }); warpOut(-3); e('bird', 3, GY - 6); deco(1, 'jar');
+    M.spring(); M.flat(5); hid(-2); M.blocks('S', 6); M.spikes(9); M.tide(6); M.flat(4); M.door();
   } else if(n === 9){   // Matmata : les maisons creusées sous la terre, dans le noir
-    sign(3, 'Les maisons sous la terre…'); M.flat(10, { coins:4 });
+    sign(3, 'Les maisons sous la terre…'); M.flat(10, { coins:4 }); hid(-4);
     M.roof(30); M.flat(8, { coins:5 }); M.blocks('bSb', 8); e('scorp', -3); M.gap(2); M.flat(6, { coins:4 }); e('bird', 3, GY - 3); M.flat(6); deco(-3, 'jar');
     M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13); gem(10, GY - 9); M.flat(6); M.check();
-    M.roof(36); M.flat(6); M.spikes(10); M.blocks('cpc', 8); e('scorp', -2); M.gap(3); M.flat(9, { coins:4 }); e('bird', 4, GY - 3);
+    M.roof(36); M.flat(6); M.spikes(10); M.blocks('cpc', 8); e('scorp', -2); M.gap(3); M.flat(9, { coins:4 }); warpIn(-4); e('bird', 4, GY - 3);
     M.flat(6); M.secret(); M.spring(); M.flat(6); gem(-4, GY - 8); M.check();
-    M.roof(28); M.flat(6, { coins:3 }); M.mover(9, GY - 2, 4, 'x'); M.flat(5); e('scorp', 2); M.blocks('S', 8); deco(-2, 'jar');
-    M.stairs(4); M.step(4, 4); M.gap(3); M.stairs(4, -1); M.flat(4); M.door();
+    M.roof(28); M.flat(6, { coins:3 }); warpOut(-3); M.mover(9, GY - 2, 4, 'x'); M.flat(5); e('scorp', 2); M.blocks('S', 8); deco(-2, 'jar');
+    M.stairs(4); M.step(4, 4); M.gap(3); M.stairs(4, -1); M.flat(4); hid(-2); M.door();
+  } else if(n === 10){   // Tabarka : la côte de corail, on plonge et on nage
+    sign(3, 'Plonge ! A pour nager'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3); M.step(4, 4);
+    M.sea(22); coral(-18, 11); coral(-12, 10); coral(-6, 12); coins(x - 20, 12, 3, true); coins(x - 10, 8 + 2, 3, true); gem(-9, 13); e('bird', -15, 10); e('bird', -4, 11);
+    M.step(4, 4); M.stairs(4, -1); M.check(); M.flat(8, { coins:4 }); warpIn(-3);
+    M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13); gem(10, GY - 9); M.flat(6);
+    M.blocks('cpc', 8); e('scorp', -2); M.secret(); M.step(4, 4);
+    M.sea(26); coral(-22, 12); coral(-17, 10); coral(-12, 11); coral(-6, 10); coins(x - 24, 13, 4, false); coins(x - 15, 11, 3, true); coins(x - 9, 9 + 3, 2, false); e('bird', -20, 10); e('bird', -9, 9); e('bird', -3, 12);
+    M.step(4, 4); M.stairs(4, -1); M.check(); M.flat(8, { coins:4 }); warpOut(-3); hid(-6);
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
+  } else if(n === 11){   // El Jem : l'amphithéâtre, les ascenseurs et les pierres qui tombent
+    sign(3, 'Attention aux pierres qui tombent !'); deco(9, 'column'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3); M.flat(10, { coins:4 }); stone(-6); M.gap(3); M.flat(6); stone(-3);
+    M.flat(4); M.mover(5, GY - 1, 5, 'y'); M.step(5, 6, { coins:4 }); gem(-3, GY - 8); M.stairs(5, -1);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3);
+    M.flat(14, { coins:6 }); stone(-11); stone(-7); stone(-3); deco(-1, 'column');
+    M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13); gem(-3, GY - 9); M.flat(6);
+    M.blocks('cpc', 8); e('scorp', -2); M.secret(); e('bird', 3, GY - 5);
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); M.flat(10); stone(-7); stone(-3); hid(-9); M.mover(9, GY - 2, 4, 'x'); M.flat(4);
+    M.blocks('S', 6); M.stairs(4); M.step(4, 4); M.gap(2); M.stairs(4, -1); M.flat(4); M.door();
+  } else if(n === 12){   // Chott el-Jérid : le lac salé et ses mirages qui apparaissent et disparaissent
+    sign(3, 'Les mirages apparaissent et disparaissent !'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3);
+    M.plats([[1, GY, 3, 'm'], [6, GY, 3, 'm']], 10, true); M.flat(6, { coins:3 });
+    M.plats([[1, GY - 2, 3, 'm'], [5, GY - 4, 3, 'm'], [9, GY - 2, 3, 'm']], 13, true); gem(-7, GY - 6); M.flat(6); M.check();
+    M.blocks('cpc', 8); e('scorp', -2); M.flat(8, { coins:4 }); warpIn(-3); M.spikes(10);
+    M.plats([[1, GY - 1, 2, 'm'], [4, GY - 3, 2], [7, GY - 5, 2, 'm'], [10, GY - 7, 3]], 14, true); gem(-3, GY - 9); M.flat(6);
+    M.secret(); e('bird', 3, GY - 5); M.flat(8, { coins:4 }); warpOut(-3); M.check();
+    M.fragile(4, GY, true); M.flat(4); M.plats([[1, GY, 4, 'm'], [7, GY, 4, 'm']], 12, true); M.flat(6, { coins:4 }); hid(-3);
+    M.blocks('S', 6); M.stairs(4); M.step(4, 4); M.gap(2); M.stairs(4, -1); M.flat(4); M.door();
+  } else if(n === 13){   // le Lézard Rouge : le petit train rouge au-dessus des gorges
+    sign(3, 'En voiture sur le Lézard Rouge !'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3); M.train(10); M.flat(8, { coins:4 }); e('bird', 3, GY - 4);
+    M.stairs(3); M.step(3, 4); M.gap(3); M.step(3, 4); M.stairs(3, -1);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3);
+    M.train(14); gem(-10, GY - 5); M.flat(6);
+    M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13); gem(10, GY - 9); M.flat(6);
+    M.blocks('cpc', 8); e('scorp', -2); M.secret(); e('bird', 3, GY - 5);
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); M.train(12); e('bird', -8, GY - 4); M.flat(6, { coins:3 }); hid(-3); M.spring(); M.flat(5);
+    M.blocks('S', 6); M.spikes(9); M.door();
   } else {
-    sign(3, 'Le palais du Scorpion…'); M.flat(12, { coins:5 });
+    sign(3, 'Le palais du Scorpion…'); M.flat(12, { coins:5 }); hid(-4);
     M.blocks('bpbSb', 10); e('cactus', -2); M.gap(3, true); M.spikes(10); e('hog', -4); M.fragile(6); M.flat(5); e('bird', 2, GY - 5);
-    M.plats([[1, GY - 3, 2], [5, GY - 5, 2, 'f'], [9, GY - 3, 2]], 13, true); gem(5.5, GY - 7); M.flat(6, { coins:4 }); M.check();
-    M.mover(10, GY - 3, 5, 'x', true); M.flat(5); e('cactus', 3); M.blocks('cSc', 8); M.spikes(12, 3); e('hog', -6); M.mover(8, GY - 5, 3, 'y', true); M.flat(6, { coins:4 });
+    M.plats([[1, GY - 3, 2], [5, GY - 5, 2, 'f'], [9, GY - 3, 2]], 13, true); gem(5.5, GY - 7); M.flat(6, { coins:4 }); warpIn(-3); M.check();
+    M.mover(10, GY - 3, 5, 'x', true); M.flat(5); e('cactus', 3); M.blocks('cSc', 8); M.spikes(12, 3); e('hog', -6); M.mover(8, GY - 5, 3, 'y', true); M.flat(6, { coins:4 }); warpOut(-3);
     M.secret(); gem(4, GY - 4); M.step(2, 5); M.check();
     // l'arène du boss
     const a0 = x; ground(x, 30); for(let y = 0; y < GY; y++){ set(a0, y, 'B'); set(a0 + 29, y, 'B'); } for(let y = 0; y < GY - 4; y++) set(a0, y, 'B');
@@ -295,7 +348,19 @@ function buildLevel(n){
     M.door();
   }
   for(let i = x; i < W; i++) for(let y = 0; y < ROWS; y++) set(i, y, i < x + 1 ? '#' : ' ');
-  return { G, E, W:x + 1, n };
+  let LW = x + 1;
+  if(wIn && wOut){   // la salle secrète, cachée après la fin du niveau, derrière un mur
+    const r0 = x + 5, rw = 24; for(let i = x + 1; i < r0; i++) for(let y = 0; y < ROWS; y++) set(i, y, 'R');
+    for(let i = r0; i < r0 + rw; i++) for(let y = 0; y < ROWS; y++) set(i, y, (y <= 2 || y >= GY || i === r0 || i === r0 + rw - 1) ? 'R' : ' ');
+    for(let i = 0; i < 14; i++) ent('coin', r0 + 4 + i, GY - 2, { secret:true });
+    for(let i = 0; i < 10; i++) ent('coin', r0 + 6 + i, GY - 7 + Math.round(Math.sin(i / 9 * Math.PI) * -1), { secret:true });
+    for(let i = r0 + 6; i < r0 + 18; i += 3) set(i, GY - 4, 'c');
+    ent('heart', r0 + 12, GY - 6); ent('sign', r0 + 3, GY - 1, { txt:'Salle secrète !' });
+    wIn.to = { x:(r0 + 2) * T + T / 2, y:GY * T };
+    ent('warp', r0 + rw - 4, GY - 1, { to:{ x:wOut.x, y:wOut.y } });
+    LW = r0 + rw + 1;
+  }
+  return { G, E, W:LW, n, sea, mir };
 }
 
 /* =====================================================================
@@ -326,7 +391,7 @@ const Q = {
     () => { const a = rnd(12, 25), b = rnd(3, 9); return { q:`${a} × ${b} = ?`, a:String(a * b), o:shuffle([a * b, ...near(a * b, b)]).map(String) }; }
   ],
   autre:[
-    () => pick([{ q:'Quelle est la capitale de la Tunisie ?', a:'Tunis', o:['Sfax', 'Tunis', 'Sousse', 'Tozeur'] }, { q:'De quelles couleurs sont les portes de Sidi Bou Saïd ?', a:'bleu', o:['rouge', 'vert', 'bleu', 'jaune'] }, { q:'Quelle fleur est un symbole de la Tunisie ?', a:'le jasmin', o:['la tulipe', 'le jasmin', 'la rose', 'le tournesol'] }, { q:'De quelles couleurs est le drapeau tunisien ?', a:'rouge et blanc', o:['bleu et blanc', 'rouge et blanc', 'vert et rouge', 'noir et or'] }, { q:'Quel désert touche le sud de la Tunisie ?', a:'le Sahara', o:['le Sahara', 'le Gobi', 'l\'Atacama', 'le Kalahari'] }, { q:'Djerba est…', a:'une île', o:['une montagne', 'une île', 'un désert', 'une forêt'] }, { q:'À Matmata, les maisons sont creusées…', a:'dans la terre', o:['dans les arbres', 'dans la terre', 'dans la glace', 'sur l\'eau'] }, { q:'Carthage était une grande ville…', a:'antique', o:['antique', 'toute neuve', 'sous la mer', 'en Amérique'] }, { q:'Comment s\'appelle la vieille ville de Tunis ?', a:'la médina', o:['la médina', 'la plage', 'l\'oasis', 'le port'] }]),
+    () => pick([{ q:'Quelle est la capitale de la Tunisie ?', a:'Tunis', o:['Sfax', 'Tunis', 'Sousse', 'Tozeur'] }, { q:'De quelles couleurs sont les portes de Sidi Bou Saïd ?', a:'bleu', o:['rouge', 'vert', 'bleu', 'jaune'] }, { q:'Quelle fleur est un symbole de la Tunisie ?', a:'le jasmin', o:['la tulipe', 'le jasmin', 'la rose', 'le tournesol'] }, { q:'De quelles couleurs est le drapeau tunisien ?', a:'rouge et blanc', o:['bleu et blanc', 'rouge et blanc', 'vert et rouge', 'noir et or'] }, { q:'Quel désert touche le sud de la Tunisie ?', a:'le Sahara', o:['le Sahara', 'le Gobi', 'l\'Atacama', 'le Kalahari'] }, { q:'Djerba est…', a:'une île', o:['une montagne', 'une île', 'un désert', 'une forêt'] }, { q:'À Matmata, les maisons sont creusées…', a:'dans la terre', o:['dans les arbres', 'dans la terre', 'dans la glace', 'sur l\'eau'] }, { q:'Carthage était une grande ville…', a:'antique', o:['antique', 'toute neuve', 'sous la mer', 'en Amérique'] }, { q:'Comment s\'appelle la vieille ville de Tunis ?', a:'la médina', o:['la médina', 'la plage', 'l\'oasis', 'le port'] }, { q:'Que trouve-t-on dans la mer à Tabarka ?', a:'du corail', o:['du corail', 'des pingouins', 'de la neige', 'des chameaux'] }, { q:'À El Jem, il y a un grand…', a:'amphithéâtre', o:['amphithéâtre', 'gratte-ciel', 'volcan', 'glacier'] }, { q:'Le Chott el-Jérid est un lac de…', a:'sel', o:['sucre', 'sel', 'lait', 'chocolat'] }, { q:'Le Lézard Rouge est…', a:'un train', o:['un train', 'un bateau', 'un avion', 'un lézard géant'] }]),
     () => { const a = rnd(11, 49), b = rnd(11, 49); return { q:`${a} + ${b} = ?`, a:String(a + b), o:shuffle([a + b, ...near(a + b, 10)]).map(String) }; }
   ]
 };
@@ -376,7 +441,9 @@ const sfx = {
   ok:S(() => { tone(660, .12); tone(880, .16, { at:.08 }); }), no:S(() => tone(220, .3, { type:'sine', v:.12 })),
   lamp:S(() => [659, 880, 1318].forEach((f, i) => tone(f, .25, { v:.07, at:i * .08 }))),
   win:S(() => [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => tone(f, .22, { type:'square', v:.06, at:i * .11 }))),
-  boss:S(() => tone(90, .6, { type:'sawtooth', v:.12, slide:.6 })), tap:S(() => tone(900, .05, { v:.05 }))
+  boss:S(() => tone(90, .6, { type:'sawtooth', v:.12, slide:.6 })),
+  warp:S(() => { tone(880, .5, { type:'square', v:.05, slide:.25 }); tone(440, .5, { type:'triangle', v:.08, slide:.25, at:.05 }); }),
+  swim:S(() => noise(.12, { v:.06, lp:900 })), thud:S(() => { tone(70, .3, { type:'sine', v:.4, slide:.5 }); noise(.15, { v:.12, lp:500 }); }), tap:S(() => tone(900, .05, { v:.05 }))
 };
 // Musique : mode hijaz (oriental) et rythme de darbouka « maqsoum », jouée par un luth synthétique
 const HIJAZ = [0, 1, 4, 5, 7, 8, 10, 12];
@@ -409,6 +476,7 @@ addEventListener('keydown', e => {
   if(e.repeat) return;
   if(e.code === 'ArrowLeft' || e.code === 'KeyA' || e.code === 'KeyQ') keys.l = true;
   if(e.code === 'ArrowRight' || e.code === 'KeyD') keys.r = true;
+  if(e.code === 'ArrowDown' || e.code === 'KeyS') keys.d = true;
   if(e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyZ' || e.code === 'KeyW'){ keys.a = true; jumpPressed = true; }
   if(e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyX' || e.code === 'KeyE'){ keys.b = true; firePressed = true; }
   if(e.code === 'Escape' || e.code === 'KeyP'){ if(state === 'play') pauseGame(); else if(state === 'pause') resume(); }
@@ -416,6 +484,7 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => {
   if(e.code === 'ArrowLeft' || e.code === 'KeyA' || e.code === 'KeyQ') keys.l = false;
   if(e.code === 'ArrowRight' || e.code === 'KeyD') keys.r = false;
+  if(e.code === 'ArrowDown' || e.code === 'KeyS') keys.d = false;
   if(e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyZ' || e.code === 'KeyW') keys.a = false;
   if(e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyX' || e.code === 'KeyE') keys.b = false;
 });
@@ -452,13 +521,13 @@ function shade(hex, k){ const f = v => Math.max(0, Math.min(255, Math.round(v * 
    La partie
    ===================================================================== */
 let state = 'menu', G0 = null;
-const SOLID = new Set(['#', 'b', 'S', 'c', 'p', 'U', 'f', 'B', 'X', 'w']);
+const SOLID = new Set(['#', 'b', 'S', 'c', 'p', 'U', 'f', 'B', 'X', 'w', 'm', 'R']);
 // Le sol sûr d'une colonne : la première case pleine (pas fragile) sous du vide, sans eau ni pics. -1 s'il n'y en a pas.
 function groundRow(G, cx){
   if(cx < 0 || cx >= G[0].length) return -1;
   for(let y = 1; y < ROWS; y++){ const c = G[y][cx], up = G[y - 1][cx];
     if(c === '~' || c === 'w') return -1;
-    if(SOLID.has(c) && c !== 'f' && c !== 'B' && c !== 'w' && (up === ' ' || up === '=' ) && G[y - 1][cx] !== '^'){ return (y >= 2 && SOLID.has(G[y - 2][cx])) ? -1 : y; } }
+    if(SOLID.has(c) && c !== 'f' && c !== 'B' && c !== 'w' && c !== 'm' && c !== 'R' && (up === ' ' || up === '=' ) && G[y - 1][cx] !== '^'){ return (y >= 2 && SOLID.has(G[y - 2][cx])) ? -1 : y; } }
   return -1;
 }
 // Cherche un sol sûr en partant d'une colonne et en reculant (puis en avançant si besoin).
@@ -473,7 +542,8 @@ function newLevel(n, fromCheck){
   G0 = g;
   lv.E.forEach(e => {
     const o = Object.assign({ vx:0, vy:0, alive:true, dir:-1, t:Math.random() * 6 }, e);
-    if(e.t === 'coin') g.dinarTotal++;
+    if(e.t === 'coin' && !e.secret) g.dinarTotal++;
+    if(e.t === 'stone'){ o.w = 56; o.h = 52; o.hy = o.y; o.st = 'up'; o.timer = 0; }
     if(e.t === 'mover'){ o.x0 = o.x - T / 2; o.y0 = o.y - T; o.px = o.x0; o.py = o.y0; }
     if(e.t === 'scorp'){ o.w = 30; o.h = 20; o.sp = 45; } if(e.t === 'hog'){ o.w = 28; o.h = 24; o.sp = 35; o.ball = false; }
     if(e.t === 'bird'){ o.w = 30; o.h = 22; o.bx = o.x; o.by = o.y - 10; } if(e.t === 'cactus'){ o.w = 26; o.h = 44; o.cd = 2; }
@@ -486,7 +556,10 @@ function newLevel(n, fromCheck){
 }
 // Djerba : la surface de la marée (en pixels), entre la marée basse (cuvette à sec) et la marée haute (au ras du sol)
 const tideY = t => { const s = Math.max(-1, Math.min(1, Math.sin(t * .8) * 1.5)); return (12.78 + s * .62) * T; };
-const tileAt = (cx, cy) => { const g = G0; if(cy < 0) return ' '; if(cy >= ROWS || cx < 0) return cx < 0 ? '#' : ' '; const c = g.lv.G[cy][cx] || ' '; if(c === 'f' && g.frag.has(cx + ',' + cy) && g.frag.get(cx + ',' + cy).gone) return ' '; return c; };
+// Chott el-Jérid : un mirage est solide quand sa valeur est positive (il pâlit juste avant de disparaître)
+const mirage = (g, cx, cy) => Math.sin(g.t * 1.1 + (g.lv.mir.get(cx + ',' + cy) || 0)) + .35;
+const SEA_Y = 9 * 32;   // Tabarka : la surface de la mer
+const tileAt = (cx, cy) => { const g = G0; if(cy < 0) return ' '; if(cy >= ROWS || cx < 0) return cx < 0 ? '#' : ' '; const c = g.lv.G[cy][cx] || ' '; if(c === 'm') return mirage(g, cx, cy) > 0 ? 'm' : ' '; if(c === 'f' && g.frag.has(cx + ',' + cy) && g.frag.get(cx + ',' + cy).gone) return ' '; return c; };
 const solidAt = (cx, cy) => SOLID.has(tileAt(cx, cy));
 function boxHitsSolid(x0, y0, x1, y1){ for(let cy = Math.floor(y0 / T); cy <= Math.floor((y1 - .01) / T); cy++) for(let cx = Math.floor(x0 / T); cx <= Math.floor((x1 - .01) / T); cx++) if(solidAt(cx, cy)) return [cx, cy]; return null; }
 
@@ -530,7 +603,7 @@ function step(dt){
   g.t += dt;
   const L = keys.l || touch.l.size > 0 || pad.l, R = keys.r || touch.r.size > 0 || pad.r, A = keys.a || touch.a.size > 0 || pad.a, B = keys.b || touch.b.size > 0 || pad.b;
   // plateformes mobiles
-  g.ents.forEach(e => { if(e.t !== 'mover') return; const off = Math.sin(g.t * .9 + e.x0 * .01) * e.dist * T / 2 + e.dist * T / 2; const nx = e.axis === 'x' ? e.x0 + off : e.x0, ny = e.axis === 'y' ? e.y0 - off : e.y0; e.dx = nx - e.px; e.dy = ny - e.py; e.px = nx; e.py = ny; });
+  g.ents.forEach(e => { if(e.t !== 'mover') return; const sn = Math.sin(g.t * (e.kind === 'train' ? .7 : .9) + e.x0 * .01), off = (e.kind === 'train' ? Math.max(-1, Math.min(1, sn * 1.4)) : sn) * e.dist * T / 2 + e.dist * T / 2; /* le train marque l'arrêt à chaque quai */ const nx = e.axis === 'x' ? e.x0 + off : e.x0, ny = e.axis === 'y' ? e.y0 - off : e.y0; e.dx = nx - e.px; e.dy = ny - e.py; e.px = nx; e.py = ny; });
   // dalles fragiles
   g.frag.forEach((v, k) => { v.t -= dt; if(!v.gone && v.t <= 0){ v.gone = true; v.t = 3; const [cx, cy] = k.split(',').map(Number); for(let i = 0; i < 6; i++) g.parts.push({ x:cx * T + 16, y:cy * T + 10, vx:(Math.random() - .5) * 160, vy:Math.random() * 60, life:.8, c:g.W.ground2, r:4, grav:true }); } else if(v.gone && v.t <= 0){ g.frag.delete(k); } });
   if(h.dead){ h.deadT += dt; h.vy += PH.g * dt; h.y += h.vy * dt; return; }
@@ -541,16 +614,20 @@ function step(dt){
   const under = tileAt(Math.floor(h.x / T), Math.floor((h.y + 1) / T)), ice = g.W.ice && h.ground && !h.on && under !== '=' && under !== 'f', maxV = (B && !h.harissa) || h.runT > 1.1 || h.tea > 0 ? (h.tea > 0 ? 360 : PH.maxRun) : PH.max;
   if(dir){ const rev = Math.sign(h.vx) === -dir && Math.abs(h.vx) > 20; h.vx += dir * (h.ground ? PH.acc * (rev ? (ice ? .55 : 1.6) : (ice ? .7 : 1)) : PH.accAir) * dt; if(Math.abs(h.vx) > maxV) h.vx = Math.sign(h.vx) * Math.max(maxV, Math.abs(h.vx) - 900 * dt); }
   else if(h.ground){ const fr = ice ? PH.fricIce : PH.fric; h.vx -= Math.sign(h.vx) * Math.min(Math.abs(h.vx), fr * dt); }
+  // Tabarka : dans la mer on nage (A = une brasse), et on sort de l'eau d'un bond
+  const wasSwim = h.swim; h.swim = !!(g.lv.sea && g.lv.sea.some(([a, b]) => h.x >= a * T && h.x < b * T) && h.y - 20 > SEA_Y);
+  if(h.swim){ h.vx = Math.max(-170, Math.min(170, h.vx)); if(jumpPressed){ jumpPressed = false; h.vy = -290; h.ground = false; sfx.swim(); for(let k = 0; k < 3; k++) g.parts.push({ x:h.x, y:h.y - 40, vx:(Math.random() - .5) * 40, vy:-60 - Math.random() * 40, life:.8, c:'#e8f8ff', r:3 }); } }
+  else if(wasSwim && h.vy < 0){ h.vy = Math.min(h.vy, -600); h.held = true; h.exitSwim = .35; }   // un bond hors de l'eau, comme un dauphin
   // saut (tolérance au bord + appui mémorisé)
   if(jumpPressed){ h.buffer = PH.buffer; jumpPressed = false; } else h.buffer = Math.max(0, h.buffer - dt);
   h.coyote = h.ground ? PH.coyote : Math.max(0, h.coyote - dt);
   if(h.buffer > 0 && h.coyote > 0){ h.vy = -(PH.jump + PH.jumpK * Math.abs(h.vx)); h.ground = false; h.coyote = 0; h.buffer = 0; h.on = null; h.squash = -.25; h.held = true; sfx.jump(); }
-  if(!A) h.held = false;
+  h.exitSwim = Math.max(0, (h.exitSwim || 0) - dt); if(!A && !h.exitSwim) h.held = false;
   // tir de piment
   if(firePressed){ firePressed = false; if(h.harissa && g.shots.length < 2){ g.shots.push({ x:h.x + h.face * 14, y:h.y - 24, vx:h.face * 330, vy:-60, life:2.2 }); sfx.fire(); } }
   // gravité : saut plus court si on lâche A
   const gr = h.vy < 0 ? (h.held ? PH.gHold : PH.gCut) : PH.gFall;
-  h.vy = Math.min(PH.maxFall, h.vy + gr * dt);
+  h.vy = h.swim ? Math.min(140, h.vy + 520 * dt) : Math.min(PH.maxFall, h.vy + gr * dt);
   if(h.on){ h.x += h.on.dx || 0; h.y += h.on.dy || 0; }
   // déplacement horizontal + collisions
   h.x += h.vx * dt;
@@ -561,7 +638,10 @@ function step(dt){
   const py = h.y; h.y += h.vy * dt; const wasGround = h.ground; h.ground = false; h.on = null;
   if(h.vy < 0){ hit = boxHitsSolid(h.x - HW + 3, h.y - HH, h.x + HW - 3, h.y - HH + 1); if(hit){ const [cx, cy] = hit; h.y = (cy + 1) * T + HH; h.vy = 40;
       // on tape le bloc le plus proche du centre de la tête
-      const c1 = Math.floor((h.x) / T); bumpTile(solidAt(c1, cy) ? c1 : cx, cy); } }
+      const c1 = Math.floor((h.x) / T); bumpTile(solidAt(c1, cy) ? c1 : cx, cy); }
+    else { const cy = Math.floor((h.y - HH) / T); for(let cx = Math.floor((h.x - HW + 3) / T); cx <= Math.floor((h.x + HW - 3) / T); cx++) if(tileAt(cx, cy) === 'i' && py - HH >= (cy + 1) * T - 1){
+      g.lv.G[cy][cx] = 'U'; h.y = (cy + 1) * T + HH; h.vy = 40; g.bumps = g.bumps || []; g.bumps.push({ cx, cy, t:.2 }); g.lives = Math.min(9, g.lives + 1); g.dinars += 3; g.score += 500; g.secrets = (g.secrets || 0) + 1;
+      sfx.power(); burst(cx * T + 16, cy * T, '#ff6b8a', 14); addText('❤️ Bloc secret : une vie en plus !', cx * T + 16, cy * T - 20, '#ffb3c9', 22); break; } } }
   else {
     hit = boxHitsSolid(h.x - HW + 2, h.y - 1, h.x + HW - 2, h.y);
     if(hit){ h.y = hit[1] * T; h.vy = 0; h.ground = true; }
@@ -579,6 +659,7 @@ function step(dt){
   if(footC === '~' || h.y > ROWS * T + 40){ h.inv = 0; h.chechia = false; h.harissa = false; die(); return; }
   if(g.lv.n === 8 && tileAt(Math.floor(h.x / T), 13) === 'w' && h.y > tideY(g.t) + 10){ h.inv = 0; h.chechia = false; h.harissa = false; die(); return; }
   // entités
+  let nearWarp = false;
   for(const e of g.ents){
     if(!e.alive){ if(e.dying){ e.dying -= dt; e.vy += 1500 * dt; e.y += e.vy * dt; } continue; }
     e.t2 = (e.t2 || 0) + dt;
@@ -594,6 +675,9 @@ function step(dt){
         if(e.kind === 'harissa'){ h.harissa = true; addText('🌶️ Harissa : B pour lancer !', h.x, h.y - 60, '#ff8a5a'); }
         if(e.kind === 'tea'){ h.tea = 9; addText('🍵 Thé à la menthe : vite !', h.x, h.y - 60, '#7dffb0'); } }
       continue; }
+    if(e.t === 'warp'){ e.near = !e.exit && Math.abs(h.x - e.x) < 18 && h.ground && !h.dead; if(e.near){ nearWarp = true; if(!dir) h.warpT = (h.warpT || 0) + dt; if(h.warpT > .7 || keys.d) doWarp(e); } continue; }
+    if(e.t === 'heart'){ if(Math.abs(h.x - e.x) < 22 && Math.abs(h.y - 20 - (e.y - 16)) < 32){ e.alive = false; g.lives = Math.min(9, g.lives + 1); sfx.gem(); addText('❤️ Une vie en plus !', e.x, e.y - 40, '#ffb3c9', 22); } continue; }
+    if(e.t === 'stone'){ stoneStep(e, h, dt); continue; }
     if(e.t === 'mover' || e.t === 'sign' || e.t === 'deco') continue;
     // ennemis
     if(e.t === 'scorp' || (e.t === 'hog' && !e.ball)){
@@ -623,6 +707,7 @@ function step(dt){
       else hurt();
     }
   }
+  if(!nearWarp) h.warpT = 0;
   // piments
   g.shots.forEach(s => { s.vy += 1400 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
     if(solidAt(Math.floor(s.x / T), Math.floor((s.y + 6) / T)) && s.vy > 0){ s.y = Math.floor((s.y + 6) / T) * T - 6; s.vy = -330; }
@@ -634,6 +719,29 @@ function step(dt){
   g.look += ((h.face * 90 + h.vx * .25) - g.look) * Math.min(1, dt * 2.5);
   let want = h.x - VW * .42 + g.look; if(g.bossOn){ const b = g.ents.find(e => e.t === 'boss'); if(b) want = Math.max(want, b.ax0 - T); }
   g.camX += (want - g.camX) * Math.min(1, dt * 6); g.camX = Math.max(0, Math.min(g.lv.W * T - VW, g.camX));
+}
+/* ---------- les secrets : la jarre magique ---------- */
+function doWarp(e){
+  const g = G0, h = g.hero; if(!e.to) return;
+  sfx.warp(); burst(h.x, h.y - 20, '#ffe066', 16);
+  Object.assign(h, { x:e.to.x, y:e.to.y, vx:0, vy:0, warpT:0, inv:Math.max(h.inv, .6) });
+  g.camX = Math.max(0, Math.min(g.lv.W * T - VW, h.x - VW * .42)); g.look = 0;
+  burst(h.x, h.y - 20, '#ffe066', 16);
+  addText(g.inRoom ? '✨ Te revoilà !' : '✨ Salle secrète !', h.x, h.y - 70, '#ffe066', 24);
+  g.inRoom = !g.inRoom;
+}
+/* ---------- El Jem : les pierres qui tombent ---------- */
+function stoneStep(e, h, dt){
+  const g = G0;
+  if(e.st === 'up'){ if(Math.abs(h.x - e.x) < 60 && h.y > e.y && !h.dead){ e.st = 'warn'; e.timer = .45; } }
+  else if(e.st === 'warn'){ e.timer -= dt; if(e.timer <= 0){ e.st = 'fall'; e.vy = 0; } }
+  else if(e.st === 'fall'){ e.vy = Math.min(950, e.vy + 2400 * dt); e.y += e.vy * dt; const cy = Math.floor(e.y / T);
+    if(solidAt(Math.floor((e.x - 20) / T), cy) || solidAt(Math.floor((e.x + 20) / T), cy)){ e.y = cy * T; e.st = 'rest'; e.timer = 1.1; g.shake = 6; sfx.thud(); burst(e.x, e.y, '#d8c49a', 10, 160); }
+    else if(e.y > ROWS * T + 80){ e.y = ROWS * T + 80; e.st = 'rise'; } }
+  else if(e.st === 'rest'){ e.timer -= dt; if(e.timer <= 0) e.st = 'rise'; }
+  else if(e.st === 'rise'){ e.y -= 90 * dt; if(e.y <= e.hy){ e.y = e.hy; e.st = 'wait'; e.timer = .9; } }
+  else if(e.st === 'wait'){ e.timer -= dt; if(e.timer <= 0) e.st = 'up'; }
+  if(e.st === 'fall' && h.x + HW > e.x - e.w / 2 && h.x - HW < e.x + e.w / 2 && h.y > e.y - e.h && h.y - HH < e.y) hurt();
 }
 /* ---------- le boss : le Scorpion d'Or ---------- */
 function bossStep(b, h, dt){
@@ -688,22 +796,25 @@ function drawTiles(g, t){
   if(g.lv.n === 9){ ctx.fillStyle = '#5e3c22'; for(let cx = c0; cx < c1; cx++) if(g.lv.G[GY - 5][cx] === '#'){ ctx.fillRect(cx * T, (GY - 4) * T, T + 1, 4 * T); ctx.fillStyle = '#6e4a2c'; if(cx % 5 === 0) ctx.fillRect(cx * T + 6, (GY - 3) * T, 18, 26); ctx.fillStyle = '#5e3c22'; } }
   const bumpOf = (cx, cy) => { const b = (g.bumps || []).find(b => b.cx === cx && b.cy === cy); return b ? Math.sin(b.t / .2 * Math.PI) * -8 : 0; };
   for(let cy = 0; cy < ROWS; cy++) for(let cx = c0; cx < c1; cx++){
-    const c = tileAt(cx, cy); if(c === ' ' || c === 'h') continue;
+    const c = tileAt(cx, cy); if(c === ' ' || c === 'h' || c === 'i') continue;
     const x = cx * T, y = cy * T + bumpOf(cx, cy);
     if(c === '~'){ const top = tileAt(cx, cy - 1) !== '~'; ctx.fillStyle = W.haz; ctx.globalAlpha = .9; ctx.fillRect(x, y + (top ? 8 + Math.sin(t * 3 + cx) * 3 : 0), T, T); if(top){ ctx.fillStyle = '#ffffff88'; ctx.fillRect(x, y + 8 + Math.sin(t * 3 + cx) * 3, T, 3); } ctx.globalAlpha = 1; continue; }
     if(c === '^'){ ctx.fillStyle = '#c8ccd4'; for(let k = 0; k < 3; k++){ ctx.beginPath(); ctx.moveTo(x + k * 11, y + T); ctx.lineTo(x + k * 11 + 5.5, y + 10); ctx.lineTo(x + k * 11 + 11, y + T); ctx.fill(); } ctx.fillStyle = '#8a8f98'; ctx.fillRect(x, y + T - 4, T, 4); continue; }
     if(c === '='){ ctx.fillStyle = shade(W.plat, .7); ctx.fillRect(x + DX, y + DY, T, 10); ctx.fillStyle = W.plat; rr(ctx, x, y, T, 12, 3); ctx.fill(); ctx.fillStyle = '#ffffff44'; ctx.fillRect(x + 2, y + 2, T - 4, 2);
-      if(g.lv.n <= 2 || g.lv.n === 5 || g.lv.n === 6){ ctx.fillStyle = '#ffc93c'; ctx.fillRect(x, y + 10, T, 2); } continue; }
+      if(g.lv.n <= 2 || g.lv.n === 5 || g.lv.n === 6 || g.lv.n === 11){ ctx.fillStyle = '#ffc93c'; ctx.fillRect(x, y + 10, T, 2); } continue; }
     const fr = c === 'f' ? g.frag.get(cx + ',' + cy) : null, shk = fr ? Math.sin(t * 60) * 1.5 : 0;
     const openTop = !SOLID.has(tileAt(cx, cy - 1)) && tileAt(cx, cy - 1) !== 'h', openRight = !SOLID.has(tileAt(cx + 1, cy)) && tileAt(cx + 1, cy) !== 'h';
     let face = W.ground, side = W.ground2;
-    if(c === 'b'){ face = ['#6fa8e8', '#b07a44', '#d2a65a', '#9aa8b8', '#c99a2e', '#3f8fc0', '#c8b48a', '#e0b46a', '#a8703e'][g.lv.n - 1]; side = shade(face, .7); }
+    if(c === 'b'){ face = ['#6fa8e8', '#b07a44', '#d2a65a', '#9aa8b8', '#c99a2e', '#3f8fc0', '#c8b48a', '#e0b46a', '#a8703e', '#7a8a9a', '#c89a5a', '#b8a8d8', '#a8482a'][g.lv.n - 1]; side = shade(face, .7); }
     if(c === 'w'){ face = shade(W.ground, .86); side = shade(W.ground, .7); }
+    if(c === 'R'){ face = '#5a4a72'; side = '#3a2a52'; }
+    if(c === 'm'){ face = '#f4eeff'; side = '#cfc0f0'; }
     if(c === 'S' || c === 'p' || c === 'c'){ face = c === 'S' ? '#2a7fd6' : c === 'p' ? '#1fa98e' : '#e0a12e'; side = shade(face, .65); }
     if(c === 'U'){ face = '#9a8a72'; side = '#6a5a42'; }
     if(c === 'B'){ face = '#5a3a6a'; side = '#3a1a4a'; }
     if(c === 'f'){ face = shade(W.ground, .95); side = shade(W.ground, .75); }
     ctx.save(); ctx.translate(shk, 0);
+    if(c === 'm') ctx.globalAlpha = Math.max(.2, Math.min(.92, mirage(g, cx, cy) / .5));
     // faces de profondeur (2.5D)
     if(openTop){ ctx.fillStyle = shade(face, 1.12); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + DX, y + DY); ctx.lineTo(x + T + DX, y + DY); ctx.lineTo(x + T, y); ctx.fill(); }
     if(openRight){ ctx.fillStyle = shade(side, .8); ctx.beginPath(); ctx.moveTo(x + T, y); ctx.lineTo(x + T + DX, y + DY); ctx.lineTo(x + T + DX, y + T + DY); ctx.lineTo(x + T, y + T); ctx.fill(); }
@@ -718,14 +829,20 @@ function drawTiles(g, t){
       else if(g.lv.n === 7 && c === '#'){ ctx.fillStyle = shade(face, .85); ctx.fillRect(x, y + 15, T, 2); ctx.fillRect(x + ((cx + cy) % 2) * 16, y, 2, T); }
       else if(g.lv.n === 8 && c === '#'){ ctx.fillStyle = shade(face, .9); ctx.beginPath(); ctx.arc(x + 8 + (cx * 5 % 16), y + 18, 1.6, 0, 7); ctx.arc(x + 20, y + 26 - (cy % 2) * 8, 1.4, 0, 7); ctx.fill(); }
       else if(g.lv.n === 9 && c === '#'){ ctx.fillStyle = shade(face, .88); ctx.fillRect(x, y + 10 + (cx % 3) * 4, T, 3); }
+      else if(g.lv.n === 10 && c === '#'){ ctx.fillStyle = shade(face, .85); ctx.beginPath(); ctx.arc(x + 10 + (cx * 3 % 12), y + 18, 5, 0, 7); ctx.fill(); if(hash(cx * 5 + cy) > .7){ ctx.fillStyle = '#e8506a'; ctx.fillRect(x + 20, y + 6, 3, 8); ctx.fillRect(x + 17, y + 9, 9, 3); } }
+      else if(g.lv.n === 11 && c === '#'){ ctx.fillStyle = shade(face, .86); ctx.fillRect(x, y + 15, T, 2); ctx.fillRect(x + ((cx + cy) % 2) * 16, y, 2, 15); ctx.fillRect(x + ((cx + cy + 1) % 2) * 16, y + 17, 2, 15); }
+      else if(g.lv.n === 12 && c === '#'){ ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(x + 4 + (cx % 3) * 6, y + 12); ctx.lineTo(x + 10 + (cx % 3) * 6, y + 16); ctx.lineTo(x + 6 + (cx % 3) * 6, y + 24); ctx.closePath(); ctx.fill(); }
+      else if(g.lv.n === 13 && c === '#'){ ctx.fillStyle = shade(face, .85); ctx.fillRect(x, y + 6 + (cx % 2) * 10, T, 4); ctx.fillStyle = shade(face, 1.12); ctx.fillRect(x, y + 22, T, 2); }
       else if(c === '#' || c === 'B'){ // mosaïque du palais
         ctx.fillStyle = (cx + cy) % 2 ? '#1f7a8a' : '#c99a2e'; ctx.save(); ctx.translate(x + 16, y + 16); ctx.rotate(Math.PI / 4); ctx.fillRect(-6, -6, 12, 12); ctx.restore(); }
       if(c === 'f'){ ctx.strokeStyle = '#5a4636'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 6, y + 2); ctx.lineTo(x + 14, y + 14); ctx.lineTo(x + 10, y + 28); ctx.moveTo(x + 22, y + 4); ctx.lineTo(x + 18, y + 18); ctx.stroke(); }
       if(openTop && c === '#'){ ctx.fillStyle = W.top; ctx.fillRect(x, y, T, 6); if(g.lv.n === 6){ ctx.fillStyle = shade(W.top, .75); for(let k = 0; k < 4; k++) ctx.fillRect(x + k * 8, y + 3, 1.5, 4); }
-        if(g.lv.n === 1 || g.lv.n === 2 || g.lv.n === 7){ ctx.fillStyle = shade(W.top, .8); for(let k = 0; k < 4; k++) ctx.fillRect(x + k * 8 + 2, y + 5, 3, 3 + (k % 2) * 2); }
+        if(g.lv.n === 1 || g.lv.n === 2 || g.lv.n === 7 || g.lv.n === 10){ ctx.fillStyle = shade(W.top, .8); for(let k = 0; k < 4; k++) ctx.fillRect(x + k * 8 + 2, y + 5, 3, 3 + (k % 2) * 2); }
         if(g.lv.n === 1 && hash(cx) > .82){ ctx.fillStyle = '#d6337a'; ctx.beginPath(); ctx.arc(x + 16, y - 2, 4, 0, 7); ctx.fill(); } }
       if(g.lv.n === 1 && openTop && tileAt(cx, cy + 1) !== '#' ){ ctx.fillStyle = W.edge; ctx.fillRect(x, y + T - 4, T, 4); }
-    } else if(c === 'b'){ ctx.strokeStyle = shade(face, .78); ctx.lineWidth = 1.5; ctx.strokeRect(x + 1, y + 1, T - 2, T - 2); ctx.beginPath(); ctx.moveTo(x, y + 16); ctx.lineTo(x + T, y + 16); ctx.moveTo(x + 16, y); ctx.lineTo(x + 16, y + 16); ctx.moveTo(x + 8, y + 16); ctx.lineTo(x + 8, y + T); ctx.moveTo(x + 24, y + 16); ctx.lineTo(x + 24, y + T); ctx.stroke(); }
+    } else if(c === 'R'){ ctx.fillStyle = '#6a5a86'; ctx.fillRect(x + ((cy % 2) ? 0 : 16), y + 14, 14, 3); ctx.fillStyle = '#ffe06633'; if((cx * 7 + cy) % 11 === 0){ ctx.beginPath(); ctx.arc(x + 16, y + 16, 3, 0, 7); ctx.fill(); } }
+    else if(c === 'm'){ ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 3, y + 4, T - 6, 3); ctx.fillStyle = '#e0c8ff88'; ctx.fillRect(x + 6, y + 14 + Math.sin(t * 3 + cx) * 2, T - 12, 2); }
+    else if(c === 'b'){ ctx.strokeStyle = shade(face, .78); ctx.lineWidth = 1.5; ctx.strokeRect(x + 1, y + 1, T - 2, T - 2); ctx.beginPath(); ctx.moveTo(x, y + 16); ctx.lineTo(x + T, y + 16); ctx.moveTo(x + 16, y); ctx.lineTo(x + 16, y + 16); ctx.moveTo(x + 8, y + 16); ctx.lineTo(x + 8, y + T); ctx.moveTo(x + 24, y + 16); ctx.lineTo(x + 24, y + T); ctx.stroke(); }
     else if(c === 'S' || c === 'p' || c === 'c'){
       // bloc en mosaïque avec un symbole
       ctx.strokeStyle = '#ffffff99'; ctx.lineWidth = 2; ctx.strokeRect(x + 3, y + 3, T - 6, T - 6);
@@ -755,23 +872,40 @@ function drawEnt(e, g, t){
     case 'door': { ctx.fillStyle = '#f4efe6'; rr(ctx, -30, -96, 60, 96, 6); ctx.fill(); ctx.fillStyle = '#1f5fbf'; ctx.beginPath(); ctx.moveTo(-22, 0); ctx.lineTo(-22, -60); ctx.arc(0, -60, 22, Math.PI, 0); ctx.lineTo(22, 0); ctx.fill(); ctx.fillStyle = '#ffc93c'; for(let k = 0; k < 4; k++) for(let j = 0; j < 3; j++){ ctx.beginPath(); ctx.arc(-12 + j * 12, -54 + k * 14, 2, 0, 7); ctx.fill(); }
       ctx.fillStyle = '#fff'; ctx.font = '800 13px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(g.bossAlive ? '🔒' : 'SORTIE', 0, -100); break; }
     case 'sign': { ctx.fillStyle = '#7a4a22'; ctx.fillRect(-2, -40, 4, 40); ctx.fillStyle = '#f4efe6'; rr(ctx, -60, -64, 120, 28, 6); ctx.fill(); ctx.fillStyle = '#1f5fbf'; ctx.font = '800 13px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(e.txt, 0, -45); break; }
+    case 'warp': { const gl = e.near ? .6 + .4 * Math.sin(t * 8) : 0;   // la jarre magique
+      if(gl){ ctx.fillStyle = `rgba(255,224,102,${(.35 * gl).toFixed(2)})`; ctx.beginPath(); ctx.ellipse(0, -30, 34, 40, 0, 0, 7); ctx.fill(); }
+      ctx.fillStyle = '#c8743a'; ctx.beginPath(); ctx.ellipse(0, -24, 20, 24, 0, 0, 7); ctx.fill(); ctx.fillRect(-11, -56, 22, 12); ctx.fillStyle = '#8a4a1e'; ctx.fillRect(-14, -58, 28, 5);
+      ctx.fillStyle = '#1f6fa8'; ctx.fillRect(-19, -28, 38, 4); ctx.fillStyle = '#ffc93c'; for(let k = -12; k <= 12; k += 8){ ctx.beginPath(); ctx.arc(k, -18, 2.2, 0, 7); ctx.fill(); }
+      ctx.fillStyle = '#2a1408'; ctx.beginPath(); ctx.ellipse(0, -57, 9, 3, 0, 0, 7); ctx.fill();
+      if(e.near){ ctx.fillStyle = '#fff'; ctx.font = '800 22px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⬇', 0, -70 + Math.sin(t * 6) * 4); ctx.font = '800 12px "Baloo 2", sans-serif'; ctx.fillText('ne bouge plus…', 0, -96); }
+      break; }
+    case 'heart': { ctx.translate(0, -18 + Math.sin(t * 3) * 3); ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.fillText('❤️', 0, 9); break; }
+    case 'stone': { const j = e.st === 'warn' ? Math.sin(t * 60) * 2 : 0; ctx.translate(j, 0);   // une pierre sculptée de l'amphithéâtre
+      ctx.fillStyle = '#8a7a62'; ctx.fillRect(-28 + DX, -52 + DY, 56, 52); ctx.fillStyle = '#b8a482'; rr(ctx, -28, -52, 56, 52, 6); ctx.fill(); ctx.strokeStyle = '#8a7a62'; ctx.lineWidth = 2; ctx.strokeRect(-22, -46, 44, 40);
+      ctx.fillStyle = '#3a2a1a'; const ang = e.st === 'fall' || e.st === 'warn'; ctx.beginPath(); ctx.ellipse(-10, -30, 5, ang ? 3 : 5, 0, 0, 7); ctx.ellipse(10, -30, 5, ang ? 3 : 5, 0, 0, 7); ctx.fill();
+      ctx.fillRect(-10, -16, 20, 3); if(ang){ ctx.fillRect(-18, -40, 12, 3); ctx.fillRect(6, -40, 12, 3); } break; }
     case 'deco': {
       if(e.kind === 'jar'){ ctx.fillStyle = '#b8582e'; ctx.beginPath(); ctx.ellipse(0, -16, 12, 15, 0, 0, 7); ctx.fill(); ctx.fillRect(-6, -36, 12, 8); ctx.fillStyle = '#e8c070'; ctx.fillRect(-12, -18, 24, 3); ctx.fillStyle = '#8a3a1a'; ctx.fillRect(-8, -38, 16, 3); }
       else if(e.kind === 'column'){ ctx.globalAlpha = .9; ctx.fillStyle = '#e8d8b0'; ctx.fillRect(-12, -92, 24, 92); ctx.fillStyle = '#c8b48a'; for(let k = -8; k <= 8; k += 6) ctx.fillRect(k - 1, -88, 2, 86); ctx.fillStyle = '#d8c49a'; ctx.fillRect(-16, -8, 32, 8); ctx.beginPath(); ctx.moveTo(-14, -92); ctx.lineTo(-4, -100); ctx.lineTo(4, -94); ctx.lineTo(14, -102); ctx.lineTo(14, -92); ctx.fill(); }
       else if(e.kind === 'torch'){ ctx.fillStyle = '#3a2412'; ctx.fillRect(-3, -30, 6, 18); ctx.fillStyle = '#ffb02e'; ctx.shadowColor = '#ffb02e'; ctx.shadowBlur = 14; ctx.beginPath(); ctx.ellipse(0, -38 - Math.sin(t * 9 + e.x) * 1.5, 6, 10 + Math.sin(t * 13 + e.x) * 2, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#fff2b0'; ctx.beginPath(); ctx.ellipse(0, -35, 3, 5, 0, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }
       break; }
-    case 'mover': ctx.restore(); if(g.lv.n === 6){ const x = e.px, y = e.py, w = e.w * T, wv = k => Math.sin(t * 4 + k * .25) * 2.5;   // un tapis volant
+    case 'mover': ctx.restore(); if(e.kind === 'train'){ const x = e.px, y = e.py, w = e.w * T, r0 = e.x0 - T, r1 = e.x0 + (e.dist + e.w + 1) * T;   // le Lézard Rouge et son pont
+        ctx.fillStyle = '#5a3a22'; ctx.fillRect(r0, y + 40, r1 - r0, 6); for(let k = r0; k < r1; k += 18) ctx.fillRect(k, y + 36, 8, 4); ctx.strokeStyle = '#5a3a2288'; ctx.lineWidth = 3; ctx.beginPath(); for(let k = r0; k < r1; k += 40){ ctx.moveTo(k, y + 46); ctx.lineTo(k + 20, y + 120); ctx.moveTo(k + 40, y + 46); ctx.lineTo(k + 20, y + 120); } ctx.stroke();
+        ctx.fillStyle = '#7a1414'; ctx.fillRect(x + DX, y + DY, w, 30); ctx.fillStyle = '#c4222a'; rr(ctx, x, y, w, 32, 5); ctx.fill(); ctx.fillStyle = '#f4e3b0'; for(let k = 10; k < w - 16; k += 26) rr(ctx, x + k, y + 8, 16, 12, 3), ctx.fill();
+        ctx.fillStyle = '#ffc93c'; ctx.fillRect(x, y, w, 3); ctx.fillRect(x, y + 26, w, 2); ctx.fillStyle = '#222'; for(const k of [16, w - 16]){ ctx.beginPath(); ctx.arc(x + k, y + 36, 7, 0, 7); ctx.fill(); }
+        ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.arc(x + w - 4, y + 14, 4, 0, 7); ctx.fill(); return; }
+      if(g.lv.n === 6){ const x = e.px, y = e.py, w = e.w * T, wv = k => Math.sin(t * 4 + k * .25) * 2.5;   // un tapis volant
         ctx.fillStyle = '#7a1424'; ctx.fillRect(x + DX, y + DY + 4, w, 8); ctx.beginPath(); ctx.moveTo(x, y + wv(0)); for(let k = 0; k <= w; k += 8) ctx.lineTo(x + k, y + wv(k)); for(let k = w; k >= 0; k -= 8) ctx.lineTo(x + k, y + 12 + wv(k)); ctx.closePath(); ctx.fillStyle = '#b3262e'; ctx.fill();
         ctx.fillStyle = '#ffc93c'; for(let k = 6; k < w - 4; k += 14){ ctx.beginPath(); ctx.moveTo(x + k, y + 6 + wv(k)); ctx.lineTo(x + k + 5, y + 2 + wv(k)); ctx.lineTo(x + k + 10, y + 6 + wv(k)); ctx.lineTo(x + k + 5, y + 10 + wv(k)); ctx.fill(); }
         ctx.fillStyle = '#1f6fa8'; ctx.fillRect(x, y + 10 + wv(0), w, 2); ctx.strokeStyle = '#ffe9c8'; ctx.lineWidth = 1.5; ctx.beginPath(); for(const ex of [x, x + w]) for(let k = 2; k < 12; k += 3){ ctx.moveTo(ex, y + k + wv(ex - x)); ctx.lineTo(ex + (ex === x ? -5 : 5), y + k + 1 + wv(ex - x)); } ctx.stroke(); return; }
       { const x = e.px, y = e.py, w = e.w * T; ctx.fillStyle = shade(W.plat, .7); ctx.fillRect(x + DX, y + DY, w, 12); ctx.fillStyle = '#c2185b'; rr(ctx, x, y, w, 14, 4); ctx.fill(); ctx.fillStyle = '#ffc93c'; for(let k = 0; k < w; k += 12) ctx.fillRect(x + k + 2, y + 4, 6, 6); ctx.fillStyle = '#7a1040'; ctx.fillRect(x, y + 12, w, 3); } return;
     case 'power': { ctx.translate(0, -12); ctx.font = '24px serif'; ctx.textAlign = 'center'; ctx.fillText(e.kind === 'chechia' ? '🎩' : e.kind === 'harissa' ? '🌶️' : '🍵', 0, 9); break; }
-    case 'scorp': if(g.lv.n === 6){ ctx.scale(e.dir, 1); const lg = Math.sin(t * 12) * 3; ctx.fillStyle = '#e8963a';   // un chat de la médina
+    case 'scorp': if(g.lv.n === 6 || g.lv.n === 11){ ctx.scale(e.dir, 1); const lg = Math.sin(t * 12) * 3; ctx.fillStyle = '#e8963a';   // un chat de la médina
         ctx.fillRect(-10, -8, 3, 8 + lg * .3); ctx.fillRect(6, -8, 3, 8 - lg * .3); ctx.beginPath(); ctx.ellipse(0, -12, 13, 7, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(13, -18, 7, 0, 7); ctx.fill();
         ctx.beginPath(); ctx.moveTo(8, -22); ctx.lineTo(10, -30); ctx.lineTo(14, -24); ctx.moveTo(14, -24); ctx.lineTo(18, -30); ctx.lineTo(19, -21); ctx.fill();
         ctx.strokeStyle = '#e8963a'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-12, -14); ctx.quadraticCurveTo(-22, -16, -20, -28 + lg); ctx.stroke(); ctx.lineCap = 'butt';
         ctx.fillStyle = '#b8642a'; ctx.fillRect(-4, -18, 3, 6); ctx.fillRect(2, -18, 3, 6); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(16, -19, 1.6, 0, 7); ctx.fill(); ctx.fillStyle = '#ff8aa8'; ctx.beginPath(); ctx.arc(20, -17, 1.4, 0, 7); ctx.fill(); break; }
-      else if(g.lv.n === 7 || g.lv.n === 8){ const lg = Math.sin(t * 16) * 2; ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2;   // un crabe
+      else if(g.lv.n === 7 || g.lv.n === 8 || g.lv.n === 10){ const lg = Math.sin(t * 16) * 2; ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2;   // un crabe
         for(let k = -1; k <= 1; k += 2) for(let j = 0; j < 3; j++){ ctx.beginPath(); ctx.moveTo(k * 8, -7); ctx.lineTo(k * (14 + j * 2), -2 + (j % 2 ? lg : -lg)); ctx.stroke(); }
         ctx.fillStyle = '#e04a2e'; ctx.beginPath(); ctx.ellipse(0, -9, 13, 8, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(-16, -16 + lg, 5, 0, 7); ctx.arc(16, -16 - lg, 5, 0, 7); ctx.fill();
         ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-4, -19, 3, 0, 7); ctx.arc(4, -19, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(-4 + e.dir, -19, 1.5, 0, 7); ctx.arc(4 + e.dir, -19, 1.5, 0, 7); ctx.fill(); break; }
@@ -782,7 +916,10 @@ function drawEnt(e, g, t){
     case 'hog': { if(e.ball){ ctx.translate(0, -11); ctx.rotate(e.spin || 0); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0; k < 8; k++){ const a = k * Math.PI / 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8); ctx.lineTo(Math.cos(a) * 14, Math.sin(a) * 14); ctx.stroke(); } break; }
       ctx.scale(e.dir, 1); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.ellipse(-2, -11, 14, 11, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0; k < 7; k++){ const a = Math.PI + k * .4; ctx.beginPath(); ctx.moveTo(-2 + Math.cos(a) * 10, -11 + Math.sin(a) * 9); ctx.lineTo(-2 + Math.cos(a) * 17, -11 + Math.sin(a) * 15); ctx.stroke(); }
       ctx.fillStyle = '#e8c8a0'; ctx.beginPath(); ctx.ellipse(10, -8, 7, 6, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(16, -9, 2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(10, -11, 1.5, 0, 7); ctx.fill(); break; }
-    case 'bird': if(g.lv.n === 9){ const fl = Math.sin(t * 18); ctx.fillStyle = '#4a3a6a';   // une chauve-souris
+    case 'bird': if(g.lv.n === 10){ ctx.scale(e.dir, 1); const sw = Math.sin(t * 10) * .4; ctx.fillStyle = '#ff8a2a';   // un poisson
+        ctx.beginPath(); ctx.ellipse(0, -12, 14, 9, 0, 0, 7); ctx.fill(); ctx.save(); ctx.translate(-12, -12); ctx.rotate(sw); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-10, -8); ctx.lineTo(-10, 8); ctx.fill(); ctx.restore();
+        ctx.fillStyle = '#fff'; ctx.fillRect(-4, -20, 3, 16); ctx.fillRect(3, -20, 3, 16); ctx.beginPath(); ctx.arc(7, -14, 3.5, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(8, -14, 1.8, 0, 7); ctx.fill(); break; }
+      if(g.lv.n === 9){ const fl = Math.sin(t * 18); ctx.fillStyle = '#4a3a6a';   // une chauve-souris
         ctx.beginPath(); ctx.ellipse(0, -12, 7, 8, 0, 0, 7); ctx.fill(); for(const k of [-1, 1]){ ctx.beginPath(); ctx.moveTo(k * 5, -14); ctx.quadraticCurveTo(k * 16, -24 - fl * 8, k * 24, -12 - fl * 6); ctx.quadraticCurveTo(k * 16, -10, k * 5, -8); ctx.fill(); }
         ctx.beginPath(); ctx.moveTo(-5, -18); ctx.lineTo(-3, -24); ctx.lineTo(-1, -18); ctx.moveTo(1, -18); ctx.lineTo(3, -24); ctx.lineTo(5, -18); ctx.fill(); ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.arc(-2.5, -14, 1.6, 0, 7); ctx.arc(2.5, -14, 1.6, 0, 7); ctx.fill(); break; }
       if(g.lv.n === 7 || g.lv.n === 8){ ctx.scale(e.dir, 1); const fl = Math.sin(t * 10) * .6; ctx.fillStyle = '#ffffff';   // une mouette
@@ -854,20 +991,26 @@ function render(t){
   drawBackground(g);
   ctx.translate(-g.camX, 0);
   drawTiles(g, t);
-  const BACK = ['mover', 'door', 'lamp', 'sign', 'spring', 'deco'];
+  const BACK = ['mover', 'door', 'lamp', 'sign', 'spring', 'deco', 'warp'];
   g.ents.forEach(e => { if(BACK.includes(e.t)) drawEnt(e, g, t); });
   g.ents.forEach(e => { if(!BACK.includes(e.t)) drawEnt(e, g, t); });
   g.shots.forEach(s => { ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(t * 12); ctx.fillStyle = '#e8331a'; ctx.beginPath(); ctx.ellipse(0, 0, 9, 4, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#2f9e44'; ctx.fillRect(7, -2, 4, 4); ctx.restore(); });
   drawHero(ctx, g.hero, t);
   g.parts.forEach(p => { ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 2)); if(p.coin){ ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.ellipse(p.x, p.y, 7, 9, 0, 0, 7); ctx.fill(); } else { ctx.fillStyle = p.c; ctx.fillRect(p.x - p.r / 2, p.y - p.r / 2, p.r, p.r); } }); ctx.globalAlpha = 1;
-  drawDark(g, t);
+  drawSea(g, t); drawDark(g, t);
   g.texts.forEach(x => { ctx.globalAlpha = Math.min(1, x.life * 1.5); ctx.font = `800 ${x.size}px "Baloo 2", sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 5; ctx.strokeStyle = '#0b1e46'; ctx.strokeText(x.s, x.x, x.y); ctx.fillStyle = x.c; ctx.fillText(x.s, x.x, x.y); }); ctx.globalAlpha = 1;
   // premier plan : herbes, jasmins (parallaxe 1,25)
   const fp = g.camX * 1.25;
-  for(let k = Math.floor(fp / 220) - 1; k < Math.floor((fp + VW) / 220) + 2; k++){ const r = hash(k * 13 + 5); if(r < .45) continue; const x = k * 220 - fp + g.camX; ctx.globalAlpha = .7; ctx.fillStyle = ({ 4:'#ffffff', 3:'#d2a65a', 8:'#e8d29a', 9:'#6a4020', 6:'#c8643a' })[g.lv.n] || '#2f7a3a';
+  for(let k = Math.floor(fp / 220) - 1; k < Math.floor((fp + VW) / 220) + 2; k++){ const r = hash(k * 13 + 5); if(r < .45) continue; const x = k * 220 - fp + g.camX; ctx.globalAlpha = .7; ctx.fillStyle = ({ 4:'#ffffff', 3:'#d2a65a', 8:'#e8d29a', 9:'#6a4020', 6:'#c8643a', 11:'#c8a070', 12:'#ffffff', 13:'#93432a' })[g.lv.n] || '#2f7a3a';
     ctx.beginPath(); ctx.ellipse(x, VHL + 6, 46 + r * 30, 26 + r * 12, 0, Math.PI, 0); ctx.fill(); if(g.lv.n <= 2){ ctx.fillStyle = '#fffaf0'; for(let j = 0; j < 4; j++){ ctx.beginPath(); ctx.arc(x - 20 + j * 13, VHL - 14 - (j % 2) * 8, 3, 0, 7); ctx.fill(); } } ctx.globalAlpha = 1; }
   drawHUD(g, t);
 }
+// Tabarka : l'eau de la crique, par-dessus tout ce qui y nage
+function drawSea(g, t){ if(!g.lv.sea || !g.lv.sea.length) return;
+  g.lv.sea.forEach(([a, b]) => { const x0 = a * T, x1 = b * T; if(x1 < g.camX || x0 > g.camX + VW) return;
+    const gr = ctx.createLinearGradient(0, SEA_Y, 0, ROWS * T); gr.addColorStop(0, 'rgba(60,170,230,.30)'); gr.addColorStop(1, 'rgba(20,80,170,.45)'); ctx.fillStyle = gr; ctx.fillRect(x0, SEA_Y, x1 - x0, ROWS * T - SEA_Y);
+    ctx.fillStyle = '#ffffffcc'; for(let x = x0; x < x1; x += 8) ctx.fillRect(x, SEA_Y + Math.sin(t * 3 + x * .05) * 3, 8, 3);
+    ctx.fillStyle = '#ffffff66'; for(let k = 0; k < 6; k++){ const bx = x0 + ((k * 97 + Math.floor(t * 20)) % (x1 - x0)), by = ROWS * T - ((t * 40 + k * 53) % (ROWS * T - SEA_Y)); ctx.beginPath(); ctx.arc(bx, by, 2 + k % 3, 0, 7); ctx.fill(); } }); }
 // Matmata : il fait sombre dans les tunnels ; le héros, les lampes, les torches et les jasmins éclairent autour d'eux
 let dk = null;
 function drawDark(g, t){
@@ -916,7 +1059,7 @@ function renderMenu(){ $('who').innerHTML = player ? `${avatarHTML(player)}<span
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 $('who').onclick = () => { audio(); sfx.tap(); choose(); };
 // un monde est ouvert s'il est le premier du voyage, s'il l'était déjà avec l'ancien ordre (1 à 5), ou si le monde d'avant est réussi
-function isOpen(id){ const i = ORDER.indexOf(id); return i === 0 || (id <= 5 && id <= save.unlocked) || !!save.best[ORDER[i - 1]]; }
+function isOpen(id){ const i = ORDER.indexOf(id); return i === 0 || !!save.best[id] || (id <= 5 && id <= save.unlocked) || !!save.best[ORDER[i - 1]]; }
 async function openLevels(){
   audio(); if(!player){ const n = await choose(); if(!n) return; }
   const nextId = ORDER.find(id => isOpen(id) && !save.best[id]);
@@ -925,7 +1068,7 @@ async function openLevels(){
   const totG = Object.values(save.gems).reduce((a, x) => a + x.length, 0);
   $('lvlStats').innerHTML = `<span>🌼 Jasmins : ${totG}/${WORLDS.length * 3}</span><span>🎟️ Tickets : ${save.tickets}</span><span>📚 Bonnes réponses : ${save.answers.ok}</span>`;
   document.querySelectorAll('.lvl').forEach(b => b.onclick = () => { if(b.disabled) return; sfx.tap(); intro(+b.dataset.n); });
-  show('levelsScr');
+  show('levelsScr'); const nx = document.querySelector('.lvl.next'); if(nx) try{ nx.scrollIntoView({ block:'nearest' }); }catch(e){}
 }
 $('play').onclick = () => { sfx.tap(); openLevels(); };
 $('lvlBack').onclick = () => { sfx.tap(); show('menu'); };
@@ -937,7 +1080,11 @@ const STORY = ["Le Scorpion d'Or a volé les jasmins dorés de Sidi Bou Saïd ! 
   "Le Scorpion d'Or s'est caché dans la médina de Tunis ! Saute de toit en toit, et monte sur les tapis volants pour passer au-dessus des ruelles.",
   "À Carthage, les vieilles pierres sont fragiles : ne reste pas trop longtemps dessus ! Les crabes sortent de la mer et les mouettes volent bas.",
   "Sur l'île de Djerba, la mer monte et descend dans les cuvettes de sable. Attends la marée basse pour passer… ou saute par-dessus !",
-  "À Matmata, les maisons sont creusées sous la terre. Dans les tunnels il fait noir : les torches et les lanternes t'éclairent. Attention aux chauves-souris !"];
+  "À Matmata, les maisons sont creusées sous la terre. Dans les tunnels il fait noir : les torches et les lanternes t'éclairent. Attention aux chauves-souris !",
+  "À Tabarka, la mer est pleine de corail ! Plonge dans les criques : dans l'eau, A te fait nager. Attention aux poissons et aux crabes.",
+  "Dans le grand amphithéâtre d'El Jem, de lourdes pierres tremblent… puis tombent ! Passe vite quand elles remontent, et prends les ascenseurs de pierre.",
+  "Sur le Chott el-Jérid, le lac de sel, la chaleur fait des mirages : des plateformes qui apparaissent et disparaissent. Quand elles pâlissent, saute !",
+  "Tout le monde à bord du Lézard Rouge ! Le petit train traverse les gorges : monte dessus au bon moment et garde l'équilibre."];
 function intro(n){
   const w = WORLDS[n - 1];
   $('introBox').innerHTML = `${n === 5 ? `<img class="boss-img" src="jasmin/boss.webp" alt="Le Scorpion d'Or" onerror="this.remove()">` : `<img class="title-img" src="${w.img}" alt="" onerror="this.remove()" style="aspect-ratio:21/9">`}
