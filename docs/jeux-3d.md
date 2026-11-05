@@ -60,6 +60,8 @@ Jeu de plateforme original à défilement horizontal, univers tunisien (cahier d
 - **Sauvegarde** `jasmin:<Prénom>` {unlocked, best{n:{score,stars,time}}, gems{n:[…]}, tickets, answers{ok,ko}, games, t}, réglages `jasmin-prefs`. Records en ligne `jasmin`, variantes `monde1` à `monde13`.
 - Images : `jeux/jasmin/` (titre, monde1 à monde13, boss).
 
+- **Mascottes** (joueurs hors famille) : au lieu d'un rond avec l'initiale, un vrai héros tunisien Higgsfield : **Nour** (garçon à la chéchia et au jasmin, gilet turquoise) ou **Farès** (jeune homme à la chéchia, gilet bleu roi), choisi selon le prénom (`mascotOf`). Images `jeux/avatars/mascotte-{nour,fares}.webp`.
+
 ### Secrets et astuces (pour les parents, à ne pas dévoiler tout de suite)
 Dans **chaque monde** il y a trois sortes de secrets :
 - **Le bloc invisible ❤️** (`i`, posé par `hid()`) : rien ne se voit, mais en sautant au bon endroit on tape un bloc caché qui apparaît : **une vie en plus**, 3 dinars, +500. Il est toujours à 4 cases au-dessus du sol, au-dessus d'un chemin plat : presque toujours **juste à la fin du premier long passage plat** (au début du monde), parfois un deuxième plus loin.

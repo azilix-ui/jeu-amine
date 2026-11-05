@@ -170,6 +170,9 @@ const T = 32, ROWS = 15, GY = 12, VHL = ROWS * T, STEP = 1 / 120;
 const PH = { acc:1300, accAir:950, max:205, maxRun:285, fric:1700, fricIce:430, g:1550, gHold:1250, gFall:2100, gCut:3400, jump:560, jumpK:.22, maxFall:900, coyote:.1, buffer:.13, stomp:400 };
 const HW = 10, HH = 40;
 const PEOPLE = { essil:{ c:'#1f3c88', c2:'#d7263d', e:'🚆' }, salma:{ c:'#1f6b44', c2:'#5aaedc', e:'🦉' }, amine:{ c:'#ff8c1a', c2:'#2a1f4f', e:'🎃' }, anis:{ c:'#0f766e', c2:'#ff7aa8', e:'🧔' }, imen:{ c:'#b4235a', c2:'#ffb3c9', e:'👩' } };
+// Les mascottes : un vrai héros tunisien pour les invités (au lieu d'un rond avec une lettre). Nour (petit, au jasmin) ou Farès (grand) selon le prénom.
+const MASCOTS = [{ id:'nour', name:'Nour', c:'#1fa3a8', c2:'#c4122f', e:'🌼' }, { id:'fares', name:'Farès', c:'#2a3f9a', c2:'#c4122f', e:'🎩' }];
+const mascotOf = name => { let hs = 0; for(const ch of String(name || '').toLowerCase()) hs = (hs * 31 + ch.charCodeAt(0)) >>> 0; return MASCOTS[hs % 2]; };
 const PARENTS = [{ name:'Anis', color:'#0f766e', emoji:'🧔' }, { name:'Imen', color:'#b4235a', emoji:'👩' }];
 const WORLDS = [
   { name:'Sidi Bou Saïd', sub:'Le village bleu et blanc', img:'jasmin/monde1.webp', sky:['#5fb6f0', '#d8f0ff'], ground:'#f4efe6', ground2:'#d9d2c4', edge:'#1f5fbf', top:'#7cc864', plat:'#1f5fbf', haz:'#2a8fd6', mid:'#ffffff', mid2:'#cfe3f7', music:{ bpm:112, root:62 } },
@@ -411,7 +414,7 @@ const tracked = new Set();
 async function setPlayer(name){
   player = name; save = Object.assign(fresh(), store.get(skey(), {}) || {});
   const k = name.toLowerCase(); avatarImg = null;
-  if(PEOPLE[k]){ const im = new Image(); im.onload = () => { avatarImg = im; }; im.src = `avatars/${k}.webp`; }
+  const im = new Image(); im.onload = () => { if(player === name) avatarImg = im; }; im.src = PEOPLE[k] ? `avatars/${k}.webp` : `avatars/mascotte-${mascotOf(name).id}.webp`;
   renderMenu();
   if(window.Famille){
     if(!tracked.has(name)){ tracked.add(name); Famille.track('jasmin', name, [skey()]); }
@@ -419,9 +422,9 @@ async function setPlayer(name){
     if(d && player === name && (d.t || 0) > (save.t || 0)){ save = Object.assign(fresh(), d); store.set(skey(), save); renderMenu(); }
   }
 }
-const pcol = () => PEOPLE[(player || '').toLowerCase()] || { c:'#7a4fe0', c2:'#ffd23f', e:(player || '?')[0] };
+const pcol = () => PEOPLE[(player || '').toLowerCase()] || Object.assign({ mascot:true }, mascotOf(player));
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-function avatarHTML(name){ const k = (name || '').toLowerCase(), p = PEOPLE[k]; return p ? `<span class="av"><img src="avatars/${k}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${p.e}'))"></span>` : `<span class="av">${name ? esc(name[0].toUpperCase()) : '🙂'}</span>`; }
+function avatarHTML(name){ const k = (name || '').toLowerCase(), p = PEOPLE[k], m = mascotOf(name); return p ? `<span class="av"><img src="avatars/${k}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${p.e}'))"></span>` : `<span class="av"><img src="avatars/mascotte-${name ? m.id : 'nour'}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${m.e}'))"></span>`; }
 
 let AC = null, master = null, musicGain = null, noiseBuf = null;
 function audio(){ if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .9; master.connect(AC.destination); musicGain = AC.createGain(); musicGain.gain.value = .3; musicGain.connect(master); }catch(e){ return null; } } if(AC.state === 'suspended') AC.resume(); return AC; }
@@ -970,14 +973,16 @@ function drawHero(cx, h, t){
   // tunique (jebba légère) aux couleurs du joueur, avec une bordure dorée
   cx.fillStyle = col.c; rr(cx, -11, -38, 22, 26, 8); cx.fill();
   cx.fillStyle = '#ffc93c'; cx.fillRect(-1.5, -36, 3, 18); cx.fillRect(-11, -15, 22, 3);
+  if(col.mascot){ cx.fillStyle = '#f4eee0'; cx.fillRect(-5, -38, 10, 20); cx.fillStyle = col.c2; cx.fillRect(-11, -18, 22, 5); }
   const arm = air ? (h.vy < 0 ? -2.4 : -1.6) : Math.sin(ph + Math.PI) * .9 * run;
   [[-10, arm], [10, air ? -arm * .9 - 3 : -arm]].forEach(([ax, a]) => { cx.save(); cx.translate(ax, -34); cx.rotate(a); cx.fillStyle = col.c; rr(cx, -4, 0, 8, 16, 4); cx.fill(); cx.fillStyle = '#f2c9a0'; cx.beginPath(); cx.arc(0, 17, 3.5, 0, 7); cx.fill(); cx.restore(); });
   if(h.harissa){ cx.fillStyle = '#ff6a1a'; cx.beginPath(); cx.arc(12, -20, 4 + Math.sin(t * 12), 0, 7); cx.fill(); }
   cx.save(); cx.translate(0, -52); if(h.face < 0) cx.scale(-1, 1);
-  cx.beginPath(); cx.arc(0, 0, 15, 0, 7); cx.closePath(); cx.fillStyle = '#f2c9a0'; cx.fill();
-  if(avatarImg){ cx.save(); cx.clip(); const iw = avatarImg.naturalWidth, ih = avatarImg.naturalHeight; cx.drawImage(avatarImg, iw * .22, ih * .1, iw * .56, ih * .56, -16, -16, 32, 32); cx.restore(); }
+  const HR = col.mascot ? 17 : 15; if(col.mascot) cx.translate(0, -2);
+  cx.beginPath(); cx.arc(0, 0, HR, 0, 7); cx.closePath(); cx.fillStyle = '#f2c9a0'; cx.fill();
+  if(avatarImg){ cx.save(); cx.clip(); const iw = avatarImg.naturalWidth, ih = avatarImg.naturalHeight, cr = col.mascot ? [.17, .02, .66] : [.22, .1, .56]; cx.drawImage(avatarImg, iw * cr[0], ih * cr[1], iw * cr[2], ih * cr[2], -HR - 1, -HR - 1, HR * 2 + 2, HR * 2 + 2); cx.restore(); }
   else { cx.fillStyle = '#23324a'; cx.font = '800 16px "Baloo 2", sans-serif'; cx.textAlign = 'center'; cx.fillText(col.e || '?', 0, 6); }
-  cx.lineWidth = 2.5; cx.strokeStyle = '#ffffff'; cx.beginPath(); cx.arc(0, 0, 15, 0, 7); cx.stroke();
+  cx.lineWidth = 2.5; cx.strokeStyle = '#ffffff'; cx.beginPath(); cx.arc(0, 0, HR, 0, 7); cx.stroke();
   if(h.chechia){ cx.fillStyle = '#c4122f'; cx.beginPath(); cx.moveTo(-12, -9); cx.lineTo(12, -9); cx.lineTo(10, -22); cx.lineTo(-10, -22); cx.closePath(); cx.fill(); cx.fillStyle = '#8a0a1f'; cx.fillRect(-10, -12, 20, 3);
     cx.strokeStyle = '#111'; cx.lineWidth = 2; cx.beginPath(); cx.moveTo(0, -22); cx.quadraticCurveTo(-8, -18 + Math.sin(t * 8) * 2, -12, -10); cx.stroke(); }
   cx.restore(); cx.restore();
@@ -1055,7 +1060,7 @@ function frame(now){
    Écrans : menu, mondes, questions, fin de niveau
    ===================================================================== */
 function show(id){ document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); document.body.classList.toggle('menu', id === 'menu'); document.body.classList.toggle('playing', !id); }
-function renderMenu(){ $('who').innerHTML = player ? `${avatarHTML(player)}<span><b>${esc(player)}</b><small>Toucher pour changer de héros</small></span>` : `<span class="av">🙂</span><span><b>Qui joue ?</b><small>Choisis ton héros</small></span>`; }
+function renderMenu(){ $('who').innerHTML = player ? `${avatarHTML(player)}<span><b>${esc(player)}</b><small>Toucher pour changer de héros</small></span>` : `${avatarHTML('')}<span><b>Qui joue ?</b><small>Choisis ton héros</small></span>`; }
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 $('who').onclick = () => { audio(); sfx.tap(); choose(); };
 // un monde est ouvert s'il est le premier du voyage, s'il l'était déjà avec l'ancien ordre (1 à 5), ou si le monde d'avant est réussi
