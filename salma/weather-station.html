@@ -157,7 +157,7 @@ function miss(word){(data.errs[word]=data.errs[word]||{ko:0}).ko++;save()}
    Les voix passent par Web Audio : toutes chargées et décodées une fois, puis jouées sans réseau ni blocage
    (sur iPad/Android, un <audio> lancé hors d'un toucher peut rester muet ; le contexte audio, lui, est débloqué au premier toucher). */
 let muted=false, cur=null, ac=null;
-const clip=n=>`meteo/voix/${n}.mp3`;
+const clip=n=>`meteo/voix/${n}.mp3?v=2`;   // ?v=2 : les tablettes ne gardent pas les anciennes voix muettes en cache
 const ALL=[...['sunny','cloudy','rainy','windy','snowy','stormy','foggy','rainbow','hot','cold','spring','summer','autumn','winter'].map(w=>'w-'+w),
   ...['sunny','cloudy','rainy','windy','snowy','stormy','foggy','rainbow','hot','cold'].map(w=>'s-'+w),
   ...['coat','scarf','hat','gloves','boots','umbrella','sunglasses','tshirt','shorts','cap'].map(c=>'c-'+c),
