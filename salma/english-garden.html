@@ -248,11 +248,11 @@ function pickVoice(lang){
 /* Les voix : enregistrées avec Higgsfield (Raina pour l'anglais, Julian pour le français d'Ollie), jouées par Web Audio,
    préchargées au premier toucher. La voix du navigateur ne sert plus que de secours pour une phrase non enregistrée. */
 let VOICE = {}, actxV = null, curSrc = null; const vbuf = {}, vload = {};
-fetch('english/voix/manifest.json?v=2').then(r => r.json()).then(m => { VOICE = m; }).catch(() => {});
+fetch('english/voix/manifest.json?v=3').then(r => r.json()).then(m => { VOICE = m; }).catch(() => {});
 function vctx(){ if(!actxV){ try{ actxV = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(actxV && actxV.state === 'suspended') actxV.resume(); return actxV; }
 function vdecode(d){ return new Promise((ok, ko) => { try{ const p = actxV.decodeAudioData(d, ok, ko); if(p && p.then) p.then(ok, ko); }catch(e){ ko(e); } }); }
 function vfetch(file){ if(vbuf[file]) return Promise.resolve(vbuf[file]); if(vload[file]) return vload[file];
-  return vload[file] = fetch(`english/voix/${file}.mp3?v=2`).then(r => r.arrayBuffer()).then(d => { vctx(); return vdecode(d); }).then(b => vbuf[file] = b).catch(() => { delete vload[file]; return null; }); }
+  return vload[file] = fetch(`english/voix/${file}.mp3?v=3`).then(r => r.arrayBuffer()).then(d => { vctx(); return vdecode(d); }).then(b => vbuf[file] = b).catch(() => { delete vload[file]; return null; }); }
 let preloaded = false;
 ['pointerdown', 'touchend', 'keydown'].forEach(ev => addEventListener(ev, () => { vctx(); if(!preloaded && Object.keys(VOICE).length){ preloaded = true; Object.values(VOICE).reduce((p, f) => p.then(() => vfetch(f)), Promise.resolve()); } }, { passive:true }));
 const PRAISE = ['Yes! Well done!', 'Great job!', 'Super!', 'Excellent!', 'Yes!'];

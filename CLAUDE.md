@@ -70,7 +70,7 @@ package.json, build.js  copie le site dans dist/ si Hostinger lance un « build 
 
 ## Règles à respecter
 
-- **Voix off des vidéos** : **Céline** (ElevenLabs, `text2speech_v2`, voix `57ccb351-84d7-54ba-afd4-26b566ca6023`), et **Julian** (`95429266-c0ac-4137-a209-63b8812b0f23`) pour les autres projets ; choisies par le papa le 09/11. Toujours faire écouter des essais avant de choisir une nouvelle voix.
+- **Voix off des vidéos** : **Céline** (ElevenLabs, `text2speech_v2`, voix `57ccb351-84d7-54ba-afd4-26b566ca6023`), et **Julian** (`95429266-c0ac-4137-a209-63b8812b0f23`) pour les autres projets ; choisies par le papa le 09/11. Ollie, la prof de Salma, parle français avec la voix de **Céline** (voix de femme, demandé le 10/11) ; en anglais c'est **Raina**. Toujours faire écouter des essais avant de choisir une nouvelle voix.
 - **Higgsfield** : toujours annoncer le prix exact en crédits (outil `get_cost`) et attendre l'accord du papa avant de générer. Montrer le résultat avant de publier.
 - **Photos** : ne jamais publier de documents scolaires bruts ni de photos d'identité (planches avec numéros). Seuls des visages recadrés servent de référence à Higgsfield ; ce sont les avatars dessinés qui vont en ligne.
 - **Pas de personnages protégés** (jeux vidéo, dessins animés, marques) : on invente des personnages originaux (ex. Poppy Playtime → monde « Usine à jouets » inventé).
