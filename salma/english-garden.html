@@ -182,13 +182,13 @@ const THEMES = {
     ask:w=>`Where is number ${w}?`,
     items:[["one","un",1],["two","deux",2],["three","trois",3],["four","quatre",4],["five","cinq",5],["six","six",6],["seven","sept",7],["eight","huit",8],["nine","neuf",9],["ten","dix",10]]},
   fruits:{name:"Fruits",fr:"Les fruits",pic:"🍓",edge:"#e0473a",
-    ask:w=>`Where is the ${w}?`,
+    ask:w=>w==="grapes"?"Where are the grapes?":`Where is the ${w}?`,
     items:[["apple","la pomme","🍎"],["banana","la banane","🍌"],["orange","l'orange","🍊"],["strawberry","la fraise","🍓"],["grapes","le raisin","🍇"],["pear","la poire","🍐"],["cherry","la cerise","🍒"],["lemon","le citron","🍋"]]},
   family:{name:"Family",fr:"La famille",pic:"👨‍👩‍👧",edge:"#2ec4a6",
     ask:w=>`Where is ${w}?`,
     items:[["mum","maman","👩"],["dad","papa","👨"],["baby","le bébé","👶"],["sister","la sœur","👧"],["brother","le frère","👦"],["grandma","mamie","👵"],["grandpa","papi","👴"]]},
   hello:{name:"Hello!",fr:"Se présenter",pic:"👋",edge:"#ffc93c",chat:true,
-    ask:w=>`Find... ${w}`,
+    ask:w=>w,
     items:[["Hello!","Bonjour ! / Salut !","👋"],["Goodbye!","Au revoir !","😘"],["Good morning!","Bonjour ! (le matin)","🌅"],["Good night!","Bonne nuit !","🌙"],["Thank you!","Merci !","🎁"],["Please","S'il te plaît","🙏"],["Yes","Oui","👍"],["No","Non","👎"],["I'm fine!","Je vais bien !","😊"],["My name is Salma.","Je m'appelle Salma.","📛"],["I am eight.","J'ai huit ans.","🎂"]]},
   days:{name:"Days",fr:"Les jours",pic:"📅",edge:"#2f7de1",ordered:true,
     ask:w=>`Where is ${w}?`,
@@ -245,11 +245,43 @@ function pickVoice(lang){
   }
   return null;
 }
-/* La voix du navigateur a des défauts connus sur tablette : une phrase lancée juste après cancel() peut se perdre,
-   une phrase « oubliée » par le ramasse-miettes s'arrête au milieu.
-   On garde chaque phrase en mémoire et on attend un peu après un cancel() avant de reparler. */
+/* Les voix : enregistrées avec Higgsfield (Raina pour l'anglais, Julian pour le français d'Ollie), jouées par Web Audio,
+   préchargées au premier toucher. La voix du navigateur ne sert plus que de secours pour une phrase non enregistrée. */
+let VOICE = {}, actxV = null, curSrc = null; const vbuf = {}, vload = {};
+fetch('english/voix/manifest.json?v=2').then(r => r.json()).then(m => { VOICE = m; }).catch(() => {});
+function vctx(){ if(!actxV){ try{ actxV = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(actxV && actxV.state === 'suspended') actxV.resume(); return actxV; }
+function vdecode(d){ return new Promise((ok, ko) => { try{ const p = actxV.decodeAudioData(d, ok, ko); if(p && p.then) p.then(ok, ko); }catch(e){ ko(e); } }); }
+function vfetch(file){ if(vbuf[file]) return Promise.resolve(vbuf[file]); if(vload[file]) return vload[file];
+  return vload[file] = fetch(`english/voix/${file}.mp3?v=2`).then(r => r.arrayBuffer()).then(d => { vctx(); return vdecode(d); }).then(b => vbuf[file] = b).catch(() => { delete vload[file]; return null; }); }
+let preloaded = false;
+['pointerdown', 'touchend', 'keydown'].forEach(ev => addEventListener(ev, () => { vctx(); if(!preloaded && Object.keys(VOICE).length){ preloaded = true; Object.values(VOICE).reduce((p, f) => p.then(() => vfetch(f)), Promise.resolve()); } }, { passive:true }));
+const PRAISE = ['Yes! Well done!', 'Great job!', 'Super!', 'Excellent!', 'Yes!'];
+function pieces(text){   // une phrase composée (« Great job! cat », « Monday, Tuesday, Wednesday... ») -> des morceaux enregistrés
+  text = text.trim(); if(VOICE[text]) return [text];
+  for(const p of PRAISE) if(text.startsWith(p + ' ')){ const r = pieces(text.slice(p.length + 1)); return r && [p, ...r]; }
+  if(text.includes(', ')){ const parts = text.replace(/\.\.\.$/, '').split(', ').map(x => x.trim()); if(parts.every(x => VOICE[x])) return parts; }
+  return null;
+}
+function playClip(file){
+  return new Promise(async res => {
+    const a = vctx(); if(!a){ res(false); return; }
+    const b = await Promise.race([vfetch(file), new Promise(r => setTimeout(() => r(null), 4000))]);
+    if(!b || muted){ res(!!b); return; }
+    stopClip(); const src = a.createBufferSource(); src.buffer = b; src.connect(a.destination);
+    let done = false; const fin = () => { if(!done){ done = true; if(curSrc === src) curSrc = null; res(true); } };
+    src.onended = fin; setTimeout(fin, (b.duration + 1) * 1000); curSrc = src; src.start(); talk();
+  });
+}
+function stopClip(){ if(curSrc){ try{ curSrc.onended = null; curSrc.stop(); }catch(e){} curSrc = null; } }
+async function say(text, lang = "en", rate){
+  if(muted) return;
+  const parts = pieces(text);
+  if(parts){ for(const p of parts){ const ok = await playClip(VOICE[p]); if(!ok) return sayTTS(p, lang, rate); } return; }
+  return sayTTS(text, lang, rate);
+}
+/* Secours : la voix du navigateur (phrases gardées en mémoire, petite attente après une coupure). */
 const alive = new Set(); let lastCancel = 0;
-function say(text,lang="en",rate){
+function sayTTS(text,lang="en",rate){
   return new Promise(res=>{
     if(muted||!synth){res();return}
     const u = new SpeechSynthesisUtterance(text);
@@ -264,7 +296,7 @@ function say(text,lang="en",rate){
     const since=performance.now()-lastCancel; since<120 ? setTimeout(go,120-since) : go();
   });
 }
-function hush(){ if(synth){ synth.cancel(); lastCancel=performance.now(); } }
+function hush(){ stopClip(); if(synth){ synth.cancel(); lastCancel=performance.now(); } }
 
 /* ---------- sound effects ---------- */
 let ac;
