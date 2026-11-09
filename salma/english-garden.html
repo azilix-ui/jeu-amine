@@ -245,6 +245,10 @@ function pickVoice(lang){
   }
   return null;
 }
+/* La voix du navigateur a des défauts connus sur tablette : une phrase lancée juste après cancel() peut se perdre,
+   une phrase « oubliée » par le ramasse-miettes s'arrête au milieu.
+   On garde chaque phrase en mémoire et on attend un peu après un cancel() avant de reparler. */
+const alive = new Set(); let lastCancel = 0;
 function say(text,lang="en",rate){
   return new Promise(res=>{
     if(muted||!synth){res();return}
@@ -253,13 +257,14 @@ function say(text,lang="en",rate){
     u.lang = lang==="en"?"en-GB":"fr-FR";
     u.rate = rate || (lang==="en"?0.8:1);
     u.pitch = 1.1;
-    let done=false; const fin=()=>{if(!done){done=true;res()}};
-    u.onend=fin; u.onerror=fin; setTimeout(fin, 900+text.length*140);
-    synth.speak(u);
-    talk();
+    alive.add(u);
+    let done=false; const fin=()=>{if(!done){done=true;alive.delete(u);res()}};
+    u.onend=fin; u.onerror=fin; setTimeout(fin, 2500+text.length*160/u.rate);
+    const go=()=>{ if(done) return; if(synth.paused) synth.resume(); synth.speak(u); talk(); };
+    const since=performance.now()-lastCancel; since<120 ? setTimeout(go,120-since) : go();
   });
 }
-function hush(){ if(synth) synth.cancel(); }
+function hush(){ if(synth){ synth.cancel(); lastCancel=performance.now(); } }
 
 /* ---------- sound effects ---------- */
 let ac;

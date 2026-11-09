@@ -153,28 +153,42 @@ function save(){data.t=Date.now();try{localStorage.setItem(KEY,JSON.stringify(da
 const totalStars=()=>Object.values(data.stars).reduce((a,b)=>a+(+b||0),0);
 function miss(word){(data.errs[word]=data.errs[word]||{ko:0}).ko++;save()}
 
-/* ---------- voice (Higgsfield recordings) ---------- */
-let muted=false, cur=null;
+/* ---------- voice (Higgsfield recordings) ----------
+   Les voix passent par Web Audio : toutes chargées et décodées une fois, puis jouées sans réseau ni blocage
+   (sur iPad/Android, un <audio> lancé hors d'un toucher peut rester muet ; le contexte audio, lui, est débloqué au premier toucher). */
+let muted=false, cur=null, ac=null;
 const clip=n=>`meteo/voix/${n}.mp3`;
-const cache={};
+const ALL=[...['sunny','cloudy','rainy','windy','snowy','stormy','foggy','rainbow','hot','cold','spring','summer','autumn','winter'].map(w=>'w-'+w),
+  ...['sunny','cloudy','rainy','windy','snowy','stormy','foggy','rainbow','hot','cold'].map(w=>'s-'+w),
+  ...['coat','scarf','hat','gloves','boots','umbrella','sunglasses','tshirt','shorts','cap'].map(c=>'c-'+c),
+  'q-today','q-tunis','q-london','q-paris','q-moscow','q-cairo','q-newyork','q-wear','f-well','f-great','f-again','f-hello','f-bravo'];
+const buf={}, loading={};
+function actx(){ if(!ac){ try{ ac=new (window.AudioContext||window.webkitAudioContext)() }catch(e){} } if(ac&&ac.state==='suspended') ac.resume(); return ac; }
+function decode(data){ return new Promise((ok,ko)=>{ try{ const p=ac.decodeAudioData(data,ok,ko); if(p&&p.then) p.then(ok,ko); }catch(e){ ko(e) } }); }
+function load(n){ if(buf[n]) return Promise.resolve(buf[n]); if(loading[n]) return loading[n];
+  return loading[n]=fetch(clip(n)).then(r=>r.arrayBuffer()).then(d=>{ actx(); return decode(d) }).then(b=>buf[n]=b).catch(()=>{ delete loading[n]; return null }); }
+function preloadAll(){ if(!actx()) return; ALL.reduce((p,n)=>p.then(()=>load(n)),Promise.resolve()); }
+['pointerdown','touchend','keydown'].forEach(ev=>addEventListener(ev,()=>{ actx(); if(!preloadAll.done){ preloadAll.done=true; preloadAll(); } },{passive:true}));
+function hush(){ if(cur){ try{ cur.onended=null; cur.stop(); }catch(e){} cur=null; } }
 function play(n){
-  return new Promise(res=>{
+  return new Promise(async res=>{
     if(muted){res();return}
-    try{ if(cur){cur.pause();} const a=cache[n]||(cache[n]=new Audio(clip(n))); cur=a; a.currentTime=0;
-      let done=false; const fin=()=>{if(!done){done=true;res()}};
-      a.onended=fin; a.onerror=fin; setTimeout(fin,6000);
-      const p=a.play(); if(p&&p.catch) p.catch(fin); talk();
-    }catch(e){res()}
+    const a=actx(); if(!a){res();return}
+    const b=await Promise.race([load(n),new Promise(r=>setTimeout(()=>r(null),4000))]);
+    if(!b||muted){res();return}
+    hush();
+    const src=a.createBufferSource(), g=a.createGain(); g.gain.value=1; src.buffer=b; src.connect(g).connect(a.destination);
+    let done=false; const fin=()=>{ if(!done){ done=true; if(cur===src) cur=null; res(); } };
+    src.onended=fin; setTimeout(fin,(b.duration+1)*1000); cur=src; src.start(); talk();
   });
 }
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 async function seq(...names){for(const n of names){await play(n);await wait(150)}}
-function preload(list){list.forEach(n=>{if(!cache[n]){const a=new Audio();a.preload='auto';a.src=clip(n);cache[n]=a}})}
+function preload(list){ list.forEach(n=>load(n)); }
 const praise=()=>play(Math.random()<.5?'f-well':'f-great');
 
 /* ---------- effects ---------- */
-let ac;
-function tone(f,t0,d,type='sine',g=.15){try{if(muted)return;ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),gn=ac.createGain();o.type=type;o.frequency.value=f;gn.gain.setValueAtTime(g,ac.currentTime+t0);gn.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t0+d);o.connect(gn).connect(ac.destination);o.start(ac.currentTime+t0);o.stop(ac.currentTime+t0+d+.05)}catch(e){}}
+function tone(f,t0,d,type='sine',g=.15){try{if(muted)return;if(!actx())return;const o=ac.createOscillator(),gn=ac.createGain();o.type=type;o.frequency.value=f;gn.gain.setValueAtTime(g,ac.currentTime+t0);gn.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t0+d);o.connect(gn).connect(ac.destination);o.start(ac.currentTime+t0);o.stop(ac.currentTime+t0+d+.05)}catch(e){}}
 const sfx={good(){tone(784,0,.15);tone(1047,.12,.25)},bad(){tone(260,0,.25,'sawtooth',.06)},flip(){tone(560,0,.06,'triangle',.1)},win(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.13,.3,'triangle',.14))}};
 const cv=document.getElementById('confetti'),cx=cv.getContext('2d');let parts=[],raf=null;
 function confetti(n=110){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;cv.width=innerWidth;cv.height=innerHeight;const c=['#ff6b5b','#ffc93c','#8a5cf6','#2ec4a6','#3b82f6','#fff'];for(let i=0;i<n;i++)parts.push({x:innerWidth/2+(Math.random()-.5)*240,y:innerHeight*.35,vx:(Math.random()-.5)*14,vy:-Math.random()*14-4,r:Math.random()*6+4,c:c[i%6],a:0,l:120});if(!raf)stepC()}
@@ -190,7 +204,7 @@ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(
 const byId=id=>W.find(w=>w.id===id)||SEASONS.find(s=>s.id===id);
 let token=0; // cancels pending async steps when the screen changes
 function topbar(back=true){return `<div class="top">${back?'<button class="pill" id="back">← Studio</button>':'<a class="pill" href="./">← Salma</a>'}<button class="pill" id="mute" aria-label="Son">${muted?'🔇':'🔊'}</button><div class="chip">⭐ ${totalStars()} · 🎟️ ${data.tickets}</div></div>`}
-function wire(){const b=document.getElementById('back');if(b)b.onclick=home;document.getElementById('mute').onclick=e=>{muted=!muted;if(muted&&cur)cur.pause();e.currentTarget.textContent=muted?'🔇':'🔊'}}
+function wire(){const b=document.getElementById('back');if(b)b.onclick=home;document.getElementById('mute').onclick=e=>{muted=!muted;if(muted)hush();e.currentTarget.textContent=muted?'🔇':'🔊'}}
 function teacher(html){return `<div class="teacher">${OWL}<div class="bubble">${html}</div></div>`}
 function dots(res,n,i){return `<div class="progress">${Array.from({length:n},(_,k)=>`<i class="${res[k]===true?'ok':res[k]===false?'ko':k===i?'now':''}"></i>`).join('')}</div>`}
 function finish(mode,good,total,extra=''){
@@ -206,7 +220,7 @@ const earn=()=>{data.tickets++;save();const c=document.querySelector('.chip');if
 
 /* ---------- home ---------- */
 function home(){
-  token++;
+  token++; hush();
   app.innerHTML=topbar(false)+`<h1>Salma's Weather Station</h1>
   <div class="hero"><span class="onair">ON AIR</span><img src="meteo/titre.webp" width="1280" height="720" alt="Salma présente la météo devant un grand écran"></div>
   ${teacher(`<span class="en">Hello Salma! Welcome to the Weather Station!</span><span class="fr">Bonjour Salma ! Aujourd'hui tu apprends à dire le temps qu'il fait en anglais. Commence par <b>Learn</b>, puis passe à l'antenne !</span>`)}
@@ -218,7 +232,7 @@ function home(){
 
 /* ---------- 1. learn ---------- */
 function learn(){
-  token++;
+  token++; hush();
   const all=[...W,...SEASONS];
   const draw=()=>{
     app.innerHTML=topbar()+teacher(`<span class="en">What's the weather like today?</span><span class="fr">Touche chaque image pour entendre le mot et la phrase. Répète à voix haute !</span>`)+
@@ -240,7 +254,7 @@ function learn(){
 
 /* ---------- 2. listen & find ---------- */
 function listen(){
-  const t=++token, rounds=shuffle(W), res=[]; let i=0, good=0;
+  hush(); const t=++token, rounds=shuffle(W), res=[]; let i=0, good=0;
   preload(rounds.map(r=>'s-'+r.id));
   const show=()=>{
     if(t!==token)return;
@@ -263,7 +277,7 @@ function listen(){
 
 /* ---------- 3. memory ---------- */
 function memory(){
-  const t=++token, pick=shuffle(W).slice(0,6);
+  hush(); const t=++token, pick=shuffle(W).slice(0,6);
   const cards=shuffle(pick.flatMap(w=>[{id:w.id,kind:'img'},{id:w.id,kind:'word'}]));
   let open=[], found=0, flips=0, lock=false;
   app.innerHTML=topbar()+teacher(`<span class="en">Find the pairs!</span><span class="fr">Retrouve chaque image avec son mot anglais.</span>`)+
@@ -285,7 +299,7 @@ function memory(){
 
 /* ---------- 4. dress up ---------- */
 function dress(){
-  const t=++token, rounds=shuffle(DRESS), res=[]; let i=0, good=0;
+  hush(); const t=++token, rounds=shuffle(DRESS), res=[]; let i=0, good=0;
   const show=()=>{
     if(t!==token)return;
     if(i>=rounds.length) return finish('dress',good,rounds.length);
@@ -316,7 +330,7 @@ function dress(){
 
 /* ---------- 5. weather reporter ---------- */
 function report(){
-  const t=++token;
+  hush(); const t=++token;
   const pool=shuffle(W.filter(w=>!['rainbow','hot','cold'].includes(w.id))).slice(0,6); // no look-alike pictures on the same map
   const map=CITIES.map(([id,name],k)=>({id,name,w:pool[k]}));
   const order=shuffle(map), res=[]; let i=0, good=0;
