@@ -41,7 +41,7 @@ famille.js             module commun : « Qui joue ? », scores, classements, su
 site.js                chargé par toutes les pages : appli installable (service worker) + journal des visites
 manifest.webmanifest, sw.js, icons/   l'application à installer sur l'écran d'accueil (voir docs/serveur.md)
 progression.html       tableau de bord des parents (mot de passe parent), avec le journal des visites
-essil/  index.html, deutsch-express.html, via-romana.html
+essil/  index.html, deutsch-express.html, via-romana.html, videos-geometrie.html (+ videos/ : épisodes « Pas à pas »)
 salma/  index.html, english-garden.html, weather-station.html (+ meteo/ : images et voix), atelier-des-verbes.html, atelier-des-formes.html, marche-d-ollie.html (monnaie, 3D), jardin-des-nombres.html, le-grand-galop.html, cheval/ (images et vidéos)
 amine/  index.html, ardoise-magique.html (+ lettres.js : modèles des 78 lettres), la-nuit-d-amine.html, la-nuit-d-amine-2.html, nahki-tounsi.html, serpentin.html, voix/api.php
 jeux/   serpent-legendes.html, ludo-legendes.html, grimpe-glace.html, legende-du-jasmin.html (+ jasmin/ : images), avatars/ (5 avatars, 15 cartes légendes, illustrations Ludo et Grimpe-Glace), cartes/ (illustrations des skins)
@@ -70,6 +70,7 @@ package.json, build.js  copie le site dans dist/ si Hostinger lance un « build 
 
 ## Règles à respecter
 
+- **Voix off des vidéos** : **Céline** (ElevenLabs, `text2speech_v2`, voix `57ccb351-84d7-54ba-afd4-26b566ca6023`), et **Julian** (`95429266-c0ac-4137-a209-63b8812b0f23`) pour les autres projets ; choisies par le papa le 09/11. Toujours faire écouter des essais avant de choisir une nouvelle voix.
 - **Higgsfield** : toujours annoncer le prix exact en crédits (outil `get_cost`) et attendre l'accord du papa avant de générer. Montrer le résultat avant de publier.
 - **Photos** : ne jamais publier de documents scolaires bruts ni de photos d'identité (planches avec numéros). Seuls des visages recadrés servent de référence à Higgsfield ; ce sont les avatars dessinés qui vont en ligne.
 - **Pas de personnages protégés** (jeux vidéo, dessins animés, marques) : on invente des personnages originaux (ex. Poppy Playtime → monde « Usine à jouets » inventé).

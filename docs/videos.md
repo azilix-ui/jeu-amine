@@ -72,9 +72,11 @@ Chaque vidéo compte environ 11 plans. Les prix ont été vérifiés le 09/11 :
 
 ## Vidéo 1 : « La clôture des chèvres » (09/11)
 
-- Le fichier `perimetre-cloture-des-chevres.mp4` (1080 × 1920, 1 min 47) est sur le PC dans `OneDrive\Amine\grande section\videos temple\`. Il n'est pas sur le site.
+- **Version en ligne** (voix de Céline, 1 min 50) : page `essil/videos-geometrie.html` avec la vidéo (`essil/videos/perimetre.mp4`, 720 × 1280, 9 Mo), « Ce qu'il faut retenir » (les 4 formules) et un petit défi de 5 questions corrigées ; carte dans l'espace d'Essil et lien sur l'accueil.
+- Sur le PC dans `OneDrive\Amine\grande section\videos temple\` : `perimetre-cloture-des-chevres-celine.mp4` (1080 × 1920, la bonne) et `perimetre-cloture-des-chevres.mp4` (première version, voix Elodie).
 - Les 12 images viennent de `flux_3_image` (9:16) : un diorama low-poly tunisien, avec un petit personnage en tunique bleue et chéchia rouge. Ce sont les jobs 7bcafcbf, 28fdb601, 6d027ffd, a2f08948, 831d3bfe, 14167a56, e6658994, 931e243e, 6c4a22e3, 14938218, bec676ae, 90eeba96.
-- La voix off française est faite avec `seed_audio`, voix **Elodie** (`8b95a259-62fd-545d-b0f0-7b521a972b6b`), à raison d'une phrase par demande.
+- **Voix off retenue par le papa : Céline** (`text2speech_v2`, `variant: elevenlabs`, voix `57ccb351-84d7-54ba-afd4-26b566ca6023`, 0,3 crédit la phrase), et **Julian** (`95429266-c0ac-4137-a209-63b8812b0f23`) pour les autres projets. Les essais des 7 voix sont sur le PC (`voix-essai`). La première version utilisait `seed_audio` Elodie, sans choix du papa : erreur à ne pas refaire.
+- Avec ElevenLabs, chaque phrase finit parfois par un petit bruit après un blanc : `build.py` l'enlève (dernier morceau de moins de 0,45 s après un silence).
   - **Piège** : en `mp3`, les phrases longues sont coupées à la fin. Il faut demander du **`wav`**.
   - Pour être sûr que la fin n'est pas coupée, on ajoute « ... Voilà. » à la fin du texte, puis on coupe juste avant ce mot.
 - Le montage se fait avec `docs/video-perimetre/build.py` et `diagrams.py` (ffmpeg + libass, police Poppins). Il comprend :
@@ -83,4 +85,4 @@ Chaque vidéo compte environ 11 plans. Les prix ont été vérifiés le 09/11 :
   - des titres jaunes qui apparaissent sur le mot clé ;
   - des schémas exacts, dessinés par nous, en bas de l'écran ;
   - l'étiquette « PAS À PAS · le périmètre ».
-- Coût : ≈ 44 crédits, dont 24 pour les images. Le reste a servi aux voix, refaites en wav à cause des coupures.
+- Coût : ≈ 44 crédits pour la première version (images 24, voix Elodie refaites en wav) + ≈ 8 pour les essais de voix et la voix de Céline.

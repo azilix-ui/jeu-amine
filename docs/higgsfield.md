@@ -39,7 +39,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 09/11 | Salma's Weather Station : 47 voix anglaises (`seed_audio`, voix **Raina** `1c3a4775-9afb-52c1-a2bf-b6543231a9a1` choisie par le papa, `speech_rate` −15, mp3), découpées et rognées | `salma/meteo/voix/*.mp3` | ~8 |
 | 09/11 | La Légende du Jasmin : 6 fonds (21:9) : Kairouan, Ksar Ouled Soltane, Ichkeul, Tamerza, aqueduc de Zaghouan (+ un Sidi Bou Saïd non utilisé : ce monde existait déjà) | `jeux/jasmin/monde14…18.webp` | 12 |
 | 09/11 | Vidéo 1 d'Essil « La clôture des chèvres » : 12 images 9:16 + voix off française (Elodie, refaite en wav car le mp3 coupait les fins) | PC : `videos temple\perimetre-cloture-des-chevres.mp4` | ≈ 44 |
-| | **Total** | | **≈ 401** |
+| 09/11 | Essais de 6 voix françaises (ElevenLabs, MiniMax) puis toute la voix off de la vidéo 1 avec **Céline** | `essil/videos/perimetre.mp4` | ≈ 8 |
+| | **Total** | | **≈ 409** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 

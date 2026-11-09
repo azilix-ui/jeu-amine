@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&display=swap">
+<title>Pas à pas · Géométrie</title>
+<style>
+/* Une salle de projection pour Essil : la vidéo verticale au centre, ce qu'il faut retenir et un petit défi à côté. */
+:root{ --navy:#1f3c88; --navy2:#152a63; --red:#d7263d; --gold:#ffd23f; --paper:#f6f3ec; --ink:#1d2540; --soft:#5b6380; --card:#fff; --ok:#1f9a6b;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Nunito",system-ui,sans-serif; color-scheme:light; }
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--body);color:var(--ink);background:var(--paper);-webkit-tap-highlight-color:transparent}
+.wrap{max-width:1040px;margin:0 auto;padding:16px 16px 48px}
+.back{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:999px;background:var(--card);color:var(--navy);font-weight:800;text-decoration:none;box-shadow:0 3px 0 #0001}
+header{background:var(--navy);color:#fff;border-radius:24px;padding:22px 24px;margin:14px 0 18px;border-bottom:8px solid var(--red)}
+header small{font-weight:800;letter-spacing:.12em;color:var(--gold);font-size:13px}
+h1{font-family:var(--display);font-size:clamp(30px,5vw,46px);margin:4px 0 6px;line-height:1.05}
+header p{margin:0;color:#d8e0f5;font-size:17px;max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:22px;align-items:start}
+.screen{background:#0d1530;border-radius:28px;padding:10px;box-shadow:0 10px 30px #1f3c8833}
+.screen video{display:block;width:100%;aspect-ratio:9/16;border-radius:20px;background:#000}
+.screen h2{font-family:var(--display);color:#fff;font-size:20px;margin:10px 8px 4px}
+.screen p{color:#aab6d8;margin:0 8px 8px;font-size:14px}
+.card{background:var(--card);border-radius:22px;padding:18px 20px;box-shadow:0 4px 0 #0000000d;margin-bottom:18px}
+.card h3{font-family:var(--display);font-size:22px;margin:0 0 12px;color:var(--navy)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.rule{border:2px solid #e6e2d6;border-radius:16px;padding:12px 14px}
+.rule b{display:block;font-size:15px;color:var(--soft);font-weight:800}
+.rule .f{font-family:var(--display);font-size:24px;color:var(--red);margin:4px 0}
+.rule small{color:var(--soft);font-size:14px}
+.q{border-top:2px dashed #e6e2d6;padding:12px 0}
+.q:first-of-type{border-top:0;padding-top:0}
+.q p{margin:0 0 8px;font-weight:700;font-size:17px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts button{font:800 17px var(--body);min-height:48px;padding:8px 16px;border-radius:14px;border:2px solid #d9d4c6;background:#fff;color:var(--ink);cursor:pointer}
+.opts button.ok{background:#e3f6ee;border-color:var(--ok);color:var(--ok)}
+.opts button.ko{background:#fdeaea;border-color:var(--red);color:var(--red)}
+.why{margin:8px 0 0;color:var(--soft);font-size:15px;min-height:1em}
+.score{font-weight:800;color:var(--navy)}
+.next{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.next li{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:#f4f1e8;color:var(--soft);font-weight:700}
+.next li span{font-size:22px}
+.next li em{margin-left:auto;font-style:normal;font-size:13px;background:#fff;border-radius:999px;padding:3px 10px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}.screen{max-width:400px;margin:0 auto}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="back" href="./">← Espace d'Essil</a>
+  <header>
+    <small>PAS À PAS · GÉOMÉTRIE</small>
+    <h1>La clôture des chèvres</h1>
+    <p>Le périmètre, réinventé étape par étape : un problème, une idée, un mot savant… et un nouveau problème.</p>
+  </header>
+
+  <div class="grid">
+    <section class="screen">
+      <video controls playsinline preload="metadata" poster="videos/perimetre.jpg" src="videos/perimetre.mp4"></video>
+      <h2>Épisode 1 · Le périmètre</h2>
+      <p>1 min 50 · voix de Céline</p>
+    </section>
+
+    <div>
+      <section class="card">
+        <h3>Ce qu'il faut retenir</h3>
+        <div class="rules">
+          <div class="rule"><b>Le périmètre</b><div class="f">la longueur du tour</div><small>On l'exprime en mètres (m), en centimètres (cm)…</small></div>
+          <div class="rule"><b>Carré de côté c</b><div class="f">P = 4 × c</div><small>côté 25 m → 4 × 25 = 100 m</small></div>
+          <div class="rule"><b>Rectangle L × l</b><div class="f">P = 2 × (L + l)</div><small>30 m et 15 m → 2 × 45 = 90 m</small></div>
+          <div class="rule"><b>Autre polygone</b><div class="f">on additionne tout</div><small>forme en L : 20 + 8 + 12 + 10 + 8 + 18 = 76 m</small></div>
+          <div class="rule"><b>Cercle de diamètre d</b><div class="f">P = π × d</div><small>π ≈ 3,14 · d = 10 m → environ 31,4 m</small></div>
+        </div>
+      </section>
+
+      <section class="card" id="defi">
+        <h3>Petit défi <span class="score" id="score"></span></h3>
+      </section>
+
+      <section class="card">
+        <h3>Les prochains épisodes</h3>
+        <ul class="next">
+          <li><span>🧱</span>Carreler la cuisine de mamie · l'aire<em>bientôt</em></li>
+          <li><span>🐐</span>Le piège du fermier · périmètre ou aire ?<em>bientôt</em></li>
+          <li><span>💧</span>Remplir le bassin de Kairouan · le volume<em>bientôt</em></li>
+          <li><span>🕌</span>Le minaret qui ne tombe pas · les angles<em>bientôt</em></li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+const Q = [
+  { q:'Un carré a des côtés de 12 m. Son périmètre ?', a:'48 m', o:['24 m', '48 m', '144 m'], why:'4 × 12 = 48 m (144, c\'est l\'aire : 12 × 12).' },
+  { q:'Un rectangle mesure 8 m sur 5 m. Son périmètre ?', a:'26 m', o:['13 m', '40 m', '26 m'], why:'2 × (8 + 5) = 2 × 13 = 26 m.' },
+  { q:'Un triangle a des côtés de 3 m, 4 m et 5 m. Son périmètre ?', a:'12 m', o:['12 m', '60 m', '7 m'], why:'On additionne tous les côtés : 3 + 4 + 5 = 12 m.' },
+  { q:'Un cercle a un diamètre de 2 m. Son périmètre est environ…', a:'6,28 m', o:['4 m', '6,28 m', '3,14 m'], why:'π × d ≈ 3,14 × 2 = 6,28 m.' },
+  { q:'Le périmètre d\'un carré est 36 m. Son côté ?', a:'9 m', o:['9 m', '18 m', '6 m'], why:'Les 4 côtés sont égaux : 36 ÷ 4 = 9 m.' }
+];
+const box = document.getElementById('defi'); let good = 0, done = 0;
+Q.forEach((x, i) => {
+  const d = document.createElement('div'); d.className = 'q';
+  d.innerHTML = `<p>${i + 1}. ${x.q}</p><div class="opts">${x.o.map(o => `<button type="button">${o}</button>`).join('')}</div><p class="why"></p>`;
+  box.appendChild(d);
+  let first = true;
+  d.querySelectorAll('button').forEach(b => b.onclick = () => {
+    if(d.dataset.ok) return;
+    if(b.textContent === x.a){ b.classList.add('ok'); d.dataset.ok = 1; d.querySelector('.why').textContent = '✔ ' + x.why; if(first) good++; done++; }
+    else { b.classList.add('ko'); first = false; d.querySelector('.why').textContent = 'Pas tout à fait… essaie encore !'; }
+    if(done === Q.length) document.getElementById('score').textContent = `· ${good} / ${Q.length} du premier coup${good === Q.length ? ' 🏆' : ''}`;
+  });
+});
+</script>
+</body>
+</html>
