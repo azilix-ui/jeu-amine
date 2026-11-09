@@ -38,7 +38,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 09/11 | Salma's Weather Station : 14 images (la même maison sous chaque temps et à chaque saison, 1:1) + image d'accueil (Salma présentatrice, avatar en référence, 16:9) (`flux_3_image`) | `salma/meteo/*.webp` | 30 |
 | 09/11 | Salma's Weather Station : 47 voix anglaises (`seed_audio`, voix **Raina** `1c3a4775-9afb-52c1-a2bf-b6543231a9a1` choisie par le papa, `speech_rate` −15, mp3), découpées et rognées | `salma/meteo/voix/*.mp3` | ~8 |
 | 09/11 | La Légende du Jasmin : 6 fonds (21:9) : Kairouan, Ksar Ouled Soltane, Ichkeul, Tamerza, aqueduc de Zaghouan (+ un Sidi Bou Saïd non utilisé : ce monde existait déjà) | `jeux/jasmin/monde14…18.webp` | 12 |
-| | **Total** | | **357** |
+| 09/11 | Vidéo 1 d'Essil « La clôture des chèvres » : 12 images 9:16 + voix off française (Elodie, refaite en wav car le mp3 coupait les fins) | PC : `videos temple\perimetre-cloture-des-chevres.mp4` | ≈ 44 |
+| | **Total** | | **≈ 401** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 
@@ -63,5 +64,5 @@ Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet
 - Avatars : « Stylized 3D animated-movie character portrait of the [âge] [girl/boy/man/woman] in the reference photo: keep face shape, eyes, eyebrows, hair recognizable… Head and shoulders, centered, facing camera. Plain smooth gradient background… Bright cheerful video game avatar, high quality render, no text. »
 - Cartes légendes : « …the same [person] as the reference (same face, hair, outfit), proudly riding on the back of a giant friendly cartoon [snake-dragon doré / serpent licorne nacré arc-en-ciel / serpent phénix de feu]… raises one fist in victory… Trophy card composition, ornate thin golden frame… no text. » Format 4:3.
 - Une génération peut échouer (statut `failed`) : relancer une fois, elle n'est normalement pas facturée ; vérifier le solde ensuite.
-- Voix (`seed_audio`, 0,1 crédit la phrase) : pas plus de 3 ou 4 demandes à la fois (sinon erreur 429) ; une prise de plusieurs phrases séparées par des lignes vides se découpe aux silences, mais les petits mots enchaînés vite se découpent mal : une phrase par demande est plus sûr. Une prise a été refusée deux fois (« nsfw ») sans raison : la refaire en phrases séparées.
+- Voix (`seed_audio`, 0,1 crédit la phrase) : pas plus de 3 ou 4 demandes à la fois (sinon erreur 429) ; une prise de plusieurs phrases séparées par des lignes vides se découpe aux silences, mais les petits mots enchaînés vite se découpent mal : une phrase par demande est plus sûr. **En mp3, les phrases de plus de ~6 s sont coupées à la fin : demander `format: wav`.** Une prise a été refusée deux fois (« nsfw ») sans raison : la refaire en phrases séparées.
 - Vidéo (prix vérifiés le 09/11, clip 9:16 de 10 s) : Grok Imagine 1.5 Lite 10 crédits, Kling 3.0 sans son 15 (avec son 20), Wan 2.6 15, Seedance 2.5 70.

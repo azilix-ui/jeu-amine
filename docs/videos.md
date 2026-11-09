@@ -1,6 +1,6 @@
 # Vidéos éducatives « étape par étape »
 
-Analyse de la vidéo modèle (`OneDrive\Amine\grande section\videos temple\électricité.mp4`, envoyée par le papa le 09/11) et idées de vidéos de géométrie pour Essil. Aucune vidéo n'est encore produite : on attend le choix du papa (sujet et formule de prix).
+Analyse de la vidéo modèle (`OneDrive\Amine\grande section\videos temple\électricité.mp4`, envoyée par le papa le 09/11) et idées de vidéos de géométrie pour Essil. **Vidéo 1 produite le 09/11** (formule A), les autres attendent le feu vert du papa.
 
 ## La vidéo modèle : « Étape par étape — L'élec »
 
@@ -69,3 +69,18 @@ Chaque vidéo compte environ 11 plans. Les prix ont été vérifiés le 09/11 :
 À essayer d'abord : la voix off française de `seed_audio` (0,1 crédit la phrase). Voici le pilote proposé au papa :
 - la vidéo 1 (le périmètre) en formule A ;
 - puis, si le style plaît, la même vidéo en formule B pour comparer.
+
+## Vidéo 1 : « La clôture des chèvres » (09/11)
+
+- Le fichier `perimetre-cloture-des-chevres.mp4` (1080 × 1920, 1 min 47) est sur le PC dans `OneDrive\Amine\grande section\videos temple\`. Il n'est pas sur le site.
+- Les 12 images viennent de `flux_3_image` (9:16) : un diorama low-poly tunisien, avec un petit personnage en tunique bleue et chéchia rouge. Ce sont les jobs 7bcafcbf, 28fdb601, 6d027ffd, a2f08948, 831d3bfe, 14167a56, e6658994, 931e243e, 6c4a22e3, 14938218, bec676ae, 90eeba96.
+- La voix off française est faite avec `seed_audio`, voix **Elodie** (`8b95a259-62fd-545d-b0f0-7b521a972b6b`), à raison d'une phrase par demande.
+  - **Piège** : en `mp3`, les phrases longues sont coupées à la fin. Il faut demander du **`wav`**.
+  - Pour être sûr que la fin n'est pas coupée, on ajoute « ... Voilà. » à la fin du texte, puis on coupe juste avant ce mot.
+- Le montage se fait avec `docs/video-perimetre/build.py` et `diagrams.py` (ffmpeg + libass, police Poppins). Il comprend :
+  - un zoom lent sur chaque image ;
+  - des sous-titres mot à mot, au centre ;
+  - des titres jaunes qui apparaissent sur le mot clé ;
+  - des schémas exacts, dessinés par nous, en bas de l'écran ;
+  - l'étiquette « PAS À PAS · le périmètre ».
+- Coût : ≈ 44 crédits, dont 24 pour les images. Le reste a servi aux voix, refaites en wav à cause des coupures.
