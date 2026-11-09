@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#2b6cb0"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Salma's Weather Station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* A TV weather studio: deep blue "on air" frame, bright picture cards. One screen per activity, big tap targets. */
+:root{
+  --studio:#1d3f8f; --studio2:#2b6cb0; --glow:#7cc8f2;
+  --card:#fff; --ink:#1f2a44; --soft:#5a6b85;
+  --sun:#ffc93c; --coral:#ff6b5b; --mint:#2ec4a6; --plum:#8a5cf6; --rain:#3b82f6;
+  --display:"Baloo 2","Comic Sans MS","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Trebuchet MS",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:var(--body);color:var(--ink);background:radial-gradient(120% 80% at 50% 0%,var(--studio2),var(--studio) 70%) fixed;background-color:var(--studio);overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:1000px;margin:0 auto;padding:14px 16px 40px;min-height:100%;display:flex;flex-direction:column;gap:14px}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit;touch-action:manipulation}
+button:focus-visible{outline:4px solid var(--sun);outline-offset:3px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pill{background:var(--card);border-radius:999px;padding:10px 18px;font-weight:800;font-size:18px;box-shadow:0 4px 0 #0003;text-decoration:none;color:var(--ink);min-height:48px;display:inline-flex;align-items:center;gap:6px}
+.chip{margin-left:auto;background:var(--card);border-radius:999px;padding:8px 16px;font-family:var(--display);font-weight:800;font-size:21px;box-shadow:0 4px 0 #0003;font-variant-numeric:tabular-nums}
+.onair{display:inline-flex;align-items:center;gap:6px;background:#e53935;color:#fff;font-weight:800;border-radius:8px;padding:2px 10px;font-size:14px;letter-spacing:.08em}
+.onair::before{content:"";width:9px;height:9px;border-radius:50%;background:#fff;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.2}}
+h1{font-family:var(--display);color:#fff;font-size:clamp(32px,6vw,56px);line-height:1;margin:0;text-shadow:0 4px 0 #0a2560;text-wrap:balance}
+h2{font-family:var(--display);color:#fff;font-size:clamp(24px,4vw,34px);margin:0;text-shadow:0 3px 0 #0a2560}
+.teacher{display:flex;align-items:flex-end;gap:10px}
+.owl{width:96px;flex:none;transform-origin:50% 100%}
+.owl.talk{animation:bob .5s ease-in-out 2}
+@keyframes bob{50%{transform:translateY(-6px) rotate(-3deg)}}
+.bubble{position:relative;background:var(--card);border-radius:22px;padding:12px 18px;font-size:clamp(17px,2.4vw,22px);font-weight:800;box-shadow:0 5px 0 #0003;flex:1;max-width:680px}
+.bubble::before{content:"";position:absolute;left:-14px;bottom:22px;border:10px solid transparent;border-right:16px solid var(--card)}
+.bubble .en{color:var(--rain);font-family:var(--display);font-size:1.2em}
+.bubble .fr{display:block;color:var(--soft);font-size:.8em;font-weight:600}
+.replay{background:var(--sun);border-radius:999px;width:52px;height:52px;font-size:24px;box-shadow:0 4px 0 #c9971a;flex:none}
+/* home */
+.hero{position:relative;border-radius:26px;overflow:hidden;box-shadow:0 8px 0 #0a2560;border:6px solid #fff;background:#fff}
+.hero img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover}
+.hero .onair{position:absolute;left:14px;top:14px}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.mode{background:var(--card);border-radius:24px;padding:16px 12px 14px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 7px 0 var(--edge,#0003);transition:transform .12s;text-align:center;min-height:150px}
+.mode:hover{transform:translateY(-3px)}
+.mode:active{transform:translateY(4px);box-shadow:0 3px 0 var(--edge,#0003)}
+.mode .ic{font-size:44px;line-height:1}
+.mode b{font-family:var(--display);font-size:23px}
+.mode small{color:var(--soft);font-weight:700;font-size:15px}
+.mode .st{color:#f5a400;font-size:20px;letter-spacing:2px}
+/* picture cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.pic{background:var(--card);border-radius:20px;padding:8px;box-shadow:0 6px 0 #0003;display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .12s;position:relative}
+.pic img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;display:block;background:#dfeaf7}
+.pic b{font-family:var(--display);font-size:22px;line-height:1.1}
+.pic small{color:var(--soft);font-weight:700;font-size:14px}
+.pic.seen::after{content:"✓";position:absolute;top:10px;right:10px;background:var(--mint);color:#fff;border-radius:50%;width:30px;height:30px;display:grid;place-items:center;font-weight:800}
+.pic:active{transform:scale(.97)}
+.pic.good{outline:6px solid var(--mint)}
+.pic.bad{outline:6px solid var(--coral);animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:640px;margin:0 auto;width:100%}
+.sub{color:#dbe8ff;font-weight:700;margin:0;font-size:17px}
+.progress{display:flex;gap:6px;justify-content:center}
+.progress i{width:14px;height:14px;border-radius:50%;background:#ffffff40}
+.progress i.ok{background:var(--mint)} .progress i.ko{background:var(--coral)} .progress i.now{background:#fff}
+/* memory */
+.mem{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:720px;margin:0 auto;width:100%}
+.card{aspect-ratio:1;border-radius:18px;background:var(--sun);box-shadow:0 5px 0 #c9971a;font-size:38px;display:grid;place-items:center;position:relative;overflow:hidden;padding:0}
+.card .face{position:absolute;inset:0;background:#fff;display:none;place-items:center;font-family:var(--display);font-weight:800;font-size:clamp(17px,3vw,26px);padding:4px}
+.card .face img{width:100%;height:100%;object-fit:cover}
+.card.open .face,.card.done .face{display:grid}
+.card.done{box-shadow:0 0 0 5px var(--mint)}
+/* dress up */
+.dress{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;align-items:start}
+.dress .scene img{width:100%;border-radius:20px;border:6px solid #fff;box-shadow:0 6px 0 #0a2560;display:block}
+.clothes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.cloth{background:var(--card);border-radius:18px;padding:10px 4px;box-shadow:0 5px 0 #0003;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:104px;justify-content:center}
+.cloth .em{font-size:44px;line-height:1}
+.cloth .em svg{width:46px;height:46px}
+.cloth b{font-family:var(--display);font-size:18px}
+.cloth.on{background:#e5fbf5;box-shadow:0 0 0 5px var(--mint),0 5px 0 #0003}
+.cloth.wrong{box-shadow:0 0 0 5px var(--coral);animation:shake .35s}
+.done-btn{margin-top:12px;width:100%}
+/* reporter */
+.board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.city{background:#0a2560;border:3px solid #ffffff55;border-radius:16px;padding:6px;color:#fff;text-align:center;font-weight:800;font-family:var(--display);font-size:19px}
+.city img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block;margin-bottom:4px}
+.city.ask{border-color:var(--sun);box-shadow:0 0 0 4px var(--sun);transform:scale(1.03)}
+.say{display:flex;flex-direction:column;gap:10px;max-width:520px;margin:0 auto;width:100%}
+.ans{background:var(--card);border-radius:18px;padding:14px 18px;font-family:var(--display);font-weight:800;font-size:24px;box-shadow:0 5px 0 #0003;text-align:left;min-height:56px}
+.ans.good{background:#e5fbf5;box-shadow:0 0 0 5px var(--mint)} .ans.bad{background:#ffe9e6;animation:shake .35s}
+.big{font-family:var(--display);font-weight:800;font-size:clamp(24px,4vw,32px);background:var(--coral);color:#fff;border-radius:26px;padding:14px 36px;box-shadow:0 7px 0 #c8473a;min-height:56px}
+.big:active{transform:translateY(5px);box-shadow:0 2px 0 #c8473a}
+.big.green{background:var(--mint);box-shadow:0 7px 0 #1f9a83}
+.center{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.result .stars{font-size:56px;color:var(--sun);letter-spacing:6px}
+.result p{color:#fff;font-size:20px;font-weight:700;margin:0}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+@media (max-width:820px){.board{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.dress{grid-template-columns:1fr}.dress .scene img{max-height:38vh;object-fit:cover}.mem{grid-template-columns:repeat(3,minmax(0,1fr))}.board{grid-template-columns:repeat(2,minmax(0,1fr))}.choices{gap:10px}.owl{width:72px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body>
+<canvas id="confetti"></canvas>
+<main class="wrap" id="app"></main>
+<script>
+/* ---------- data ---------- */
+const W = [ // id, english word, sentence, french
+  ['sunny','sunny',"It's sunny.","Il fait beau, il y a du soleil."],
+  ['cloudy','cloudy',"It's cloudy.","C'est nuageux."],
+  ['rainy','rainy',"It's rainy.","Il pleut."],
+  ['windy','windy',"It's windy.","Il y a du vent."],
+  ['snowy','snowy',"It's snowy.","Il neige."],
+  ['stormy','stormy',"It's stormy.","Il y a de l'orage."],
+  ['foggy','foggy',"It's foggy.","Il y a du brouillard."],
+  ['rainbow','rainbow',"Look! A rainbow!","Regarde ! Un arc-en-ciel !"],
+  ['hot','hot',"It's hot!","Il fait chaud !"],
+  ['cold','cold',"It's cold!","Il fait froid !"],
+].map(([id,en,s,fr])=>({id,en,s,fr,img:`meteo/${id}.webp`}));
+const SEASONS = [['spring','spring','le printemps'],['summer','summer',"l'été"],['autumn','autumn',"l'automne"],['winter','winter',"l'hiver"]].map(([id,en,fr])=>({id,en,fr,img:`meteo/${id}.webp`}));
+const BEANIE = `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="9" r="6" fill="#ff6b5b"/><path d="M8 34 Q8 12 24 12 Q40 12 40 34Z" fill="#8a5cf6"/><rect x="6" y="31" width="36" height="9" rx="4" fill="#ff6b5b"/><path d="M13 32v7M19 32v7M25 32v7M31 32v7M37 32v7" stroke="#fff6" stroke-width="2"/></svg>`;
+const CLOTHES = {coat:['🧥','coat','un manteau'],scarf:['🧣','scarf','une écharpe'],hat:[BEANIE,'woolly hat','un bonnet'],gloves:['🧤','gloves','des gants'],boots:['👢','boots','des bottes'],umbrella:['☂️','umbrella','un parapluie'],sunglasses:['🕶️','sunglasses','des lunettes de soleil'],tshirt:['👕','T-shirt','un tee-shirt'],shorts:['🩳','shorts','un short'],cap:['🧢','cap','une casquette']};
+const DRESS = [
+  {w:'sunny', ok:['sunglasses','cap','tshirt'], no:['coat','gloves','scarf']},
+  {w:'hot', ok:['shorts','tshirt','cap'], no:['boots','scarf','hat']},
+  {w:'cold', ok:['coat','scarf','gloves'], no:['shorts','sunglasses','tshirt']},
+  {w:'snowy', ok:['hat','gloves','boots'], no:['shorts','cap','sunglasses']},
+  {w:'rainy', ok:['umbrella','boots','coat'], no:['sunglasses','shorts','cap']},
+];
+const CITIES = [['tunis','Tunis'],['london','London'],['paris','Paris'],['moscow','Moscow'],['cairo','Cairo'],['newyork','New York']];
+const MODES = [
+  {id:'learn', ic:'📖', name:'Learn', fr:'Apprendre les mots', edge:'#3b82f6'},
+  {id:'listen', ic:'👂', name:'Listen!', fr:'Écoute et trouve', edge:'#8a5cf6'},
+  {id:'memory', ic:'🃏', name:'Memory', fr:'Le mémo de la météo', edge:'#ffc93c'},
+  {id:'dress', ic:'🧥', name:'Dress up!', fr:'Habille-toi selon le temps', edge:'#ff6b5b'},
+  {id:'report', ic:'📺', name:'On air!', fr:'Présente la météo', edge:'#2ec4a6'},
+];
+
+/* ---------- save ---------- */
+const KEY='salma-meteo';
+let data={stars:{},done:{},tickets:0,errs:{},seen:{},t:0};
+try{data=Object.assign(data,JSON.parse(localStorage.getItem(KEY)||'{}')||{})}catch(e){}
+function save(){data.t=Date.now();try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+const totalStars=()=>Object.values(data.stars).reduce((a,b)=>a+(+b||0),0);
+function miss(word){(data.errs[word]=data.errs[word]||{ko:0}).ko++;save()}
+
+/* ---------- voice (Higgsfield recordings) ---------- */
+let muted=false, cur=null;
+const clip=n=>`meteo/voix/${n}.mp3`;
+const cache={};
+function play(n){
+  return new Promise(res=>{
+    if(muted){res();return}
+    try{ if(cur){cur.pause();} const a=cache[n]||(cache[n]=new Audio(clip(n))); cur=a; a.currentTime=0;
+      let done=false; const fin=()=>{if(!done){done=true;res()}};
+      a.onended=fin; a.onerror=fin; setTimeout(fin,6000);
+      const p=a.play(); if(p&&p.catch) p.catch(fin); talk();
+    }catch(e){res()}
+  });
+}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function seq(...names){for(const n of names){await play(n);await wait(150)}}
+function preload(list){list.forEach(n=>{if(!cache[n]){const a=new Audio();a.preload='auto';a.src=clip(n);cache[n]=a}})}
+const praise=()=>play(Math.random()<.5?'f-well':'f-great');
+
+/* ---------- effects ---------- */
+let ac;
+function tone(f,t0,d,type='sine',g=.15){try{if(muted)return;ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),gn=ac.createGain();o.type=type;o.frequency.value=f;gn.gain.setValueAtTime(g,ac.currentTime+t0);gn.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t0+d);o.connect(gn).connect(ac.destination);o.start(ac.currentTime+t0);o.stop(ac.currentTime+t0+d+.05)}catch(e){}}
+const sfx={good(){tone(784,0,.15);tone(1047,.12,.25)},bad(){tone(260,0,.25,'sawtooth',.06)},flip(){tone(560,0,.06,'triangle',.1)},win(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.13,.3,'triangle',.14))}};
+const cv=document.getElementById('confetti'),cx=cv.getContext('2d');let parts=[],raf=null;
+function confetti(n=110){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;cv.width=innerWidth;cv.height=innerHeight;const c=['#ff6b5b','#ffc93c','#8a5cf6','#2ec4a6','#3b82f6','#fff'];for(let i=0;i<n;i++)parts.push({x:innerWidth/2+(Math.random()-.5)*240,y:innerHeight*.35,vx:(Math.random()-.5)*14,vy:-Math.random()*14-4,r:Math.random()*6+4,c:c[i%6],a:0,l:120});if(!raf)stepC()}
+function stepC(){cx.clearRect(0,0,cv.width,cv.height);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.45;p.a+=.2;p.l--;cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.fillStyle=p.c;cx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);cx.restore()});parts=parts.filter(p=>p.l>0&&p.y<cv.height+20);raf=parts.length?requestAnimationFrame(stepC):(cx.clearRect(0,0,cv.width,cv.height),null)}
+
+/* ---------- Ollie with a weather umbrella ---------- */
+const OWL=`<svg class="owl" viewBox="0 0 120 130" aria-hidden="true"><ellipse cx="60" cy="124" rx="38" ry="5" fill="#0003"/><path d="M22 40 L30 14 L46 32 Z M98 40 L90 14 L74 32 Z" fill="#7a4b2a"/><ellipse cx="60" cy="74" rx="42" ry="50" fill="#9a6236"/><ellipse cx="60" cy="88" rx="28" ry="32" fill="#f3d9b1"/><circle cx="42" cy="52" r="17" fill="#fff"/><circle cx="78" cy="52" r="17" fill="#fff"/><circle cx="44" cy="54" r="8" fill="#23324a"/><circle cx="76" cy="54" r="8" fill="#23324a"/><circle cx="47" cy="51" r="2.5" fill="#fff"/><circle cx="79" cy="51" r="2.5" fill="#fff"/><path d="M54 64 L66 64 L60 74 Z" fill="#ffb02e"/><path d="M14 30 Q30 4 50 22" fill="none"/><path d="M8 26 Q28 -4 52 20 Z" fill="#3b82f6"/><path d="M30 10 L30 40" stroke="#23324a" stroke-width="3"/><path d="M18 74 q-6 22 10 34 M102 74 q6 22 -10 34" stroke="#7a4b2a" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M48 120 l-4 6 M52 120 l0 6 M68 120 l0 6 M72 120 l4 6" stroke="#ffb02e" stroke-width="4" stroke-linecap="round"/></svg>`;
+function talk(){document.querySelectorAll('.owl').forEach(o=>{o.classList.remove('talk');void o.offsetWidth;o.classList.add('talk')})}
+
+/* ---------- helpers ---------- */
+const app=document.getElementById('app');
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const byId=id=>W.find(w=>w.id===id)||SEASONS.find(s=>s.id===id);
+let token=0; // cancels pending async steps when the screen changes
+function topbar(back=true){return `<div class="top">${back?'<button class="pill" id="back">← Studio</button>':'<a class="pill" href="./">← Salma</a>'}<button class="pill" id="mute" aria-label="Son">${muted?'🔇':'🔊'}</button><div class="chip">⭐ ${totalStars()} · 🎟️ ${data.tickets}</div></div>`}
+function wire(){const b=document.getElementById('back');if(b)b.onclick=home;document.getElementById('mute').onclick=e=>{muted=!muted;if(muted&&cur)cur.pause();e.currentTarget.textContent=muted?'🔇':'🔊'}}
+function teacher(html){return `<div class="teacher">${OWL}<div class="bubble">${html}</div></div>`}
+function dots(res,n,i){return `<div class="progress">${Array.from({length:n},(_,k)=>`<i class="${res[k]===true?'ok':res[k]===false?'ko':k===i?'now':''}"></i>`).join('')}</div>`}
+function finish(mode,good,total,extra=''){
+  const st=good>=total?3:good>=Math.ceil(total*.7)?2:good>0?1:0;
+  data.stars[mode]=Math.max(data.stars[mode]||0,st);data.done[mode]=(data.done[mode]||0)+1;
+  const bonus=st===3?3:0;data.tickets+=bonus;save();
+  sfx.win();if(st>=2)confetti();
+  app.innerHTML=topbar()+`<div class="center result"><h2>${st===3?'Perfect!':'Well done, Salma!'}</h2><div class="stars">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div><p>${good} / ${total} bonnes réponses${bonus?' · +3 tickets 🎟️ de bonus':''}${extra}</p><div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center"><button class="big green" id="again">Encore !</button><button class="big" id="home">Studio</button></div></div>`;
+  wire();document.getElementById('again').onclick=()=>MODE[mode]();document.getElementById('home').onclick=home;
+  if(mode==='report'&&st>=2) play('f-bravo'); else if(st>=2) praise();
+}
+const earn=()=>{data.tickets++;save();const c=document.querySelector('.chip');if(c)c.textContent=`⭐ ${totalStars()} · 🎟️ ${data.tickets}`};
+
+/* ---------- home ---------- */
+function home(){
+  token++;
+  app.innerHTML=topbar(false)+`<h1>Salma's Weather Station</h1>
+  <div class="hero"><span class="onair">ON AIR</span><img src="meteo/titre.webp" width="1280" height="720" alt="Salma présente la météo devant un grand écran"></div>
+  ${teacher(`<span class="en">Hello Salma! Welcome to the Weather Station!</span><span class="fr">Bonjour Salma ! Aujourd'hui tu apprends à dire le temps qu'il fait en anglais. Commence par <b>Learn</b>, puis passe à l'antenne !</span>`)}
+  <div class="modes">${MODES.map(m=>`<button class="mode" style="--edge:${m.edge}" data-m="${m.id}"><span class="ic">${m.ic}</span><b>${m.name}</b><small>${m.fr}</small><span class="st">${'★'.repeat(data.stars[m.id]||0)}${'☆'.repeat(3-(data.stars[m.id]||0))}</span></button>`).join('')}</div>`;
+  wire();
+  app.querySelectorAll('.mode').forEach(b=>b.onclick=()=>MODE[b.dataset.m]());
+  if(!data.t) play('f-hello');
+}
+
+/* ---------- 1. learn ---------- */
+function learn(){
+  token++;
+  const all=[...W,...SEASONS];
+  const draw=()=>{
+    app.innerHTML=topbar()+teacher(`<span class="en">What's the weather like today?</span><span class="fr">Touche chaque image pour entendre le mot et la phrase. Répète à voix haute !</span>`)+
+    `<h2>The weather</h2><div class="grid">${W.map(c=>`<button class="pic ${data.seen[c.id]?'seen':''}" data-id="${c.id}"><img src="${c.img}" alt="" loading="lazy"><b>${c.en}</b><small>${c.s}</small><small>${c.fr}</small></button>`).join('')}</div>
+    <h2>The seasons</h2><div class="grid">${SEASONS.map(c=>`<button class="pic ${data.seen[c.id]?'seen':''}" data-id="${c.id}"><img src="${c.img}" alt="" loading="lazy"><b>${c.en}</b><small>${c.fr}</small></button>`).join('')}</div>`;
+    wire();
+    app.querySelectorAll('.pic').forEach(b=>b.onclick=async()=>{
+      const c=byId(b.dataset.id);b.classList.add('seen');
+      if(!data.seen[c.id]){data.seen[c.id]=1;save()}
+      const complete=all.every(x=>data.seen[x.id])&&!data.stars.learn;
+      if(complete){data.stars.learn=3;data.done.learn=1;data.tickets+=3;save();const ch=document.querySelector('.chip');if(ch)ch.textContent=`⭐ ${totalStars()} · 🎟️ ${data.tickets}`}
+      await play('w-'+c.id); if(c.s){await wait(200);await play('s-'+c.id)}
+      if(complete){sfx.win();confetti();praise()}
+    });
+  };
+  draw();
+  const p=document.createElement('p');p.className='sub';p.textContent='Quand tu as écouté les 14 images, tu gagnes 3 étoiles ⭐ et 3 tickets 🎟️.';app.appendChild(p);
+}
+
+/* ---------- 2. listen & find ---------- */
+function listen(){
+  const t=++token, rounds=shuffle(W), res=[]; let i=0, good=0;
+  preload(rounds.map(r=>'s-'+r.id));
+  const show=()=>{
+    if(t!==token)return;
+    if(i>=rounds.length) return finish('listen',good,rounds.length);
+    const ans=rounds[i], opts=shuffle([ans,...shuffle(W.filter(w=>w.id!==ans.id)).slice(0,3)]); let tries=0;
+    app.innerHTML=topbar()+`<div class="teacher">${OWL}<div class="bubble"><span class="en">Listen…</span><span class="fr">Écoute la phrase et touche la bonne image.</span></div><button class="replay" id="rep" aria-label="Réécouter">🔊</button></div>${dots(res,rounds.length,i)}<div class="choices">${opts.map(o=>`<button class="pic" data-id="${o.id}"><img src="${o.img}" alt=""></button>`).join('')}</div>`;
+    wire();document.getElementById('rep').onclick=()=>play('s-'+ans.id);
+    play('s-'+ans.id);
+    app.querySelectorAll('.choices .pic').forEach(b=>b.onclick=async()=>{
+      if(b.dataset.id===ans.id){
+        b.classList.add('good');sfx.good();if(tries===0){good++;res[i]=true;earn()}else res[i]=false;
+        b.insertAdjacentHTML('beforeend',`<b>${ans.s}</b>`);
+        app.querySelectorAll('.choices .pic').forEach(x=>x.onclick=null);
+        await play('s-'+ans.id);await wait(500);i++;show();
+      }else{tries++;b.classList.add('bad');sfx.bad();miss(ans.en);b.onclick=null;play('f-again')}
+    });
+  };
+  show();
+}
+
+/* ---------- 3. memory ---------- */
+function memory(){
+  const t=++token, pick=shuffle(W).slice(0,6);
+  const cards=shuffle(pick.flatMap(w=>[{id:w.id,kind:'img'},{id:w.id,kind:'word'}]));
+  let open=[], found=0, flips=0, lock=false;
+  app.innerHTML=topbar()+teacher(`<span class="en">Find the pairs!</span><span class="fr">Retrouve chaque image avec son mot anglais.</span>`)+
+    `<div class="mem">${cards.map((c,k)=>{const w=byId(c.id);return `<button class="card" data-k="${k}" aria-label="Carte">☀️<span class="face">${c.kind==='img'?`<img src="${w.img}" alt="">`:w.en}</span></button>`}).join('')}</div>`;
+  wire();
+  app.querySelectorAll('.card').forEach(b=>b.onclick=async()=>{
+    if(lock||b.classList.contains('open')||b.classList.contains('done'))return;
+    const c=cards[+b.dataset.k];b.classList.add('open');sfx.flip();open.push(b);
+    if(c.kind==='word') play('w-'+c.id);
+    if(open.length<2)return;
+    flips++;const [a,bb]=open;open=[];
+    if(cards[+a.dataset.k].id===cards[+bb.dataset.k].id){
+      a.classList.add('done');bb.classList.add('done');found++;sfx.good();earn();
+      await wait(250);await play('s-'+c.id);
+      if(t===token&&found===pick.length){const score=flips<=9?6:flips<=13?5:3;finish('memory',score,6,` · ${flips} essais`)}
+    }else{lock=true;await wait(950);a.classList.remove('open');bb.classList.remove('open');lock=false}
+  });
+}
+
+/* ---------- 4. dress up ---------- */
+function dress(){
+  const t=++token, rounds=shuffle(DRESS), res=[]; let i=0, good=0;
+  const show=()=>{
+    if(t!==token)return;
+    if(i>=rounds.length) return finish('dress',good,rounds.length);
+    const r=rounds[i], w=byId(r.w), items=shuffle([...r.ok,...r.no]); let mistakes=0;
+    app.innerHTML=topbar()+`<div class="teacher">${OWL}<div class="bubble"><span class="en">${w.s} What do you wear?</span><span class="fr">${w.fr} Choisis les <b>3</b> vêtements qui vont avec ce temps, puis touche ✓.</span></div><button class="replay" id="rep" aria-label="Réécouter">🔊</button></div>${dots(res,rounds.length,i)}
+    <div class="dress"><div class="scene"><img src="${w.img}" alt=""></div><div><div class="clothes">${items.map(k=>{const c=CLOTHES[k];return `<button class="cloth" data-k="${k}"><span class="em">${c[0]}</span><b>${c[1]}</b></button>`}).join('')}</div><button class="big green done-btn" id="ok">✓ Done!</button></div></div>`;
+    wire();document.getElementById('rep').onclick=()=>seq('s-'+r.w,'q-wear');
+    seq('s-'+r.w,'q-wear');
+    app.querySelectorAll('.cloth').forEach(b=>b.onclick=()=>{b.classList.toggle('on');b.classList.remove('wrong');play('c-'+b.dataset.k)});
+    document.getElementById('ok').onclick=async()=>{
+      const on=[...app.querySelectorAll('.cloth.on')].map(b=>b.dataset.k);
+      const wrong=on.filter(k=>r.no.includes(k)), missing=r.ok.filter(k=>!on.includes(k));
+      if(!wrong.length&&!missing.length){
+        sfx.good();res[i]=mistakes===0;if(mistakes===0){good++;earn()}
+        app.querySelectorAll('.cloth,#ok').forEach(x=>x.onclick=null);
+        await praise();await wait(400);i++;show();
+      }else{
+        mistakes++;sfx.bad();miss(r.w+' clothes');
+        wrong.forEach(k=>app.querySelector(`.cloth[data-k="${k}"]`).classList.add('wrong'));
+        const bub=app.querySelector('.bubble .fr');
+        bub.innerHTML=wrong.length?`Oups ! ${wrong.map(k=>'<b>'+CLOTHES[k][1]+'</b> ('+CLOTHES[k][2]+')').join(', ')} ne va pas avec ce temps.`:`Il manque encore ${missing.length} vêtement${missing.length>1?'s':''} !`;
+        play('f-again');
+      }
+    };
+  };
+  show();
+}
+
+/* ---------- 5. weather reporter ---------- */
+function report(){
+  const t=++token;
+  const pool=shuffle(W.filter(w=>!['rainbow','hot','cold'].includes(w.id))).slice(0,6); // no look-alike pictures on the same map
+  const map=CITIES.map(([id,name],k)=>({id,name,w:pool[k]}));
+  const order=shuffle(map), res=[]; let i=0, good=0;
+  const show=()=>{
+    if(t!==token)return;
+    if(i>=order.length) return finish('report',good,order.length);
+    const c=order[i], opts=shuffle([c.w,...shuffle(pool.filter(w=>w.id!==c.w.id)).slice(0,2)]); let tries=0;
+    app.innerHTML=topbar()+`<div class="teacher">${OWL}<div class="bubble"><span class="onair">ON AIR</span> <span class="en">What's the weather like in ${c.name}?</span><span class="fr">Tu es la présentatrice ! Regarde la carte et choisis la bonne phrase.</span></div><button class="replay" id="rep" aria-label="Réécouter">🔊</button></div>${dots(res,order.length,i)}
+    <div class="board">${map.map(m=>`<div class="city ${m.id===c.id?'ask':''}"><img src="${m.w.img}" alt="">${m.name}</div>`).join('')}</div>
+    <div class="say">${opts.map(o=>`<button class="ans" data-id="${o.id}">${o.s}</button>`).join('')}</div>`;
+    wire();document.getElementById('rep').onclick=()=>play('q-'+c.id);
+    play('q-'+c.id);
+    app.querySelectorAll('.ans').forEach(b=>b.onclick=async()=>{
+      if(b.dataset.id===c.w.id){
+        b.classList.add('good');sfx.good();if(tries===0){good++;res[i]=true;earn()}else res[i]=false;
+        app.querySelectorAll('.ans').forEach(x=>x.onclick=null);
+        await play('s-'+c.w.id);await wait(500);i++;show();
+      }else{tries++;b.classList.add('bad');sfx.bad();miss(c.w.en);b.onclick=null;play('f-again')}
+    });
+  };
+  show();
+}
+
+const MODE={learn,listen,memory,dress,report};
+home();
+</script>
+<script src="../famille.js"></script>
+<script>Famille.track('salma-meteo', 'Salma', ['salma-meteo']);</script>
+</body></html>
