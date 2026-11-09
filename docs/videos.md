@@ -95,3 +95,14 @@ Chaque vidéo compte environ 11 plans. Les prix ont été vérifiés le 09/11 :
 - Sur le PC : `videos temple\aire-cuisine-de-mamie.mp4`.
 - Correction faite aux deux épisodes : les « : », « ! », « ? » isolés (espace français) restent collés au mot d'avant dans les sous-titres.
 - **Genjutsu** (crédits gratuits proposés par Higgsfield) : il redessine une vidéo existante dans un autre style en gardant ses mouvements, ou fait bouger un personnage d'après une vidéo modèle ; il n'anime pas des images fixes, donc pas utile pour ces épisodes.
+
+## Épisodes 3, 4 et 5 (10/11)
+
+Même recette (9 images 9:16 `flux_3_image` par épisode, 11 phrases de Céline, schémas exacts dessinés en Python, sous-titres mot à mot). Sources du montage : `docs/video-episodes-3-5/`.
+
+- **3. Le piège du fermier** (`essil/videos/piege.mp4`) : 16 m de clôture → 7 × 1 = 7 m², 6 × 2 = 12 m², 5 × 3 = 15 m², 4 × 4 = 16 m² ; même périmètre, pas la même aire ; en cercle, r ≈ 2,5 m et A ≈ 20 m² : c'est le cercle qui enferme le plus de place (bulles, gouttes, nids).
+- **4. Le bassin de Kairouan** (`essil/videos/volume.mp4`) : cubes de 1 cm³ (5 × 3 = 15 par couche, 4 couches = 60 cm³), V = L × l × h, 1 L = 1 000 cm³, 1 m³ = 1 000 L ; bassin rond : aire du fond × hauteur (r = 2 m, h = 1 m → ≈ 12,5 m³ ≈ 12 500 L).
+- **5. Le minaret qui ne tombe pas** (`essil/videos/angles.mp4`) : fil à plomb, angle droit 90°, équerre, aigu / obtus / plat 180°, les trois coins d'un triangle forment un angle plat → somme = 180° (60° + 70° → 50°).
+- Découpage des prises de Céline : alignement par programmation dynamique sur la durée attendue de chaque phrase (`align.py`), plus fiable que « couper aux plus grands silences » car Céline fait parfois de longues pauses au milieu d'une phrase.
+- Sur la page : chaque épisode a ses formules à retenir et son défi de 5 questions (`?ep=piege`, `?ep=volume`, `?ep=angles`).
+- Sur le PC : `videos temple\piege-du-fermier.mp4`, `volume-bassin-de-kairouan.mp4`, `angles-minaret.mp4`.

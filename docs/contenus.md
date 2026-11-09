@@ -7,7 +7,7 @@ Chaque cours garde sa propre identité visuelle ; l'accueil et les pages d'espac
 | Cours | Fichier | Contenu | Sauvegarde |
 |---|---|---|---|
 | Deutsch Express | `essil/deutsch-express.html` | allemand, 14 étapes d'après son cours du 9 octobre ; XP et grades | `essil-deutsch` |
-| Pas à pas · Géométrie | `essil/videos-geometrie.html` | vidéos « étape par étape » (voir `docs/videos.md`) : onglets d'épisodes : 1 « La clôture des chèvres » (le périmètre : carré, rectangle, forme en L, cercle et π), 2 « Carreler la cuisine de mamie » (l'aire : rectangle, forme en L, triangle, disque) ; voix de Céline ; pour chacun « Ce qu'il faut retenir » et un petit défi de 5 questions ; 3 à 5 annoncés « bientôt » | aucune (page à regarder) |
+| Pas à pas · Géométrie | `essil/videos-geometrie.html` | vidéos « étape par étape » (voir `docs/videos.md`) : onglets d'épisodes : 1 « La clôture des chèvres » (le périmètre : carré, rectangle, forme en L, cercle et π), 2 « Carreler la cuisine de mamie » (l'aire : rectangle, forme en L, triangle, disque) ; voix de Céline ; pour chacun « Ce qu'il faut retenir » et un petit défi de 5 questions, 3 « Le piège du fermier » (même périmètre, pas la même aire ; le cercle optimise), 4 « Le bassin de Kairouan » (le volume, litres, m³, cylindre), 5 « Le minaret qui ne tombe pas » (angles droit, aigu, obtus, plat ; somme des angles du triangle = 180°) | aucune (page à regarder) |
 | Via Romana | `essil/via-romana.html` | latin, 10 étapes : vocabulaire, grammaire, civilisation | `essil-latin` |
 
 Sources : `OneDrive\Salma etude\Essil\` (`Essil Deutsch Express … v2 - cours.html` publiée, `Essil Via Romana Latin.html`, 2 photos WhatsApp non publiées).
