@@ -1,6 +1,6 @@
 # Vidéos éducatives « étape par étape »
 
-Analyse de la vidéo modèle (`OneDrive\Amine\grande section\videos temple\électricité.mp4`, envoyée par le papa le 09/11) et idées de vidéos de géométrie pour Essil. **Vidéo 1 produite le 09/11** (formule A), les autres attendent le feu vert du papa.
+Analyse de la vidéo modèle (`OneDrive\Amine\grande section\videos temple\électricité.mp4`, envoyée par le papa le 09/11) et idées de vidéos de géométrie pour Essil. **Épisodes 1 (le périmètre) et 2 (l'aire) produits le 09/11** (formule A, voix de Céline) et en ligne ; les épisodes 3 à 5 attendent le feu vert du papa.
 
 ## La vidéo modèle : « Étape par étape — L'élec »
 
@@ -86,3 +86,12 @@ Chaque vidéo compte environ 11 plans. Les prix ont été vérifiés le 09/11 :
   - des schémas exacts, dessinés par nous, en bas de l'écran ;
   - l'étiquette « PAS À PAS · le périmètre ».
 - Coût : ≈ 44 crédits pour la première version (images 24, voix Elodie refaites en wav) + ≈ 8 pour les essais de voix et la voix de Céline.
+
+## Épisode 2 : « Carreler la cuisine de mamie » (09/11)
+
+- Le fil : les carreaux de 1 m² (6 × 4 = 24 m², A = L × l) → le salon en L coupé en deux rectangles (8 × 3 + 3 × 4 = 36 m²) → le coin en biais : un triangle, la moitié d'un rectangle (4 × 3 ÷ 2 = 6 m²) → le tapis rond découpé en parts de pizza rangées tête-bêche, presque un rectangle π × r de long et r de large (A = π × r², r = 1 m → ≈ 3,14 m²).
+- 11 images `flux_3_image` (jobs 721790d5, a93ada3d, 9882c265, a691d392, c06f62a8, 8c7d0157, 93dff616, 1e95436e, 28ca8032, 16eb8d11, c3def506), 14 phrases de Céline, montage `docs/video-aire/`. 1 min 58. ≈ 27 crédits.
+- En ligne : `essil/videos/aire.mp4` ; la page `essil/videos-geometrie.html` a maintenant des **onglets d'épisodes** (le dernier épisode s'ouvre par défaut, puis celui regardé la dernière fois ; `?ep=perimetre` ou `?ep=aire`), chacun avec ses formules à retenir et son défi de 5 questions.
+- Sur le PC : `videos temple\aire-cuisine-de-mamie.mp4`.
+- Correction faite aux deux épisodes : les « : », « ! », « ? » isolés (espace français) restent collés au mot d'avant dans les sous-titres.
+- **Genjutsu** (crédits gratuits proposés par Higgsfield) : il redessine une vidéo existante dans un autre style en gardant ses mouvements, ou fait bouger un personnage d'après une vidéo modèle ; il n'anime pas des images fixes, donc pas utile pour ces épisodes.

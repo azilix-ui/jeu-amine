@@ -40,7 +40,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 09/11 | La Légende du Jasmin : 6 fonds (21:9) : Kairouan, Ksar Ouled Soltane, Ichkeul, Tamerza, aqueduc de Zaghouan (+ un Sidi Bou Saïd non utilisé : ce monde existait déjà) | `jeux/jasmin/monde14…18.webp` | 12 |
 | 09/11 | Vidéo 1 d'Essil « La clôture des chèvres » : 12 images 9:16 + voix off française (Elodie, refaite en wav car le mp3 coupait les fins) | PC : `videos temple\perimetre-cloture-des-chevres.mp4` | ≈ 44 |
 | 09/11 | Essais de 6 voix françaises (ElevenLabs, MiniMax) puis toute la voix off de la vidéo 1 avec **Céline** | `essil/videos/perimetre.mp4` | ≈ 8 |
-| | **Total** | | **≈ 409** |
+| 09/11 | Épisode 2 d'Essil « Carreler la cuisine de mamie » (l'aire) : 11 images 9:16 + 14 phrases de Céline | `essil/videos/aire.mp4` | ≈ 27 |
+| | **Total** | | **≈ 436** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 

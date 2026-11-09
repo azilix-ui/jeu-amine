@@ -4,19 +4,19 @@ D = os.path.dirname(os.path.abspath(__file__)); os.chdir(D)
 W, H, FPS = 1080, 1920, 30
 GAP = 0.5
 SEG = [  # audio, image, texte dit, titres [(mot déclencheur, texte, sous-texte)], schéma, sens du mouvement
-  ('final/01.mp3', 'img/01.png', "Tu as trois chèvres et un champ carré. Mais chaque nuit, elles s'échappent.", [], None, 'in'),
-  ('final/02.wav', 'img/02.png', "Alors tu poses une clôture tout autour. Mais il te faut combien de grillage ?", [('combien', 'COMBIEN DE GRILLAGE ?', '')], None, 'up'),
-  ('final/03.wav', 'img/03.png', "Tu mesures un côté : vingt-cinq mètres. Et un carré a quatre côtés égaux.", [('vingt-cinq', '25 MÈTRES', 'un côté')], 'diag/carre1.png', 'right'),
-  ('final/04.mp3', 'img/04.png', "Quatre fois vingt-cinq : cent mètres de clôture. Ça s'appelle le périmètre : la longueur du tour.", [('Quatre', '4 × 25 = 100 m', ''), ('périmètre', 'PÉRIMÈTRE', 'la longueur du tour')], 'diag/carre4.png', 'out'),
-  ('final/05.wav', 'img/05.png', "Mais ton voisin a un champ rectangulaire : trente mètres de long, quinze mètres de large.", [('trente', '30 m × 15 m', 'un rectangle')], 'diag/rect.png', 'down'),
-  ('final/06.wav', 'img/06.png', "Alors tu fais le tour : trente, plus quinze, plus trente, plus quinze. Deux fois la longueur plus la largeur : quatre-vingt-dix mètres.", [('Deux', 'P = 2 × (L + l)', ''), ('quatre-vingt-dix', '90 MÈTRES', 'P = 2 × (30 + 15)')], 'diag/rectt.png', 'in'),
-  ('final/07.mp3', 'img/07.png', "Mais le jardin de ta tante a une forme en L, avec six côtés.", [('six', '6 CÔTÉS', 'une forme en L')], 'diag/L.png', 'left'),
-  ('final/08.wav', 'img/08.png', "Alors, pas de formule magique : tu additionnes tous les côtés, un par un, sans en oublier.", [('additionnes', 'ON ADDITIONNE TOUT', '76 mètres')], 'diag/Lt.png', 'in'),
-  ('final/09.wav', 'img/09.png', "Mais le chameau, lui, vit dans un enclos tout rond. Impossible de mesurer un côté !", [('rond', 'UN CERCLE', 'pas de côté…')], None, 'out'),
-  ('final/10.wav', 'img/10.png', "Alors tu fais le tour avec une corde. Puis tu tends une autre corde à travers le cercle, en passant par le centre : c'est le diamètre.", [('diamètre', 'DIAMÈTRE', 'il passe par le centre')], 'diag/cercle-diam.png', 'in'),
-  ('final/11.wav', 'img/11.png', "Surprise : la corde du tour est toujours un peu plus de trois fois plus longue que le diamètre. Trois virgule quatorze fois.", [('virgule', '3,14 × d', 'toujours !')], 'diag/deroule.png', 'right'),
-  ('final/12.wav', 'img/09.png', "Ça s'appelle pi. Le périmètre d'un cercle, c'est pi fois le diamètre. Ici, dix mètres de diamètre : environ trente et un mètres de clôture.", [('pi.', 'π ≈ 3,14', 'le nombre pi'), ('fois', 'P = π × d', ''), ('environ', '≈ 31,4 MÈTRES', 'P = 3,14 × 10')], 'diag/cercle-formule.png', 'in'),
-  ('final/13.wav', 'img/12.png', "Félicitations : tu as inventé le périmètre !", [('Félicitations', 'BRAVO !', 'tu as inventé le PÉRIMÈTRE')], None, 'out'),
+  ('celine/v01.mp3', 'img/01.png', "Tu as trois chèvres et un champ carré. Mais chaque nuit, elles s'échappent.", [], None, 'in'),
+  ('celine/v02.mp3', 'img/02.png', "Alors tu poses une clôture tout autour. Mais il te faut combien de grillage ?", [('combien', 'COMBIEN DE GRILLAGE ?', '')], None, 'up'),
+  ('celine/v03.mp3', 'img/03.png', "Tu mesures un côté : vingt-cinq mètres. Et un carré a quatre côtés égaux.", [('vingt-cinq', '25 MÈTRES', 'un côté')], 'diag/carre1.png', 'right'),
+  ('celine/04.mp3', 'img/04.png', "Quatre fois vingt-cinq : cent mètres de clôture. Ça s'appelle le périmètre : la longueur du tour.", [('Quatre', '4 × 25 = 100 m', ''), ('périmètre', 'PÉRIMÈTRE', 'la longueur du tour')], 'diag/carre4.png', 'out'),
+  ('celine/05.mp3', 'img/05.png', "Mais ton voisin a un champ rectangulaire : trente mètres de long, quinze mètres de large.", [('trente', '30 m × 15 m', 'un rectangle')], 'diag/rect.png', 'down'),
+  ('celine/06.mp3', 'img/06.png', "Alors tu fais le tour : trente, plus quinze, plus trente, plus quinze. Deux fois la longueur plus la largeur : quatre-vingt-dix mètres.", [('Deux', 'P = 2 × (L + l)', ''), ('quatre-vingt-dix', '90 MÈTRES', 'P = 2 × (30 + 15)')], 'diag/rectt.png', 'in'),
+  ('celine/07.mp3', 'img/07.png', "Mais le jardin de ta tante a une forme en L, avec six côtés.", [('six', '6 CÔTÉS', 'une forme en L')], 'diag/L.png', 'left'),
+  ('celine/08.mp3', 'img/08.png', "Alors, pas de formule magique : tu additionnes tous les côtés, un par un, sans en oublier.", [('additionnes', 'ON ADDITIONNE TOUT', '76 mètres')], 'diag/Lt.png', 'in'),
+  ('celine/09.mp3', 'img/09.png', "Mais le chameau, lui, vit dans un enclos tout rond. Impossible de mesurer un côté !", [('rond', 'UN CERCLE', 'pas de côté…')], None, 'out'),
+  ('celine/10.mp3', 'img/10.png', "Alors tu fais le tour avec une corde. Puis tu tends une autre corde à travers le cercle, en passant par le centre : c'est le diamètre.", [('diamètre', 'DIAMÈTRE', 'il passe par le centre')], 'diag/cercle-diam.png', 'in'),
+  ('celine/11.mp3', 'img/11.png', "Surprise : la corde du tour est toujours un peu plus de trois fois plus longue que le diamètre. Trois virgule quatorze fois.", [('virgule', '3,14 × d', 'toujours !')], 'diag/deroule.png', 'right'),
+  ('celine/12.mp3', 'img/09.png', "Ça s'appelle pi. Le périmètre d'un cercle, c'est pi fois le diamètre. Ici, dix mètres de diamètre : environ trente et un mètres de clôture.", [('pi.', 'π ≈ 3,14', 'le nombre pi'), ('fois', 'P = π × d', ''), ('environ', '≈ 31,4 MÈTRES', 'P = 3,14 × 10')], 'diag/cercle-formule.png', 'in'),
+  ('celine/13.mp3', 'img/12.png', "Félicitations : tu as inventé le périmètre !", [('Félicitations', 'BRAVO !', 'tu as inventé le PÉRIMÈTRE')], None, 'out'),
 ]
 
 def probe(f): return float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f], capture_output=True, text=True).stdout)
@@ -28,6 +28,7 @@ def speech(f, d=0.12, n=-38):
         if s - cur > 0.06: sp.append([cur, s])
         cur = e
     if dur - cur > 0.06: sp.append([cur, dur])
+    while len(sp) > 1 and sp[-1][1] - sp[-1][0] < 0.45 and sp[-1][0] - sp[-2][1] > 0.3: sp.pop()   # petit bruit ou « Voilà » final : on l'enlève
     return sp, dur
 
 def ass_time(t): t = max(0, t); h = int(t // 3600); m = int(t % 3600 // 60); s = t % 60; return f'{h}:{m:02d}:{s:05.2f}'
@@ -45,7 +46,11 @@ for k, (af, img, text, titles, diag, mv) in enumerate(SEG):
     L = (a1 - a0) + GAP + (0.6 if k == 0 else 0) + (1.2 if k == len(SEG) - 1 else 0)
     lead = 0.6 if k == 0 else 0
     # mots : poids = longueur, placés sur le temps de parole (sans les blancs)
-    words = text.split(); wts = [len(w) + 1 for w in words]; tot = sum(wts); talk = sum(b - a for a, b in sp)
+    words = []
+    for w in text.split():
+        if words and not any(ch.isalnum() for ch in w): words[-1] += '\u00a0' + w   # « : », « ! », « ? » restent collés au mot d'avant
+        else: words.append(w)
+    wts = [len(w) + 1 for w in words]; tot = sum(wts); talk = sum(b - a for a, b in sp)
     def at(x):   # x = temps de parole cumulé -> temps réel dans le clip
         for a, b in sp:
             if x <= b - a: return a + x
@@ -113,5 +118,5 @@ for st, s, e, txt in events:
     pos = '{\\pos(540,1010)}' if st == 'Word' else ''
     lines.append(f'Dialogue: 1,{ass_time(s)},{ass_time(e)},{st},,0,0,0,,{pos}{txt}')
 open('tmp/subs.ass', 'w').write(hdr + '\n'.join(lines) + '\n')
-subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', 'tmp/images.mp4', '-i', 'tmp/voix.wav', '-vf', 'ass=tmp/subs.ass:fontsdir=/usr/share/fonts/truetype/google-fonts', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', '-shortest', 'perimetre-cloture-des-chevres.mp4'], check=True)
+subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', 'tmp/images.mp4', '-i', 'tmp/voix.wav', '-vf', 'ass=tmp/subs.ass:fontsdir=/usr/share/fonts/truetype/google-fonts', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', '-shortest', 'perimetre-cloture-des-chevres-celine.mp4'], check=True)
 print('durée', round(TOTAL, 1), 's')

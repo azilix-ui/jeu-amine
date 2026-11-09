@@ -16,17 +16,22 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&display=swap">
 <title>Pas à pas · Géométrie</title>
 <style>
-/* Une salle de projection pour Essil : la vidéo verticale au centre, ce qu'il faut retenir et un petit défi à côté. */
-:root{ --navy:#1f3c88; --navy2:#152a63; --red:#d7263d; --gold:#ffd23f; --paper:#f6f3ec; --ink:#1d2540; --soft:#5b6380; --card:#fff; --ok:#1f9a6b;
+/* Une salle de projection pour Essil : les épisodes en onglets, la vidéo verticale au centre, ce qu'il faut retenir et un petit défi à côté. */
+:root{ --navy:#1f3c88; --red:#d7263d; --gold:#ffd23f; --paper:#f6f3ec; --ink:#1d2540; --soft:#5b6380; --card:#fff; --ok:#1f9a6b;
   --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Nunito",system-ui,sans-serif; color-scheme:light; }
 *{box-sizing:border-box}
 body{margin:0;font-family:var(--body);color:var(--ink);background:var(--paper);-webkit-tap-highlight-color:transparent}
 .wrap{max-width:1040px;margin:0 auto;padding:16px 16px 48px}
 .back{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:999px;background:var(--card);color:var(--navy);font-weight:800;text-decoration:none;box-shadow:0 3px 0 #0001}
-header{background:var(--navy);color:#fff;border-radius:24px;padding:22px 24px;margin:14px 0 18px;border-bottom:8px solid var(--red)}
+header{background:var(--navy);color:#fff;border-radius:24px;padding:22px 24px;margin:14px 0 14px;border-bottom:8px solid var(--red)}
 header small{font-weight:800;letter-spacing:.12em;color:var(--gold);font-size:13px}
 h1{font-family:var(--display);font-size:clamp(30px,5vw,46px);margin:4px 0 6px;line-height:1.05}
 header p{margin:0;color:#d8e0f5;font-size:17px;max-width:60ch}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
+.tabs button{font:800 16px var(--body);min-height:48px;padding:8px 16px;border-radius:999px;border:2px solid #d9d4c6;background:#fff;color:var(--ink);cursor:pointer;display:flex;gap:8px;align-items:center}
+.tabs button[aria-selected="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tabs button:disabled{opacity:.55;cursor:default}
+.tabs em{font-style:normal;font-size:12px;background:#f4f1e8;color:var(--soft);border-radius:999px;padding:2px 8px}
 .grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:22px;align-items:start}
 .screen{background:#0d1530;border-radius:28px;padding:10px;box-shadow:0 10px 30px #1f3c8833}
 .screen video{display:block;width:100%;aspect-ratio:9/16;border-radius:20px;background:#000}
@@ -48,11 +53,7 @@ header p{margin:0;color:#d8e0f5;font-size:17px;max-width:60ch}
 .opts button.ko{background:#fdeaea;border-color:var(--red);color:var(--red)}
 .why{margin:8px 0 0;color:var(--soft);font-size:15px;min-height:1em}
 .score{font-weight:800;color:var(--navy)}
-.next{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.next li{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:#f4f1e8;color:var(--soft);font-weight:700}
-.next li span{font-size:22px}
-.next li em{margin-left:auto;font-style:normal;font-size:13px;background:#fff;border-radius:999px;padding:3px 10px}
-@media (max-width:760px){.grid{grid-template-columns:1fr}.screen{max-width:400px;margin:0 auto}}
+@media (max-width:760px){.grid{grid-template-columns:1fr}.screen{max-width:400px;margin:0 auto}.tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}.tabs button{flex:none;white-space:nowrap;font-size:15px}}
 </style>
 </head>
 <body>
@@ -60,66 +61,65 @@ header p{margin:0;color:#d8e0f5;font-size:17px;max-width:60ch}
   <a class="back" href="./">← Espace d'Essil</a>
   <header>
     <small>PAS À PAS · GÉOMÉTRIE</small>
-    <h1>La clôture des chèvres</h1>
-    <p>Le périmètre, réinventé étape par étape : un problème, une idée, un mot savant… et un nouveau problème.</p>
+    <h1 id="titre">La géométrie, étape par étape</h1>
+    <p id="sous">Tu réinventes la géométrie : un problème, une idée, un mot savant… et un nouveau problème.</p>
   </header>
-
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Épisodes"></nav>
   <div class="grid">
     <section class="screen">
-      <video controls playsinline preload="metadata" poster="videos/perimetre.jpg" src="videos/perimetre.mp4"></video>
-      <h2>Épisode 1 · Le périmètre</h2>
-      <p>1 min 50 · voix de Céline</p>
+      <video id="video" controls playsinline preload="metadata"></video>
+      <h2 id="ep"></h2>
+      <p id="info"></p>
     </section>
-
     <div>
-      <section class="card">
-        <h3>Ce qu'il faut retenir</h3>
-        <div class="rules">
-          <div class="rule"><b>Le périmètre</b><div class="f">la longueur du tour</div><small>On l'exprime en mètres (m), en centimètres (cm)…</small></div>
-          <div class="rule"><b>Carré de côté c</b><div class="f">P = 4 × c</div><small>côté 25 m → 4 × 25 = 100 m</small></div>
-          <div class="rule"><b>Rectangle L × l</b><div class="f">P = 2 × (L + l)</div><small>30 m et 15 m → 2 × 45 = 90 m</small></div>
-          <div class="rule"><b>Autre polygone</b><div class="f">on additionne tout</div><small>forme en L : 20 + 8 + 12 + 10 + 8 + 18 = 76 m</small></div>
-          <div class="rule"><b>Cercle de diamètre d</b><div class="f">P = π × d</div><small>π ≈ 3,14 · d = 10 m → environ 31,4 m</small></div>
-        </div>
-      </section>
-
-      <section class="card" id="defi">
-        <h3>Petit défi <span class="score" id="score"></span></h3>
-      </section>
-
-      <section class="card">
-        <h3>Les prochains épisodes</h3>
-        <ul class="next">
-          <li><span>🧱</span>Carreler la cuisine de mamie · l'aire<em>bientôt</em></li>
-          <li><span>🐐</span>Le piège du fermier · périmètre ou aire ?<em>bientôt</em></li>
-          <li><span>💧</span>Remplir le bassin de Kairouan · le volume<em>bientôt</em></li>
-          <li><span>🕌</span>Le minaret qui ne tombe pas · les angles<em>bientôt</em></li>
-        </ul>
-      </section>
+      <section class="card"><h3>Ce qu'il faut retenir</h3><div class="rules" id="rules"></div></section>
+      <section class="card" id="defi"><h3>Petit défi <span class="score" id="score"></span></h3><div id="qs"></div></section>
     </div>
   </div>
 </main>
 <script>
-const Q = [
-  { q:'Un carré a des côtés de 12 m. Son périmètre ?', a:'48 m', o:['24 m', '48 m', '144 m'], why:'4 × 12 = 48 m (144, c\'est l\'aire : 12 × 12).' },
-  { q:'Un rectangle mesure 8 m sur 5 m. Son périmètre ?', a:'26 m', o:['13 m', '40 m', '26 m'], why:'2 × (8 + 5) = 2 × 13 = 26 m.' },
-  { q:'Un triangle a des côtés de 3 m, 4 m et 5 m. Son périmètre ?', a:'12 m', o:['12 m', '60 m', '7 m'], why:'On additionne tous les côtés : 3 + 4 + 5 = 12 m.' },
-  { q:'Un cercle a un diamètre de 2 m. Son périmètre est environ…', a:'6,28 m', o:['4 m', '6,28 m', '3,14 m'], why:'π × d ≈ 3,14 × 2 = 6,28 m.' },
-  { q:'Le périmètre d\'un carré est 36 m. Son côté ?', a:'9 m', o:['9 m', '18 m', '6 m'], why:'Les 4 côtés sont égaux : 36 ÷ 4 = 9 m.' }
+const EP = [
+  { id:'perimetre', n:1, ic:'🐐', titre:'La clôture des chèvres', sous:'Le périmètre, réinventé étape par étape : du champ carré à l\'enclos rond du chameau.', duree:'1 min 50',
+    rules:[['Le périmètre', 'la longueur du tour', 'en mètres (m), en centimètres (cm)…'], ['Carré de côté c', 'P = 4 × c', 'côté 25 m → 4 × 25 = 100 m'], ['Rectangle L × l', 'P = 2 × (L + l)', '30 m et 15 m → 2 × 45 = 90 m'], ['Autre polygone', 'on additionne tout', 'forme en L : 20 + 8 + 12 + 10 + 8 + 18 = 76 m'], ['Cercle de diamètre d', 'P = π × d', 'π ≈ 3,14 · d = 10 m → environ 31,4 m']],
+    q:[{ q:'Un carré a des côtés de 12 m. Son périmètre ?', a:'48 m', o:['24 m', '48 m', '144 m'], why:'4 × 12 = 48 m (144, c\'est l\'aire : 12 × 12).' },
+       { q:'Un rectangle mesure 8 m sur 5 m. Son périmètre ?', a:'26 m', o:['13 m', '40 m', '26 m'], why:'2 × (8 + 5) = 2 × 13 = 26 m.' },
+       { q:'Un triangle a des côtés de 3 m, 4 m et 5 m. Son périmètre ?', a:'12 m', o:['12 m', '60 m', '7 m'], why:'On additionne tous les côtés : 3 + 4 + 5 = 12 m.' },
+       { q:'Un cercle a un diamètre de 2 m. Son périmètre est environ…', a:'6,28 m', o:['4 m', '6,28 m', '3,14 m'], why:'π × d ≈ 3,14 × 2 = 6,28 m.' },
+       { q:'Le périmètre d\'un carré est 36 m. Son côté ?', a:'9 m', o:['9 m', '18 m', '6 m'], why:'Les 4 côtés sont égaux : 36 ÷ 4 = 9 m.' }] },
+  { id:'aire', n:2, ic:'🧱', titre:'Carreler la cuisine de mamie', sous:'L\'aire, réinventée étape par étape : des carreaux, un salon en L, un coin en triangle et un tapis rond.', duree:'2 min',
+    rules:[['L\'aire', 'la place de la surface', 'en mètres carrés (m²) : 1 m² = un carré de 1 m de côté'], ['Rectangle L × l', 'A = L × l', '6 m et 4 m → 24 m²'], ['Forme en L', 'on coupe, on additionne', '8 × 3 + 3 × 4 = 24 + 12 = 36 m²'], ['Triangle', 'A = b × h ÷ 2', 'base 4 m, hauteur 3 m → 6 m²'], ['Disque de rayon r', 'A = π × r²', 'r = 1 m → environ 3,14 m²']],
+    q:[{ q:'Un rectangle mesure 7 m sur 3 m. Son aire ?', a:'21 m²', o:['20 m²', '21 m²', '10 m²'], why:'7 × 3 = 21 m² (20 m, c\'est son périmètre !).' },
+       { q:'Un carré de 5 m de côté. Son aire ?', a:'25 m²', o:['20 m²', '10 m²', '25 m²'], why:'5 × 5 = 25 m².' },
+       { q:'Un triangle : base 6 m, hauteur 4 m. Son aire ?', a:'12 m²', o:['24 m²', '12 m²', '10 m²'], why:'6 × 4 ÷ 2 = 12 m² : la moitié du rectangle.' },
+       { q:'Un disque de 2 m de rayon. Son aire est environ…', a:'12,56 m²', o:['6,28 m²', '12,56 m²', '4 m²'], why:'π × r × r ≈ 3,14 × 2 × 2 = 12,56 m².' },
+       { q:'Une pièce de 24 m² se couvre avec des carreaux de 1 m². Combien de carreaux ?', a:'24', o:['24', '12', '48'], why:'1 carreau = 1 m², donc 24 carreaux.' }] },
+  { n:3, ic:'🐑', titre:'Le piège du fermier', soon:true }, { n:4, ic:'💧', titre:'Le bassin de Kairouan', soon:true }, { n:5, ic:'🕌', titre:'Le minaret qui ne tombe pas', soon:true }
 ];
-const box = document.getElementById('defi'); let good = 0, done = 0;
-Q.forEach((x, i) => {
-  const d = document.createElement('div'); d.className = 'q';
-  d.innerHTML = `<p>${i + 1}. ${x.q}</p><div class="opts">${x.o.map(o => `<button type="button">${o}</button>`).join('')}</div><p class="why"></p>`;
-  box.appendChild(d);
-  let first = true;
-  d.querySelectorAll('button').forEach(b => b.onclick = () => {
-    if(d.dataset.ok) return;
-    if(b.textContent === x.a){ b.classList.add('ok'); d.dataset.ok = 1; d.querySelector('.why').textContent = '✔ ' + x.why; if(first) good++; done++; }
-    else { b.classList.add('ko'); first = false; d.querySelector('.why').textContent = 'Pas tout à fait… essaie encore !'; }
-    if(done === Q.length) document.getElementById('score').textContent = `· ${good} / ${Q.length} du premier coup${good === Q.length ? ' 🏆' : ''}`;
+const $ = id => document.getElementById(id);
+function show(e){
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.id === e.id ? 'true' : 'false'));
+  $('titre').textContent = e.titre; $('sous').textContent = e.sous;
+  const v = $('video'); v.pause(); v.poster = `videos/${e.id}.jpg`; v.src = `videos/${e.id}.mp4`;
+  $('ep').textContent = `Épisode ${e.n} · ${e.titre}`; $('info').textContent = `${e.duree} · voix de Céline`;
+  $('rules').innerHTML = e.rules.map(([b, f, s]) => `<div class="rule"><b>${b}</b><div class="f">${f}</div><small>${s}</small></div>`).join('');
+  const box = $('qs'); box.innerHTML = ''; $('score').textContent = ''; let good = 0, done = 0;
+  e.q.forEach((x, i) => {
+    const d = document.createElement('div'); d.className = 'q';
+    d.innerHTML = `<p>${i + 1}. ${x.q}</p><div class="opts">${x.o.map(o => `<button type="button">${o}</button>`).join('')}</div><p class="why"></p>`;
+    box.appendChild(d); let first = true;
+    d.querySelectorAll('button').forEach(b => b.onclick = () => {
+      if(d.dataset.ok) return;
+      if(b.textContent === x.a){ b.classList.add('ok'); d.dataset.ok = 1; d.querySelector('.why').textContent = '✔ ' + x.why; if(first) good++; done++; }
+      else { b.classList.add('ko'); first = false; d.querySelector('.why').textContent = 'Pas tout à fait… essaie encore !'; }
+      if(done === e.q.length) $('score').textContent = `· ${good} / ${e.q.length} du premier coup${good === e.q.length ? ' 🏆' : ''}`;
+    });
   });
-});
+  try{ localStorage.setItem('essil-pasapas', e.id); }catch(err){}
+}
+$('tabs').innerHTML = EP.map(e => `<button type="button" role="tab" data-id="${e.id || ''}" ${e.soon ? 'disabled' : ''}><span>${e.ic}</span>${e.n}. ${e.titre}${e.soon ? '<em>bientôt</em>' : ''}</button>`).join('');
+document.querySelectorAll('#tabs button:not([disabled])').forEach(b => b.onclick = () => show(EP.find(e => e.id === b.dataset.id)));
+let start = EP[EP.length - 1]; try{ const k = new URLSearchParams(location.search).get('ep') || localStorage.getItem('essil-pasapas'); start = EP.find(e => e.id === k) || EP.filter(e => !e.soon).pop(); }catch(err){ start = EP.filter(e => !e.soon).pop(); }
+show(start);
 </script>
 </body>
 </html>
