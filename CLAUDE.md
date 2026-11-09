@@ -10,6 +10,7 @@
 | `docs/serveur.md` | PHP + SQLite, API, clés de sauvegarde, synchronisation, Progression, limites |
 | `docs/higgsfield.md` | images et vidéos générées, crédits dépensés, identifiants à réutiliser, règles |
 | `docs/journal.md` | l'historique daté de tout ce qui a été fait |
+| `docs/videos.md` | les vidéos éducatives « étape par étape » : analyse du modèle, idées pour Essil, prix |
 | `PRODUCT.md` | contexte produit (audience, principes) pour le skill Impeccable |
 
 Ces fichiers `.md` sont bloqués en ligne par `.htaccess`. Une copie de cette fiche est dans le projet Claude « jeu et loisir Amine » (`claude/site-famille-missaoui.md`).
@@ -41,7 +42,7 @@ site.js                chargé par toutes les pages : appli installable (service
 manifest.webmanifest, sw.js, icons/   l'application à installer sur l'écran d'accueil (voir docs/serveur.md)
 progression.html       tableau de bord des parents (mot de passe parent), avec le journal des visites
 essil/  index.html, deutsch-express.html, via-romana.html
-salma/  index.html, english-garden.html, atelier-des-verbes.html, atelier-des-formes.html, marche-d-ollie.html (monnaie, 3D), jardin-des-nombres.html, le-grand-galop.html, cheval/ (images et vidéos)
+salma/  index.html, english-garden.html, weather-station.html (+ meteo/ : images et voix), atelier-des-verbes.html, atelier-des-formes.html, marche-d-ollie.html (monnaie, 3D), jardin-des-nombres.html, le-grand-galop.html, cheval/ (images et vidéos)
 amine/  index.html, ardoise-magique.html (+ lettres.js : modèles des 78 lettres), la-nuit-d-amine.html, la-nuit-d-amine-2.html, nahki-tounsi.html, serpentin.html, voix/api.php
 jeux/   serpent-legendes.html, ludo-legendes.html, grimpe-glace.html, legende-du-jasmin.html (+ jasmin/ : images), avatars/ (5 avatars, 15 cartes légendes, illustrations Ludo et Grimpe-Glace), cartes/ (illustrations des skins)
 lib/    three-0.170.0.module.min.js (Three.js, copié ici : aucune dépendance en ligne)
