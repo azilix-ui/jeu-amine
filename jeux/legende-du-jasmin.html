@@ -538,14 +538,15 @@ const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 const prefs = Object.assign({ sound:true, music:true, quiz:true, bs:1 }, store.get('jasmin-prefs', {}));
 const fresh = () => ({ unlocked:1, best:{}, gems:{}, tickets:0, answers:{ ok:0, ko:0 }, games:0, t:0 });
-let player = null, save = fresh(), avatarImg = null;
+let player = null, save = fresh(), avatarImg = null, avatarProf = null;   // avatarProf : la tête de profil, quand le héros marche
 const skey = () => 'jasmin:' + player;
 function persist(){ save.t = Date.now(); if(player) store.set(skey(), save); }
 const tracked = new Set();
 async function setPlayer(name){
   player = name; save = Object.assign(fresh(), store.get(skey(), {}) || {});
-  const k = name.toLowerCase(); avatarImg = null;
+  const k = name.toLowerCase(); avatarImg = null; avatarProf = null;
   const im = new Image(); im.onload = () => { if(player === name) avatarImg = im; }; im.src = PEOPLE[k] ? `avatars/${k}.webp` : `avatars/mascotte-${mascotOf(name).id}.webp`;
+  const ip = new Image(); ip.onload = () => { if(player === name) avatarProf = ip; }; ip.src = PEOPLE[k] ? `avatars/${k}-profil.webp` : `avatars/mascotte-${mascotOf(name).id}-profil.webp`;
   renderMenu();
   if(window.Famille){
     if(!tracked.has(name)){ tracked.add(name); Famille.track('jasmin', name, [skey()]); }
@@ -1156,6 +1157,9 @@ function drawBoss(b, t){
 // le cadrage du visage dans le rond de tête, avatar par avatar : [gauche, haut, taille] en fraction de l'image
 // (réglé par le papa avec la page « Les têtes du Jasmin »)
 const HEADCROP = { essil:[.15, .05, .68], salma:[.125, .069, .75], amine:[.103, .009, .83], anis:[.048, -.018, .91], imen:[.021, -.057, .97], nour:[.075, -.02, .88], yasmine:[.127, -.01, .76], fares:[.107, -.057, .827] };
+// tête de profil (regard vers la droite, retournée avec le corps) : son propre cadrage
+const HEADCROP_P = { essil:[.15, .02, .72], salma:[.15, .02, .72], amine:[.15, .02, .72], anis:[.15, .02, .72], imen:[.15, .02, .72], nour:[.15, .02, .72], yasmine:[.15, .02, .72], fares:[.15, .02, .72] };
+function headCropP(){ const k = (player || '').toLowerCase(); return HEADCROP_P[PEOPLE[k] ? k : mascotOf(player).id] || HEADCROP_P.nour; }
 function headCrop(){ const k = (player || '').toLowerCase(); return HEADCROP[PEOPLE[k] ? k : mascotOf(player).id] || HEADCROP.nour; }
 function drawHero(cx, h, t){
   const col = pcol(), air = !h.ground, run = Math.min(1, Math.abs(h.vx) / PH.maxRun), ph = h.phase || 0;
@@ -1175,10 +1179,11 @@ function drawHero(cx, h, t){
   const arm = air ? (h.vy < 0 ? -2.4 : -1.6) : Math.sin(ph + Math.PI) * .9 * run;
   [[-10, arm], [10, air ? -arm * .9 - 3 : -arm]].forEach(([ax, a]) => { cx.save(); cx.translate(ax, -34); cx.rotate(a); cx.fillStyle = col.c; rr(cx, -4, 0, 8, 16, 4); cx.fill(); cx.fillStyle = '#f2c9a0'; cx.beginPath(); cx.arc(0, 17, 3.5, 0, 7); cx.fill(); cx.restore(); });
   if(h.harissa){ cx.fillStyle = '#ff6a1a'; cx.beginPath(); cx.arc(12, -20, 4 + Math.sin(t * 12), 0, 7); cx.fill(); }
-  cx.save(); cx.translate(0, -52); if(h.face < 0) cx.scale(-1, 1);
+  const prof = !!avatarProf && !h.dead && run > .15;   // il marche : la tête de profil, tournée dans le sens de la marche
+  cx.save(); cx.translate(0, -52); if(h.face < 0 && !prof) cx.scale(-1, 1);
   const HR = col.mascot ? 17 : 15; if(col.mascot) cx.translate(0, -2);
   cx.beginPath(); cx.arc(0, 0, HR, 0, 7); cx.closePath(); cx.fillStyle = '#f2c9a0'; cx.fill();
-  if(avatarImg){ cx.save(); cx.clip(); const iw = avatarImg.naturalWidth, ih = avatarImg.naturalHeight, cr = headCrop(); cx.drawImage(avatarImg, iw * cr[0], ih * cr[1], iw * cr[2], iw * cr[2], -HR - 1, -HR - 1, HR * 2 + 2, HR * 2 + 2); cx.restore(); }
+  if(avatarImg){ cx.save(); cx.clip(); const hi = prof ? avatarProf : avatarImg, iw = hi.naturalWidth, ih = hi.naturalHeight, cr = prof ? headCropP() : headCrop(); cx.drawImage(hi, iw * cr[0], ih * cr[1], iw * cr[2], iw * cr[2], -HR - 1, -HR - 1, HR * 2 + 2, HR * 2 + 2); cx.restore(); }
   else { cx.fillStyle = '#23324a'; cx.font = '800 16px "Baloo 2", sans-serif'; cx.textAlign = 'center'; cx.fillText(col.e || '?', 0, 6); }
   cx.lineWidth = 1; cx.strokeStyle = 'rgba(20,30,60,.35)'; cx.beginPath(); cx.arc(0, 0, HR, 0, 7); cx.stroke();   // plus de cercle blanc (demandé le 10/11)
   if(h.chechia){ cx.fillStyle = '#c4122f'; cx.beginPath(); cx.moveTo(-12, -9); cx.lineTo(12, -9); cx.lineTo(10, -22); cx.lineTo(-10, -22); cx.closePath(); cx.fill(); cx.fillStyle = '#8a0a1f'; cx.fillRect(-10, -12, 20, 3);

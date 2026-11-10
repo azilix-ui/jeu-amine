@@ -49,7 +49,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 10/11 | La Planète des Nombres (Amine) : 8 aliens (2 refaits pour être bien originaux : le vert à un œil et le rose à grandes oreilles rappelaient des personnages connus), soucoupe, décor et accueil (`flux_3_image`, fond blanc détouré par remplissage depuis les bords) ; voix de Julian : les nombres de 0 à 59 en 6 prises de dix (« Zéro. Un. … Neuf. Voilà. », découpées aux silences avec `split2.py`), « Soixante » et 19 consignes à part | `amine/nombres/*.webp`, `amine/nombres/voix/*.mp3` | 28 |
 | 10/11 | Nouvel avatar de Salma : 3 propositions (`flux_3_image`, 1:1), références = 3 gros plans de son visage recadrés (sans le fond ni son frère) + l'avatar d'Essil pour le style ; choix 1 retenu (job 1960c07c…) | `jeux/avatars/salma.webp` | 6 |
 | 10/11 | Salma refaite sur 9 images (retouche `flux_3_image` : 1re référence = l'ancienne image, 2e = le nouvel avatar ; consigne « Edit the first image. Keep everything exactly the same… Only change the girl… ») + vidéo d'accueil du Jasmin refaite (`kling3_0`, 5 s, std, sans son, même image au début et à la fin) | `jeux/avatars/salma-{dragon,licorne,phenix}.webp`, `ludo-famille`, `grimpe-glace`, `jeux/cartes/{verbes,hydre}.webp`, `jeux/jasmin/titre.{webp,mp4}`, `salma/meteo/titre.webp` | 25,5 |
-| | **Total** (solde Higgsfield le 10/11 au soir : ≈ 718 crédits) | | **≈ 790** |
+| 10/11 | Têtes de profil pour le héros du Jasmin : 8 images (`flux_3_image`, 1:1, l'avatar en référence, « same character… clean side profile view… looking to the RIGHT ») | `jeux/avatars/*-profil.webp` | 16 |
+| | **Total** (solde Higgsfield le 10/11 au soir : ≈ 703 crédits) | | **≈ 806** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 
