@@ -1158,7 +1158,7 @@ function drawBoss(b, t){
 // (réglé par le papa avec la page « Les têtes du Jasmin »)
 const HEADCROP = { essil:[.15, .05, .68], salma:[.125, .069, .75], amine:[.103, .009, .83], anis:[.048, -.018, .91], imen:[.021, -.057, .97], nour:[.075, -.02, .88], yasmine:[.127, -.01, .76], fares:[.107, -.057, .827] };
 // tête de profil (regard vers la droite, retournée avec le corps) : son propre cadrage
-const HEADCROP_P = { essil:[.15, .02, .72], salma:[.15, .02, .72], amine:[.15, .02, .72], anis:[.15, .02, .72], imen:[.15, .02, .72], nour:[.15, .02, .72], yasmine:[.15, .02, .72], fares:[.15, .02, .72] };
+const HEADCROP_P = { essil:[.048, .011, .86], salma:[.066, .024, .88], amine:[.095, .02, .83], anis:[.08, .012, .86], imen:[-.029, -.02, .99], nour:[.075, .017, .84], yasmine:[.08, -.017, .83], fares:[.075, -.055, .87] };
 function headCropP(){ const k = (player || '').toLowerCase(); return HEADCROP_P[PEOPLE[k] ? k : mascotOf(player).id] || HEADCROP_P.nour; }
 function headCrop(){ const k = (player || '').toLowerCase(); return HEADCROP[PEOPLE[k] ? k : mascotOf(player).id] || HEADCROP.nour; }
 function drawHero(cx, h, t){
