@@ -571,7 +571,7 @@ async function init3D(){
   // ciel en dégradé
   const sky = mk(8, 256), sx = sky.getContext('2d'), sg = sx.createLinearGradient(0, 0, 0, 256); sg.addColorStop(0, '#3f8fe8'); sg.addColorStop(.55, '#aee0ff'); sg.addColorStop(1, '#fff0c9'); sx.fillStyle = sg; sx.fillRect(0, 0, 8, 256);
   const skyT = new THREE.CanvasTexture(sky); skyT.colorSpace = THREE.SRGBColorSpace; scene.background = skyT;
-  scene.add(new THREE.HemisphereLight('#ffffff', '#c9b48a', 1.25)); const sun = new THREE.DirectionalLight('#fff3d0', 1.6); sun.position.set(6, 12, 8); scene.add(sun);
+  scene.add(new THREE.HemisphereLight('#ffffff', '#efe6d2', 2.1)); const sun = new THREE.DirectionalLight('#fff3d0', 1.1); sun.position.set(6, 12, 8); scene.add(sun);
   const M = (c, o = {}) => new THREE.MeshLambertMaterial(Object.assign({ color:c }, o));
   const add = (geo, mat, x, y, z, parent = scene) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
   // la mer, la terrasse carrelée (zellige), le muret, des maisons blanches aux dômes bleus
