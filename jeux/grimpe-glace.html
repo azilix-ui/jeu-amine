@@ -580,6 +580,9 @@ function drawStar(x, y, r, c, t){ ctx.save(); ctx.translate(x, y); ctx.rotate(Ma
   for(let k = 0; k < 10; k++){ const a = -Math.PI / 2 + k * Math.PI / 5, rr2 = k % 2 ? r * .45 : r; ctx.lineTo(Math.cos(a) * rr2, Math.sin(a) * rr2); } ctx.fill(); ctx.restore(); }
 
 /* ---------- le héros : l'avatar de la famille en tenue d'hiver streetwear ---------- */
+// cadrage du visage dans le rond de tête, avatar par avatar (mêmes réglages que La Légende du Jasmin, page « Les têtes du Jasmin »)
+const HEADCROP = { essil:[.15, .05, .68], salma:[.125, .069, .75], amine:[.103, .009, .83], anis:[.048, -.018, .91], imen:[.021, -.057, .97], nour:[.075, -.02, .88], yasmine:[.127, -.01, .76], fares:[.107, -.057, .827] };
+function headCrop(){ const k = (player || '').toLowerCase(), mh = !PEOPLE[k] && window.Famille && Famille.head ? Famille.head(player) : null; return HEADCROP[PEOPLE[k] ? k : mh ? mh.id : 'nour'] || HEADCROP.nour; }
 function drawHero(cx, h, x, y, t, opts = {}){
   const col = opts.col || pcol(), tenue = opts.tenue || save.tenue || 'classique', img = opts.img !== undefined ? opts.img : avatarImg;
   const air = !h.ground, run = Math.min(1, Math.abs(h.vx) / MAXV), ph = h.phase || 0;
@@ -609,9 +612,9 @@ function drawHero(cx, h, x, y, t, opts = {}){
   cx.save(); cx.translate(0, -52);
   if(h.face < 0) cx.scale(-1, 1);       // le visage n'est pas inversé
   cx.beginPath(); cx.arc(0, 0, 15, 0, 7); cx.closePath(); cx.fillStyle = '#f2c9a0'; cx.fill();
-  if(img){ cx.save(); cx.clip(); const iw = img.naturalWidth, ih = img.naturalHeight; cx.drawImage(img, iw * .22, ih * .1, iw * .56, ih * .56, -16, -16, 32, 32); cx.restore(); }
+  if(img){ cx.save(); cx.clip(); const iw = img.naturalWidth, ih = img.naturalHeight, cr = headCrop(); cx.drawImage(img, iw * cr[0], ih * cr[1], iw * cr[2], iw * cr[2], -16, -16, 32, 32); cx.restore(); }
   else { cx.fillStyle = '#23324a'; cx.font = '800 16px "Baloo 2", sans-serif'; cx.textAlign = 'center'; cx.fillText(col.e || '?', 0, 6); }
-  cx.lineWidth = 2.5; cx.strokeStyle = '#ffffff'; cx.beginPath(); cx.arc(0, 0, 15, 0, 7); cx.stroke();
+  cx.lineWidth = 1; cx.strokeStyle = 'rgba(20,30,60,.35)'; cx.beginPath(); cx.arc(0, 0, 15, 0, 7); cx.stroke();   // plus de cercle blanc (demandé le 10/11)
   // bonnet (ou couronne)
   if(tenue === 'couronne'){ cx.fillStyle = '#bfefff'; cx.strokeStyle = '#ffffff'; cx.lineWidth = 1.5; cx.beginPath(); cx.moveTo(-12, -9); for(let k = 0; k <= 4; k++){ cx.lineTo(-12 + k * 6, -20 - (k % 2 ? 0 : 6)); cx.lineTo(-9 + k * 6, -12); } cx.lineTo(12, -9); cx.closePath(); cx.fill(); cx.stroke(); cx.fillStyle = '#ff6fb5'; cx.beginPath(); cx.arc(0, -15, 2.5, 0, 7); cx.fill(); }
   else { cx.fillStyle = col.c2 || '#ff6fb5'; cx.beginPath(); cx.arc(0, -8, 15.5, Math.PI * 1.05, Math.PI * 1.95); cx.closePath(); cx.fill(); cx.fillStyle = '#ffffff'; cx.fillRect(-15, -10, 30, 4); cx.beginPath(); cx.arc(Math.sin(t * 8) * (air ? 3 : 1), -24, 4.5, 0, 7); cx.fill(); }
