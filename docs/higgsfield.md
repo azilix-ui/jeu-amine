@@ -50,7 +50,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 10/11 | Nouvel avatar de Salma : 3 propositions (`flux_3_image`, 1:1), références = 3 gros plans de son visage recadrés (sans le fond ni son frère) + l'avatar d'Essil pour le style ; choix 1 retenu (job 1960c07c…) | `jeux/avatars/salma.webp` | 6 |
 | 10/11 | Salma refaite sur 9 images (retouche `flux_3_image` : 1re référence = l'ancienne image, 2e = le nouvel avatar ; consigne « Edit the first image. Keep everything exactly the same… Only change the girl… ») + vidéo d'accueil du Jasmin refaite (`kling3_0`, 5 s, std, sans son, même image au début et à la fin) | `jeux/avatars/salma-{dragon,licorne,phenix}.webp`, `ludo-famille`, `grimpe-glace`, `jeux/cartes/{verbes,hydre}.webp`, `jeux/jasmin/titre.{webp,mp4}`, `salma/meteo/titre.webp` | 25,5 |
 | 10/11 | Têtes de profil pour le héros du Jasmin : 8 images (`flux_3_image`, 1:1, l'avatar en référence, « same character… clean side profile view… looking to the RIGHT ») | `jeux/avatars/*-profil.webp` | 16 |
-| | **Total** (solde Higgsfield le 10/11 au soir : ≈ 703 crédits) | | **≈ 806** |
+| 11/11 | Têtes « soupir » du héros du Jasmin : 8 images (`flux_3_image`, 1:1, l'avatar en référence, « Exactly the same image… Only the expression changes: a funny bored sigh… ») — même cadrage que l'avatar, donc même réglage de tête | `jeux/avatars/*-soupir.webp` | 16 |
+| | **Total** (solde Higgsfield le 11/11 : ≈ 687 crédits) | | **≈ 822** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 

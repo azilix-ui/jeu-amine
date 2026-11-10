@@ -538,7 +538,7 @@ const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 const prefs = Object.assign({ sound:true, music:true, quiz:true, bs:1 }, store.get('jasmin-prefs', {}));
 const fresh = () => ({ unlocked:1, best:{}, gems:{}, tickets:0, answers:{ ok:0, ko:0 }, games:0, t:0 });
-let player = null, save = fresh(), avatarImg = null, avatarProf = null;   // avatarProf : la tête de profil, quand le héros marche
+let player = null, save = fresh(), avatarImg = null, avatarProf = null, avatarSigh = null;   // avatarSigh : la tête qui soupire   // avatarProf : la tête de profil, quand le héros marche
 const skey = () => 'jasmin:' + player;
 function persist(){ save.t = Date.now(); if(player) store.set(skey(), save); }
 const tracked = new Set();
@@ -546,6 +546,7 @@ async function setPlayer(name){
   player = name; save = Object.assign(fresh(), store.get(skey(), {}) || {});
   const k = name.toLowerCase(); avatarImg = null; avatarProf = null;
   const im = new Image(); im.onload = () => { if(player === name) avatarImg = im; }; im.src = PEOPLE[k] ? `avatars/${k}.webp` : `avatars/mascotte-${mascotOf(name).id}.webp`;
+  avatarSigh = null; const is = new Image(); is.onload = () => { if(player === name) avatarSigh = is; }; is.src = PEOPLE[k] ? `avatars/${k}-soupir.webp` : `avatars/mascotte-${mascotOf(name).id}-soupir.webp`;
   const ip = new Image(); ip.onload = () => { if(player === name) avatarProf = ip; }; ip.src = PEOPLE[k] ? `avatars/${k}-profil.webp` : `avatars/mascotte-${mascotOf(name).id}-profil.webp`;
   renderMenu();
   if(window.Famille){
@@ -565,6 +566,7 @@ function noise(d, { v = .2, at = 0, hp = 800, lp = 0, dest = null } = {}){ if(!A
   const t = AC.currentTime + at, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; f.type = lp ? 'lowpass' : 'highpass'; f.frequency.value = lp || hp; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0008, t + d); s.connect(f).connect(g).connect(dest || master); s.start(t); s.stop(t + d + .02); }
 const S = (fn) => (...a) => { if(prefs.sound && AC) try{ fn(...a); }catch(e){} };   // un souci de son (tablette) ne doit jamais bloquer un bouton
 const sfx = {
+  sigh:S(() => { noise(.45, { v:.06, lp:900 }); noise(.45, { v:.045, lp:600, at:.38 }); }),
   jump:S(() => tone(330, .16, { type:'square', v:.06, slide:2.2 })), land:S(() => noise(.05, { v:.08, lp:700 })),
   coin:S(() => { tone(1318, .06, { type:'square', v:.05 }); tone(1975, .12, { type:'square', v:.05, at:.05 }); }),
   gem:S(() => [784, 988, 1175, 1568].forEach((f, i) => tone(f, .2, { v:.08, at:i * .07 }))),
@@ -1176,16 +1178,26 @@ function drawHero(cx, h, t){
   cx.fillStyle = col.c; rr(cx, -11, -38, 22, 26, 8); cx.fill();
   cx.fillStyle = '#ffc93c'; cx.fillRect(-1.5, -36, 3, 18); cx.fillRect(-11, -15, 22, 3);
   if(col.mascot){ cx.fillStyle = '#f4eee0'; cx.fillRect(-5, -38, 10, 20); cx.fillStyle = col.c2; cx.fillRect(-11, -18, 22, 5); }
+  // le regard : de face au départ ; de profil dès qu'il bouge, et il le reste à l'arrêt ;
+  // après 10 s sans bouger, il se remet de face, hausse les épaules et soupire
+  if(!h.dead && (run > .15 || (air && Math.abs(h.vx) > 20))){ h.lookProf = true; h.still = t; h.sigh = 0; }
+  else if(h.still === undefined) h.still = t;
+  if(h.lookProf && !h.dead && t - h.still > 10){ h.lookProf = false; h.sigh = t; sfx.sigh(); }
+  const sg = h.sigh && t - h.sigh < 2.2 ? (t - h.sigh) / 2.2 : -1, bump = sg >= 0 ? Math.sin(Math.min(1, sg * 1.25) * Math.PI) : 0;
   const arm = air ? (h.vy < 0 ? -2.4 : -1.6) : Math.sin(ph + Math.PI) * .9 * run;
-  [[-10, arm], [10, air ? -arm * .9 - 3 : -arm]].forEach(([ax, a]) => { cx.save(); cx.translate(ax, -34); cx.rotate(a); cx.fillStyle = col.c; rr(cx, -4, 0, 8, 16, 4); cx.fill(); cx.fillStyle = '#f2c9a0'; cx.beginPath(); cx.arc(0, 17, 3.5, 0, 7); cx.fill(); cx.restore(); });
+  [[-10, arm + bump * 1.25], [10, (air ? -arm * .9 - 3 : -arm) - bump * 1.25]].forEach(([ax, a]) => { cx.save(); cx.translate(ax, -34 - bump * 3); cx.rotate(a); cx.fillStyle = col.c; rr(cx, -4, 0, 8, 16, 4); cx.fill(); cx.fillStyle = '#f2c9a0'; cx.beginPath(); cx.arc(0, 17, 3.5, 0, 7); cx.fill(); cx.restore(); });
   if(h.harissa){ cx.fillStyle = '#ff6a1a'; cx.beginPath(); cx.arc(12, -20, 4 + Math.sin(t * 12), 0, 7); cx.fill(); }
-  const prof = !!avatarProf && !h.dead && run > .15;   // il marche : la tête de profil, tournée dans le sens de la marche
-  cx.save(); cx.translate(0, -52); if(h.face < 0 && !prof) cx.scale(-1, 1);
+  const prof = !!avatarProf && !h.dead && h.lookProf;   // de profil : la tête tournée dans le sens de la dernière marche
+  cx.save(); cx.translate(0, -52 - bump * 2.5); if(h.face < 0 && !prof) cx.scale(-1, 1); if(bump) cx.rotate(Math.sin(sg * 9) * .06 * bump);
   const HR = col.mascot ? 17 : 15; if(col.mascot) cx.translate(0, -2);
   cx.beginPath(); cx.arc(0, 0, HR, 0, 7); cx.closePath(); cx.fillStyle = '#f2c9a0'; cx.fill();
-  if(avatarImg){ cx.save(); cx.clip(); const hi = prof ? avatarProf : avatarImg, iw = hi.naturalWidth, ih = hi.naturalHeight, cr = prof ? headCropP() : headCrop(); cx.drawImage(hi, iw * cr[0], ih * cr[1], iw * cr[2], iw * cr[2], -HR - 1, -HR - 1, HR * 2 + 2, HR * 2 + 2); cx.restore(); }
+  if(avatarImg){ cx.save(); cx.clip(); const hi = prof ? avatarProf : (sg > .12 && sg < .85 && avatarSigh) ? avatarSigh : avatarImg, iw = hi.naturalWidth, ih = hi.naturalHeight, cr = prof ? headCropP() : headCrop(); cx.drawImage(hi, iw * cr[0], ih * cr[1], iw * cr[2], iw * cr[2], -HR - 1, -HR - 1, HR * 2 + 2, HR * 2 + 2); cx.restore(); }
   else { cx.fillStyle = '#23324a'; cx.font = '800 16px "Baloo 2", sans-serif'; cx.textAlign = 'center'; cx.fillText(col.e || '?', 0, 6); }
   cx.lineWidth = 1; cx.strokeStyle = 'rgba(20,30,60,.35)'; cx.beginPath(); cx.arc(0, 0, HR, 0, 7); cx.stroke();   // plus de cercle blanc (demandé le 10/11)
+  // le souffle du soupir : trois petits nuages qui sortent de la bouche, et « pff… »
+  if(sg > .3 && sg < 1){ const k = (sg - .3) / .7; cx.save(); cx.globalAlpha = Math.max(0, 1 - k) * .9; cx.fillStyle = '#ffffff';
+    [[0, 4.5], [.18, 3.6], [.36, 2.8]].forEach(([d, r]) => { const q = Math.max(0, k - d); if(q > 0){ cx.beginPath(); cx.arc(HR * .45 + q * 26, HR * .45 - q * 12, r + q * 2, 0, 7); cx.fill(); } });
+    cx.font = '800 9px "Baloo 2", sans-serif'; cx.fillStyle = '#23324a'; cx.textAlign = 'left'; cx.fillText('pff…', HR + 4 + k * 10, -HR * .3 - k * 8); cx.restore(); }
   if(h.chechia){ cx.fillStyle = '#c4122f'; cx.beginPath(); cx.moveTo(-12, -9); cx.lineTo(12, -9); cx.lineTo(10, -22); cx.lineTo(-10, -22); cx.closePath(); cx.fill(); cx.fillStyle = '#8a0a1f'; cx.fillRect(-10, -12, 20, 3);
     cx.strokeStyle = '#111'; cx.lineWidth = 2; cx.beginPath(); cx.moveTo(0, -22); cx.quadraticCurveTo(-8, -18 + Math.sin(t * 8) * 2, -12, -10); cx.stroke(); }
   cx.restore(); cx.restore();
