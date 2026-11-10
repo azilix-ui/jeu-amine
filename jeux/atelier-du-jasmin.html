@@ -110,6 +110,26 @@ body:not(.m3d) .scr{background:linear-gradient(180deg,#8fd0ff 0%,#d8f0ff 45%,#ff
 #card .acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px;width:100%}
 #card .acts .pill{width:100%;font-size:17px}
 #printImg{display:none}
+/* puzzle : le dessin découpé en pièces */
+#pzAsk{position:fixed;inset:0;z-index:63;display:none;place-items:center;background:rgba(15,40,95,.6);padding:12px;overflow:auto}
+#pzAsk.on{display:grid}
+#pzAsk .box h2{font-size:34px;color:var(--blue-deep)}
+.lv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%}
+.lv button{border-radius:24px;padding:12px 6px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:2px;min-height:130px;justify-content:center}
+.lv button:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(20,40,90,.28)}
+.lv span{font-size:44px;line-height:1}.lv b{font-family:"Baloo 2";font-size:24px;color:var(--blue-deep);line-height:1.05}.lv small{font-size:15px;color:var(--mist)}
+.lv .l1{background:#e9fbe6}.lv .l2{background:#fff3c4}.lv .l3{background:#ffe9f3}
+.lv i{font-style:normal;font-size:14px;color:#35b44a;min-height:1.2em}
+#pzSrc{justify-content:center}
+#puz{position:fixed;inset:0;z-index:58;display:none;flex-direction:column;background:linear-gradient(180deg,#8fd0ff 0%,#d8f0ff 45%,#fff4d6 100%);padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));touch-action:none}
+#puz.on{display:flex}
+#pzCount{font-family:"Baloo 2";font-weight:800;font-size:22px;color:var(--blue-deep);background:var(--lime);border-radius:20px;padding:6px 14px;box-shadow:var(--shadow);flex:none}
+#pzArea{position:relative;flex:1;min-height:0;overflow:hidden}
+#pzBoard{position:absolute;border-radius:6px;box-shadow:0 8px 24px rgba(20,40,90,.25);background:#fff}
+.pc{position:absolute;left:0;top:0;touch-action:none;cursor:grab;filter:drop-shadow(0 4px 4px rgba(20,40,90,.35));will-change:transform}
+.pc.lift{filter:drop-shadow(0 12px 10px rgba(20,40,90,.4))}
+.pc.ok{filter:none;cursor:default;pointer-events:none}
+@media (max-width:560px){ #puz .top h2{display:none} #puz .pill{height:46px;min-width:46px;padding:0 10px} .lv span{font-size:34px} .lv b{font-size:20px} .lv button{min-height:110px} }
 @media print{
   body > *{display:none !important}
   html,body{background:#fff !important;height:auto !important;overflow:visible !important}
@@ -131,7 +151,7 @@ body.m3d #cv{display:none}
   .pats{border-top:0;border-left:2px dashed #cfd8ee;padding:0 0 0 8px}
   .meter{display:none}
 }
-@media (max-width:560px){ #paint .top h2{display:none} #paint .top{justify-content:space-between} #paint .pill{height:46px;min-width:46px;padding:0 10px} .zb{width:44px;height:44px;font-size:19px} }
+@media (max-width:560px){ #paint .top h2{display:none} #paint .top{justify-content:space-between;gap:5px} #paint .pill{height:44px;min-width:40px;padding:0 8px;font-size:18px} .zb{width:44px;height:44px;font-size:19px} }
 @media (orientation:landscape) and (max-height:520px){ .zb{width:42px;height:42px;font-size:18px} .zt{gap:6px} .pal,.pats{grid-template-columns:repeat(3,38px)} .sw{width:38px;height:38px} .tools{width:146px} .top{min-height:48px} .pill{height:44px;min-width:44px} }
 /* serpent */
 #snake .work{grid-template-columns:minmax(0,1fr) minmax(250px,340px)}
@@ -155,7 +175,7 @@ body.m3d #scv{display:none}
 body.m3d #shcv{display:none}
 #show .top{position:absolute;left:12px;right:12px;top:max(10px,env(safe-area-inset-top));z-index:2}
 /* fête */
-#party{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+#party{position:fixed;inset:0;pointer-events:none;z-index:59;overflow:hidden}
 #party i{position:absolute;top:-40px;font-style:normal;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(115vh) rotate(540deg)}}
 #bravo{position:fixed;inset:0;z-index:60;display:none;place-items:center;background:rgba(15,40,95,.55);padding:16px}
@@ -210,7 +230,7 @@ body.m3d #shcv{display:none}
 
 <section id="paint" class="scr">
   <div class="top"><button class="pill" id="pBack" aria-label="Retour">←</button><h2 id="pTitle"></h2>
-    <button class="pill" id="undo" aria-label="Annuler">↩️</button><button class="pill" id="wipe" aria-label="Tout effacer">🧽</button><button class="pill" data-snd aria-label="Musique">🎵</button><button class="pill sun" id="share" aria-label="Imprimer ou envoyer mon dessin">🖨️</button><button class="pill go" id="done">✔ Fini</button></div>
+    <button class="pill" id="undo" aria-label="Annuler">↩️</button><button class="pill" id="wipe" aria-label="Tout effacer">🧽</button><button class="pill" data-snd aria-label="Musique">🎵</button><button class="pill sun" id="pzBtn" aria-label="Faire un puzzle avec ce dessin">🧩</button><button class="pill sun" id="share" aria-label="Imprimer ou envoyer mon dessin">🖨️</button><button class="pill go" id="done">✔ Fini</button></div>
   <div class="work">
     <div id="stage"><canvas id="cv" width="1024" height="768"></canvas><div id="load">Je prépare ton dessin… 🎨</div>
       <div class="zt" id="zt"><button class="zb" id="zIn" aria-label="Agrandir le dessin">➕</button><button class="zb" id="zOut" aria-label="Réduire le dessin">➖</button><button class="zb" id="zFit" aria-label="Voir tout le dessin">🔲</button><button class="zb" id="mBtn" aria-label="Voir le modèle en couleur">🌈</button></div>
@@ -251,6 +271,21 @@ body.m3d #shcv{display:none}
   <div class="row"><button class="chip" id="cardPos"></button><button class="chip" id="cardSign"></button></div>
   <div class="acts"><button class="pill go" id="cPrint">🖨️ Imprimer</button><button class="pill sun" id="cSend">📲 Envoyer</button><button class="pill" id="cSave">💾 Enregistrer</button><button class="pill" id="cClose">✖ Fermer</button></div>
 </div></div>
+<div id="pzAsk"><div class="box">
+  <h2>🧩 Un puzzle !</h2>
+  <div class="row" id="pzSrc"></div>
+  <div class="lv" id="pzLv">
+    <button class="l1" data-n="8"><span aria-hidden="true">🙂</span><b>Facile</b><small>8 pièces</small><i></i></button>
+    <button class="l2" data-n="16"><span aria-hidden="true">😃</span><b>Moyen</b><small>16 pièces</small><i></i></button>
+    <button class="l3" data-n="32"><span aria-hidden="true">🤩</span><b>Difficile</b><small>32 pièces</small><i></i></button>
+  </div>
+  <button class="pill" id="pzNo">✖ Fermer</button>
+</div></div>
+<div id="puz">
+  <div class="top"><button class="pill" id="pzBack" aria-label="Retour au coloriage">←</button><h2 id="pzTitle">Le puzzle</h2><div id="pzCount"></div>
+    <button class="pill" id="pzGhost" aria-label="Montrer l'image en transparence">👻</button><button class="pill" id="pzMix" aria-label="Mélanger les pièces">🔀</button><button class="pill" data-snd aria-label="Musique">🎵</button></div>
+  <div id="pzArea"><canvas id="pzBoard"></canvas></div>
+</div>
 <img id="printImg" alt="">
 <div id="toast"></div>
 
@@ -355,7 +390,7 @@ function tint(pat, c, x, y){
   }
 }
 async function loadArt(id){
-  const img = await loadImg(`atelier/${id}.webp`), W = img.naturalWidth, H = img.naturalHeight, N = W * H, isChar = id[0] === 'c';
+  const img = await loadImg(`atelier/${id}.webp?v=2`), W = img.naturalWidth, H = img.naturalHeight, N = W * H, isChar = id[0] === 'c';
   const lc = mk(W, H), lx = lc.getContext('2d', { willReadFrequently:true }); lx.drawImage(img, 0, 0);
   const src = lx.getImageData(0, 0, W, H), sd = src.data;
   const wall = new Uint8Array(N); for(let i = 0; i < N; i++) wall[i] = sd[i * 4] < 150 ? 1 : 0;
@@ -550,6 +585,125 @@ $('cSave').onclick = async () => { sfx.tap(); drawCard(); download(await cardBlo
 $('cSend').onclick = async () => { sfx.tap(); drawCard(); const blob = await cardBlob(), file = new File([blob], cardName(), { type:'image/jpeg' });
   if(navigator.canShare && navigator.canShare({ files:[file] })){ try{ await navigator.share({ files:[file], title:'Mon dessin' }); }catch(e){ if(e && e.name !== 'AbortError') toast('L\'envoi n\'a pas marché. Essaie « Enregistrer ».'); } }
   else { download(blob); toast('Ton dessin est enregistré : ouvre WhatsApp ou tes messages et joins l\'image 📎'); } };
+/* ----- le puzzle : le dessin (colorié, ou le modèle en couleur) découpé en 8, 16 ou 32 pièces à remettre en place ----- */
+const PZ = { n:16, src:'mine', img:null, W:0, H:0, cols:4, rows:4, cw:0, ch:0, pad:0, pcs:[], placed:0, ghost:true, s:1, bx:0, by:0, z:10, url:'' };
+const pzArea = $('pzArea'), pzBoard = $('pzBoard'); window.__pz = PZ;   // pour les tests
+function pzGrid(n, tall){ const g = n === 8 ? [4, 2] : n === 16 ? [4, 4] : [8, 4]; return tall ? [g[1], g[0]] : g; }
+function pzAskOpen(){
+  if(!art) return; sfx.tap();
+  const mine = art.fills.size > 0; if(!mine) PZ.src = 'model'; else if(PZ.src !== 'model') PZ.src = 'mine';
+  $('pzSrc').innerHTML = mine ? `<button class="chip ${PZ.src === 'mine' ? 'on' : ''}" data-s="mine">🖍️ Mon coloriage</button><button class="chip ${PZ.src === 'model' ? 'on' : ''}" data-s="model">🌈 Le modèle en couleur</button>` : '<small style="color:var(--mist);font-size:16px">Avec le modèle en couleur 🌈 (colorie ton dessin pour en faire ton puzzle !)</small>';
+  const best = (S.puz && S.puz[art.id]) || 0;
+  document.querySelectorAll('#pzLv button').forEach(b => { b.querySelector('i').textContent = best >= +b.dataset.n ? '⭐ réussi' : ''; });
+  $('pzAsk').classList.add('on'); say('puzzle');
+}
+$('pzBtn').onclick = pzAskOpen;
+$('pzNo').onclick = () => { sfx.tap(); $('pzAsk').classList.remove('on'); };
+$('pzAsk').onclick = e => { if(e.target.id === 'pzAsk'){ sfx.tap(); $('pzAsk').classList.remove('on'); } };
+$('pzSrc').onclick = e => { const b = e.target.closest('[data-s]'); if(!b) return; sfx.tap(); PZ.src = b.dataset.s; $('pzSrc').querySelectorAll('[data-s]').forEach(c => c.classList.toggle('on', c === b)); };
+$('pzLv').onclick = e => { const b = e.target.closest('[data-n]'); if(!b) return; sfx.tap(); $('pzAsk').classList.remove('on'); pzStart(+b.dataset.n); };
+// l'image du puzzle, à la taille du dessin au trait
+async function pzPicture(){
+  const c = mk(art.W, art.H), x = c.getContext('2d'); x.fillStyle = '#fffdf6'; x.fillRect(0, 0, art.W, art.H);
+  if(PZ.src === 'mine' && art.fills.size){ x.fillStyle = '#ffffff'; x.fillRect(0, 0, art.W, art.H); x.drawImage(art.out, 0, 0); return c; }
+  try{ const m = await loadImg(`atelier/m-${art.id}.webp?v=1`); x.imageSmoothingQuality = 'high'; x.drawImage(m, 0, 0, art.W, art.H); }catch(e){ x.drawImage(art.out, 0, 0); }
+  return c;
+}
+// le contour d'une pièce : 4 côtés, chacun plat (bord) ou avec un tenon qui sort (+1) ou rentre (-1)
+function pzPath(g, p){
+  const { cw, ch } = PZ, m = Math.min(cw, ch), e = p.e;
+  const side = (x0, y0, dx, dy, L, s) => {
+    const nx = dy, ny = -dx, P = (t, o) => [x0 + dx * t * L + nx * o * m * s, y0 + dy * t * L + ny * o * m * s];
+    if(!s){ g.lineTo(...P(1, 0)); return; }
+    const a = .5 - .13 * m / L, b = .5 + .13 * m / L, w = m / L;
+    g.lineTo(...P(a, 0));
+    g.bezierCurveTo(...P(a + .05 * w, 0), ...P(a + .05 * w, .08), ...P(.5 - .1 * w, .13));
+    g.bezierCurveTo(...P(.5 - .2 * w, .22), ...P(.5 - .07 * w, .27), ...P(.5, .27));
+    g.bezierCurveTo(...P(.5 + .07 * w, .27), ...P(.5 + .2 * w, .22), ...P(.5 + .1 * w, .13));
+    g.bezierCurveTo(...P(b - .05 * w, .08), ...P(b - .05 * w, 0), ...P(b, 0));
+    g.lineTo(...P(1, 0));
+  };
+  const x = p.c * cw, y = p.r * ch; g.beginPath(); g.moveTo(x, y);
+  side(x, y, 1, 0, cw, e[0]); side(x + cw, y, 0, 1, ch, e[1]); side(x + cw, y + ch, -1, 0, cw, e[2]); side(x, y + ch, 0, -1, ch, e[3]); g.closePath();
+}
+async function pzStart(n){
+  PZ.n = n; $('puz').classList.add('on'); $('pzCount').textContent = '…';
+  const pic = await pzPicture(); PZ.img = pic; PZ.W = art.W; PZ.H = art.H; PZ.url = '';
+  const [cols, rows] = pzGrid(n, art.H > art.W); Object.assign(PZ, { cols, rows, cw:PZ.W / cols, ch:PZ.H / rows }); PZ.pad = Math.min(PZ.cw, PZ.ch) * .3;
+  const rnd = () => Math.random() < .5 ? 1 : -1, Hs = [], Vs = [];
+  for(let r = 0; r < rows; r++){ Hs.push([]); Vs.push([]); for(let c = 0; c < cols; c++){ Hs[r].push(r < rows - 1 ? rnd() : 0); Vs[r].push(c < cols - 1 ? rnd() : 0); } }
+  pzArea.querySelectorAll('.pc').forEach(el => el.remove()); PZ.pcs = []; PZ.placed = 0; PZ.ghost = n === 8;
+  for(let r = 0; r < rows; r++) for(let c = 0; c < cols; c++){
+    const e = [r ? -Hs[r - 1][c] : 0, Vs[r][c], Hs[r][c], c ? -Vs[r][c - 1] : 0];   // haut, droite, bas, gauche
+    const el = document.createElement('canvas'); el.className = 'pc'; pzArea.appendChild(el);
+    const p = { r, c, e, el, x:0, y:0, ok:false }; PZ.pcs.push(p); pzDrag(p);
+  }
+  $('pzTitle').textContent = '🧩 ' + (NAME[art.id] || 'Le puzzle'); $('pzGhost').classList.toggle('on', PZ.ghost);
+  pzLayout(true); pzCount(); say('puzzle-go');
+}
+function pzCount(){ $('pzCount').textContent = `${PZ.placed} / ${PZ.pcs.length}`; }
+// place le plateau et le bac à pièces (à droite en paysage, en bas en portrait), et redessine tout à la bonne taille
+function pzLayout(mix){
+  if(!PZ.img) return; const aw = pzArea.clientWidth, ah = pzArea.clientHeight, land = aw / ah > 1.05, dpr = Math.min(2, devicePixelRatio || 1);
+  const rw = land ? aw * .56 : aw, rh = land ? ah : ah * .55, s = Math.min(rw * .95 / PZ.W, rh * .94 / PZ.H);
+  PZ.s = s; PZ.bx = (rw - PZ.W * s) / 2; PZ.by = (rh - PZ.H * s) / 2; PZ.tray = land ? [rw, 0, aw - rw, ah] : [0, rh, aw, ah - rh];
+  Object.assign(pzBoard.style, { left:PZ.bx + 'px', top:PZ.by + 'px', width:PZ.W * s + 'px', height:PZ.H * s + 'px' });
+  pzBoard.width = Math.round(PZ.W * s * dpr); pzBoard.height = Math.round(PZ.H * s * dpr); pzDrawBoard();
+  const k = s * dpr, pad = PZ.pad, cw = PZ.cw, ch = PZ.ch;
+  PZ.pcs.forEach(p => {
+    const el = p.el, w = cw + pad * 2, h = ch + pad * 2; el.width = Math.ceil(w * k); el.height = Math.ceil(h * k); el.style.width = w * s + 'px'; el.style.height = h * s + 'px';
+    const g = el.getContext('2d'); g.setTransform(k, 0, 0, k, (pad - p.c * cw) * k, (pad - p.r * ch) * k);
+    pzPath(g, p); g.save(); g.clip(); g.drawImage(PZ.img, 0, 0); g.restore();
+    g.lineJoin = 'round'; g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 3 / s; g.stroke(); g.strokeStyle = 'rgba(28,35,64,.55)'; g.lineWidth = 1.2 / s; g.stroke();
+    if(!p.ok && !mix && pzOut(p)) pzScatter(p); pzPos(p);
+  });
+  if(mix) pzMixAll();
+}
+// range les pièces dans le bac, chacune dans sa case (mélangées), un peu de travers pour faire « en vrac »
+function pzMixAll(){
+  const left = PZ.pcs.filter(p => !p.ok); if(!left.length) return; const [tx, ty, tw, th] = PZ.tray, s = PZ.s, w = PZ.cw * s, h = PZ.ch * s;
+  let best = [1, left.length], bs = -1; for(let c = 1; c <= left.length; c++){ const r = Math.ceil(left.length / c), k = Math.min(tw / c / w, th / r / h); if(k > bs){ bs = k; best = [c, r]; } }
+  const [c, r] = best, sw = tw / c, sh = th / r, slots = [...Array(c * r).keys()].sort(() => Math.random() - .5);
+  left.forEach((p, i) => { const k = slots[i], cx = tx + (k % c + .5) * sw, cy = ty + (Math.floor(k / c) + .5) * sh, jx = Math.max(0, sw - w) * (Math.random() - .5) * .8, jy = Math.max(0, sh - h) * (Math.random() - .5) * .8;
+    const sx = Math.max(tx, Math.min(tx + tw - w, cx - w / 2 + jx)), sy = Math.max(ty, Math.min(ty + th - h, cy - h / 2 + jy));
+    p.x = (sx - PZ.bx) / s - p.c * PZ.cw; p.y = (sy - PZ.by) / s - p.r * PZ.ch; p.el.style.zIndex = ++PZ.z; pzPos(p); });
+}
+function pzDrawBoard(){
+  const g = pzBoard.getContext('2d'), k = pzBoard.width / PZ.W; g.setTransform(k, 0, 0, k, 0, 0); g.fillStyle = '#fff'; g.fillRect(0, 0, PZ.W, PZ.H);
+  if(PZ.ghost){ g.globalAlpha = .3; g.drawImage(PZ.img, 0, 0); g.globalAlpha = 1; }
+  g.setLineDash([6 / k, 6 / k]); g.strokeStyle = 'rgba(31,95,191,.35)'; g.lineWidth = 1.5 / k; PZ.pcs.forEach(p => { pzPath(g, p); g.stroke(); }); g.setLineDash([]);
+}
+const pzPos = p => { p.el.style.transform = `translate(${PZ.bx + (p.c * PZ.cw + p.x - PZ.pad) * PZ.s}px,${PZ.by + (p.r * PZ.ch + p.y - PZ.pad) * PZ.s}px)`; };
+// p.x, p.y : écart (en pixels du dessin) entre la pièce et sa vraie place
+function pzScatter(p){
+  const [tx, ty, tw, th] = PZ.tray, s = PZ.s, w = PZ.cw * s, h = PZ.ch * s;
+  const sx = tx + 4 + Math.random() * Math.max(0, tw - w - 8), sy = ty + 4 + Math.random() * Math.max(0, th - h - 8);
+  p.x = (sx - PZ.bx) / s - p.c * PZ.cw; p.y = (sy - PZ.by) / s - p.r * PZ.ch; p.el.style.zIndex = ++PZ.z;
+}
+function pzOut(p){ const s = PZ.s, X = PZ.bx + (p.c * PZ.cw + p.x) * s, Y = PZ.by + (p.r * PZ.ch + p.y) * s; return X < -PZ.cw * s * .5 || Y < -PZ.ch * s * .5 || X > pzArea.clientWidth - PZ.cw * s * .5 || Y > pzArea.clientHeight - PZ.ch * s * .5; }
+function pzDrag(p){
+  let d = null; const el = p.el;
+  el.addEventListener('pointerdown', e => { if(p.ok || d) return; e.preventDefault(); audio(); try{ el.setPointerCapture(e.pointerId); }catch(_){} d = { id:e.pointerId, x:e.clientX, y:e.clientY }; el.style.zIndex = ++PZ.z; el.classList.add('lift'); sfx.tap(); });
+  el.addEventListener('pointermove', e => { if(!d || e.pointerId !== d.id) return; p.x += (e.clientX - d.x) / PZ.s; p.y += (e.clientY - d.y) / PZ.s; d.x = e.clientX; d.y = e.clientY; pzPos(p); });
+  const up = e => { if(!d || e.pointerId !== d.id) return; d = null; el.classList.remove('lift');
+    const tol = Math.min(PZ.cw, PZ.ch) * (PZ.n <= 8 ? .38 : .3);
+    if(Math.abs(p.x) < tol && Math.abs(p.y) < tol){ p.x = p.y = 0; p.ok = true; el.classList.add('ok'); el.style.zIndex = 1; pzPos(p); PZ.placed++; pzCount(); sfx.fill(PZ.placed); if(PZ.placed === PZ.pcs.length) setTimeout(pzWin, 350); }
+    else if(pzOut(p)){ pzScatter(p); pzPos(p); } };
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+}
+function pzWin(){
+  S.puz = S.puz || {}; if((S.puz[art.id] || 0) < PZ.n) S.puz[art.id] = PZ.n; save();
+  celebrate(); say('puzzle-bravo'); if(T) T.cheer();
+  $('bTitle').textContent = ['Bravo !', 'Super puzzle !', 'Champion !', 'Bien joué !'][Math.floor(Math.random() * 4)];
+  const t = mk(Math.round(PZ.W * .35), Math.round(PZ.H * .35)); t.getContext('2d').drawImage(PZ.img, 0, 0, t.width, t.height); $('bImg').src = t.toDataURL('image/jpeg', .8); $('bImg').hidden = false;
+  $('bRow').innerHTML = `<button class="pill go" data-b="pzAgain">🔁 Encore</button>${PZ.n < 32 ? '<button class="pill sun" data-b="pzUp">⬆️ Plus difficile</button>' : ''}<button class="pill" data-b="pzEnd">🎨 Colorier</button>`;
+  $('bravo').classList.add('on');
+}
+function pzClose(){ $('puz').classList.remove('on'); PZ.img = null; pzArea.querySelectorAll('.pc').forEach(el => el.remove()); PZ.pcs = []; }
+$('pzBack').onclick = () => { sfx.tap(); pzClose(); };
+$('pzGhost').onclick = () => { sfx.tap(); PZ.ghost = !PZ.ghost; $('pzGhost').classList.toggle('on', PZ.ghost); pzDrawBoard(); };
+$('pzMix').onclick = () => { sfx.tap(); pzMixAll(); };
+addEventListener('resize', () => { if($('puz').classList.contains('on')) pzLayout(false); });
 $('undo').onclick = () => { if(!art || !art.hist.length) return; const [L, prev] = art.hist.pop(); if(prev){ art.fills.set(L, prev); compose(art, paintRegion(art, L, prev.c, prev.p)); } else { art.fills.delete(L); compose(art, paintRegion(art, L, null)); } sfx.undo(); meter(); persist(art, false); };
 let wipeArm = 0;
 $('wipe').onclick = () => { if(!art || !art.fills.size) return; if(Date.now() - wipeArm > 2500){ wipeArm = Date.now(); toast('Touche encore 🧽 pour tout effacer'); sfx.tap(); return; } wipeArm = 0; art.fills.clear(); art.hist = []; art.cd.data.fill(0); compose(art); sfx.undo(); meter(); persist(art, true); };
@@ -562,7 +716,7 @@ $('done').onclick = () => {
   $('bRow').innerHTML = `<button class="pill go" data-b="pick">🎨 Un autre</button><button class="pill sun" data-b="card">🖨️ Imprimer / envoyer</button><button class="pill sun" data-b="show">🎭 Spectacle</button><button class="pill" data-b="stay">✏️ Continuer</button>`;
   $('bravo').classList.add('on');
 };
-$('bravo').onclick = e => { const b = e.target.closest('[data-b]'); if(!b) return; sfx.tap(); $('bravo').classList.remove('on'); const k = b.dataset.b; if(k === 'pick') go('pick:' + pickKind); else if(k === 'show') go('show'); else if(k === 'card') openCard(); else if(k === 'menu') go('menu'); else if(k === 'serpent') location.href = 'serpent-legendes.html'; };
+$('bravo').onclick = e => { const b = e.target.closest('[data-b]'); if(!b) return; sfx.tap(); $('bravo').classList.remove('on'); const k = b.dataset.b; if(k === 'pzAgain') pzStart(PZ.n); else if(k === 'pzUp') pzStart(PZ.n === 8 ? 16 : 32); else if(k === 'pzEnd') pzClose(); else if(k === 'pick') go('pick:' + pickKind); else if(k === 'show') go('show'); else if(k === 'card') openCard(); else if(k === 'menu') go('menu'); else if(k === 'serpent') location.href = 'serpent-legendes.html'; };
 function celebrate(n = 46){
   sfx.win(); const P = $('party'), E = ['🌼', '🤍', '✨', '🌸', '⭐', '🎨'];
   for(let i = 0; i < n; i++){ const s = document.createElement('i'); s.textContent = E[i % E.length]; s.style.left = Math.random() * 100 + 'vw'; s.style.fontSize = 18 + Math.random() * 26 + 'px'; s.style.animationDuration = 2.2 + Math.random() * 2.4 + 's'; s.style.animationDelay = Math.random() * .9 + 's'; P.appendChild(s); setTimeout(() => s.remove(), 6000); }
@@ -573,7 +727,7 @@ let toastT = null; function toast(m){ const t = $('toast'); t.textContent = m; t
    Choix d'un dessin, galerie
    ===================================================================== */
 let backTo = 'pick';
-function card(id, label, tall){ const it = ART.items[id]; return `<button class="card ${tall ? 'tall' : ''}" data-id="${id}"><img src="${it && it.th ? it.th : `atelier/${id}.webp`}" alt="" loading="lazy">${S.done[id] ? '<span class="ok" aria-label="fini">✔</span>' : ''}<b>${label}</b></button>`; }
+function card(id, label, tall){ const it = ART.items[id]; return `<button class="card ${tall ? 'tall' : ''}" data-id="${id}"><img src="${it && it.th ? it.th : `atelier/${id}.webp?v=2`}" alt="" loading="lazy">${S.done[id] ? '<span class="ok" aria-label="fini">✔</span>' : ''}<b>${label}</b></button>`; }
 function renderPick(kind){
   pickKind = kind; $('pickTitle').textContent = kind === 'p' ? 'Choisis un paysage' : kind === 'a' ? 'Choisis un animal' : 'Choisis un ami et sa tenue';
   $('pickGrid').innerHTML = kind !== 'c' ? (kind === 'a' ? ANIM : LAND).map(l => card(l[0], l[1])).join('')
