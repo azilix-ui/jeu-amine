@@ -85,6 +85,9 @@ Autres astuces :
 - **Blocs savoir désactivés** (Réglages) : chaque bloc 📚 donne directement 3 dinars, mais plus de tickets.
 - **Étoiles** : 1 = fini, 2 = 60 % des dinars, 3 = les 3 jasmins. Les jasmins trouvés une première fois rapportent 2 tickets chacun.
 
+### Ludo : accueil et salon (10/11)
+Accueil = carte `.mcard` (`.mhead` : image, titre, bouton `#who` ; `.mbody` : `.modes`, `#salonMenu`, `.mrow`). Réglages de la partie dans l'écran `#opts` (fenêtre posée sur le menu). Salon : voir `docs/serveur.md`.
+
 ### Ludo en ligne : discussion (10/11)
 Bouton 💬 (uniquement en ligne) : emojis, phrases toutes faites, message libre. Détail du serveur dans `docs/serveur.md`.
 
