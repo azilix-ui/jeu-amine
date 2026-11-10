@@ -47,7 +47,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 10/11 | Jasmin : l'image d'accueil animée (la famille saute, boucle de 5 s ; `kling3_0`, mode std, sans son, même image au début et à la fin pour boucler) | `jeux/jasmin/titre.mp4` | 7,5 |
 | 10/11 | L'Atelier du Jasmin, suite : 20 dessins au trait (14 animaux de la ferme, 6 paysages), 47 modèles en couleur (un par dessin : `flux_3_image` avec le trait en `image_references`, consigne « Color this exact coloring page. Keep exactly the same drawing… bright cheerful flat colors »), 3 consignes de Julian | `jeux/atelier/{a-*,p-*,m-*}.webp`, `jeux/atelier/voix/{animaux,modele,envoyer}.mp3` | 134,75 |
 | 10/11 | La Planète des Nombres (Amine) : 8 aliens (2 refaits pour être bien originaux : le vert à un œil et le rose à grandes oreilles rappelaient des personnages connus), soucoupe, décor et accueil (`flux_3_image`, fond blanc détouré par remplissage depuis les bords) ; voix de Julian : les nombres de 0 à 59 en 6 prises de dix (« Zéro. Un. … Neuf. Voilà. », découpées aux silences avec `split2.py`), « Soixante » et 19 consignes à part | `amine/nombres/*.webp`, `amine/nombres/voix/*.mp3` | 28 |
-| | **Total** (solde Higgsfield le 10/11 au soir : 750,35 crédits) | | **≈ 758** |
+| 10/11 | Nouvel avatar de Salma : 3 propositions (`flux_3_image`, 1:1), références = 3 gros plans de son visage recadrés (sans le fond ni son frère) + l'avatar d'Essil pour le style ; choix 1 retenu (job 1960c07c…) | `jeux/avatars/salma.webp` | 6 |
+| | **Total** (solde Higgsfield le 10/11 au soir : ≈ 744 crédits) | | **≈ 764** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 

@@ -1,7 +1,7 @@
 /* Famille Missaoui : le site s'installe comme une application.
    Pages, styles et scripts : d'abord le réseau (toujours la dernière version), la copie gardée sert hors connexion.
    Images et Three.js : d'abord la copie gardée (rapide). Les API, voix et vidéos passent toujours par le réseau. */
-const V = 'missaoui-v1';
+const V = 'missaoui-v2';   // à augmenter quand une image change de contenu sans changer de nom (ex. avatar de Salma, 10/11)
 const CORE = ['/', '/index.html', '/famille.css?v=6', '/famille.js', '/site.js', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
