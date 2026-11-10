@@ -44,7 +44,7 @@ progression.html       tableau de bord des parents (mot de passe parent), avec l
 essil/  index.html, deutsch-express.html, via-romana.html, videos-geometrie.html (+ videos/ : épisodes « Pas à pas »)
 salma/  index.html, english-garden.html, weather-station.html (+ meteo/ : images et voix), atelier-des-verbes.html, atelier-des-formes.html, marche-d-ollie.html (monnaie, 3D), jardin-des-nombres.html, le-grand-galop.html, cheval/ (images et vidéos)
 amine/  index.html, ardoise-magique.html (+ lettres.js : modèles des 78 lettres), planete-des-nombres.html (+ nombres/ : aliens, décor, voix des nombres), la-nuit-d-amine.html, la-nuit-d-amine-2.html, nahki-tounsi.html, serpentin.html, voix/api.php
-jeux/   serpent-legendes.html, ludo-legendes.html, grimpe-glace.html, legende-du-jasmin.html (+ jasmin/ : images), atelier-du-jasmin.html (coloriage 2D / 3D, + atelier/ : dessins au trait et voix), avatars/ (5 avatars, 15 cartes légendes, illustrations Ludo et Grimpe-Glace), cartes/ (illustrations des skins)
+jeux/   serpent-legendes.html, ludo-legendes.html, grimpe-glace.html, legende-du-jasmin.html (+ jasmin/ : images), atelier-du-jasmin.html (coloriage 2D / 3D, + atelier/ : dessins au trait et voix), avatars/ (5 avatars + têtes de profil `-profil` et « soupir » `-soupir` pour le héros du Jasmin, 3 mascottes d'invités, 15 cartes légendes, illustrations Ludo et Grimpe-Glace), cartes/ (illustrations des skins)
 lib/    three-0.170.0.module.min.js (Three.js, copié ici : aucune dépendance en ligne)
 api/    famille.php (joueurs, records, progrès), ludo.php (parties de Ludo en ligne)
 photos/ photos de famille de l'ancienne accueil (maison, salon, canapé)
@@ -76,6 +76,7 @@ package.json, build.js  copie le site dans dist/ si Hostinger lance un « build 
 - **Pas de personnages protégés** (jeux vidéo, dessins animés, marques) : on invente des personnages originaux (ex. Poppy Playtime → monde « Usine à jouets » inventé).
 - Ton chaleureux, jamais moqueur ; consignes lues à voix haute pour Amine qui ne lit pas encore.
 - Tout en français ; tester sur tablette (tactile, cibles ≥ 48 px).
+- **Réglage des têtes** du héros (Jasmin, Grimpe-Glace) : page claude.ai « Les têtes du Jasmin » (artifact `GmHsWJsfQKKV32z6t81upp`) ; le papa ajuste et enregistre, Claude relit le document `reglages/tetes` et recopie les valeurs dans `HEADCROP` / `HEADCROP_P` (voir `docs/jeux-3d.md`).
 
 ## Points ouverts
 
