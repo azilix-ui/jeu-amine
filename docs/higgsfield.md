@@ -48,7 +48,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 10/11 | L'Atelier du Jasmin, suite : 20 dessins au trait (14 animaux de la ferme, 6 paysages), 47 modèles en couleur (un par dessin : `flux_3_image` avec le trait en `image_references`, consigne « Color this exact coloring page. Keep exactly the same drawing… bright cheerful flat colors »), 3 consignes de Julian | `jeux/atelier/{a-*,p-*,m-*}.webp`, `jeux/atelier/voix/{animaux,modele,envoyer}.mp3` | 134,75 |
 | 10/11 | La Planète des Nombres (Amine) : 8 aliens (2 refaits pour être bien originaux : le vert à un œil et le rose à grandes oreilles rappelaient des personnages connus), soucoupe, décor et accueil (`flux_3_image`, fond blanc détouré par remplissage depuis les bords) ; voix de Julian : les nombres de 0 à 59 en 6 prises de dix (« Zéro. Un. … Neuf. Voilà. », découpées aux silences avec `split2.py`), « Soixante » et 19 consignes à part | `amine/nombres/*.webp`, `amine/nombres/voix/*.mp3` | 28 |
 | 10/11 | Nouvel avatar de Salma : 3 propositions (`flux_3_image`, 1:1), références = 3 gros plans de son visage recadrés (sans le fond ni son frère) + l'avatar d'Essil pour le style ; choix 1 retenu (job 1960c07c…) | `jeux/avatars/salma.webp` | 6 |
-| | **Total** (solde Higgsfield le 10/11 au soir : ≈ 744 crédits) | | **≈ 764** |
+| 10/11 | Salma refaite sur 9 images (retouche `flux_3_image` : 1re référence = l'ancienne image, 2e = le nouvel avatar ; consigne « Edit the first image. Keep everything exactly the same… Only change the girl… ») + vidéo d'accueil du Jasmin refaite (`kling3_0`, 5 s, std, sans son, même image au début et à la fin) | `jeux/avatars/salma-{dragon,licorne,phenix}.webp`, `ludo-famille`, `grimpe-glace`, `jeux/cartes/{verbes,hydre}.webp`, `jeux/jasmin/titre.{webp,mp4}`, `salma/meteo/titre.webp` | 25,5 |
+| | **Total** (solde Higgsfield le 10/11 au soir : ≈ 718 crédits) | | **≈ 790** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 
@@ -61,12 +62,12 @@ Avatars (à passer en `image_references` pour garder la ressemblance) :
 | Personne | Job de l'avatar | Visage recadré (media) |
 |---|---|---|
 | Essil | `b227d137-954b-4b50-92b9-48d38093f44d` | `b9b454c0-6984-4a8f-8a58-65e1c6fb25d1` |
-| Salma | `6f770cde-3515-4b15-a440-199ce7fa29b0` | `9d549ae9-421c-4bc2-b097-f85bc5a05cbc` (et photo de la vidéo : `85b8bc08-b5b9-46ee-b7b9-bfcab9174a83`) |
+| Salma | `1960c07c-bf62-41bc-84bf-441acc842e25` (nouvel avatar du 10/11 ; l'ancien : `6f770cde-3515-4b15-a440-199ce7fa29b0`) | `9d549ae9-421c-4bc2-b097-f85bc5a05cbc` (et photo de la vidéo : `85b8bc08-b5b9-46ee-b7b9-bfcab9174a83`) |
 | Amine | `5f2f13ce-4ac0-474e-a2f6-ac2c9009ec46` | `99a026b6-35df-49d8-8a73-04d6a5a2debb` |
 | Anis | `89ebb3d9-6c6a-4e61-8ff4-79fd2ae7ce2c` | `be2d86c4-32d0-4204-ab4d-fce778095040` |
 | Imen | `9a51905a-ec98-49a9-9a17-3fbf1f85ab10` | `fd516196-f994-4f02-8093-5c20cb0201b9` |
 
-Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet) ; Salma tee-shirt blanc au petit chat violet (fond vert-ciel) ; Amine tee-shirt orange au petit dragon vert (fond violet-orange) ; Anis polo bleu col rose (fond vert sarcelle) ; Imen haut bordeaux, cheveux longs lisses (fond framboise-corail).
+Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet) ; Salma sweat rose zippé, cheveux lisses mi-longs (fond bleu-vert ; depuis le 10/11) ; Amine tee-shirt orange au petit dragon vert (fond violet-orange) ; Anis polo bleu col rose (fond vert sarcelle) ; Imen haut bordeaux, cheveux longs lisses (fond framboise-corail).
 
 ## Style des prompts qui marchent
 
