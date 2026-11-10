@@ -46,7 +46,7 @@ h1{font-family:var(--display);font-weight:800;margin:0;font-size:clamp(36px,6.5v
 h1 span{color:var(--gold)}
 h2{font-family:var(--display);margin:0;font-size:30px;line-height:1.05}
 .sub{margin:0;color:var(--mist);font-weight:700}
-.title-img{width:100%;border-radius:20px;border:3px solid var(--gold);aspect-ratio:16/9;object-fit:cover;background:#1b2a5e;display:block}
+.title-img{width:100%;border-radius:20px;border:3px solid var(--gold);aspect-ratio:16/9;object-fit:cover;background:#1b2a5e;display:block;cursor:pointer}
 .big{font-family:var(--display);font-weight:800;font-size:24px;min-height:58px;padding:6px 24px;border-radius:20px;background:linear-gradient(#ffe066,#ffc21f);color:#3a2600;box-shadow:0 6px 0 var(--gold-deep)}
 .big:active{transform:translateY(4px);box-shadow:0 2px 0 var(--gold-deep)}
 .big.ghost{background:#ffffff14;color:#fff;box-shadow:0 6px 0 #0006;border:2px solid var(--line)}
@@ -107,7 +107,7 @@ body.menu .back{display:inline-flex}
 <a class="back" href="../index.html">← Famille</a>
 
 <div class="screen on" id="menu"><div class="box">
-  <video class="title-img" src="jasmin/titre.mp4" poster="jasmin/titre.webp" autoplay loop muted playsinline disablepictureinpicture aria-label="La famille saute de joie dans un village tunisien bleu et blanc"></video>
+  <video class="title-img" id="titleVid" src="jasmin/titre.mp4" poster="jasmin/titre.webp" preload="none" muted playsinline disablepictureinpicture aria-label="La famille dans un village tunisien bleu et blanc : passe la souris ou touche l'image pour la voir sauter"></video>
   <h1>La Légende <span>du Jasmin</span></h1>
   <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse dix-huit mondes pour les rapporter !</p>
   <button class="who" id="who"></button>
@@ -672,6 +672,12 @@ function shade(hex, k){ const f = v => Math.max(0, Math.min(255, Math.round(v * 
    La partie
    ===================================================================== */
 let state = 'menu', G0 = null;
+// Image d'accueil : fixe ; elle s'anime quand on la survole à la souris (en boucle) ou quand on la touche (une fois), puis redevient l'image fixe
+(() => { const v = document.getElementById('titleVid'); if(!v) return; const stop = () => { v.pause(); v.loop = false; v.load(); };
+  v.addEventListener('pointerenter', e => { if(e.pointerType === 'mouse'){ v.loop = true; v.play().catch(() => {}); } });
+  v.addEventListener('pointerleave', e => { if(e.pointerType === 'mouse') stop(); });
+  v.addEventListener('pointerdown', e => { if(e.pointerType !== 'mouse'){ if(v.paused){ v.loop = false; v.play().catch(() => {}); } else stop(); } });
+  v.addEventListener('ended', stop); })();
 const SOLID = new Set(['#', 'b', 'S', 'c', 'p', 'U', 'f', 'B', 'X', 'w', 'm', 'R', 'v', 'u', 'a']);
 // Le sol sûr d'une colonne : la première case pleine (pas fragile) sous du vide, sans eau ni pics. -1 s'il n'y en a pas.
 function groundRow(G, cx){
