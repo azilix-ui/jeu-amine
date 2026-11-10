@@ -92,3 +92,10 @@ Demandé par le papa : un soir, c'est lui qui a parcouru le cours d'anglais de S
 ## Progression : tableau de bord en rubriques (10/11)
 
 `progression.html` affiche six onglets (`TABS`, fonction `draw()`), mémorisés dans `sessionStorage` (`prog-tab`, `prog-kid`, `prog-days`). Les données viennent des deux mêmes appels qu'avant : `summary` (progrès, historique de 120 jours, records) et `visits` (30 jours chargés une fois, 60 si on le demande ; le filtre de période se fait dans la page). Les « activités des enfants » sont les lignes du journal des visites qui portent le prénom d'un enfant, regroupées par page et par jour (`activiteHTML`) ; les « progrès » sont les écarts entre deux états successifs de l'historique (`gains()`). Limite : une page n'est notée qu'une fois toutes les 10 minutes, on compte donc des ouvertures, pas un temps passé.
+
+## Salon de Ludo (10/11)
+
+- Tables `presence (client, name, tete, status, code, ts)` et `invites (dest, name, tete, code, ts)` dans `ludo.sqlite`.
+- `POST action=hello client name tete status code` toutes les 4 s (onglet visible seulement) → `{online, invites}` : les joueurs vus depuis moins de 15 s (40 au plus), et les invitations reçues (valables 40 s, effacées une fois lues). `status` : `menu`, `salon` (avec le code de sa partie en attente), `joue`, `machine`.
+- `POST action=invite client name tete to code` (limite d'envois comme les coups ; la partie doit exister).
+- `client` = identifiant aléatoire de la tablette (`ludo-client` dans le navigateur). Le salon est visible par toute personne qui ouvre la page du Ludo : il n'y a pas de mot de passe.

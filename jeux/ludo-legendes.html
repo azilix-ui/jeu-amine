@@ -148,6 +148,31 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
 .bub b{color:var(--c);margin-right:6px}
 @keyframes bub{0%{opacity:0;transform:translate(-50%,-14px)}8%{opacity:1;transform:translate(-50%,0)}88%{opacity:1}100%{opacity:0}}
 
+/* le salon : qui est là, inviter, rejoindre */
+.salon{width:100%;display:flex;flex-direction:column;gap:8px;text-align:left}
+.salon h3{margin:0;font-family:var(--display);font-size:20px;display:flex;align-items:center;gap:8px}
+.salon h3 small{font-family:var(--body,inherit);font-weight:600;font-size:14px;color:var(--mist)}
+.salon .live{width:12px;height:12px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 0 #5fe0a8aa;animation:live 1.8s ease-out infinite}
+@keyframes live{to{box-shadow:0 0 0 12px #5fe0a800}}
+.slist{display:flex;flex-direction:column;gap:6px;max-height:min(34vh,260px);overflow:auto;touch-action:pan-y}
+.sp{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:16px;background:var(--card)}
+.sp .av{width:44px;height:44px;font-size:22px}
+.sp b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp small{display:block;font-size:13px;color:var(--mist)}
+.sp > div{flex:1;min-width:0}
+.sp button{flex:none;min-height:44px;padding:0 14px;border-radius:14px;background:var(--mint);color:#06281a;font-weight:800;font-size:16px}
+.sp button.join{background:var(--gold);color:#3a2a00}
+.sp button[disabled]{opacity:.55}
+.salon .none{color:var(--mist);font-size:15px;margin:0}
+#invite{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:45;width:min(440px,calc(100vw - 20px));background:var(--panel);border:3px solid var(--gold);border-radius:26px;padding:14px;display:none;flex-direction:column;gap:12px;box-shadow:0 18px 50px #000b;animation:burst .35s cubic-bezier(.2,1.4,.4,1)}
+#invite.on{display:flex}
+#invite .top{display:flex;align-items:center;gap:12px}
+#invite .av{width:60px;height:60px;font-size:30px;border-color:var(--gold)}
+#invite b{font-family:var(--display);font-size:22px;line-height:1.15}
+#invite .row{display:flex;gap:10px}
+#invite .row button{flex:1;min-height:56px;border-radius:18px;font-weight:800;font-size:19px;background:var(--card-hi)}
+#invite .row button.yes{background:var(--mint);color:#06281a}
+
 /* fin, collection, récompense */
 .rank{width:100%;display:flex;flex-direction:column;gap:6px;text-align:left}
 .rank div{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:8px 12px;border-left:6px solid var(--c)}
@@ -226,6 +251,7 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
       <button class="big blue" id="create">🌐 Créer en ligne<small>chacun sa tablette</small></button>
       <button class="big ghost" id="joinBtn">🔑 Rejoindre<small>avec un code</small></button>
     </div>
+    <div class="salon" id="salonMenu"></div>
     <div class="opt"><b>Joueurs</b><div class="seg" id="optN"><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button></div></div>
     <div class="opt"><b>Pions</b><div class="seg" id="optP"><button data-v="2"><i>⚡</i>2 par joueur<small>partie rapide</small></button><button data-v="4"><i>🏁</i>4 par joueur<small>partie classique</small></button></div></div>
     <div class="opt"><b>Plateau</b><div class="seg" id="optB"></div></div>
@@ -250,6 +276,7 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
   <button class="big blue" id="lInvite" style="width:100%">📤 Inviter un ami<small>envoie le lien par WhatsApp ou SMS</small></button>
   <div class="row" id="lShare" hidden><a class="big ghost" id="lWa" target="_blank" rel="noopener" style="text-decoration:none;font-size:18px">WhatsApp</a><a class="big ghost" id="lSms" style="text-decoration:none;font-size:18px">SMS</a><button class="big ghost" id="lCopy" style="font-size:18px">Copier le lien</button></div>
   <div class="seats" id="lSeats"></div>
+  <div class="salon" id="salonLobby"></div>
   <p class="err" id="lMsg" style="color:var(--mist)"></p>
   <div class="row"><button class="big ghost" id="lLeave">Quitter</button><button class="big" id="lStart">▶ Lancer la partie</button></div>
 </div></div>
@@ -271,6 +298,9 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
   <div class="cphr" id="chatPhr"></div>
   <form class="cform" id="chatForm"><input id="chatIn" maxlength="120" autocomplete="off" placeholder="Écris un message…" aria-label="Ton message"><button aria-label="Envoyer">➤</button></form>
 </div>
+
+<!-- Invitation reçue d'un autre joueur du salon -->
+<div id="invite" role="dialog" aria-label="Invitation"><div class="top"><span id="invAv"></span><b id="invTxt"></b></div><div class="row"><button id="invNo">Plus tard</button><button class="yes" id="invYes">▶ Rejoindre</button></div></div>
 
 <!-- Quitter ? -->
 <div class="screen modal" id="quit"><div class="box">
@@ -719,6 +749,43 @@ $('chatBtn').onclick = () => { sfx.tap(); const c = $('chat'); c.classList.toggl
 $('chatClose').onclick = () => { sfx.tap(); $('chat').classList.remove('on'); };
 ['chat', 'chatBtn'].forEach(id => ['pointerdown', 'pointerup', 'pointermove', 'touchstart', 'wheel'].forEach(ev => $(id).addEventListener(ev, e => e.stopPropagation())));
 
+/* ---------- le salon : on voit qui est sur la page du Ludo, on s'invite ou on rejoint sans code ---------- */
+let SALON = [], invited = {}, pendingInv = null, invT = null;
+const myHead = () => { const h = window.Famille && Famille.head && player ? Famille.head(player) : null; return h ? h.id : ''; };
+function avatarOf(name, tete, style = ''){ const k = (name || '').toLowerCase(); if(KNOWN[k] || !tete) return avatarHTML(name, false, style); return `<span class="av" style="${style}"><img src="avatars/mascotte-${tete}.webp" alt=""></span>`; }
+function myStatus(){ return mode === 'online' && state === 'lobby' ? 'salon' : mode === 'online' && (state === 'play' || state === 'end') ? 'joue' : state === 'play' ? 'machine' : 'menu'; }
+async function hello(){
+  if(!ONLINE_OK || !player || document.hidden) return;
+  const st = myStatus(), r = await api({ action:'hello', client:ME, name:player, tete:myHead(), status:st, code:st === 'salon' ? code || '' : '' }, true).catch(() => null);
+  if(!r || r.status !== 200) return;
+  SALON = r.online || []; renderSalon();
+  (r.invites || []).forEach(v => { if(state === 'play' && mode === 'online') return; pendingInv = v; $('invAv').innerHTML = avatarOf(v.name, v.tete); $('invTxt').textContent = v.name + ' t\'invite à jouer au Ludo !'; $('invite').classList.add('on'); try{ sfx.win ? sfx.tap() : 0; }catch(e){} clearTimeout(invT); invT = setTimeout(() => $('invite').classList.remove('on'), 35000); });
+}
+function renderSalon(){
+  const LBL = { menu:'cherche une partie', salon:'attend des joueurs', joue:'en pleine partie', machine:'joue contre la machine' }, inLobby = mode === 'online' && state === 'lobby';
+  const html = '<h3><span class="live"></span>Dans le salon <small>' + (SALON.length ? SALON.length + ' autre' + (SALON.length > 1 ? 's' : '') + ' joueur' + (SALON.length > 1 ? 's' : '') : '') + '</small></h3>' +
+    (SALON.length ? '<div class="slist">' + SALON.map(p => { const sent = invited[p.client] && Date.now() - invited[p.client] < 30000;
+        const btn = p.status === 'salon' && p.code && !(inLobby && p.code === code) ? `<button class="join" data-join="${esc(p.code)}">▶ Rejoindre</button>` : p.status === 'joue' || (inLobby && p.code === code) ? '' : `<button data-inv="${esc(p.client)}" ${sent ? 'disabled' : ''}>${sent ? 'Invité ✓' : '✉ Inviter'}</button>`;
+        return `<div class="sp">${avatarOf(p.name, p.tete)}<div><b>${esc(p.name)}</b><small>${inLobby && p.code === code ? 'dans ta partie' : LBL[p.status] || ''}</small></div>${btn}</div>`; }).join('') + '</div>'
+      : '<p class="none">Personne d\'autre pour l\'instant. Dès que quelqu\'un ouvre le Ludo, il apparaît ici.</p>');
+  ['salonMenu', 'salonLobby'].forEach(id => { const el = $(id); if(!el) return; if(!ONLINE_OK || !player){ el.innerHTML = ''; return; } if(el.dataset.h !== html){ el.dataset.h = html; el.innerHTML = html; } });
+}
+async function inviteTo(client){
+  if(!(await needPlayer())) return;
+  if(!(mode === 'online' && state === 'lobby')){ await createOnline(); if(!(mode === 'online' && code)) return; }
+  const r = await api({ action:'invite', client:ME, name:player, tete:myHead(), to:client, code }, true).catch(() => ({ status:0 }));
+  if(r.status === 200){ invited[client] = Date.now(); toast('Invitation envoyée ✉'); hello(); } else toast(r.error || 'Invitation non envoyée');
+  renderSalon();
+}
+['salonMenu', 'salonLobby'].forEach(id => $(id).addEventListener('click', async e => {
+  const j = e.target.closest('[data-join]'), i = e.target.closest('[data-inv]'); if(!j && !i) return; sfx.tap();
+  if(i){ i.disabled = true; inviteTo(i.dataset.inv); return; }
+  if(!(await needPlayer())) return; const c = j.dataset.join; if(mode === 'online' && state === 'lobby') stopPoll();
+  $('joinErr').textContent = ''; await joinOnline(c); if(!(mode === 'online' && code === c)){ toast($('joinErr').textContent || 'Impossible de rejoindre'); if(state === 'lobby') startPoll(); } }));
+$('invNo').onclick = () => { sfx.tap(); $('invite').classList.remove('on'); };
+$('invYes').onclick = async () => { sfx.tap(); $('invite').classList.remove('on'); const v = pendingInv; if(!v) return; if(mode === 'online') stopPoll(); $('joinErr').textContent = ''; await joinOnline(v.code); if(!(mode === 'online' && code === v.code)) toast($('joinErr').textContent || 'Cette partie n\'est plus disponible'); };
+setInterval(hello, 4000); document.addEventListener('visibilitychange', () => { if(!document.hidden) hello(); });
+
 // Appliquer un coup : en local tout de suite ; en ligne, seulement si personne n'a joué entre-temps.
 async function commit(st){
   if(mode === 'local'){ receive(st, 0); return true; }
@@ -1064,7 +1131,7 @@ $('recBack').onclick = () => { sfx.tap(); show('menu'); };
 
 /* ---------- démarrage ---------- */
 buildBoard('jardin'); buildDice('blanc'); renderMenu(); show('menu'); requestAnimationFrame(frame);
-const p0 = window.Famille && Famille.player(); if(p0) setPlayer(p0); else renderWho();
+const p0 = window.Famille && Famille.player(); if(p0) setPlayer(p0).then(hello); else { renderWho(); setTimeout(() => { if(!player && state === 'menu') choose().then(hello); }, 600); }
 // arrivé par un lien d'invitation (…/ludo-legendes.html?code=ABCD) : on demande le prénom puis on rejoint
 const inv = (new URLSearchParams(location.search).get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
 if(inv.length === 4){

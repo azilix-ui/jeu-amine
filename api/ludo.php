@@ -13,6 +13,11 @@
  *   GET  ?action=state&code=ABCD&since=N         -> en plus : chat [{id, seat, name, text, ts}] (messages d'identifiant > N)
  *   POST action=chat code seat name text         -> {id}
  *
+ * Le salon : qui est sur la page du Ludo en ce moment (pour s'inviter sans échanger de code).
+ *   POST action=hello client name tete status code   -> {online:[{client, name, tete, status, code}], invites:[{name, tete, code}]}
+ *        (à renvoyer toutes les 4 secondes ; on disparaît du salon après 15 secondes sans nouvelles)
+ *   POST action=invite client name tete to code       -> {ok} : l'autre joueur reçoit l'invitation à son prochain « hello »
+ *
  * Base à part (ludo.sqlite, hors du site public) pour ne pas gêner les autres jeux.
  */
 declare(strict_types=1);
@@ -20,6 +25,8 @@ declare(strict_types=1);
 const MAX_STATE = 24000;
 const MAX_WRITES = 1500;       // envois par adresse (toute la maison partage souvent la même)…
 const WRITE_WINDOW = 600;      // …toutes les 10 minutes
+const ONLINE_FOR = 15;         // secondes pendant lesquelles on reste affiché dans le salon
+const INVITE_FOR = 40;         // durée de vie d'une invitation
 const MAX_TEXT = 120;          // longueur d'un message
 const CHAT_KEEP = 60;          // messages gardés par partie
 const ROOM_TTL = 43200;        // une partie inactive disparaît après 12 heures
@@ -52,6 +59,8 @@ function db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS writes (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS chat (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL, ts INTEGER NOT NULL, seat INTEGER NOT NULL, name TEXT NOT NULL, text TEXT NOT NULL)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS chat_code ON chat (code, id)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS presence (client TEXT PRIMARY KEY, name TEXT NOT NULL, tete TEXT NOT NULL, status TEXT NOT NULL, code TEXT NOT NULL, ts INTEGER NOT NULL)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS invites (id INTEGER PRIMARY KEY AUTOINCREMENT, dest TEXT NOT NULL, name TEXT NOT NULL, tete TEXT NOT NULL, code TEXT NOT NULL, ts INTEGER NOT NULL)');
     return $pdo;
 }
 function limit_writes(): void {
@@ -127,6 +136,34 @@ try {
         $r = room($code);
         if (!$r) fail(404, "Cette partie n'existe pas ou est terminée.");
         out(409, ['v' => (int)$r['v'], 'state' => json_decode($r['state'], true)]);
+    }
+
+    if ($action === 'hello' || $action === 'invite') {
+        $client = (string)($_POST['client'] ?? '');
+        if (!preg_match('/^[a-z0-9]{8,20}$/', $client)) fail(400, 'Joueur invalide.');
+        $name = trim(preg_replace('/[\x00-\x1F\x7F]+/u', ' ', (string)($_POST['name'] ?? '')) ?? '');
+        if ($name === '' || mb_strlen($name) > 24) fail(400, 'Prénom invalide.');
+        $tete = (string)($_POST['tete'] ?? ''); if (!in_array($tete, ['nour', 'yasmine', 'fares'], true)) $tete = '';
+        $pdo = db(); $t = time();
+        if ($action === 'invite') {
+            limit_writes();
+            $to = (string)($_POST['to'] ?? ''); $code = clean_code($_POST['code'] ?? '');
+            if (!preg_match('/^[a-z0-9]{8,20}$/', $to) || $to === $client) fail(400, 'Joueur invalide.');
+            if (!room($code)) fail(404, "Cette partie n'existe pas ou est terminée.");
+            $pdo->prepare('DELETE FROM invites WHERE ts < ? OR (dest = ? AND code = ?)')->execute([$t - INVITE_FOR, $to, $code]);
+            $pdo->prepare('INSERT INTO invites (dest, name, tete, code, ts) VALUES (?, ?, ?, ?, ?)')->execute([$to, $name, $tete, $code, $t]);
+            out(200, ['ok' => true]);
+        }
+        $status = (string)($_POST['status'] ?? 'menu'); if (!in_array($status, ['menu', 'salon', 'joue', 'machine'], true)) $status = 'menu';
+        $code = $status === 'salon' ? clean_code($_POST['code'] ?? '') : '';
+        $pdo->prepare('INSERT OR REPLACE INTO presence (client, name, tete, status, code, ts) VALUES (?, ?, ?, ?, ?, ?)')->execute([$client, $name, $tete, $status, $code, $t]);
+        if (random_int(0, 20) === 0) $pdo->prepare('DELETE FROM presence WHERE ts < ?')->execute([$t - 300]);
+        $st = $pdo->prepare('SELECT client, name, tete, status, code FROM presence WHERE ts >= ? AND client <> ? ORDER BY name COLLATE NOCASE LIMIT 40'); $st->execute([$t - ONLINE_FOR, $client]);
+        $online = $st->fetchAll(PDO::FETCH_ASSOC);
+        $st = $pdo->prepare('SELECT name, tete, code FROM invites WHERE dest = ? AND ts >= ? ORDER BY id'); $st->execute([$client, $t - INVITE_FOR]);
+        $inv = $st->fetchAll(PDO::FETCH_ASSOC);
+        if ($inv) $pdo->prepare('DELETE FROM invites WHERE dest = ?')->execute([$client]);
+        out(200, ['online' => $online, 'invites' => $inv]);
     }
 
     if ($action === 'chat') {
