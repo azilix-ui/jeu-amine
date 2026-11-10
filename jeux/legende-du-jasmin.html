@@ -1153,6 +1153,10 @@ function drawBoss(b, t){
   ctx.globalAlpha = 1;
 }
 /* ---------- le héros : l'avatar de la famille ---------- */
+// le cadrage du visage dans le rond de tête, avatar par avatar : [gauche, haut, taille] en fraction de l'image
+// (réglé par le papa avec la page « Les têtes du Jasmin »)
+const HEADCROP = { essil:[.22, .1, .56], salma:[.22, .1, .56], amine:[.22, .1, .56], anis:[.22, .1, .56], imen:[.22, .1, .56], nour:[.17, .02, .66], yasmine:[.17, .02, .66], fares:[.17, .02, .66] };
+function headCrop(){ const k = (player || '').toLowerCase(); return HEADCROP[PEOPLE[k] ? k : mascotOf(player).id] || HEADCROP.nour; }
 function drawHero(cx, h, t){
   const col = pcol(), air = !h.ground, run = Math.min(1, Math.abs(h.vx) / PH.maxRun), ph = h.phase || 0;
   if(h.inv > 0 && Math.sin(t * 40) > 0 && !h.dead) return;
@@ -1174,7 +1178,7 @@ function drawHero(cx, h, t){
   cx.save(); cx.translate(0, -52); if(h.face < 0) cx.scale(-1, 1);
   const HR = col.mascot ? 17 : 15; if(col.mascot) cx.translate(0, -2);
   cx.beginPath(); cx.arc(0, 0, HR, 0, 7); cx.closePath(); cx.fillStyle = '#f2c9a0'; cx.fill();
-  if(avatarImg){ cx.save(); cx.clip(); const iw = avatarImg.naturalWidth, ih = avatarImg.naturalHeight, cr = col.mascot ? [.17, .02, .66] : [.22, .1, .56]; cx.drawImage(avatarImg, iw * cr[0], ih * cr[1], iw * cr[2], ih * cr[2], -HR - 1, -HR - 1, HR * 2 + 2, HR * 2 + 2); cx.restore(); }
+  if(avatarImg){ cx.save(); cx.clip(); const iw = avatarImg.naturalWidth, ih = avatarImg.naturalHeight, cr = headCrop(); cx.drawImage(avatarImg, iw * cr[0], ih * cr[1], iw * cr[2], iw * cr[2], -HR - 1, -HR - 1, HR * 2 + 2, HR * 2 + 2); cx.restore(); }
   else { cx.fillStyle = '#23324a'; cx.font = '800 16px "Baloo 2", sans-serif'; cx.textAlign = 'center'; cx.fillText(col.e || '?', 0, 6); }
   cx.lineWidth = 2.5; cx.strokeStyle = '#ffffff'; cx.beginPath(); cx.arc(0, 0, HR, 0, 7); cx.stroke();
   if(h.chechia){ cx.fillStyle = '#c4122f'; cx.beginPath(); cx.moveTo(-12, -9); cx.lineTo(12, -9); cx.lineTo(10, -22); cx.lineTo(-10, -22); cx.closePath(); cx.fill(); cx.fillStyle = '#8a0a1f'; cx.fillRect(-10, -12, 20, 3);

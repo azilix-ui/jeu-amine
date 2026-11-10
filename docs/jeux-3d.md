@@ -63,6 +63,7 @@ Jeu de plateforme original à défilement horizontal, univers tunisien (cahier d
 
 - **Mascottes** (joueurs hors famille) : trois héros tunisiens Higgsfield, **Nour** (garçon au jasmin, gilet turquoise), **Yasmine** (fille à la tresse et au jasmin, gilet corail) et **Farès** (jeune homme, gilet bleu roi). Dans « Qui joue ? », l'invité écrit son **pseudo** puis touche sa tête ; le choix est gardé avec le pseudo (et son historique) et retrouvé sur les autres tablettes (voir `docs/serveur.md`). Images `jeux/avatars/mascotte-{nour,yasmine,fares}.webp`. Les mascottes s'affichent aussi dans Serpent Légendes, Ludo Légendes et Grimpe-Glace (classements, bouton du joueur, et le héros de Grimpe-Glace).
 
+- Rond de tête du héros : cadrage par avatar dans `HEADCROP` (`[gauche, haut, taille]` en fraction de l'image, recadrage carré), lu par `headCrop()`. Le papa règle les valeurs dans la page « Les têtes du Jasmin » (artifact claude.ai `GmHsWJsfQKKV32z6t81upp`, document `reglages/tetes`), puis Claude les recopie ici.
 - Retouches du 10/11 : image d'accueil fixe, animée au survol de la souris ou au toucher (`jasmin/titre.mp4`, Kling, 5 s) ; pièces à hauteur de tête ramassées en passant ; hérisson : 7 piquants, +100 par saut tant qu'il en reste, puis il s'en va (700 points au plus, ou +200 par ennemi renversé si on le fait rouler).
 
 ### Secrets et astuces (pour les parents, à ne pas dévoiler tout de suite)
