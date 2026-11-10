@@ -68,7 +68,7 @@ body:not(.m3d) .scr{background:linear-gradient(180deg,#8fd0ff 0%,#d8f0ff 45%,#ff
 .big span{font-size:54px;line-height:1;flex:none}
 .big b{font-family:"Baloo 2";font-size:25px;line-height:1.05;color:var(--blue-deep);display:block}
 .big small{font-size:15px;color:var(--mist);display:block;margin-top:2px}
-.big.c1{background:#e6f6ff}.big.c2{background:#ffe9f3}.big.c3{background:#e9fbe6}.big.c4{background:#fff3c4}.big.c5{background:#efe6ff}
+.big.c1{background:#e6f6ff}.big.c2{background:#ffe9f3}.big.c3{background:#e9fbe6}.big.c4{background:#fff3c4}.big.c5{background:#efe6ff}.big.c6{background:#ffeedd}
 /* choix d'un dessin */
 #pick .grid,#gallery .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 .card{position:relative;border-radius:22px;background:var(--lime);box-shadow:var(--shadow);padding:8px;display:flex;flex-direction:column;gap:6px;align-items:stretch}
@@ -82,7 +82,39 @@ body:not(.m3d) .scr{background:linear-gradient(180deg,#8fd0ff 0%,#d8f0ff 45%,#ff
 /* coloriage */
 #paint{padding-bottom:max(8px,env(safe-area-inset-bottom))}
 .work{flex:1;min-height:0;display:grid;gap:10px;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:minmax(0,1fr)}
-#stage{position:relative;min-width:0;min-height:0;display:grid;place-items:center;border-radius:24px;touch-action:none}
+#stage{position:relative;min-width:0;min-height:0;display:grid;place-items:center;border-radius:24px;touch-action:none;overflow:hidden}
+/* loupe et modèle en couleur, posés sur le dessin */
+.zt{position:absolute;left:8px;top:8px;display:flex;flex-direction:column;gap:8px;z-index:3}
+.zb{width:50px;height:50px;border-radius:50%;background:var(--lime);box-shadow:var(--shadow);font-size:22px;display:grid;place-items:center;padding:0}
+.zb:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(20,40,90,.28)}
+.zb[disabled]{opacity:.35}
+.zb.on{background:var(--sun)}
+#zLvl{position:absolute;left:66px;top:14px;z-index:3;background:var(--ink);color:#fff;font-weight:800;font-size:15px;padding:5px 11px;border-radius:14px;opacity:0;transition:opacity .25s;pointer-events:none}
+#zLvl.on{opacity:.9}
+#pip{position:absolute;right:8px;top:8px;z-index:3;width:min(36%,250px);padding:5px;border-radius:16px;background:var(--lime);box-shadow:0 6px 18px rgba(20,40,90,.35);display:block}
+#pip[hidden]{display:none}
+#pip img{display:block;width:100%;border-radius:11px}
+#pip.tall{width:min(26%,170px)}
+#pip::after{content:"🔍";position:absolute;right:8px;bottom:8px;font-size:18px;background:#fffc;border-radius:50%;width:30px;height:30px;display:grid;place-items:center}
+#model{position:fixed;inset:0;z-index:65;display:none;place-items:center;background:rgba(15,40,95,.8);padding:14px;flex-direction:column;gap:12px}
+#model.on{display:flex;justify-content:center;align-items:center}
+#model img{max-width:100%;max-height:calc(100% - 80px);border-radius:18px;background:#fff;box-shadow:0 20px 60px #0008}
+/* carte à imprimer ou à envoyer */
+#card{position:fixed;inset:0;z-index:62;display:none;place-items:center;background:rgba(15,40,95,.6);padding:10px;overflow:auto}
+#card.on{display:grid}
+#card .box{max-width:640px;gap:10px;padding:16px;animation:none}
+#card .box h2{font-size:28px;color:var(--blue-deep)}
+#cardCv{max-width:100%;max-height:38vh;border-radius:12px;box-shadow:0 4px 14px #0003;background:#fff}
+#cardTxt{font:inherit;font-size:19px;font-weight:800;padding:11px 14px;border-radius:14px;border:3px solid #cfd8ee;background:#fff;color:var(--ink);width:100%;user-select:text;-webkit-user-select:text;touch-action:manipulation}
+#card .chip{font-size:15px;min-height:42px}
+#card .acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px;width:100%}
+#card .acts .pill{width:100%;font-size:17px}
+#printImg{display:none}
+@media print{
+  body > *{display:none !important}
+  html,body{background:#fff !important;height:auto !important;overflow:visible !important}
+  body > #printImg{display:block !important;max-width:100%;max-height:96vh;margin:0 auto}
+}
 #cv{position:absolute;inset:0;margin:auto;max-width:100%;max-height:100%;border-radius:18px;box-shadow:0 8px 24px rgba(20,40,90,.25);background:#fffdf6;touch-action:none;display:block}
 body.m3d #cv{display:none}
 .tools{display:flex;flex-direction:column;gap:8px;background:rgba(255,253,246,.92);border-radius:24px;padding:10px;box-shadow:var(--shadow);overflow:auto;touch-action:pan-y;width:164px}
@@ -99,7 +131,8 @@ body.m3d #cv{display:none}
   .pats{border-top:0;border-left:2px dashed #cfd8ee;padding:0 0 0 8px}
   .meter{display:none}
 }
-@media (orientation:landscape) and (max-height:520px){ .pal,.pats{grid-template-columns:repeat(3,38px)} .sw{width:38px;height:38px} .tools{width:146px} .top{min-height:48px} .pill{height:44px;min-width:44px} }
+@media (max-width:560px){ #paint .top h2{display:none} #paint .top{justify-content:space-between} #paint .pill{height:46px;min-width:46px;padding:0 10px} .zb{width:44px;height:44px;font-size:19px} }
+@media (orientation:landscape) and (max-height:520px){ .zb{width:42px;height:42px;font-size:18px} .zt{gap:6px} .pal,.pats{grid-template-columns:repeat(3,38px)} .sw{width:38px;height:38px} .tools{width:146px} .top{min-height:48px} .pill{height:44px;min-width:44px} }
 /* serpent */
 #snake .work{grid-template-columns:minmax(0,1fr) minmax(250px,340px)}
 #sstage{position:relative;min-width:0;min-height:0;border-radius:24px;overflow:hidden}
@@ -156,7 +189,8 @@ body.m3d #shcv{display:none}
 <section id="menu" class="scr soft">
   <div class="top"><button class="pill" data-go="home" aria-label="Retour">←</button><h2>Que veux-tu faire ?</h2><button class="pill" id="mode2" aria-label="Changer 2D / 3D"></button><button class="pill" data-snd aria-label="Musique">🎵</button><button class="who" id="who2"></button></div>
   <div class="grid">
-    <button class="big c1" data-go="pick:p"><span aria-hidden="true">🏞️</span><div><b>Les paysages</b><small>18 lieux de Tunisie à colorier</small></div></button>
+    <button class="big c1" data-go="pick:p"><span aria-hidden="true">🏞️</span><div><b>Les paysages</b><small>24 lieux de Tunisie à colorier</small></div></button>
+    <button class="big c6" data-go="pick:a"><span aria-hidden="true">🐴</span><div><b>Les animaux</b><small>Chat, chien, cheval… les amis de la ferme</small></div></button>
     <button class="big c2" data-go="pick:c"><span aria-hidden="true">👘</span><div><b>Les costumes</b><small>Habille Nour, Yasmine et Farès</small></div></button>
     <button class="big c3" data-go="snake"><span aria-hidden="true">🐍</span><div><b>Mon serpent</b><small>Crée ton skin pour Serpent Légendes</small></div></button>
     <button class="big c4" data-go="gallery"><span aria-hidden="true">🖼️</span><div><b>Ma galerie</b><small id="galCount">Tes dessins</small></div></button>
@@ -176,9 +210,12 @@ body.m3d #shcv{display:none}
 
 <section id="paint" class="scr">
   <div class="top"><button class="pill" id="pBack" aria-label="Retour">←</button><h2 id="pTitle"></h2>
-    <button class="pill" id="undo" aria-label="Annuler">↩️</button><button class="pill" id="wipe" aria-label="Tout effacer">🧽</button><button class="pill" data-snd aria-label="Musique">🎵</button><button class="pill go" id="done">✔ Fini</button></div>
+    <button class="pill" id="undo" aria-label="Annuler">↩️</button><button class="pill" id="wipe" aria-label="Tout effacer">🧽</button><button class="pill" data-snd aria-label="Musique">🎵</button><button class="pill sun" id="share" aria-label="Imprimer ou envoyer mon dessin">🖨️</button><button class="pill go" id="done">✔ Fini</button></div>
   <div class="work">
-    <div id="stage"><canvas id="cv" width="1024" height="768"></canvas><div id="load">Je prépare ton dessin… 🎨</div></div>
+    <div id="stage"><canvas id="cv" width="1024" height="768"></canvas><div id="load">Je prépare ton dessin… 🎨</div>
+      <div class="zt" id="zt"><button class="zb" id="zIn" aria-label="Agrandir le dessin">➕</button><button class="zb" id="zOut" aria-label="Réduire le dessin">➖</button><button class="zb" id="zFit" aria-label="Voir tout le dessin">🔲</button><button class="zb" id="mBtn" aria-label="Voir le modèle en couleur">🌈</button></div>
+      <div id="zLvl"></div>
+      <button id="pip" hidden aria-label="Voir le modèle en grand"><img id="pipImg" alt="Le modèle en couleur"></button></div>
     <div class="tools"><div class="pal" id="pal"></div><div class="pats" id="pats"></div><div class="meter" aria-hidden="true"><i id="meter"></i></div></div>
   </div>
 </section>
@@ -205,6 +242,16 @@ body.m3d #shcv{display:none}
 
 <div id="party"></div>
 <div id="bravo"><div class="box"><h2 id="bTitle">Bravo !</h2><img id="bImg" alt=""><div class="row" id="bRow"></div></div></div>
+<div id="model"><img id="modelImg" alt="Le modèle en couleur"><button class="pill go" id="modelOk">✔ J'ai vu</button></div>
+<div id="card"><div class="box">
+  <h2>Imprimer ou envoyer</h2>
+  <canvas id="cardCv" width="1400" height="1050"></canvas>
+  <input id="cardTxt" maxlength="60" autocomplete="off" placeholder="Écris un petit mot ici…" aria-label="Le texte à écrire sur le dessin">
+  <div class="row" id="cardIdeas"></div>
+  <div class="row"><button class="chip" id="cardPos"></button><button class="chip" id="cardSign"></button></div>
+  <div class="acts"><button class="pill go" id="cPrint">🖨️ Imprimer</button><button class="pill sun" id="cSend">📲 Envoyer</button><button class="pill" id="cSave">💾 Enregistrer</button><button class="pill" id="cClose">✖ Fermer</button></div>
+</div></div>
+<img id="printImg" alt="">
 <div id="toast"></div>
 
 <script src="../famille.js"></script>
@@ -219,12 +266,15 @@ const FAMILY = ['essil', 'salma', 'amine', 'anis', 'imen'];
    ===================================================================== */
 const LAND = [['p-sidi','Sidi Bou Saïd'],['p-medina','La Médina de Tunis'],['p-carthage','Les Ruines de Carthage'],['p-kairouan','Kairouan'],['p-eljem',"L'Amphithéâtre d'El Jem"],['p-zaghouan',"L'Aqueduc de Zaghouan"],
   ['p-tabarka','La Côte de Tabarka'],['p-aindraham',"Les Montagnes d'Aïn Draham"],['p-ichkeul',"Le Lac d'Ichkeul"],['p-djerba',"L'Île de Djerba"],['p-matmata','Les Maisons de Matmata'],['p-ksar','Le Ksar Ouled Soltane'],
-  ['p-dunes','Les Dunes du Sahara'],['p-tozeur',"L'Oasis de Tozeur"],['p-chott','Le Chott el-Jérid'],['p-lezard','Le Lézard Rouge'],['p-tamerza','Le Canyon de Tamerza'],['p-palais',"Le Palais du Scorpion d'Or"]];
+  ['p-dunes','Les Dunes du Sahara'],['p-tozeur',"L'Oasis de Tozeur"],['p-chott','Le Chott el-Jérid'],['p-lezard','Le Lézard Rouge'],['p-tamerza','Le Canyon de Tamerza'],['p-palais',"Le Palais du Scorpion d'Or"],
+  ['p-bizerte','Le Vieux Port de Bizerte'],['p-monastir','Le Ribat de Monastir'],['p-nabeul','Les Poteries de Nabeul'],['p-dougga','Le Temple de Dougga'],['p-chebika',"L'Oasis de Chebika"],['p-kerkennah','Les Îles Kerkennah']];
+const ANIM = [['a-chat','Le chat'],['a-chatons','Les chatons'],['a-chien','Le chien'],['a-chiot','Le chiot'],['a-cheval','Le cheval'],['a-poulain','La jument et son poulain'],['a-ane',"L'âne"],
+  ['a-vache','La vache'],['a-mouton','Le mouton et son agneau'],['a-chevre','La chèvre'],['a-poule','La poule et ses poussins'],['a-coq','Le coq'],['a-lapin','Le lapin'],['a-canard','La cane et ses canetons']];
 const COST = [
   { who:'Nour', img:'avatars/mascotte-nour.webp', items:[['c-nour-1','Jebba de fête'],['c-nour-2','Pêcheur de Djerba'],['c-nour-3','Prince du désert']] },
   { who:'Yasmine', img:'avatars/mascotte-yasmine.webp', items:[['c-yasmine-1','Farmla et chéchia'],['c-yasmine-2','Melia berbère'],['c-yasmine-3','Caftan de fête']] },
   { who:'Farès', img:'avatars/mascotte-fares.webp', items:[['c-fares-1','Jebba brodée'],['c-fares-2','Cavalier du désert'],['c-fares-3','Farmla et sarouel']] }];
-const NAME = Object.fromEntries(LAND.concat(...COST.map(c => c.items.map(i => [i[0], c.who + ' · ' + i[1]]))));
+const NAME = Object.fromEntries(LAND.concat(ANIM, ...COST.map(c => c.items.map(i => [i[0], c.who + ' · ' + i[1]]))));
 const COLORS = ['#e8333a','#ff7a1a','#ffc928','#fff0a0','#8fd14f','#2f9e44','#1fb8a6','#5cc8f5','#1f6fd8','#27348b','#8a4fd8','#d264c8','#ff8fb8','#ffd9c2','#e0a878','#a8683c','#6b4226','#ffffff','#9aa3ad','#2b2b33'];
 const PATS = [['u','⬤','Uni'],['r','〰️','Rayures'],['p','🔵','Pois'],['z','💠','Zellige'],['a','🌈','Arc-en-ciel'],['g','🧽','Gomme']];
 
@@ -403,13 +453,13 @@ function buildPalette(){
 }
 function markTools(){ document.querySelectorAll('#pal .sw').forEach(b => b.classList.toggle('on', b.dataset.c === color && pat !== 'g' && pat !== 'a')); document.querySelectorAll('#pats .sw').forEach(b => b.classList.toggle('on', b.dataset.p === pat)); }
 async function openArt(id){
-  go('paint'); $('pTitle').textContent = NAME[id] || ''; $('load').classList.add('on'); cv.style.visibility = 'hidden'; art = null; if(T) T.setBoard(null);
+  go('paint'); $('pTitle').textContent = NAME[id] || ''; $('pip').hidden = true; $('load').classList.add('on'); cv.style.visibility = 'hidden'; art = null; if(T) T.setBoard(null);
   await new Promise(r => setTimeout(r, 30));
   let a; try{ a = await loadArt(id); }catch(e){ toast('Ce dessin ne se charge pas. Vérifie la connexion.'); go('pick:' + pickKind); return; }
   if(cur !== 'paint') return;
   art = a; cv.width = a.W; cv.height = a.H; a.onDraw = () => { if(S.mode === '3d'){ if(T) T.touchBoard(); } else { cvx.clearRect(0, 0, a.W, a.H); cvx.drawImage(a.out, 0, 0); } };
   a.onDraw(); if(S.mode === '3d' && T) T.setBoard(a);
-  $('load').classList.remove('on'); cv.style.visibility = ''; meter(); say('colorie', true);
+  $('load').classList.remove('on'); cv.style.visibility = ''; meter(); zReset(); showModel(); say('colorie', true);
 }
 function meter(){ const k = art ? coverage(art) : 0; $('meter').style.width = Math.round(k * 100) + '%'; $('done').classList.toggle('wow', k >= .9); $('undo').disabled = !art || !art.hist.length; }
 function tapArt(x, y){
@@ -422,7 +472,84 @@ function tapArt(x, y){
   else { art.fills.delete(L); compose(art, paintRegion(art, L, null)); sfx.undo(); }
   meter(); clearTimeout(saveT); saveT = setTimeout(() => art && persist(art, false), 900);
 }
-cv.addEventListener('pointerdown', e => { if(S.mode === '3d' || !art) return; e.preventDefault(); audio(); const r = cv.getBoundingClientRect(); tapArt((e.clientX - r.left) / r.width * art.W, (e.clientY - r.top) / r.height * art.H); });
+/* ----- la loupe : ➕ ➖, pincer avec deux doigts ou molette ; quand le dessin est agrandi, on le déplace en glissant ----- */
+const stage = $('stage'), Z = { z:1, x:0, y:0 }, ZMAX = 6, ZP = new Map(); let zMoved = 0, zPinch = null, zLvlT = null;
+function zApply(show){
+  Z.z = Math.max(1, Math.min(ZMAX, Z.z)); const mx = cv.offsetWidth * (Z.z - 1) / 2, my = cv.offsetHeight * (Z.z - 1) / 2;
+  Z.x = Math.max(-mx, Math.min(mx, Z.x)); Z.y = Math.max(-my, Math.min(my, Z.y));
+  cv.style.transform = Z.z > 1.001 ? `translate(${Z.x}px,${Z.y}px) scale(${Z.z})` : '';
+  zButtons(Z.z, ZMAX); if(show) zLabel(Z.z);
+}
+function zButtons(z, max){ $('zOut').disabled = $('zFit').disabled = z <= 1.02; $('zIn').disabled = z >= max - .02; }
+function zLabel(z){ const l = $('zLvl'); l.textContent = '🔍 × ' + (Math.round(z * 10) / 10).toString().replace('.', ','); l.classList.add('on'); clearTimeout(zLvlT); zLvlT = setTimeout(() => l.classList.remove('on'), 1100); }
+// agrandit autour d'un point de l'écran (par défaut le milieu de la zone de dessin)
+function zAt(z2, cx, cy){ const r = stage.getBoundingClientRect(), px = (cx === undefined ? r.left + r.width / 2 : cx) - (r.left + r.width / 2), py = (cy === undefined ? r.top + r.height / 2 : cy) - (r.top + r.height / 2);
+  z2 = Math.max(1, Math.min(ZMAX, z2)); const k = z2 / Z.z; Z.x = px - (px - Z.x) * k; Z.y = py - (py - Z.y) * k; Z.z = z2; zApply(true); }
+function zReset(){ Z.z = 1; Z.x = Z.y = 0; zApply(); }
+function zoomBtn(f){ sfx.tap(); if(S.mode === '3d'){ if(T) T.zoomBy(f); return; } if(f) zAt(Z.z * f); else { zReset(); zLabel(1); } }
+$('zIn').onclick = () => zoomBtn(1.6); $('zOut').onclick = () => zoomBtn(1 / 1.6); $('zFit').onclick = () => zoomBtn(0);
+['zt', 'pip'].forEach(id => ['pointerdown', 'pointerup', 'pointermove', 'wheel'].forEach(ev => $(id).addEventListener(ev, e => e.stopPropagation())));
+stage.addEventListener('pointerdown', e => { if(S.mode === '3d' || !art) return; e.preventDefault(); audio(); try{ stage.setPointerCapture(e.pointerId); }catch(_){}
+  ZP.set(e.pointerId, { x:e.clientX, y:e.clientY, onCv:e.target === cv }); zMoved = ZP.size > 1 ? 99 : 0;
+  if(ZP.size === 2){ const [a, b] = [...ZP.values()]; zPinch = { d:Math.hypot(a.x - b.x, a.y - b.y) || 1, z:Z.z, mx:(a.x + b.x) / 2, my:(a.y + b.y) / 2 }; } });
+stage.addEventListener('pointermove', e => { const p = ZP.get(e.pointerId); if(!p || S.mode === '3d') return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+  if(ZP.size === 1){ zMoved += Math.abs(dx) + Math.abs(dy); if(zMoved > 12 && Z.z > 1.001){ Z.x += dx; Z.y += dy; zApply(); } }
+  else if(ZP.size === 2 && zPinch){ const [a, b] = [...ZP.values()], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; Z.x += mx - zPinch.mx; Z.y += my - zPinch.my; zPinch.mx = mx; zPinch.my = my; zAt(zPinch.z * Math.hypot(a.x - b.x, a.y - b.y) / zPinch.d, mx, my); } });
+const zUp = e => { const p = ZP.get(e.pointerId); if(!p) return; ZP.delete(e.pointerId); if(ZP.size < 2) zPinch = null;
+  if(S.mode !== '3d' && art && e.type === 'pointerup' && zMoved <= 12 && p.onCv){ const r = cv.getBoundingClientRect(); tapArt((e.clientX - r.left) / r.width * art.W, (e.clientY - r.top) / r.height * art.H); } };
+stage.addEventListener('pointerup', zUp); stage.addEventListener('pointercancel', zUp);
+stage.addEventListener('wheel', e => { if(S.mode === '3d' || !art) return; e.preventDefault(); zAt(Z.z * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY); }, { passive:false });
+addEventListener('resize', () => zApply());
+
+/* ----- le modèle en couleur : une petite image d'exemple, qu'on agrandit en la touchant ----- */
+let modelOn = store.get('atelier-modele', false);
+function showModel(){
+  const pip = $('pip'); $('mBtn').classList.toggle('on', modelOn && !!art);
+  if(!modelOn || !art){ pip.hidden = true; return; }
+  pip.classList.toggle('tall', art.isChar); $('pipImg').onerror = () => { pip.hidden = true; $('mBtn').classList.remove('on'); toast('Ce dessin n\'a pas encore de modèle.'); };
+  $('pipImg').src = `atelier/m-${art.id}.webp?v=1`; pip.hidden = false;
+}
+$('mBtn').onclick = () => { if(!art) return; sfx.tap(); modelOn = !modelOn; store.set('atelier-modele', modelOn); showModel(); if(modelOn) say('modele', true); };
+$('pip').onclick = () => { if(!art) return; sfx.tap(); $('modelImg').src = $('pipImg').src; $('model').classList.add('on'); };
+$('model').onclick = () => { sfx.tap(); $('model').classList.remove('on'); };
+
+/* ----- la carte : le dessin avec un petit mot, à imprimer, à envoyer (WhatsApp, message…) ou à enregistrer ----- */
+const CARD = { pos:'bas', sign:true }, IDEAS = ['Pour Maman ❤️', 'Pour Papa ❤️', 'Je t\'aime', 'Bonne fête !', 'Joyeux anniversaire 🎂', 'Pour Papi et Mamie', 'Bravo !'];
+const ccv = $('cardCv'), ccx = ccv.getContext('2d');
+function drawCard(){
+  if(!art) return; const txt = $('cardTxt').value.trim(), land = art.W >= art.H, PW = land ? 1400 : 1050, M = 44, iw = PW - M * 2, ih = Math.round(iw * art.H / art.W), band = txt ? 150 : 0, foot = CARD.sign ? 58 : 0;
+  ccv.width = PW; ccv.height = M + band + ih + foot + (foot ? 18 : M);
+  const x = ccx, H = ccv.height, top = CARD.pos === 'haut'; x.fillStyle = '#fffdf6'; x.fillRect(0, 0, PW, H);
+  x.strokeStyle = '#1f5fbf'; x.lineWidth = 10; x.strokeRect(14, 14, PW - 28, H - 28); x.strokeStyle = '#ffc928'; x.lineWidth = 4; x.strokeRect(25, 25, PW - 50, H - 50);
+  const iy = M + (top ? band : 0); x.fillStyle = '#fff'; x.fillRect(M, iy, iw, ih); x.imageSmoothingQuality = 'high'; x.drawImage(art.out, M, iy, iw, ih); x.strokeStyle = '#1c2340'; x.lineWidth = 3; x.strokeRect(M, iy, iw, ih);
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  if(txt){ let fs = 92; do { x.font = `800 ${fs}px "Baloo 2", Nunito, system-ui, sans-serif`; fs -= 4; } while(x.measureText(txt).width > iw - 30 && fs > 30);
+    x.fillStyle = '#e8438f'; x.fillText(txt, PW / 2, (top ? M + band / 2 - 6 : iy + ih + band / 2 + 8)); }
+  if(foot){ x.font = '700 30px Nunito, system-ui, sans-serif'; x.fillStyle = '#5d6686'; x.fillText(`🎨 ${NAME[art.id] || ''} · colorié par ${player} · ${new Date().toLocaleDateString('fr-FR')}`, PW / 2, H - 18 - foot / 2 - 4, iw); }
+}
+function cardLabels(){ $('cardPos').textContent = CARD.pos === 'bas' ? '⬇️ Texte en bas' : '⬆️ Texte en haut'; $('cardSign').textContent = CARD.sign ? '✍️ Signé : oui' : '✍️ Signé : non'; $('cardSign').classList.toggle('on', CARD.sign); }
+async function openCard(){
+  if(!art) return; if(!art.fills.size){ toast('Colorie d\'abord un peu ton dessin 🙂'); sfx.nope(); return; }
+  persist(art, true); $('bravo').classList.remove('on'); try{ await document.fonts.load('800 60px "Baloo 2"'); }catch(e){}
+  cardLabels(); drawCard(); $('card').classList.add('on'); say('envoyer', true);
+}
+$('cardIdeas').innerHTML = IDEAS.map(t => `<button class="chip" data-t="${t.replace(/"/g, '&quot;')}">${t}</button>`).join('');
+$('cardIdeas').onclick = e => { const b = e.target.closest('[data-t]'); if(!b) return; sfx.tap(); $('cardTxt').value = b.dataset.t; drawCard(); };
+$('cardTxt').oninput = drawCard;
+$('cardPos').onclick = () => { sfx.tap(); CARD.pos = CARD.pos === 'bas' ? 'haut' : 'bas'; cardLabels(); drawCard(); };
+$('cardSign').onclick = () => { sfx.tap(); CARD.sign = !CARD.sign; cardLabels(); drawCard(); };
+$('cClose').onclick = () => { sfx.tap(); $('card').classList.remove('on'); };
+$('share').onclick = () => { sfx.tap(); openCard(); };
+const cardName = () => `dessin-${(player || 'atelier').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${art ? art.id : ''}.jpg`;
+const cardBlob = () => new Promise(ok => ccv.toBlob(ok, 'image/jpeg', .92));
+function download(blob){ const a = document.createElement('a'), u = URL.createObjectURL(blob); a.href = u; a.download = cardName(); document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+$('cPrint').onclick = async () => { sfx.tap(); drawCard(); const im = $('printImg'); im.src = ccv.toDataURL('image/jpeg', .92); try{ await im.decode(); }catch(e){}
+  let st = $('pgs'); if(!st){ st = document.createElement('style'); st.id = 'pgs'; document.head.appendChild(st); } st.textContent = `@page{size:A4 ${ccv.width > ccv.height ? 'landscape' : 'portrait'};margin:10mm}`;
+  window.print(); };
+$('cSave').onclick = async () => { sfx.tap(); drawCard(); download(await cardBlob()); toast('Ton dessin est enregistré dans les images 💾'); };
+$('cSend').onclick = async () => { sfx.tap(); drawCard(); const blob = await cardBlob(), file = new File([blob], cardName(), { type:'image/jpeg' });
+  if(navigator.canShare && navigator.canShare({ files:[file] })){ try{ await navigator.share({ files:[file], title:'Mon dessin' }); }catch(e){ if(e && e.name !== 'AbortError') toast('L\'envoi n\'a pas marché. Essaie « Enregistrer ».'); } }
+  else { download(blob); toast('Ton dessin est enregistré : ouvre WhatsApp ou tes messages et joins l\'image 📎'); } };
 $('undo').onclick = () => { if(!art || !art.hist.length) return; const [L, prev] = art.hist.pop(); if(prev){ art.fills.set(L, prev); compose(art, paintRegion(art, L, prev.c, prev.p)); } else { art.fills.delete(L); compose(art, paintRegion(art, L, null)); } sfx.undo(); meter(); persist(art, false); };
 let wipeArm = 0;
 $('wipe').onclick = () => { if(!art || !art.fills.size) return; if(Date.now() - wipeArm > 2500){ wipeArm = Date.now(); toast('Touche encore 🧽 pour tout effacer'); sfx.tap(); return; } wipeArm = 0; art.fills.clear(); art.hist = []; art.cd.data.fill(0); compose(art); sfx.undo(); meter(); persist(art, true); };
@@ -432,10 +559,10 @@ $('done').onclick = () => {
   persist(art, true); S.done[art.id] = Date.now(); save();
   celebrate(); say(Math.random() < .5 ? 'bravo' : 'galerie'); if(T) T.cheer();
   $('bTitle').textContent = ['Bravo !', 'Magnifique !', 'Quel artiste !', 'Superbe !'][Math.floor(Math.random() * 4)]; $('bImg').src = ART.items[art.id].th; $('bImg').hidden = false;
-  $('bRow').innerHTML = `<button class="pill go" data-b="pick">🎨 Un autre</button><button class="pill sun" data-b="show">🎭 Spectacle</button><button class="pill" data-b="stay">✏️ Continuer</button>`;
+  $('bRow').innerHTML = `<button class="pill go" data-b="pick">🎨 Un autre</button><button class="pill sun" data-b="card">🖨️ Imprimer / envoyer</button><button class="pill sun" data-b="show">🎭 Spectacle</button><button class="pill" data-b="stay">✏️ Continuer</button>`;
   $('bravo').classList.add('on');
 };
-$('bravo').onclick = e => { const b = e.target.closest('[data-b]'); if(!b) return; sfx.tap(); $('bravo').classList.remove('on'); const k = b.dataset.b; if(k === 'pick') go('pick:' + pickKind); else if(k === 'show') go('show'); else if(k === 'menu') go('menu'); else if(k === 'serpent') location.href = 'serpent-legendes.html'; };
+$('bravo').onclick = e => { const b = e.target.closest('[data-b]'); if(!b) return; sfx.tap(); $('bravo').classList.remove('on'); const k = b.dataset.b; if(k === 'pick') go('pick:' + pickKind); else if(k === 'show') go('show'); else if(k === 'card') openCard(); else if(k === 'menu') go('menu'); else if(k === 'serpent') location.href = 'serpent-legendes.html'; };
 function celebrate(n = 46){
   sfx.win(); const P = $('party'), E = ['🌼', '🤍', '✨', '🌸', '⭐', '🎨'];
   for(let i = 0; i < n; i++){ const s = document.createElement('i'); s.textContent = E[i % E.length]; s.style.left = Math.random() * 100 + 'vw'; s.style.fontSize = 18 + Math.random() * 26 + 'px'; s.style.animationDuration = 2.2 + Math.random() * 2.4 + 's'; s.style.animationDelay = Math.random() * .9 + 's'; P.appendChild(s); setTimeout(() => s.remove(), 6000); }
@@ -448,10 +575,10 @@ let toastT = null; function toast(m){ const t = $('toast'); t.textContent = m; t
 let backTo = 'pick';
 function card(id, label, tall){ const it = ART.items[id]; return `<button class="card ${tall ? 'tall' : ''}" data-id="${id}"><img src="${it && it.th ? it.th : `atelier/${id}.webp`}" alt="" loading="lazy">${S.done[id] ? '<span class="ok" aria-label="fini">✔</span>' : ''}<b>${label}</b></button>`; }
 function renderPick(kind){
-  pickKind = kind; $('pickTitle').textContent = kind === 'p' ? 'Choisis un paysage' : 'Choisis un ami et sa tenue';
-  $('pickGrid').innerHTML = kind === 'p' ? LAND.map(l => card(l[0], l[1])).join('')
+  pickKind = kind; $('pickTitle').textContent = kind === 'p' ? 'Choisis un paysage' : kind === 'a' ? 'Choisis un animal' : 'Choisis un ami et sa tenue';
+  $('pickGrid').innerHTML = kind !== 'c' ? (kind === 'a' ? ANIM : LAND).map(l => card(l[0], l[1])).join('')
     : COST.map(c => `<div class="sect"><img src="${c.img}" alt="">${c.who}</div>` + c.items.map(i => card(i[0], i[1], true)).join('')).join('');
-  say(kind === 'p' ? 'paysage' : 'costume', true);
+  say(kind === 'p' ? 'paysage' : kind === 'a' ? 'animaux' : 'costume', true);
 }
 function renderGallery(){
   const ids = Object.keys(ART.items).filter(id => NAME[id] && ART.items[id].th).sort((a, b) => (ART.items[b].t || 0) - (ART.items[a].t || 0));
@@ -529,7 +656,7 @@ let SHOW = null, showSeed = 0;
 async function renderOut(id){ const a = await loadArt(id); return a.out; }
 async function prepareShow(){
   const its = ART.items, by = k => Object.keys(its).filter(id => id[0] === k && its[id].f && its[id].f.length && NAME[id]).sort((a, b) => (its[b].t || 0) - (its[a].t || 0));
-  const lands = by('p'), costs = by('c');
+  const lands = by('p').concat(by('a')).sort((a, b) => (its[b].t || 0) - (its[a].t || 0)), costs = by('c');
   const land = lands.length ? lands[showSeed % lands.length] : LAND[showSeed % LAND.length][0];
   const chars = []; COST.forEach((c, k) => { const mine = costs.filter(id => c.items.some(i => i[0] === id)); chars.push(mine.length ? mine[showSeed % mine.length] : c.items[(showSeed + k) % 3][0]); });
   const back = await renderOut(land), pups = []; for(const id of chars) pups.push(await renderOut(id));
@@ -607,7 +734,7 @@ async function init3D(){
     const w = a.isChar ? 3.9 : 5.6, h = w * a.H / a.W; board.scale.set(w, h, 1); board.visible = true;
     if(a.isChar){ easel.visible = false; socle.visible = true; board.position.set(0, .5 + h / 2, 0); }
     else { easel.visible = true; paper.visible = true; socle.visible = false; paper.scale.set(w + .3, h + .3, 1); paper.position.y = 1.4 + h / 2 + .15; board.position.set(0, 1.4 + h / 2 + .15, 0); }
-    look.target.set(0, board.position.y, 0); look.w = w; look.h = h; yaw = 0; pitch = .04; zoom = 1;
+    look.target.set(0, board.position.y, 0); look.w = w; look.h = h; yaw = 0; pitch = .04; zoom = 1; pan.set(0, 0, 0); zButtons(1, ZM3);
   }
   // le serpent, sur son tapis rond
   const snakeG = new THREE.Group(); scene.add(snakeG); snakeG.visible = false; const rug = [add(new THREE.CylinderGeometry(3.3, 3.5, .3, 40), M('#e8438f'), 0, .15, 0, snakeG), add(new THREE.CylinderGeometry(2.9, 2.9, .06, 40), M('#fff4d6'), 0, .31, 0, snakeG)];
@@ -643,9 +770,11 @@ async function init3D(){
   }
   // caméra : on tourne un peu autour avec le doigt, on zoome en pinçant
   const look = { target:new THREE.Vector3(0, 3, 0), w:5.6, h:4.2 }, tgt = new THREE.Vector3(0, 3, 0);
+  const pan = new THREE.Vector3(), ZM3 = 5, setZoom = (z, show) => { zoom = Math.max(scn === 'paint' ? 1 : .7, Math.min(scn === 'paint' ? ZM3 : 2.6, z)); if(scn === 'paint'){ if(zoom <= 1.02) pan.set(0, 0, 0); clampPan(); zButtons(zoom, ZM3); if(show) zLabel(zoom); } };
+  function clampPan(){ const k = Math.max(0, 1 - 1 / zoom); pan.x = Math.max(-look.w / 2 * k, Math.min(look.w / 2 * k, pan.x)); pan.y = Math.max(-look.h / 2 * k, Math.min(look.h / 2 * k, pan.y)); }
   let scn = 'idle', yaw = 0, pitch = .12, zoom = 1, cyaw = 0, cpitch = .12, cdist = 16, cheerT = 0, stageRect = null;
   function setScene(s){ scn = s; snakeG.visible = s === 'snake' || s === 'show'; showG.visible = s === 'show'; easel.visible = s === 'idle' || (s === 'paint' && !(boardArt && boardArt.isChar)); board.visible = s === 'paint' && !!boardArt; socle.visible = s === 'paint' && !!(boardArt && boardArt.isChar); paper.visible = s === 'paint' && !!boardArt && !boardArt.isChar;
-    bushes.forEach(b => b.visible = s !== 'show'); rug.forEach(r => r.visible = s === 'snake'); snakeG.position.set(0, 0, s === 'show' ? 1.2 : 0); snakeG.scale.setScalar(s === 'show' ? .6 : 1); yaw = 0; pitch = s === 'snake' ? .5 : .1; zoom = 1; resize(); }
+    bushes.forEach(b => b.visible = s !== 'show'); rug.forEach(r => r.visible = s === 'snake'); snakeG.position.set(0, 0, s === 'show' ? 1.2 : 0); snakeG.scale.setScalar(s === 'show' ? .6 : 1); yaw = 0; pitch = s === 'snake' ? .5 : .1; zoom = 1; pan.set(0, 0, 0); resize(); }
   function resize(){
     const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); cam.aspect = w / h;
     const el = scn === 'paint' ? $('stage') : scn === 'snake' ? $('sstage') : null; stageRect = el ? el.getBoundingClientRect() : { left:0, top:0, width:w, height:h };
@@ -657,7 +786,7 @@ async function init3D(){
     requestAnimationFrame(frame3); if(S.mode !== '3d' || document.hidden) return;
     const dt = Math.min(.05, clock.getDelta()), t = clock.elapsedTime, w = innerWidth, h = innerHeight, tan = Math.tan(cam.fov * Math.PI / 360);
     let dist = 18, idle = 0;
-    if(scn === 'paint'){ tgt.copy(look.target); const sw = stageRect.width / w, sh2 = stageRect.height / h; dist = Math.max(look.h / 2 / tan / sh2, look.w / 2 / (tan * cam.aspect) / sw) * 1.12 / zoom; }
+    if(scn === 'paint'){ tgt.copy(look.target).add(pan); const sw = stageRect.width / w, sh2 = stageRect.height / h; dist = Math.max(look.h / 2 / tan / sh2, look.w / 2 / (tan * cam.aspect) / sw) * 1.12 / zoom; }
     else if(scn === 'snake'){ tgt.set(0, .9, 0); const sw = stageRect.width / w, sh2 = stageRect.height / h; dist = Math.max(2.4 / tan / sh2, 3.7 / (tan * cam.aspect) / sw) / zoom; }
     else if(scn === 'show'){ tgt.set(0, 3.6, -1.5); dist = Math.max(5 / tan, 6 / (tan * cam.aspect)) * 1.05 / zoom; idle = Math.sin(t * .35) * .22; }
     else { tgt.set(0, 2.6, 0); dist = 19; idle = t * .12; }
@@ -678,14 +807,16 @@ async function init3D(){
   const P = new Map(); let moved = 0, pinch0 = 0, zoom0 = 1;
   function onDown(e){ if(S.mode !== '3d') return; audio(); P.set(e.pointerId, { x:e.clientX, y:e.clientY, x0:e.clientX, y0:e.clientY }); moved = P.size > 1 ? 99 : 0; if(P.size === 2){ const [a, b] = [...P.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = zoom; } }
   function onMove(e){ const p = P.get(e.pointerId); if(!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
-    if(P.size === 1){ moved += Math.abs(dx) + Math.abs(dy); if(moved > 14){ yaw = Math.max(-.7, Math.min(.7, yaw - dx * .006)); pitch = Math.max(-.05, Math.min(scn === 'snake' ? 1.1 : .5, pitch + dy * .005)); } }
-    else if(P.size === 2){ const [a, b] = [...P.values()]; zoom = Math.max(.7, Math.min(2.6, zoom0 * Math.hypot(a.x - b.x, a.y - b.y) / (pinch0 || 1))); } }
+    const upp = 2 * cdist * Math.tan(cam.fov * Math.PI / 360) / innerHeight;   // unités du monde par pixel d'écran
+    if(scn === 'paint' && zoom > 1.05 && (P.size === 2 || moved + Math.abs(dx) + Math.abs(dy) > 14)){ pan.x -= dx * upp / P.size; pan.y += dy * upp / P.size; clampPan(); }
+    if(P.size === 1){ moved += Math.abs(dx) + Math.abs(dy); if(moved > 14 && !(scn === 'paint' && zoom > 1.05)){ yaw = Math.max(-.7, Math.min(.7, yaw - dx * .006)); pitch = Math.max(-.05, Math.min(scn === 'snake' ? 1.1 : .5, pitch + dy * .005)); } }
+    else if(P.size === 2){ const [a, b] = [...P.values()]; setZoom(zoom0 * Math.hypot(a.x - b.x, a.y - b.y) / (pinch0 || 1), true); } }
   function onUp(e){ const p = P.get(e.pointerId); if(!p) return; P.delete(e.pointerId);
     if(moved <= 14 && scn === 'paint' && boardArt && e.type === 'pointerup'){ ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, cam); const hit = ray.intersectObject(board)[0]; if(hit && hit.uv) tapArt(hit.uv.x * boardArt.W, (1 - hit.uv.y) * boardArt.H); } }
   ['stage', 'sstage', 'show'].forEach(id => { const el = $(id); el.addEventListener('pointerdown', onDown); el.addEventListener('pointermove', onMove); el.addEventListener('pointerup', onUp); el.addEventListener('pointercancel', onUp);
-    el.addEventListener('wheel', e => { if(S.mode === '3d'){ zoom = Math.max(.7, Math.min(2.6, zoom * (e.deltaY < 0 ? 1.1 : .9))); } }, { passive:true }); });
+    el.addEventListener('wheel', e => { if(S.mode === '3d') setZoom(zoom * (e.deltaY < 0 ? 1.1 : .9), true); }, { passive:true }); });
   resize(); frame3();
-  return { setBoard, touchBoard(){ if(boardTex) boardTex.needsUpdate = true; }, setSnake, setShow, setScene, cheer(){ cheerT = 1.6; }, resize };
+  return { setBoard, touchBoard(){ if(boardTex) boardTex.needsUpdate = true; }, setSnake, setShow, setScene, cheer(){ cheerT = 1.6; }, resize, zoomBy(f){ if(scn !== 'paint') return; if(f) setZoom(zoom * f, true); else { setZoom(1); yaw = 0; pitch = .04; zLabel(1); } } };
 }
 async function applyMode(m){
   document.body.classList.toggle('m3d', m === '3d');
@@ -708,7 +839,7 @@ function go(to){
   if(T) T.setScene(name === 'paint' ? 'paint' : name === 'snake' ? 'snake' : name === 'show' ? 'show' : 'idle');
   if(name === 'snake') requestAnimationFrame(snakeLoop);
   if(name === 'show') openShow();
-  if(name !== 'paint') art = null;
+  if(name !== 'paint'){ art = null; $('card').classList.remove('on'); $('model').classList.remove('on'); }
 }
 document.addEventListener('click', async e => {
   const g = e.target.closest('[data-go]'); if(g){ audio(); sfx.tap(); go(g.dataset.go); return; }

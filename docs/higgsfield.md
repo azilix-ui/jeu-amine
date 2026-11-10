@@ -45,7 +45,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 10/11 | Épisodes 3, 4, 5 d'Essil (le piège du fermier, le bassin de Kairouan, le minaret) : 27 images 9:16 `flux_3_image` + 33 phrases de Céline | `essil/videos/{piege,volume,angles}.mp4` | ≈ 72 |
 | 10/11 | L'Atelier du Jasmin : 19 paysages au trait (4:3 ; Sidi Bou Saïd refait une fois, le premier était sorti en couleurs), 9 costumes au trait (3:4), 1 essai, l'image d'accueil (16:9) (`flux_3_image`) + 10 consignes de Julian (2 prises ElevenLabs) | `jeux/atelier/*.webp`, `jeux/atelier/voix/*.mp3` | ≈ 62 |
 | 10/11 | Jasmin : l'image d'accueil animée (la famille saute, boucle de 5 s ; `kling3_0`, mode std, sans son, même image au début et à la fin pour boucler) | `jeux/jasmin/titre.mp4` | 7,5 |
-| | **Total** (solde Higgsfield le 10/11 : 913,1 crédits) | | **≈ 595** |
+| 10/11 | L'Atelier du Jasmin, suite : 20 dessins au trait (14 animaux de la ferme, 6 paysages), 47 modèles en couleur (un par dessin : `flux_3_image` avec le trait en `image_references`, consigne « Color this exact coloring page. Keep exactly the same drawing… bright cheerful flat colors »), 3 consignes de Julian | `jeux/atelier/{a-*,p-*,m-*}.webp`, `jeux/atelier/voix/{animaux,modele,envoyer}.mp3` | 134,75 |
+| | **Total** (solde Higgsfield le 10/11 au soir : 778,35 crédits) | | **≈ 730** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 
