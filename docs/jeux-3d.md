@@ -85,6 +85,11 @@ Autres astuces :
 - **Blocs savoir désactivés** (Réglages) : chaque bloc 📚 donne directement 3 dinars, mais plus de tickets.
 - **Étoiles** : 1 = fini, 2 = 60 % des dinars, 3 = les 3 jasmins. Les jasmins trouvés une première fois rapportent 2 tickets chacun.
 
+### Ludo : temps de jeu et joueurs qui partent (10/11)
+- `TURN_MS = 10000` : dans `tick()`, chaque nouvelle étape (`ev.n` + tour + phase) relance le sablier `#hg` (SVG dont le sable descend, barre, secondes). L'appareil du joueur joue tout seul à 10 s (`timeUp(false)` : dé au hasard, ou le pion que choisirait l'ordinateur).
+- L'« arbitre » (`arbiter()`) fait jouer l'ordinateur et remplace les absents : l'hôte s'il est présent, sinon le premier joueur encore là (présence = le salon, `hello` toutes les 4 s). S'il doit jouer pour quelqu'un (à 10 s + 4 s), il compte `miss` ; au 2e coup manqué, ou si le joueur n'est plus vu depuis 20 s, la place devient `bot:true, left:true` et l'hôte passe à l'arbitre si c'était lui.
+- Bouton ✕ en ligne : la place devient `left` tout de suite et l'hôte est transmis. Chaque appareil qui voit une place passer `left` affiche l'annonce (`announceLeft`). En revenant avec le code, `joinOnline` rend la place au joueur.
+
 ### Ludo : accueil et salon (10/11)
 Accueil = carte `.mcard` (`.mhead` : image, titre, bouton `#who` ; `.mbody` : `.modes`, `#salonMenu`, `.mrow`). Réglages de la partie dans l'écran `#opts` (fenêtre posée sur le menu). Salon : voir `docs/serveur.md`.
 
