@@ -27,7 +27,7 @@ Ces fichiers `.md` sont bloqués en ligne par `.htaccess`. Une copie de cette fi
 | **Imen** | la maman | framboise `#b4235a`, `jeux/avatars/imen.webp` |
 | **Essil** | 12 ans, collège : allemand, latin | bleu `#1f3c88` + rail rouge `#d7263d` |
 | **Salma** | 8 ans, CE2 : anglais, français (conjugaison), maths (soustraction, géométrie, monnaie), exposé cheval | vert `#1f6b44` + ciel `#5aaedc` |
-| **Amine** | 5 ans, grande section : jeux, écriture (Ardoise magique), derja tunisienne | nuit `#2a1f4f` + lune `#fff1bf` / citrouille `#ff8c1a` |
+| **Amine** | 5 ans, grande section : jeux, écriture (Ardoise magique), nombres (Planète des Nombres), derja tunisienne | nuit `#2a1f4f` + lune `#fff1bf` / citrouille `#ff8c1a` |
 
 Ordre d'affichage voulu : **Essil, Salma, Amine**. Les prénoms et les avatars peuvent apparaître sur le site (accord du papa).
 
@@ -43,7 +43,7 @@ manifest.webmanifest, sw.js, icons/   l'application à installer sur l'écran d'
 progression.html       tableau de bord des parents (mot de passe parent), avec le journal des visites
 essil/  index.html, deutsch-express.html, via-romana.html, videos-geometrie.html (+ videos/ : épisodes « Pas à pas »)
 salma/  index.html, english-garden.html, weather-station.html (+ meteo/ : images et voix), atelier-des-verbes.html, atelier-des-formes.html, marche-d-ollie.html (monnaie, 3D), jardin-des-nombres.html, le-grand-galop.html, cheval/ (images et vidéos)
-amine/  index.html, ardoise-magique.html (+ lettres.js : modèles des 78 lettres), la-nuit-d-amine.html, la-nuit-d-amine-2.html, nahki-tounsi.html, serpentin.html, voix/api.php
+amine/  index.html, ardoise-magique.html (+ lettres.js : modèles des 78 lettres), planete-des-nombres.html (+ nombres/ : aliens, décor, voix des nombres), la-nuit-d-amine.html, la-nuit-d-amine-2.html, nahki-tounsi.html, serpentin.html, voix/api.php
 jeux/   serpent-legendes.html, ludo-legendes.html, grimpe-glace.html, legende-du-jasmin.html (+ jasmin/ : images), atelier-du-jasmin.html (coloriage 2D / 3D, + atelier/ : dessins au trait et voix), avatars/ (5 avatars, 15 cartes légendes, illustrations Ludo et Grimpe-Glace), cartes/ (illustrations des skins)
 lib/    three-0.170.0.module.min.js (Three.js, copié ici : aucune dépendance en ligne)
 api/    famille.php (joueurs, records, progrès), ludo.php (parties de Ludo en ligne)
