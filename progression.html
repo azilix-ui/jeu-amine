@@ -76,6 +76,55 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
 .vtable td.ip{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--soft)}
 .vtable tr.fam td:first-child{border-left:4px solid var(--salma)}
 .flag{font-size:18px;margin-right:4px}
+/* tableau de bord : onglets, tuiles de chiffres, graphique, activités */
+.tabs{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px;margin:0 -4px;background:var(--surface);border:2px solid var(--line);border-radius:20px;box-shadow:0 6px 18px rgba(20,30,60,.08);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1 0 auto;font:inherit;font-weight:800;border:0;background:none;color:var(--soft);border-radius:14px;padding:10px 14px;min-height:46px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.tabs button span{font-size:19px}
+.tabs button[aria-selected="true"]{background:var(--essil);color:#fff}
+.tabs button:focus-visible,.seg button:focus-visible,.mini:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+.bar .grow{flex:1}
+.pane{display:flex;flex-direction:column;gap:20px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.tile{background:var(--surface);border:2px solid var(--line);border-top:6px solid var(--t,var(--essil));border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile b{font-family:var(--display);font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.tile span{font-weight:800;font-size:15px}
+.tile small{color:var(--soft);font-weight:700;font-size:13px}
+.tiles.small .tile{border-top-width:2px;background:var(--bg);border-color:transparent;padding:10px 14px}
+.tiles.small .tile b{font-size:28px}
+.tiles.small{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-weight:700;font-size:15px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px}
+.chart{width:100%;height:auto;display:block}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--soft);font-size:12px;font-family:var(--body);font-weight:700}
+.chart .tot{fill:var(--ink)}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:16px}
+.kcard{background:var(--surface);border:2px solid var(--line);border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0;border-top:8px solid var(--t)}
+.kcard header{display:flex;gap:12px;align-items:center}
+.kcard img{border-radius:50%;object-fit:cover;border:3px solid var(--t)}
+.kcard h3{margin:0;font-family:var(--display);font-size:26px;line-height:1}
+.kcard small{color:var(--soft);font-weight:700;font-size:13px}
+.kcard .mini{align-self:flex-start;margin-top:auto}
+.seg.big button{display:inline-flex;align-items:center;gap:8px;font-size:17px;padding:6px 16px 6px 8px;border-radius:999px;min-height:48px}
+.seg.big img{border-radius:50%;object-fit:cover}
+.atable tfoot td{font-weight:800;border-top:2px solid var(--line);border-bottom:0}
+.atable .zero{color:var(--line)}
+.barcell{width:34%;min-width:110px}
+.stack{display:flex;height:12px;border-radius:999px;overflow:hidden;gap:2px}
+.stack i{display:block;min-width:3px}
+.day{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.day:first-of-type{border-top:0}
+.day h3{margin:0;font-family:var(--display);font-size:18px}
+.day h3::first-letter{text-transform:uppercase}
+.drow{display:grid;grid-template-columns:76px 1fr auto;gap:10px;align-items:start;border-left:5px solid var(--t);padding-left:10px}
+.drow>b{padding-top:6px}
+.drow .dn{color:var(--soft);font-weight:700;font-size:14px;padding-top:7px;white-space:nowrap}
+.chip small{color:var(--soft);font-weight:700}
+.chip.win{background:var(--salma-soft);color:var(--salma)}
+.search{font:inherit;padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+h3.sub{margin:6px 0 0;font-family:var(--display)}
+@media (max-width:560px){ .tabs button{padding:8px 12px;font-size:15px} .tile b{font-size:32px} .drow{grid-template-columns:1fr auto} .drow .chips{grid-column:1/-1;grid-row:2} }
 </style>
 </head>
 <body>
@@ -83,7 +132,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
   <a class="back" href="./">← Famille Missaoui</a>
   <header class="top">
     <h1>Progression<span class="dot">.</span></h1>
-    <p class="lead">Où en sont Essil, Salma et Amine dans leurs cours et leurs jeux. Réservé aux parents.</p>
+    <p class="lead">Le tableau de bord des parents : ce que font Essil, Salma et Amine, où ils en sont, et qui visite le site.</p>
   </header>
   <section id="login" class="login" hidden></section>
   <section id="board" class="board" hidden></section>
@@ -340,7 +389,7 @@ function bindManage(){
   const run = async (fields, question) => {
     if(!confirm(question)) return;
     const msg = $('#mMsg'); msg.textContent = 'En cours…';
-    try{ await post(Object.assign({ action:'reset', pass, player:mWho, course:mCourse }, fields)); lastS = await post({ action:'summary', pass }); show(lastS); document.getElementById('manage').scrollIntoView(); $('#mMsg').textContent = '✔ C\'est fait. La tablette de ' + mWho + ' se mettra à jour à sa prochaine visite du cours.'; }
+    try{ await post(Object.assign({ action:'reset', pass, player:mWho, course:mCourse }, fields)); lastS = await post({ action:'summary', pass }); show(lastS); $('#mMsg').textContent = '✔ C\'est fait. La tablette de ' + mWho + ' se mettra à jour à sa prochaine visite du cours.'; }
     catch(e){ msg.textContent = e.message; }
   };
   sec.querySelectorAll('[data-back]').forEach(b => b.onclick = () => run({ history:b.dataset.back }, 'Remettre « ' + (CNAME[mCourse] || mCourse) + ' » de ' + mWho + ' dans l\'état du ' + b.dataset.when + ' ?\n\nTout ce qui a été fait après sera oublié.'));
@@ -348,37 +397,177 @@ function bindManage(){
 }
 function lastSeen(S, name){ const p = S.players.find(x => x.name.toLowerCase() === name.toLowerCase()); return p ? 'dernière visite ' + ago(p.last_seen) : 'pas encore de visite'; }
 
-/* ---------- Affichage ---------- */
-function show(S){
-  $('#login').hidden = true; const b = $('#board'); b.hidden = false; lastS = S;
+/* ---------- Affichage : un tableau de bord en rubriques (onglets) ---------- */
+const KIDS = ['Essil', 'Salma', 'Amine'], KCOL = { Essil:'var(--essil)', Salma:'var(--salma)', Amine:'var(--amine-2)' }, KSUB = { Essil:'12 ans · collège', Salma:'8 ans · CE2', Amine:'5 ans · grande section' };
+const FAM = ['essil', 'salma', 'amine', 'anis', 'imen'];
+const TABS = [['vue', '📊', 'Vue d\'ensemble'], ['activite', '📅', 'Activités'], ['enfants', '🎓', 'Cours et jeux'], ['suivi', '🧭', 'Suivi'], ['records', '🏆', 'Records'], ['journal', '🌍', 'Journal']];
+const mem = { get(k, d){ try{ return sessionStorage.getItem(k) || d; }catch(e){ return d; } }, set(k, v){ try{ sessionStorage.setItem(k, v); }catch(e){} } };
+let tab = mem.get('prog-tab', 'vue'), kid = mem.get('prog-kid', 'Salma'), aKid = 'Tous', vdays = +mem.get('prog-days', 7) || 7;
+let VIS = null, VERR = '', VKEEP = 60, vLoaded = 0, vBusy = false, jFilter = 'tous', jQuery = '';
+const dayKey = t => new Date(t * 1000).toLocaleDateString('fr-CA', { timeZone:'Europe/Paris' });
+const dayLabel = k => new Date(k + 'T12:00:00').toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+const hm = t => new Date(t * 1000).toLocaleTimeString('fr-FR', { timeZone:'Europe/Paris', hour:'2-digit', minute:'2-digit' });
+const kidOf = p => KIDS.find(k => k.toLowerCase() === String(p || '').toLowerCase());
+const since = () => Date.now() / 1000 - vdays * 86400;
+const period = () => (VIS || []).filter(v => v.ts >= since());
+const periodLabel = () => vdays === 1 ? 'depuis 24 h' : 'sur ' + vdays + ' jours';
+const plural = (n, one, many) => n + ' ' + (n > 1 ? many : one);
+// les progrès enregistrés, un par un : qui, quel cours, quand, combien de gagné depuis l'état d'avant
+function gains(S){
+  const by = {}, out = [];
+  S.history.forEach(x => { if(x.course !== 'profil') (by[x.player.toLowerCase() + '|' + x.course] = by[x.player.toLowerCase() + '|' + x.course] || []).push(x); });
+  Object.values(by).forEach(h => h.forEach((x, i) => { const n = brief(x.course, x.data).n, g = i ? n - brief(x.course, h[i - 1].data).n : 0; out.push({ player:x.player, course:x.course, ts:Date.parse(x.created) / 1000, gain:g, first:i === 0, t:brief(x.course, x.data).t }); }));
+  return out.sort((a, b) => b.ts - a.ts);
+}
+function vLabel2(r){ return r.game === 'ludo3d' ? '🎲 Ludo · victoires' : r.game === 'grimpeglace' ? '❄️ Grimpe-Glace · ' + (r.variant === 'etages' ? 'étages' : 'score') : r.game === 'jasmin' ? '🌼 Jasmin · ' + r.variant.replace('monde', 'monde ') : r.game === 'serpent3d' ? '🐉 Légendes · ' + r.variant : '🐍 ' + vLabel(r.variant); }
+const tile = (n, label, sub, col) => '<div class="tile"' + (col ? ' style="--t:' + col + '"' : '') + '><b>' + n + '</b><span>' + label + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>';
+const waitV = () => VERR ? '<p class="none">' + esc(VERR) + '</p>' : '<p class="none">Chargement du journal des visites…</p>';
+
+/* --- 📊 Vue d'ensemble --- */
+function chartHTML(V){
+  const hourly = vdays === 1, N = hourly ? 24 : Math.min(vdays, 30), now = Date.now() / 1000, slots = [];
+  for(let i = N - 1; i >= 0; i--){ const t = now - i * (hourly ? 3600 : 86400); slots.push({ k:hourly ? dayKey(t) + ' ' + new Date(t * 1000).toLocaleTimeString('fr-FR', { timeZone:'Europe/Paris', hour:'2-digit' }) : dayKey(t), t, n:{ Essil:0, Salma:0, Amine:0 } }); }
+  const idx = Object.fromEntries(slots.map((s, i) => [s.k, i]));
+  V.forEach(v => { const k = kidOf(v.player); if(!k) return; const key = hourly ? dayKey(v.ts) + ' ' + new Date(v.ts * 1000).toLocaleTimeString('fr-FR', { timeZone:'Europe/Paris', hour:'2-digit' }) : dayKey(v.ts); if(idx[key] !== undefined) slots[idx[key]].n[k]++; });
+  const max = Math.max(4, ...slots.map(s => s.n.Essil + s.n.Salma + s.n.Amine)), W = 720, H = 210, L = 30, B = 26, T = 14, bw = (W - L - 6) / N, ph = H - B - T;
+  const step = Math.ceil(max / 4), ticks = [0, 1, 2, 3, 4].map(i => i * step).filter(v => v <= max + step - 1);
+  const top = ticks[ticks.length - 1] || max, y = v => T + ph - v / top * ph;
+  let g = ticks.map(v => '<line x1="' + L + '" x2="' + W + '" y1="' + y(v) + '" y2="' + y(v) + '" class="gl"/><text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" class="ax" text-anchor="end">' + v + '</text>').join('');
+  slots.forEach((s, i) => { let acc = 0; const x = L + i * bw + bw * .14, w = bw * .72, tot = s.n.Essil + s.n.Salma + s.n.Amine;
+    const lab = hourly ? s.k.slice(-4).trim() : new Date(s.t * 1000).toLocaleDateString('fr-FR', { timeZone:'Europe/Paris', day:'numeric', month:N > 10 ? 'numeric' : 'short' });
+    KIDS.forEach(k => { const n = s.n[k]; if(!n) return; const h = n / top * ph; acc += n; g += '<rect x="' + x.toFixed(1) + '" y="' + (y(acc)).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + Math.max(1, h - 1.5).toFixed(1) + '" rx="3" fill="' + KCOL[k] + '"><title>' + k + ' : ' + n + ' · ' + lab + '</title></rect>'; });
+    if(tot && N <= 16) g += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (y(tot) - 4).toFixed(1) + '" class="ax tot" text-anchor="middle">' + tot + '</text>';
+    if(N <= 10 || i % Math.ceil(N / 8) === 0 || i === N - 1) g += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (H - 8) + '" class="ax" text-anchor="middle">' + lab + '</text>'; });
+  return '<div class="legend">' + KIDS.map(k => '<span><i style="background:' + KCOL[k] + '"></i>' + k + '</span>').join('') + '</div><svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Pages ouvertes par les enfants, ' + (hourly ? 'heure par heure' : 'jour par jour') + '">' + g + '</svg>';
+}
+function vueHTML(S){
+  const G = gains(S).filter(g => g.ts >= since() && g.gain > 0 && kidOf(g.player));
+  const adv = new Set(G.map(g => g.player.toLowerCase() + '|' + g.course)).size;
+  let head, chart = waitV(), cards;
+  const V = VIS ? period() : [], KV = V.filter(v => kidOf(v.player));
+  if(VIS){
+    const days = new Set(KV.map(v => dayKey(v.ts))).size, ips = {}; V.forEach(v => { (ips[v.ip] = ips[v.ip] || { fam:false }).fam = ips[v.ip].fam || FAM.includes(String(v.player || '').toLowerCase()); });
+    const out = Object.values(ips).filter(x => !x.fam).length;
+    head = tile(KV.length, 'pages ouvertes par les enfants', periodLabel()) + tile(vdays === 1 ? adv : Math.min(days, vdays) + ' / ' + vdays, vdays === 1 ? 'cours ou jeux avancés' : 'jours avec de l\'activité', vdays === 1 ? '' : 'au moins un enfant') +
+      (vdays === 1 ? '' : tile(adv, 'cours ou jeux avancés', 'des progrès enregistrés')) + tile(V.length, 'pages ouvertes en tout', 'famille et visiteurs') + tile(Object.keys(ips).length, 'adresses IP', out ? plural(out, 'hors famille', 'hors famille') : 'toutes de la famille');
+    chart = chartHTML(KV);
+  } else head = tile(adv, 'cours ou jeux avancés', periodLabel()) + tile('…', 'pages ouvertes', 'chargement');
+  cards = KIDS.map(k => {
+    const mine = KV.filter(v => kidOf(v.player) === k), by = {}; mine.forEach(v => by[v.page] = (by[v.page] || 0) + 1);
+    const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 3), g = G.filter(x => kidOf(x.player) === k), gc = {}; g.forEach(x => gc[x.course] = (gc[x.course] || 0) + x.gain);
+    return '<article class="kcard" style="--t:' + KCOL[k] + '"><header><img src="jeux/avatars/' + k.toLowerCase() + '.webp" alt="" width="56" height="56"><div><h3>' + k + '</h3><small>' + KSUB[k] + ' · ' + lastSeen(S, k) + '</small></div></header>' +
+      '<div class="kpis">' + kpi(VIS ? mine.length : '…', 'pages ouvertes') + kpi(VIS ? new Set(mine.map(v => dayKey(v.ts))).size : '…', 'jours actifs') + kpi(Object.keys(gc).length, 'cours avancés') + '</div>' +
+      (top.length ? '<dl class="units">' + top.map(([pg, n]) => '<dt>' + esc(pageName(pg)) + '</dt><dd>' + n + ' fois</dd>').join('') + '</dl>' : '<p class="none">' + (VIS ? 'Aucune page ouverte ' + periodLabel() + '.' : '') + '</p>') +
+      (Object.keys(gc).length ? '<p class="when">Progrès : ' + Object.entries(gc).map(([c, n]) => (CNAME[c] || c) + ' <span class="gain">+' + n + '</span>').join(' · ') + '</p>' : '') +
+      '<button class="mini" data-kid="' + k + '">Voir ses cours et ses jeux →</button></article>'; }).join('');
+  return '<div class="tiles">' + head + '</div><section class="panel"><h2>Pages ouvertes par les enfants</h2>' + chart + '</section><div class="kgrid">' + cards + '</div>';
+}
+
+/* --- 📅 Activités des enfants : combien de fois chaque page, puis jour par jour --- */
+function activiteHTML(S){
+  if(!VIS) return '<section class="panel"><h2>Activités des enfants</h2>' + waitV() + '</section>';
+  const V = period().filter(v => kidOf(v.player)), cols = aKid === 'Tous' ? KIDS : [aKid], by = {};
+  V.forEach(v => { const k = kidOf(v.player); if(!cols.includes(k)) return; const r = by[v.page] = by[v.page] || { Essil:0, Salma:0, Amine:0, n:0 }; r[k]++; r.n++; });
+  const rows = Object.entries(by).sort((a, b) => b[1].n - a[1].n), max = Math.max(1, ...rows.map(r => r[1].n)), tot = c => rows.reduce((a, r) => a + r[1][c], 0);
+  const table = rows.length ? '<div class="table-wrap"><table class="atable"><thead><tr><th>Page</th>' + cols.map(c => '<th class="n">' + c + '</th>').join('') + (cols.length > 1 ? '<th class="n">Total</th>' : '') + '<th></th></tr></thead><tbody>' +
+      rows.map(([pg, r]) => '<tr><td>' + esc(pageName(pg)) + '</td>' + cols.map(c => '<td class="n">' + (r[c] || '<span class="zero">·</span>') + '</td>').join('') + (cols.length > 1 ? '<td class="n">' + r.n + '</td>' : '') +
+        '<td class="barcell"><span class="stack" style="width:' + Math.max(3, r.n / max * 100) + '%">' + cols.map(c => r[c] ? '<i style="flex:' + r[c] + ';background:' + KCOL[c] + '"></i>' : '').join('') + '</span></td></tr>').join('') +
+      '</tbody><tfoot><tr><td>Total</td>' + cols.map(c => '<td class="n">' + tot(c) + '</td>').join('') + (cols.length > 1 ? '<td class="n">' + rows.reduce((a, r) => a + r[1].n, 0) + '</td>' : '') + '<td></td></tr></tfoot></table></div>'
+    : '<p class="none">Aucune page ouverte ' + periodLabel() + '.</p>';
+  // jour par jour
+  const G = gains(S).filter(g => g.ts >= since() && g.gain > 0 && cols.includes(kidOf(g.player))), days = {};
+  V.forEach(v => { const k = kidOf(v.player); if(!cols.includes(k)) return; const d = days[dayKey(v.ts)] = days[dayKey(v.ts)] || {}; const kk = d[k] = d[k] || { pages:{}, gains:[] }; const pg = kk.pages[v.page] = kk.pages[v.page] || { n:0, a:v.ts, b:v.ts }; pg.n++; pg.a = Math.min(pg.a, v.ts); pg.b = Math.max(pg.b, v.ts); });
+  G.forEach(g => { const k = kidOf(g.player), d = days[dayKey(g.ts)] = days[dayKey(g.ts)] || {}; (d[k] = d[k] || { pages:{}, gains:[] }).gains.push(g); });
+  const list = Object.keys(days).sort().reverse().slice(0, 62).map(dk => '<div class="day"><h3>' + dayLabel(dk) + '</h3>' + cols.filter(k => days[dk][k]).map(k => { const x = days[dk][k], n = Object.values(x.pages).reduce((a, p) => a + p.n, 0), gc = {}; x.gains.forEach(g => gc[g.course] = (gc[g.course] || 0) + g.gain);
+      return '<div class="drow" style="--t:' + KCOL[k] + '"><b>' + k + '</b><div class="chips">' + Object.entries(x.pages).sort((a, b) => a[1].a - b[1].a).map(([pg, o]) => '<span class="chip">' + esc(pageName(pg)) + (o.n > 1 ? ' <b>× ' + o.n + '</b>' : '') + ' <small>' + hm(o.a) + (o.b - o.a > 300 ? ' → ' + hm(o.b) : '') + '</small></span>').join('') +
+        Object.entries(gc).map(([c, g]) => '<span class="chip win">' + (CNAME[c] || c) + ' <b>+' + g + '</b></span>').join('') + '</div><span class="dn">' + (n ? plural(n, 'page', 'pages') : '') + '</span></div>'; }).join('') + '</div>').join('');
+  return '<section class="panel"><div class="vhead"><h2>Activités des enfants</h2><span class="seg" id="aKid">' + ['Tous'].concat(KIDS).map(k => '<button data-k="' + k + '" aria-pressed="' + (k === aKid) + '">' + k + '</button>').join('') + '</span></div>' +
+    '<p class="when">Nombre de fois où chaque page a été ouverte ' + periodLabel() + ', avec le prénom choisi sur la tablette.</p>' + table + '</section>' +
+    '<section class="panel"><h2>Jour par jour</h2>' + (list || '<p class="none">Rien ' + periodLabel() + '.</p>') + '<p class="when">Une page est comptée au plus une fois toutes les 10 minutes. Les pastilles vertes sont les progrès enregistrés ce jour-là (étoiles, XP, dessins finis…).</p></section>';
+}
+
+/* --- 🎓 Cours et jeux : les cartes détaillées, un enfant à la fois --- */
+function enfantsHTML(S){
+  const cards = { Essil:() => courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + legendesCard(S, 'Essil') + ludoCard(S, 'Essil') + atelierCard(S, 'Essil'),
+    Salma:() => salmaCard(S) + meteoCard(S) + verbesCard(S) + monnaieCard(S) + formesCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + ludoCard(S, 'Salma') + atelierCard(S, 'Salma'),
+    Amine:() => serpentCard(S, 'Amine') + ecritureCard(S) + legendesCard(S, 'Amine') + ludoCard(S, 'Amine') + atelierCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') };
+  const sub = { Essil:'Allemand · Latin', Salma:'Anglais · Français · Maths · Exposé', Amine:'Jeux · Grande section' };
+  if(!cards[kid]) kid = 'Salma';
+  return '<div class="seg big" id="kidSeg">' + KIDS.map(k => '<button data-k="' + k + '" aria-pressed="' + (k === kid) + '"><img src="jeux/avatars/' + k.toLowerCase() + '.webp" alt="" width="34" height="34">' + k + '</button>').join('') + '</div>' +
+    '<article class="child ' + kid.toLowerCase() + '"><header><h2>' + kid + '</h2><span>' + sub[kid] + '</span><span>· ' + lastSeen(S, kid) + '</span></header><div class="subjects">' + cards[kid]() + '</div></article>' +
+    '<p class="when">Les progrès des cours sont envoyés automatiquement quand l\'enfant les utilise sur missaoui-family.com. Ce qui a été fait avant la mise en place du suivi apparaît dès que l\'enfant rouvre le cours sur le même appareil.</p>';
+}
+
+/* --- 🏆 Records et dernières parties --- */
+function recordsHTML(S){
   const others = S.players.map(p => p.name).filter(n => !['essil','salma','amine'].includes(n.toLowerCase()));
-  const serp = S.best.filter(x => x.game === 'serpentin');
-  const variants = [...new Set(serp.map(x => x.variant))].sort();
-  const top = n => Math.max(...serp.filter(x => x.player === n).map(x => +x.best));
-  const names = [...new Set(serp.map(x => x.player))].sort((a,b) => top(b) - top(a));
-  b.innerHTML =
-    '<div class="bar"><span>Mis à jour ' + fmtDate(new Date().toISOString()) + '</span><button class="tool" id="reload">↻ Actualiser</button><button class="tool" id="logout">Se déconnecter</button></div>' + manageHTML(S) +
-    '<article class="child essil"><header><h2>Essil</h2><span>Allemand · Latin</span><span>· ' + lastSeen(S, 'Essil') + '</span></header><div class="subjects">' +
-      courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + legendesCard(S, 'Essil') + ludoCard(S, 'Essil') + atelierCard(S, 'Essil') + '</div></article>' +
-    '<article class="child salma"><header><h2>Salma</h2><span>Anglais · Français · Maths · Exposé</span><span>· ' + lastSeen(S, 'Salma') + '</span></header><div class="subjects">' +
-      salmaCard(S) + meteoCard(S) + verbesCard(S) + monnaieCard(S) + formesCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + ludoCard(S, 'Salma') + atelierCard(S, 'Salma') + '</div></article>' +
-    '<article class="child amine"><header><h2>Amine</h2><span>Jeux · Grande section</span><span>· ' + lastSeen(S, 'Amine') + '</span></header><div class="subjects">' +
-      serpentCard(S, 'Amine') + ecritureCard(S) + legendesCard(S, 'Amine') + ludoCard(S, 'Amine') + atelierCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') + '</div></article>' +
-    '<section class="panel"><h2>🏆 Serpentin : les records de tout le monde</h2>' + (variants.length
+  const serp = S.best.filter(x => x.game === 'serpentin'), variants = [...new Set(serp.map(x => x.variant))].sort();
+  const top = n => Math.max(...serp.filter(x => x.player === n).map(x => +x.best)), names = [...new Set(serp.map(x => x.player))].sort((a, b) => top(b) - top(a));
+  return '<section class="panel"><h2>🏆 Serpentin : les records de tout le monde</h2>' + (variants.length
       ? '<div class="table-wrap"><table><thead><tr><th>Joueur</th>' + variants.map(v => '<th>' + vLabel(v) + '</th>').join('') + '</tr></thead><tbody>' +
         names.map(n => '<tr><td>' + esc(n) + '</td>' + variants.map(v => { const r = serp.find(x => x.player === n && x.variant === v); return '<td class="n">' + (r ? r.best : '—') + '</td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>'
       : '<p class="none">Aucune partie enregistrée pour l\'instant.</p>') +
       (others.length ? '<p class="when">Autres joueurs : ' + others.map(esc).join(', ') + '</p>' : '') + '</section>' +
     '<section class="panel"><h2>🕒 Dernières parties</h2>' + (S.recent.length
       ? '<div class="table-wrap"><table><thead><tr><th>Quand</th><th>Joueur</th><th>Jeu</th><th>Score</th></tr></thead><tbody>' +
-        S.recent.slice(0, 15).map(r => '<tr><td>' + fmtDate(r.created) + '</td><td>' + esc(r.player) + '</td><td>' + (r.game === 'ludo3d' ? '🎲 Ludo · victoires' : r.game === 'grimpeglace' ? '❄️ Grimpe-Glace · ' + (r.variant === 'etages' ? 'étages' : 'score') : r.game === 'jasmin' ? '🌼 Jasmin · ' + r.variant.replace('monde', 'monde ') : r.game === 'serpent3d' ? '🐉 Légendes · ' + r.variant : '🐍 ' + vLabel(r.variant)) + '</td><td class="n">' + r.score + '</td></tr>').join('') + '</tbody></table></div>'
-      : '<p class="none">Rien pour l\'instant.</p>') + '</section>' +
-    '<section class="panel" id="visits"><div class="vhead"><h2>🌍 Journal des visites</h2><span class="seg" id="vdays"><button data-d="1">24 h</button><button data-d="7" aria-pressed="true">7 jours</button><button data-d="30">30 jours</button><button data-d="60">60 jours</button></span></div><div id="vbody"><p class="none">Chargement…</p></div></section>' +
-    '<p class="when">Les progrès des cours sont envoyés automatiquement quand l\'enfant les utilise sur missaoui-family.com. Ce qui a été fait avant la mise en place du suivi apparaît dès que l\'enfant rouvre le cours sur le même appareil.</p>';
-  $('#reload').onclick = async () => { try{ show(await post({action:'summary', pass})); }catch(e){ loginForm(e.message); } };
-  document.querySelectorAll('#vdays button').forEach(x => x.onclick = () => { document.querySelectorAll('#vdays button').forEach(y => y.setAttribute('aria-pressed', y === x)); loadVisits(+x.dataset.d); });
-  loadVisits(7); bindManage();
-  $('#logout').onclick = () => { pass = null; try{ sessionStorage.removeItem('famille-pass'); }catch(e){} loginForm(''); };
+        S.recent.map(r => '<tr><td>' + fmtDate(r.created) + '</td><td>' + esc(r.player) + '</td><td>' + vLabel2(r) + '</td><td class="n">' + r.score + '</td></tr>').join('') + '</tbody></table></div>'
+      : '<p class="none">Rien pour l\'instant.</p>') + '</section>';
+}
+
+/* --- 🌍 Journal des visites : adresse IP, lieu, appareil, page --- */
+function journalHTML(){
+  if(!VIS) return '<section class="panel"><h2>🌍 Journal des visites</h2>' + waitV() + '</section>';
+  const isFam = v => FAM.includes(String(v.player || '').toLowerCase()), famIP = new Set(VIS.filter(isFam).map(v => v.ip));
+  const q = jQuery.trim().toLowerCase(), place = v => '<span class="flag">' + flag(v.cc) + '</span>' + esc(v.country || '?') + (v.city ? ' · ' + esc(v.city) : '');
+  const text = v => [pageName(v.page), v.player, v.ip, v.country, v.city, v.isp, device(v.ua || '', v.screen), v.ref].join(' ').toLowerCase();
+  const V = period().filter(v => (jFilter === 'tous' || (jFilter === 'famille') === famIP.has(v.ip)) && (!q || text(v).includes(q)));
+  const head = '<div class="vhead"><h2>🌍 Journal des visites</h2><span class="seg" id="jSeg">' + [['tous', 'Tout le monde'], ['famille', 'La famille'], ['autres', 'Les autres']].map(f => '<button data-f="' + f[0] + '" aria-pressed="' + (f[0] === jFilter) + '">' + f[1] + '</button>').join('') + '</span></div>' +
+    '<input class="search" id="jQ" type="search" placeholder="Chercher : une page, un prénom, une adresse IP, une ville…" value="' + esc(jQuery) + '" aria-label="Chercher dans le journal">';
+  if(!V.length) return '<section class="panel" id="visits">' + head + '<p class="none">Aucune visite ne correspond ' + periodLabel() + '.</p></section>';
+  const ips = new Set(V.map(v => v.ip)), byC = {}; V.forEach(v => { const k = (v.cc || '') + '|' + (v.country || 'Inconnu'); byC[k] = (byC[k] || 0) + 1; });
+  const who = {}; V.forEach(v => { const w = who[v.ip] || (who[v.ip] = { ip:v.ip, cc:v.cc, country:v.country, city:v.city, isp:v.isp, n:0, last:v.ts, first:v.ts, players:new Set(), dev:device(v.ua || '', v.screen) }); w.n++; w.first = Math.min(w.first, v.ts); w.last = Math.max(w.last, v.ts); if(v.player) w.players.add(v.player); });
+  const W = Object.values(who).sort((a, b) => b.last - a.last);
+  const fmt = t => new Date(t * 1000).toLocaleString('fr-FR', { timeZone:'Europe/Paris', weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  return '<section class="panel" id="visits">' + head +
+    '<div class="tiles small">' + tile(V.length, 'pages ouvertes') + tile(ips.size, 'adresses IP') + tile(V.filter(v => v.app).length, 'depuis l\'appli installée') + tile(Object.keys(byC).length, 'pays') + '</div>' +
+    '<div class="chips">' + Object.entries(byC).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, n]) => { const [cc, c] = k.split('|'); return '<span class="chip">' + flag(cc) + ' ' + esc(c) + ' · <b>' + n + '</b></span>'; }).join('') + '</div>' +
+    '<h3 class="sub">Les visiteurs (un par adresse IP)</h3><div class="table-wrap"><table class="vtable"><thead><tr><th>Dernière visite</th><th>Lieu</th><th>Adresse IP</th><th>Fournisseur</th><th>Appareil</th><th>Prénoms</th><th class="n">Pages</th></tr></thead><tbody>' +
+      W.slice(0, 80).map(w => '<tr class="' + (famIP.has(w.ip) ? 'fam' : '') + '"><td>' + fmt(w.last) + '</td><td>' + place(w) + '</td><td class="ip">' + esc(w.ip) + '</td><td>' + esc(w.isp || '') + '</td><td>' + esc(w.dev) + '</td><td>' + esc([...w.players].join(', ') || '—') + '</td><td class="n">' + w.n + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<h3 class="sub">Toutes les pages ouvertes' + (V.length > 400 ? ' (les 400 dernières)' : '') + '</h3><div class="table-wrap"><table class="vtable"><thead><tr><th>Heure (Paris)</th><th>Page</th><th>Prénom</th><th>Lieu</th><th>Adresse IP</th><th>Appareil</th><th>Venu de</th></tr></thead><tbody>' +
+      V.slice(0, 400).map(v => '<tr class="' + (famIP.has(v.ip) ? 'fam' : '') + '"><td>' + fmt(v.ts) + '</td><td>' + esc(pageName(v.page)) + (v.app ? ' 📱' : '') + '</td><td>' + esc(v.player || '—') + '</td><td>' + place(v) + '</td><td class="ip">' + esc(v.ip) + '</td><td>' + esc(device(v.ua || '', v.screen)) + (v.screen ? ' <small style="color:var(--soft)">' + esc(v.screen) + '</small>' : '') + '</td><td>' + esc(v.ref || '') + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<p class="when">Chaque ouverture de page est notée (au plus une fois toutes les 10 minutes par page et par onglet). 📱 = depuis l\'appli installée. Le pays et la ville viennent de l\'adresse IP (service ip-api.com) : c\'est approximatif, souvent la ville du fournisseur d\'accès. Le journal est effacé après ' + VKEEP + ' jours. Trait vert = une adresse d\'où un prénom de la famille a joué.</p></section>';
+}
+
+async function fetchVisits(){
+  const need = vdays > 30 ? 60 : 30; if(vBusy || (VIS && vLoaded >= need)) return; vBusy = true;
+  try{ const R = await post({ action:'visits', pass, days:need }); VIS = R.visits || []; VKEEP = R.keep || 60; vLoaded = need; VERR = ''; }catch(e){ VERR = e.message; }
+  vBusy = false; draw();
+}
+function draw(){
+  const S = lastS, pane = $('#pane'); if(!S || !pane) return;
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === tab));
+  document.querySelectorAll('#pdays button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.d === vdays));
+  $('#pdays').style.visibility = tab === 'enfants' || tab === 'suivi' || tab === 'records' ? 'hidden' : '';
+  const keep = tab === 'journal' && document.activeElement && document.activeElement.id === 'jQ' ? document.activeElement.selectionStart : null;
+  pane.innerHTML = tab === 'vue' ? vueHTML(S) : tab === 'activite' ? activiteHTML(S) : tab === 'enfants' ? enfantsHTML(S) : tab === 'suivi' ? manageHTML(S) : tab === 'records' ? recordsHTML(S) : journalHTML();
+  if(tab === 'suivi') bindManage();
+  pane.querySelectorAll('[data-kid]').forEach(b => b.onclick = () => { kid = b.dataset.kid; mem.set('prog-kid', kid); setTab('enfants'); });
+  pane.querySelectorAll('#kidSeg button').forEach(b => b.onclick = () => { kid = b.dataset.k; mem.set('prog-kid', kid); draw(); });
+  pane.querySelectorAll('#aKid button').forEach(b => b.onclick = () => { aKid = b.dataset.k; draw(); });
+  pane.querySelectorAll('#jSeg button').forEach(b => b.onclick = () => { jFilter = b.dataset.f; draw(); });
+  const q = $('#jQ'); if(q){ q.oninput = () => { jQuery = q.value; draw(); }; if(keep !== null){ q.focus(); try{ q.setSelectionRange(keep, keep); }catch(e){} } }
+}
+function setTab(t){ tab = t; mem.set('prog-tab', t); draw(); scrollTo({ top:0 }); }
+function show(S){
+  $('#login').hidden = true; const b = $('#board'); b.hidden = false; lastS = S;
+  if(!TABS.some(t => t[0] === tab)) tab = 'vue';
+  b.innerHTML = '<nav class="tabs" id="tabs" role="tablist" aria-label="Rubriques">' + TABS.map(t => '<button role="tab" data-t="' + t[0] + '"><span aria-hidden="true">' + t[1] + '</span>' + t[2] + '</button>').join('') + '</nav>' +
+    '<div class="bar"><span class="seg" id="pdays"><button data-d="1">24 h</button><button data-d="7">7 jours</button><button data-d="30">30 jours</button><button data-d="60">60 jours</button></span><span class="grow"></span><span>Mis à jour ' + fmtDate(new Date().toISOString()) + '</span><button class="tool" id="reload">↻ Actualiser</button><button class="tool" id="logout">Se déconnecter</button></div><div id="pane" class="pane"></div>';
+  document.querySelectorAll('#tabs button').forEach(x => x.onclick = () => setTab(x.dataset.t));
+  document.querySelectorAll('#pdays button').forEach(x => x.onclick = () => { vdays = +x.dataset.d; mem.set('prog-days', vdays); draw(); fetchVisits(); });
+  $('#reload').onclick = async () => { try{ const S2 = await post({action:'summary', pass}); VIS = null; vLoaded = 0; show(S2); }catch(e){ loginForm(e.message); } };
+  $('#logout').onclick = () => { pass = null; VIS = null; vLoaded = 0; try{ sessionStorage.removeItem('famille-pass'); }catch(e){} loginForm(''); };
+  draw(); fetchVisits();
 }
 /* ---------- Journal des visites (site.js, toutes les pages) ---------- */
 const PAGES = { '/':'Accueil', '/index.html':'Accueil', '/indexancien.html':'Ancienne accueil', '/progression.html':'Progression (parents)', '/essil/':'Espace Essil', '/salma/':'Espace Salma', '/amine/':'Espace Amine',
@@ -392,29 +581,6 @@ function device(ua, screen){
   const d = /iPad/.test(ua) || (/Macintosh/.test(ua) && sw && sw < sh) ? 'iPad' : /iPhone/.test(ua) ? 'iPhone' : /Android/.test(ua) ? (/Mobile/.test(ua) ? 'Android (téléphone)' : 'Android (tablette)') : /Windows/.test(ua) ? 'PC Windows' : /Macintosh/.test(ua) ? 'Mac' : /CrOS/.test(ua) ? 'Chromebook' : /Linux/.test(ua) ? 'Linux' : /bot|crawl|spider|preview/i.test(ua) ? 'Robot' : 'Autre';
   const b = /Edg\//.test(ua) ? 'Edge' : /SamsungBrowser/.test(ua) ? 'Samsung' : /Firefox|FxiOS/.test(ua) ? 'Firefox' : /CriOS|Chrome/.test(ua) ? 'Chrome' : /Safari/.test(ua) ? 'Safari' : '';
   return d + (b ? ' · ' + b : '');
-}
-const FAM = ['essil', 'salma', 'amine', 'anis', 'imen'];
-async function loadVisits(days){
-  const box = $('#vbody'); if(!box) return; box.innerHTML = '<p class="none">Chargement… (recherche des pays)</p>';
-  let R; try{ R = await post({ action:'visits', pass, days }); }catch(e){ box.innerHTML = '<p class="none">' + esc(e.message) + '</p>'; return; }
-  const V = R.visits || [];
-  if(!V.length){ box.innerHTML = '<p class="none">Aucune visite notée sur cette période.</p>'; return; }
-  const ips = new Set(V.map(v => v.ip)), byC = {};
-  V.forEach(v => { const k = (v.cc || '') + '|' + (v.country || 'Inconnu'); byC[k] = (byC[k] || 0) + 1; });
-  const apps = V.filter(v => v.app).length;
-  const top = Object.entries(byC).sort((a, b) => b[1] - a[1]);
-  // regroupe par visiteur (IP) pour voir d'un coup d'œil qui vient
-  const who = {}; V.forEach(v => { const w = who[v.ip] || (who[v.ip] = { ip:v.ip, cc:v.cc, country:v.country, city:v.city, isp:v.isp, n:0, last:v.ts, players:new Set(), dev:device(v.ua || '', v.screen) }); w.n++; if(v.player) w.players.add(v.player); });
-  const W = Object.values(who).sort((a, b) => b.last - a.last);
-  const fmt = t => new Date(t * 1000).toLocaleString('fr-FR', { timeZone:'Europe/Paris', weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', second:'2-digit' });
-  const place = v => '<span class="flag">' + flag(v.cc) + '</span>' + esc(v.country || '?') + (v.city ? ' · ' + esc(v.city) : '');
-  box.innerHTML = '<div class="chips"><span class="chip"><b>' + V.length + '</b> page' + (V.length > 1 ? 's ouvertes' : ' ouverte') + '</span><span class="chip"><b>' + ips.size + '</b> adresse' + (ips.size > 1 ? 's IP différentes' : ' IP') + '</span><span class="chip"><b>' + apps + '</b> depuis l\'appli installée</span>' +
-      top.slice(0, 8).map(([k, n]) => { const [cc, c] = k.split('|'); return '<span class="chip">' + flag(cc) + ' ' + esc(c) + ' · <b>' + n + '</b></span>'; }).join('') + '</div>' +
-    '<h3 style="margin:6px 0 0;font-family:var(--display)">Les visiteurs</h3><div class="table-wrap"><table class="vtable"><thead><tr><th>Dernière visite</th><th>Lieu</th><th>Adresse IP</th><th>Fournisseur</th><th>Appareil</th><th>Prénoms</th><th class="n">Pages</th></tr></thead><tbody>' +
-      W.slice(0, 60).map(w => '<tr class="' + ([...w.players].some(p => FAM.includes(p.toLowerCase())) ? 'fam' : '') + '"><td>' + fmt(w.last) + '</td><td>' + place(w) + '</td><td class="ip">' + esc(w.ip) + '</td><td>' + esc(w.isp || '') + '</td><td>' + esc(w.dev) + '</td><td>' + esc([...w.players].join(', ') || '—') + '</td><td class="n">' + w.n + '</td></tr>').join('') + '</tbody></table></div>' +
-    '<h3 style="margin:6px 0 0;font-family:var(--display)">Toutes les pages ouvertes</h3><div class="table-wrap"><table class="vtable"><thead><tr><th>Heure (Paris)</th><th>Page</th><th>Prénom</th><th>Lieu</th><th>Adresse IP</th><th>Appareil</th><th>Venu de</th></tr></thead><tbody>' +
-      V.slice(0, 300).map(v => '<tr class="' + (v.player && FAM.includes(v.player.toLowerCase()) ? 'fam' : '') + '"><td>' + fmt(v.ts) + '</td><td>' + esc(pageName(v.page)) + (v.app ? ' 📱' : '') + '</td><td>' + esc(v.player || '—') + '</td><td>' + place(v) + '</td><td class="ip">' + esc(v.ip) + '</td><td>' + esc(device(v.ua || '', v.screen)) + (v.screen ? ' <small style="color:var(--soft)">' + esc(v.screen) + '</small>' : '') + '</td><td>' + esc(v.ref || '') + '</td></tr>').join('') + '</tbody></table></div>' +
-    '<p class="when">Chaque ouverture de page est notée (au plus une fois toutes les 10 minutes par page et par onglet). 📱 = depuis l\'appli installée. Le pays et la ville viennent de l\'adresse IP (service ip-api.com) : c\'est approximatif, souvent la ville du fournisseur d\'accès. Le journal est effacé après ' + R.keep + ' jours. Ligne verte = un prénom de la famille.</p>';
 }
 start();
 </script>

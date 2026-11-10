@@ -88,3 +88,7 @@ Demandé par le papa : un soir, c'est lui qui a parcouru le cours d'anglais de S
 - `POST action=chat code seat name text` → `{id}` (texte de 1 à 120 caractères, prénom de 24 au plus, caractères de contrôle retirés, même limite d'envois que les coups). On garde les 60 derniers messages par partie ; ils disparaissent avec la partie (12 h).
 - Lecture sans requête en plus : la tablette ajoute `since=<dernier id>` à son `GET action=state` (une fois par seconde) et reçoit `chat: [...]`.
 - Côté page (`jeux/ludo-legendes.html`) : `chatSend`, `chatReceive`, `chatAdd` ; tout est affiché avec `textContent` (aucun HTML venant d'un message). Un message fait seulement d'emojis s'envole à l'écran ; un texte s'affiche en bulle. L'historique reçu en rejoignant la partie est rangé dans la fenêtre sans animation.
+
+## Progression : tableau de bord en rubriques (10/11)
+
+`progression.html` affiche six onglets (`TABS`, fonction `draw()`), mémorisés dans `sessionStorage` (`prog-tab`, `prog-kid`, `prog-days`). Les données viennent des deux mêmes appels qu'avant : `summary` (progrès, historique de 120 jours, records) et `visits` (30 jours chargés une fois, 60 si on le demande ; le filtre de période se fait dans la page). Les « activités des enfants » sont les lignes du journal des visites qui portent le prénom d'un enfant, regroupées par page et par jour (`activiteHTML`) ; les « progrès » sont les écarts entre deux états successifs de l'historique (`gains()`). Limite : une page n'est notée qu'une fois toutes les 10 minutes, on compte donc des ouvertures, pas un temps passé.
