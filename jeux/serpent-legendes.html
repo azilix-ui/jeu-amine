@@ -86,7 +86,9 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
 .chest p{margin:2px 0 0;color:var(--mist);font-size:14px}
 .odds{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .odds span{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#0004}
-.rar-savoir{color:var(--mint)}
+.rar-savoir{color:var(--mint)}.rar-atelier{color:#ffb3d1}
+.skin.r-atelier{border-color:#ffb3d188;background:linear-gradient(160deg,#3a2a5e,#1f4a66)}
+.atelier-link{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#ff8fb8,#ffc928);color:#3a1830;border-radius:20px;padding:12px 16px;font-weight:800;text-decoration:none;margin:6px 0 4px;box-shadow:0 5px 0 #0004}.atelier-link span{font-size:30px}.atelier-link small{display:block;font-weight:600;opacity:.85}
 .rar-mythique{color:var(--r-mythique)}.rar-secret{color:var(--r-secret)}
 .skin.r-mythique{border-color:#ff4d8d88;background:linear-gradient(160deg,#4a1838,#2b2457)}
 .skin.r-secret{border-color:#c9d4ff66;background:linear-gradient(160deg,#1b2350,#14102b)}
@@ -273,7 +275,7 @@ import * as THREE from '../lib/three-0.170.0.module.min.js';
    ===================================================================== */
 const N = 17;                               // taille du plateau (cases)
 const CHEST = 30;                           // prix d'un coffre
-const RAR = { commun:{label:'Commun', p:55}, rare:{label:'Rare', p:32}, epique:{label:'Épique', p:13}, legendaire:{label:'Légendaire', p:0}, savoir:{label:'Savoir', p:0}, mythique:{label:'Mythique', p:0}, secret:{label:'Secret', p:0} };
+const RAR = { commun:{label:'Commun', p:55}, rare:{label:'Rare', p:32}, epique:{label:'Épique', p:13}, legendaire:{label:'Légendaire', p:0}, savoir:{label:'Savoir', p:0}, mythique:{label:'Mythique', p:0}, secret:{label:'Secret', p:0}, atelier:{label:'Ma création', p:0} };
 const col = new THREE.Color(), col2 = new THREE.Color();
 const hex = h => new THREE.Color(h);
 const alt = (a, b, every = 2) => (i) => (Math.floor(i / every) % 2 ? b : a);
@@ -321,6 +323,22 @@ const SKINS = [
   { id:'tresor', name:'Trésor', rar:'secret', head:'#ffd23f', body:(i)=> i % 4 === 2 ? ['#e8333a','#2f9e44','#3a6bff','#b14bff'][Math.floor(i / 4) % 4] : (i % 2 ? '#ffd23f' : '#e0a000'), mat:{ metal:.85, rough:.22, emissive:'#7a4a00', ei:.15 }, acc:['couronne'] }
 ];
 const SECRETS = ['aurore', 'tonnerre', 'arclune', 'tresor'];
+// Le serpent inventé par le joueur dans l'Atelier du Jasmin (jeux/atelier-du-jasmin.html) : couleurs, motif, effet, accessoire
+const ATELIER_ACC = ['couronne', 'cornes', 'antennes', 'oreilles', 'aureole', 'ailes', 'corne-licorne', 'crete', 'lune'];
+function atelierSkin(sp){
+  const ok = h => /^#[0-9a-f]{6}$/i.test(h || ''), c = (sp.cols || []).filter(ok); while(c.length < 3) c.push(c[c.length - 1] || '#5cc96b');
+  const fx = { brillant:{ metal:.7, rough:.25, emissive:'#000000', ei:0 }, lumineux:{ emissive:c[0], ei:.5 } }[sp.fx] || null;
+  const body = {
+    uni:() => c[0], rayures:i => c[i % 2], bandes:i => c[Math.floor(i / 2) % 3], pois:i => i % 3 === 2 ? c[1] : c[0],
+    degrade:(i, n) => { const u = n > 1 ? i / (n - 1) : 0; return u < .5 ? col.set(c[0]).lerp(col2.set(c[1]), u * 2) : col.set(c[1]).lerp(col2.set(c[2]), (u - .5) * 2); },
+    arcenciel:(i, n, t) => col.setHSL(((i * .07 - t * .3) % 1 + 1) % 1, .85, .6)
+  }[sp.pat] || (() => c[0]);
+  return { id:'atelier', name:String(sp.name || 'Mon serpent').slice(0, 24), rar:'atelier', head:ok(sp.head) ? sp.head : c[0], anim:sp.pat === 'arcenciel', body, mat:fx || undefined, acc:ATELIER_ACC.includes(sp.acc) ? [sp.acc] : [] };
+}
+function setAtelierSkin(sp){
+  const i = SKINS.findIndex(s => s.id === 'atelier'); if(i >= 0) SKINS.splice(i, 1); delete SKIN.atelier;
+  if(sp && sp.cols){ const s = atelierSkin(sp); SKINS.push(s); SKIN.atelier = s; }
+}
 const KIDS = ['essil', 'salma', 'amine'];
 let shinyOn = false; const WHITE = new THREE.Color('#ffffff');
 const SKIN = Object.fromEntries(SKINS.map(s => [s.id, s]));
@@ -398,6 +416,11 @@ async function setPlayer(name){
       data = Object.assign(fresh(), r); data.best = Object.assign(fresh().best, data.best || {}); store.set(key(), data);
     }
   }
+  // le serpent créé dans l'Atelier du Jasmin (sur cette tablette, ou relu sur le serveur)
+  let at = store.get('atelier:' + name, null);
+  if(window.Famille){ try{ const ra = await Famille.load('atelier', name), rd = ra && ra['atelier:' + name]; if(rd && (rd.t || 0) > ((at && at.t) || 0)) at = rd; }catch(e){} if(player !== name) return; }
+  setAtelierSkin(at && at.skin);
+  data.skins = data.skins.filter(id => id !== 'atelier'); if(SKIN.atelier) data.skins.push('atelier');
   if(!SKIN[data.skin] || !data.skins.includes(data.skin)) data.skin = 'vert';
   data.bought = data.bought || []; data.spentT = data.spentT || 0;
   studyEarned = 0; for(const src of STUDY[name.toLowerCase()] || []) studyEarned += (store.get(src.key, null) || {}).tickets || 0;
@@ -998,9 +1021,11 @@ function renderColl(){
       <div class="odds"><span class="rar-commun">Commun ${RAR.commun.p}%</span><span class="rar-rare">Rare ${RAR.rare.p}%</span><span class="rar-epique">Épique ${RAR.epique.p}%</span></div></div>
       <button class="big alt" id="buyChest" style="padding:0 18px;font-size:20px" ${data.coins >= CHEST && pool.length ? '' : 'disabled style="opacity:.5;padding:0 18px;font-size:20px"'}>🪙 ${CHEST}</button></div>
     ${shopHTML()}
+    <div class="sect rar-atelier">🎨 Ma création<small>Invente ton propre serpent dans l'Atelier du Jasmin.</small></div>${SKIN.atelier ? cards([SKIN.atelier]) : ''}
+    <a class="atelier-link" href="atelier-du-jasmin.html?go=serpent"><span aria-hidden="true">🎨</span><div>${SKIN.atelier ? 'Changer mon serpent' : 'Créer mon serpent'}<small>Couleurs, motif, effet et chapeau : c'est toi qui choisis !</small></div></a>
     <div class="sect rar-legendaire">✨ Légendaires : à gagner avec un défi</div>${cards(SKINS.filter(s => s.rar === 'legendaire'))}
     ${rareHTML(cards)}
-    <div class="sect">Ma collection (${data.skins.length}/${SKINS.length})</div>${cards(SKINS.filter(s => !['legendaire','mythique','secret'].includes(s.rar) && (s.rar !== 'savoir' || data.skins.includes(s.id))))}`;
+    <div class="sect">Ma collection (${data.skins.length}/${SKINS.length})</div>${cards(SKINS.filter(s => !['legendaire','mythique','secret','atelier'].includes(s.rar) && (s.rar !== 'savoir' || data.skins.includes(s.id))))}`;
   $('collBody').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { sfx.tap(); buy(b.dataset.buy); });
   const b = $('buyChest'); if(b) b.onclick = () => { if(data.coins < CHEST || !pool.length) return; openChest(); };
   $('collBody').querySelectorAll('.skin').forEach(el => el.onclick = () => {

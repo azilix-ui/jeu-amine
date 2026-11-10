@@ -43,7 +43,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 09/11 | Épisode 2 d'Essil « Carreler la cuisine de mamie » (l'aire) : 11 images 9:16 + 14 phrases de Céline | `essil/videos/aire.mp4` | ≈ 27 |
 | 10/11 | English Garden de Salma : 171 phrases enregistrées (anglais **Raina** `seed_audio` en wav ; français d'Ollie refait avec **Céline**), découpées en clips | `salma/english/voix/*.mp3` | ≈ 17 |
 | 10/11 | Épisodes 3, 4, 5 d'Essil (le piège du fermier, le bassin de Kairouan, le minaret) : 27 images 9:16 `flux_3_image` + 33 phrases de Céline | `essil/videos/{piege,volume,angles}.mp4` | ≈ 72 |
-| | **Total** (solde Higgsfield le 10/11 : 982,4 crédits) | | **≈ 525** |
+| 10/11 | L'Atelier du Jasmin : 19 paysages au trait (4:3 ; Sidi Bou Saïd refait une fois, le premier était sorti en couleurs), 9 costumes au trait (3:4), 1 essai, l'image d'accueil (16:9) (`flux_3_image`) + 10 consignes de Julian (2 prises ElevenLabs) | `jeux/atelier/*.webp`, `jeux/atelier/voix/*.mp3` | ≈ 62 |
+| | **Total** (solde Higgsfield le 10/11 : 920,6 crédits) | | **≈ 587** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 
@@ -70,3 +71,4 @@ Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet
 - Une génération peut échouer (statut `failed`) : relancer une fois, elle n'est normalement pas facturée ; vérifier le solde ensuite.
 - Voix (`seed_audio`, 0,1 crédit la phrase) : pas plus de 3 ou 4 demandes à la fois (sinon erreur 429) ; une prise de plusieurs phrases séparées par des lignes vides se découpe aux silences, mais les petits mots enchaînés vite se découpent mal : une phrase par demande est plus sûr. **En mp3, les phrases de plus de ~6 s sont coupées à la fin : demander `format: wav`.** Une prise a été refusée deux fois (« nsfw ») sans raison : la refaire en phrases séparées.
 - Vidéo (prix vérifiés le 09/11, clip 9:16 de 10 s) : Grok Imagine 1.5 Lite 10 crédits, Kling 3.0 sans son 15 (avec son 20), Wan 2.6 15, Seedance 2.5 70.
+- Dessins à colorier (`flux_3_image`, 2 crédits) : « Simple children's coloring book page for a 5-year-old, strictly black and white line art, absolutely no color. [scène]. Bold thick uniform black outlines on a pure white background, only big simple closed shapes (about 40 areas), no tiny details, no texture, no shading, no gray, no hatching, no solid black areas, no text, no frame. » Ne pas écrire « white houses » ni « blue » : le dessin sort colorié. Pour un personnage : « Full body, front view, standing, centered… whole character visible from head to feet… hair is outlined, not filled ». Ensuite : niveaux de gris, contraste (70 → 190), WebP.

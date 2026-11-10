@@ -153,24 +153,44 @@
   }
 
   /* ---------- Suivi des progrès ---------- */
+  /* Remise à zéro par un parent (page Progression) : le serveur garde la date et l'état voulu ;
+     chaque tablette l'applique une fois (les clés du cours sont vidées ou remises à l'état choisi), puis la page se recharge. */
+  function applyReset(course, player, keys, r){
+    try{
+      var d = r.data || {};
+      keys.forEach(function(k){ try{ if(d[k] === undefined || d[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, typeof d[k] === 'string' ? d[k] : JSON.stringify(d[k])); }catch(e){} });
+      localStorage.removeItem('famille-sync:' + course + ':' + player);
+      set('famille-rst:' + course + ':' + player, r.ts);
+      // la page a encore l'ancien état en mémoire : on l'empêche de le réécrire pendant le rechargement
+      var orig = Storage.prototype.setItem;
+      Storage.prototype.setItem = function(k){ if(this === localStorage && keys.indexOf(k) >= 0) return; return orig.apply(this, arguments); };
+    }catch(e){}
+    location.reload();
+  }
   function track(course, player, keys){
     if(!online) return;
     var lastSent = get('famille-sync:' + course + ':' + player, '');
+    var ack = function(){ return +get('famille-rst:' + course + ':' + player, 0) || 0; };
+    var ready = false, stopped = false;
+    function gotReset(r){ if(r && r.ts > ack()){ stopped = true; applyReset(course, player, keys, r); return true; } return false; }
+    fetch(API + '?action=resets&course=' + encodeURIComponent(course) + '&player=' + encodeURIComponent(player), {cache:'no-store'})
+      .then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ if(!gotReset(j)) ready = true; }).catch(function(){ ready = true; });
     function snapshot(){
       var d = {};
       keys.forEach(function(k){ try{ var v = localStorage.getItem(k); if(v !== null){ try{ d[k] = JSON.parse(v); }catch(e){ d[k] = v; } } }catch(e){} });
       return JSON.stringify(d);
     }
     function send(beacon){
+      if(stopped || !ready) return;
       var data = snapshot();
       if(data === '{}' || data === lastSent) return;
-      var f = {action:'progress', player:player, course:course, data:data};
+      var f = {action:'progress', player:player, course:course, data:data, rst:String(ack())};
       if(beacon && navigator.sendBeacon){
         var fd = new FormData(); Object.keys(f).forEach(function(k){ fd.append(k, f[k]); });
         if(navigator.sendBeacon(API, fd)){ lastSent = data; set('famille-sync:' + course + ':' + player, data); }
         return;
       }
-      post(f).then(function(){ lastSent = data; set('famille-sync:' + course + ':' + player, data); }).catch(function(){});
+      post(f).then(function(j){ if(j && j.reset){ gotReset(j.reset); return; } lastSent = data; set('famille-sync:' + course + ':' + player, data); }).catch(function(){});
     }
     setTimeout(send, 3000);
     setInterval(send, 15000);

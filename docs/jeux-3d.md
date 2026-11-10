@@ -82,3 +82,21 @@ Autres astuces :
 - **Boss** : il fonce, se cogne au mur et reste sonné ⭐ : c'est seulement là qu'on lui saute sur le dos (3 fois). Les piments de harissa l'abîment aussi.
 - **Blocs savoir désactivés** (Réglages) : chaque bloc 📚 donne directement 3 dinars, mais plus de tickets.
 - **Étoiles** : 1 = fini, 2 = 60 % des dinars, 3 = les 3 jasmins. Les jasmins trouvés une première fois rapportent 2 tickets chacun.
+
+## L'Atelier du Jasmin — `jeux/atelier-du-jasmin.html` (coloriage, 2D ou 3D) (10/11)
+
+Demandé par le papa : colorier les paysages des mondes du Jasmin, créer les costumes de Nour, Yasmine et Farès, et inventer un skin pour le jeu de serpents, « dans un monde 3D avec des sons et des animations ».
+
+- **Accueil** : l'enfant choisit **2D** (à plat, comme un cahier) ou **3D** (en relief, sur une terrasse de Sidi Bou Saïd). Le choix se change dans le menu (pastille 🖍️ 2D / 🧊 3D). Three.js n'est chargé que si l'enfant choisit la 3D ; si la 3D ne démarre pas, on repasse en 2D.
+- **Menu** : 🏞️ Les paysages (18), 👘 Les costumes (3 amis × 3 tenues), 🐍 Mon serpent, 🖼️ Ma galerie, 🎭 Le spectacle.
+- **Dessins** (`jeux/atelier/*.webp`, Higgsfield `flux_3_image`, trait noir sur blanc, 1024 × 768 pour les paysages `p-…`, 768 × 1024 pour les costumes `c-…`) :
+  - paysages : sidi, medina, carthage, kairouan, eljem, zaghouan, tabarka, aindraham, ichkeul, djerba, matmata, ksar, dunes, tozeur, chott, lezard, tamerza, palais ;
+  - costumes : Nour (jebba de fête, pêcheur de Djerba, prince du désert), Yasmine (farmla et chéchia, melia berbère, caftan de fête), Farès (jebba brodée, cavalier du désert, farmla et sarouel).
+- **Moteur de coloriage** (aucune dépendance) : au chargement, le dessin est découpé en **zones** (tout ce qui n'est pas un trait, par remplissage de proche en proche) ; un toucher remplit la zone, avec une animation en cercle depuis le doigt. La couleur passe 3 pixels sous les traits (pas de liseré blanc). Si le doigt tombe sur un trait ou une zone minuscule, on prend la zone voisine la plus proche. Pour les personnages, le fond autour (zones qui touchent le bord) n'est pas coloriable et reste transparent : c'est ce qui donne les silhouettes découpées.
+- **Outils** : 20 couleurs, 5 motifs (uni, rayures, pois, zellige, arc-en-ciel), gomme, ↩️ annuler, 🧽 tout effacer (deux touchers), ✔ Fini (qui s'agite quand 90 % des zones sont coloriées).
+- **3D** : la toile est posée sur un chevalet (paysages) ou devient une silhouette debout sur un socle (costumes) ; un toucher court colorie (lancer de rayon → coordonnées dans le dessin), un glissement tourne autour, deux doigts ou la molette zooment. Décor : terrasse en zellige, muret, maisons blanches à dômes bleus, mer, buissons de jasmin, pétales qui volent.
+- **Mon serpent** : couleur de la tête, 3 couleurs du corps, motif (uni, rayures, bandes, pois, dégradé, arc-en-ciel), effet (normal, brillant, lumineux), chapeau (couronne, cornes, antennes, oreilles, auréole, ailes, corne de licorne, crête, lune), nom. Aperçu animé (2D) ou serpent 3D qui tourne sur son tapis. **Serpent Légendes** le lit (`atelierSkin` / `setAtelierSkin`) : il apparaît dans « Mes skins » sous « 🎨 Ma création » (rareté `atelier`), avec un lien pour le créer ou le changer (`atelier-du-jasmin.html?go=serpent`).
+- **Le spectacle** : le dernier paysage colorié devient le décor, les trois amis (dans le dernier costume colorié de chacun, sinon au trait) sautillent devant, le serpent de l'enfant passe. 🔀 Changer prend d'autres dessins.
+- **Sons** : petits bruits Web Audio (une note de la gamme hijaz par couleur), musique douce générée (🎵 / 🔇), consignes dites par **Julian** (`jeux/atelier/voix/*.mp3` : accueil, menu, paysage, costume, colorie, bravo, galerie, serpent, pret, spectacle).
+- **Sauvegarde** : `atelier:<Prénom>` (petit : mode, dessins finis, skin ; envoyé au serveur, cours `atelier`, relu sur une autre tablette) et `atelier-art:<Prénom>` (les coloriages, sous forme de points [x, y, couleur, motif], et leurs vignettes ; ils restent sur la tablette). Une remise à zéro par un parent vide aussi les coloriages.
+- Progression : carte « 🎨 Atelier du Jasmin » (paysages et costumes finis, serpent, façon de jouer).

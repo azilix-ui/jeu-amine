@@ -62,6 +62,16 @@ Mot de passe parent (le même que les voix). Cartes : Essil (Deutsch, Latin, Ser
 
 **Mot de passe oublié** : supprimer `nahki-voix/auth.json` dans le gestionnaire de fichiers hPanel, puis en recréer un (les sons sont conservés).
 
+## Suivre un cours, revenir en arrière, remettre à zéro (10/11)
+
+Demandé par le papa : un soir, c'est lui qui a parcouru le cours d'anglais de Salma ; il faut pouvoir le remettre « comme pas vu ».
+
+- **Progression › 🧭 Suivre un cours et revenir en arrière** (en haut de la page) : on choisit un enfant puis un cours ; le tableau montre les instantanés (un par heure d'activité au plus, 120 jours) avec où il en était et ce qu'il a gagné. « ↩ Revenir à cet état » remet le cours comme à cette date (ce qui a été fait après est oublié) ; « 🗑 Remettre ce cours à zéro » efface tout (pour un jeu, une case permet d'effacer aussi ses records des classements).
+- **Serveur** : `POST action=reset pass player course [history=<id>] [scores=1]` ; la table `resets (player, course, ts, data)` garde la date et l'état voulu (`data` vide = zéro). `GET ?action=resets&player=&course=` le relit.
+- **Tablettes** : `Famille.track` demande d'abord `resets` ; si la date est plus récente que celle déjà appliquée (`famille-rst:<cours>:<Prénom>`), les clés du cours sont vidées (ou remises à l'état choisi) et la page se recharge. Un envoi de progrès qui ne connaît pas la dernière remise à zéro (champ `rst`) est **refusé** par le serveur, qui renvoie la remise à appliquer : une tablette restée ouverte ne peut donc pas réécrire l'ancien état.
+- Les jours d'apprentissage (séries, cartes secrètes) viennent de l'historique : un retour en arrière les corrige aussi.
+- Limite : les coloriages de l'Atelier restent sur la tablette ; une remise à zéro de l'Atelier les vide à la prochaine visite sur cette tablette.
+
 ## Cache et sécurité (`.htaccess`)
 
 - Bloque en ligne tous les `.md`, `package.json`, `build.js`, `.gitignore`.

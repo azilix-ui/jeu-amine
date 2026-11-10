@@ -18,13 +18,19 @@
  *   POST action=setup  newpass                          -> crée le mot de passe (une seule fois)
  *   POST action=summary pass                            -> tout pour la page Progression
  *   POST action=visits  pass days                       -> journal des visites (IP, pays, ville, page, appareil), 60 jours au plus
+ *   POST action=reset   pass player course [history] [scores] -> remet un cours à zéro, ou à l'état d'un instantané (history = id)
+ * Remise à zéro : la table resets garde la date et l'état voulu ; chaque tablette l'applique à sa prochaine visite
+ *   GET  ?action=resets&player=P&course=C               -> {ts, data} de la dernière remise à zéro (ts = 0 s'il n'y en a pas)
+ *   (un envoi de progrès qui ne connaît pas la dernière remise à zéro est refusé : champ rst)
  */
 declare(strict_types=1);
 
 const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
-const READABLE = ['profil', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture'];
-const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin'];
+const READABLE = ['profil', 'atelier', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture'];
+const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'atelier'];
+// Jeu (classements) lié à un cours : une remise à zéro peut aussi effacer ses records.
+const COURSE_GAME = ['serpent3d' => 'serpent3d', 'ludo3d' => 'ludo3d', 'grimpeglace' => 'grimpeglace', 'jasmin' => 'jasmin', 'amine-serpentin' => 'serpentin'];
 // Cours qui comptent comme « apprendre » (les jeux n'en font pas partie) : séries de jours et cartes secrètes.
 const LEARNING = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-ecriture'];
 const MAX_DATA = 30000;
@@ -81,6 +87,7 @@ function db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS progress (player TEXT NOT NULL COLLATE NOCASE, course TEXT NOT NULL, data TEXT NOT NULL, updated TEXT NOT NULL, PRIMARY KEY (player, course))');
     $pdo->exec('CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY, player TEXT NOT NULL COLLATE NOCASE, course TEXT NOT NULL, data TEXT NOT NULL, created TEXT NOT NULL)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS history_pc ON history (player, course, created)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS resets (player TEXT NOT NULL COLLATE NOCASE, course TEXT NOT NULL, ts INTEGER NOT NULL, data TEXT, PRIMARY KEY (player, course))');
     $pdo->exec('CREATE TABLE IF NOT EXISTS writes (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS visits (id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, ip TEXT NOT NULL, cc TEXT, page TEXT NOT NULL, player TEXT, ua TEXT, app INTEGER, screen TEXT, ref TEXT)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS visits_ts ON visits (ts)');
@@ -198,6 +205,15 @@ try {
         out(200, ['data' => $r ? json_decode($r['data'], true) : null, 'updated' => $r ? $r['updated'] : null]);
     }
 
+    if ($method === 'GET' && $action === 'resets') {
+        $p = clean_player($_GET['player'] ?? '');
+        $course = (string)($_GET['course'] ?? '');
+        if (!in_array($course, COURSES, true)) fail(400, 'Cours inconnu.');
+        $st = db()->prepare('SELECT ts, data FROM resets WHERE player = ? AND course = ?'); $st->execute([$p, $course]);
+        $r = $st->fetch(PDO::FETCH_ASSOC);
+        out(200, ['ts' => $r ? (int)$r['ts'] : 0, 'data' => $r && $r['data'] !== null ? json_decode((string)$r['data'], true) : null]);
+    }
+
     if ($method === 'GET' && $action === 'rewards') {
         $p = clean_player($_GET['player'] ?? '');
         $pdo = db();
@@ -308,8 +324,12 @@ try {
         $raw = (string)($_POST['data'] ?? '');
         if ($raw === '' || strlen($raw) > MAX_DATA || !is_array(json_decode($raw, true))) fail(400, 'Progrès invalides.');
         $data = json_encode(json_decode($raw, true), JSON_UNESCAPED_UNICODE);
-        touch_player($p);
         $pdo = db();
+        // Un parent a remis ce cours à zéro : la tablette doit d'abord l'appliquer (famille.js), sinon elle renverrait l'ancien état.
+        $st = $pdo->prepare('SELECT ts, data FROM resets WHERE player = ? AND course = ?'); $st->execute([$p, $course]);
+        $rs = $st->fetch(PDO::FETCH_ASSOC);
+        if ($rs && (int)$rs['ts'] > (int)($_POST['rst'] ?? 0)) out(200, ['ok' => false, 'reset' => ['ts' => (int)$rs['ts'], 'data' => $rs['data'] !== null ? json_decode((string)$rs['data'], true) : null]]);
+        touch_player($p);
         $st = $pdo->prepare('SELECT data FROM progress WHERE player = ? AND course = ?'); $st->execute([$p, $course]);
         $prev = $st->fetchColumn();
         $n = now();
@@ -337,19 +357,50 @@ try {
         out(200, ['ok' => true]);
     }
 
+    if ($action === 'reset') {
+        check_pass();
+        $p = clean_player($_POST['player'] ?? '');
+        $course = (string)($_POST['course'] ?? '');
+        if (!in_array($course, COURSES, true) || $course === 'profil') fail(400, 'Cours inconnu.');
+        $pdo = db();
+        $hid = (int)($_POST['history'] ?? 0);
+        $data = null;
+        $pdo->beginTransaction();
+        if ($hid > 0) {   // revenir à un instantané : il devient l'état actuel, ce qui a été fait après est oublié
+            $st = $pdo->prepare('SELECT data, created FROM history WHERE id = ? AND player = ? AND course = ?'); $st->execute([$hid, $p, $course]);
+            $h = $st->fetch(PDO::FETCH_ASSOC);
+            if (!$h) { $pdo->rollBack(); fail(404, 'Instantané introuvable.'); }
+            $data = (string)$h['data'];
+            $pdo->prepare('DELETE FROM history WHERE player = ? AND course = ? AND id > ?')->execute([$p, $course, $hid]);
+            $pdo->prepare('INSERT INTO progress (player, course, data, updated) VALUES (?, ?, ?, ?) ON CONFLICT(player, course) DO UPDATE SET data = excluded.data, updated = excluded.updated')->execute([$p, $course, $data, (string)$h['created']]);
+        } else {          // remise à zéro complète
+            $pdo->prepare('DELETE FROM history WHERE player = ? AND course = ?')->execute([$p, $course]);
+            $pdo->prepare('DELETE FROM progress WHERE player = ? AND course = ?')->execute([$p, $course]);
+        }
+        $scores = 0;
+        if (($_POST['scores'] ?? '') === '1' && isset(COURSE_GAME[$course])) {
+            $st = $pdo->prepare('DELETE FROM scores WHERE player = ? AND game = ?'); $st->execute([$p, COURSE_GAME[$course]]); $scores = $st->rowCount();
+        }
+        $pdo->prepare('INSERT INTO resets (player, course, ts, data) VALUES (?, ?, ?, ?) ON CONFLICT(player, course) DO UPDATE SET ts = excluded.ts, data = excluded.data')->execute([$p, $course, time(), $data]);
+        $pdo->commit();
+        out(200, ['ok' => true, 'scores' => $scores]);
+    }
+
     if ($action === 'summary') {
         check_pass();
         $pdo = db();
         $players = $pdo->query('SELECT name, created, last_seen FROM players ORDER BY last_seen DESC')->fetchAll(PDO::FETCH_ASSOC);
         $progress = $pdo->query('SELECT player, course, data, updated FROM progress')->fetchAll(PDO::FETCH_ASSOC);
         $since = gmdate('Y-m-d\TH:i:s\Z', time() - 35 * 86400);
-        $st = $pdo->prepare('SELECT player, course, data, created FROM history WHERE created >= ? ORDER BY created ASC'); $st->execute([$since]);
+        $since = gmdate('Y-m-d\TH:i:s\Z', time() - 120 * 86400);
+        $st = $pdo->prepare('SELECT id, player, course, data, created FROM history WHERE created >= ? ORDER BY created ASC'); $st->execute([$since]);
         $history = $st->fetchAll(PDO::FETCH_ASSOC);
         $best = $pdo->query('SELECT player, game, variant, MAX(score) AS best, COUNT(*) AS games, MAX(created) AS last FROM scores GROUP BY player, game, variant')->fetchAll(PDO::FETCH_ASSOC);
         $recent = $pdo->query('SELECT player, game, variant, score, created FROM scores ORDER BY created DESC LIMIT 30')->fetchAll(PDO::FETCH_ASSOC);
         foreach ($progress as &$r) $r['data'] = json_decode($r['data'], true); unset($r);
-        foreach ($history as &$r) $r['data'] = json_decode($r['data'], true); unset($r);
-        out(200, ['players' => $players, 'progress' => $progress, 'history' => $history, 'best' => $best, 'recent' => $recent]);
+        foreach ($history as &$r) { $r['data'] = json_decode($r['data'], true); $r['id'] = (int)$r['id']; } unset($r);
+        $resets = $pdo->query('SELECT player, course, ts FROM resets')->fetchAll(PDO::FETCH_ASSOC);
+        out(200, ['players' => $players, 'progress' => $progress, 'history' => $history, 'best' => $best, 'recent' => $recent, 'resets' => $resets]);
     }
 
     fail(400, 'Action inconnue.');

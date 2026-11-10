@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#1f5fbf">
+<title>L'Atelier du Jasmin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%A8%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* L'Atelier du Jasmin : coloriage des paysages de Tunisie et des costumes de Nour, Yasmine et Farès,
+   création d'un serpent pour Serpent Légendes. Deux façons de jouer : à plat (2D) ou en relief (3D, Three.js).
+   Dessins au trait : Higgsfield. Remplissage : zones détectées dans le dessin (aucune dépendance). */
+:root{
+  --blue:#1f5fbf; --blue-deep:#143f86; --sky:#bfe4ff; --lime:#fffdf6; --cream:#fff4d6; --sun:#ffc928; --pink:#e8438f; --ink:#1c2340; --mist:#5d6686;
+  --shadow:0 6px 0 rgba(20,40,90,.28);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--sky);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-weight:600;touch-action:none;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
+h1,h2,h3{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-height:1.05}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:none}
+body.m3d #gl{display:block}
+.scr{position:fixed;inset:0;display:none;flex-direction:column;padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+.scr.on{display:flex}
+.bg2d{background:linear-gradient(180deg,#8fd0ff 0%,#d8f0ff 45%,#fff4d6 100%)}
+body.m3d .scr.soft{background:linear-gradient(180deg,rgba(143,208,255,.55),rgba(255,244,214,.72))}
+body:not(.m3d) .scr{background:linear-gradient(180deg,#8fd0ff 0%,#d8f0ff 45%,#fff4d6 100%)}
+/* barre du haut */
+.top{display:flex;align-items:center;gap:8px;min-height:56px;flex:none}
+.top h2{flex:1;min-width:0;font-size:clamp(20px,4.2vw,30px);color:var(--blue-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 #fff8}
+.pill{height:52px;min-width:52px;padding:0 14px;border-radius:26px;background:var(--lime);box-shadow:var(--shadow);font-weight:800;font-size:20px;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--blue-deep);text-decoration:none;flex:none}
+.pill:active,.big:active,.card:active,.sw:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(20,40,90,.28)}
+.pill.go{background:#35b44a;color:#fff}.pill.sun{background:var(--sun);color:#4a3200}
+.pill[disabled]{opacity:.4}
+.pill.wow{animation:wow 1s ease-in-out infinite}
+@keyframes wow{50%{transform:scale(1.12) rotate(-3deg)}}
+/* accueil */
+#home{align-items:center;justify-content:center;gap:16px;background:#1f5fbf url(atelier/titre.webp) center/cover !important}
+#home::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,40,95,.15) 0%,rgba(15,40,95,.72) 100%)}
+#home > *{position:relative}
+#home h1{font-size:clamp(38px,9vw,84px);color:#fff;text-align:center;text-shadow:0 4px 0 var(--blue-deep),0 10px 30px #0008}
+#home h1 span{color:var(--sun)}
+#home p{margin:0;color:#fff;font-size:clamp(17px,3vw,24px);text-align:center;text-shadow:0 2px 6px #0009}
+.modes{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.mode{width:min(40vw,260px);min-height:180px;border-radius:32px;background:var(--lime);box-shadow:0 10px 0 rgba(10,30,80,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px;animation:bob 3s ease-in-out infinite}
+.mode:nth-child(2){animation-delay:-1.5s}
+.mode b{font-family:"Baloo 2";font-size:clamp(30px,6vw,46px);color:var(--blue-deep);line-height:1}
+.mode span{font-size:clamp(46px,9vw,72px);line-height:1}
+.mode small{font-size:17px;color:var(--mist)}
+.mode:active{transform:translateY(6px);box-shadow:0 4px 0 rgba(10,30,80,.5)}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.corner{position:absolute !important;top:max(10px,env(safe-area-inset-top));display:flex;gap:8px}
+.corner.l{left:12px}.corner.r{right:12px}
+.who{height:52px;border-radius:26px;background:var(--lime);box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:8px;padding:0 14px 0 5px;font-weight:800;font-size:19px;color:var(--blue-deep)}
+.who img{width:42px;height:42px;border-radius:50%;object-fit:cover}
+/* menu */
+.grid{flex:1;min-height:0;overflow:auto;touch-action:pan-y;display:grid;gap:14px;padding:8px 2px 14px;align-content:start}
+#menu .grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));align-content:safe center;max-width:1060px;width:100%;margin:0 auto}
+.big{border-radius:28px;background:var(--lime);box-shadow:var(--shadow);padding:16px;display:flex;align-items:center;gap:14px;text-align:left;min-height:104px}
+.big span{font-size:54px;line-height:1;flex:none}
+.big b{font-family:"Baloo 2";font-size:25px;line-height:1.05;color:var(--blue-deep);display:block}
+.big small{font-size:15px;color:var(--mist);display:block;margin-top:2px}
+.big.c1{background:#e6f6ff}.big.c2{background:#ffe9f3}.big.c3{background:#e9fbe6}.big.c4{background:#fff3c4}.big.c5{background:#efe6ff}
+/* choix d'un dessin */
+#pick .grid,#gallery .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.card{position:relative;border-radius:22px;background:var(--lime);box-shadow:var(--shadow);padding:8px;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.card img{width:100%;border-radius:14px;background:#fff;display:block;aspect-ratio:4/3;object-fit:contain}
+.card.tall img{aspect-ratio:3/4}
+.card b{font-size:15px;line-height:1.15;color:var(--blue-deep);text-align:center;min-height:2.3em;display:grid;place-items:center}
+.card .ok{position:absolute;top:2px;right:2px;width:34px;height:34px;border-radius:50%;background:#35b44a;color:#fff;display:grid;place-items:center;font-size:18px;box-shadow:0 3px 0 #0003}
+.sect{grid-column:1/-1;display:flex;align-items:center;gap:10px;font-family:"Baloo 2";font-weight:800;font-size:24px;color:var(--blue-deep);margin-top:4px}
+.sect img{width:48px;height:48px;border-radius:50%;object-fit:cover;box-shadow:0 3px 0 #0003}
+.none{grid-column:1/-1;text-align:center;font-size:19px;color:var(--mist);padding:30px 10px}
+/* coloriage */
+#paint{padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.work{flex:1;min-height:0;display:grid;gap:10px;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:minmax(0,1fr)}
+#stage{position:relative;min-width:0;min-height:0;display:grid;place-items:center;border-radius:24px;touch-action:none}
+#cv{position:absolute;inset:0;margin:auto;max-width:100%;max-height:100%;border-radius:18px;box-shadow:0 8px 24px rgba(20,40,90,.25);background:#fffdf6;touch-action:none;display:block}
+body.m3d #cv{display:none}
+.tools{display:flex;flex-direction:column;gap:8px;background:rgba(255,253,246,.92);border-radius:24px;padding:10px;box-shadow:var(--shadow);overflow:auto;touch-action:pan-y;width:164px}
+.pal{display:grid;grid-template-columns:repeat(3,44px);gap:6px;justify-content:center}
+.sw{width:44px;height:44px;border-radius:50%;border:3px solid #fff;box-shadow:0 3px 0 rgba(20,40,90,.3),inset 0 0 0 1px rgba(20,40,90,.18);padding:0;font-size:20px;display:grid;place-items:center;background:#fff}
+.sw.on{outline:4px solid var(--blue);outline-offset:2px;transform:scale(1.08)}
+.pats{display:grid;grid-template-columns:repeat(3,44px);gap:6px;justify-content:center;border-top:2px dashed #cfd8ee;padding-top:8px}
+.pats .sw{border-radius:14px}
+.meter{height:12px;border-radius:6px;background:#dfe6f5;overflow:hidden;flex:none}.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8fd14f,#35b44a);transition:width .3s}
+@media (orientation:portrait){
+  .work{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+  .tools{width:auto;flex-direction:row;align-items:center;overflow-x:auto;touch-action:pan-x;padding:8px}
+  .pal,.pats{grid-template-columns:none;grid-auto-flow:column;grid-template-rows:repeat(2,44px)}
+  .pats{border-top:0;border-left:2px dashed #cfd8ee;padding:0 0 0 8px}
+  .meter{display:none}
+}
+@media (orientation:landscape) and (max-height:520px){ .pal,.pats{grid-template-columns:repeat(3,38px)} .sw{width:38px;height:38px} .tools{width:146px} .top{min-height:48px} .pill{height:44px;min-width:44px} }
+/* serpent */
+#snake .work{grid-template-columns:minmax(0,1fr) minmax(250px,340px)}
+#sstage{position:relative;min-width:0;min-height:0;border-radius:24px;overflow:hidden}
+#scv{width:100%;height:100%;display:block;border-radius:24px;background:linear-gradient(180deg,#bfe9ff,#e9fbe6)}
+body.m3d #scv{display:none}
+.opts{display:flex;flex-direction:column;gap:8px;background:rgba(255,253,246,.94);border-radius:24px;padding:12px;box-shadow:var(--shadow);overflow:auto;touch-action:pan-y}
+.opts h3{font-size:18px;color:var(--blue-deep);margin-top:2px}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+.slot{width:50px;height:50px;border-radius:16px;border:3px solid #fff;box-shadow:0 3px 0 rgba(20,40,90,.3);padding:0;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 2px #0008}
+.slot.on{outline:4px solid var(--blue);outline-offset:2px}
+.chip{min-height:46px;min-width:46px;padding:0 12px;border-radius:16px;background:#eaf0fb;font-weight:800;font-size:16px;color:var(--blue-deep);box-shadow:0 3px 0 rgba(20,40,90,.2)}
+.chip.on{background:var(--blue);color:#fff}
+.mini{display:grid;grid-template-columns:repeat(auto-fill,36px);gap:5px}
+.mini .sw{width:36px;height:36px}
+#sname{font:inherit;font-size:18px;font-weight:800;padding:10px 14px;border-radius:14px;border:3px solid #cfd8ee;background:#fff;color:var(--ink);width:100%;user-select:text;-webkit-user-select:text}
+@media (orientation:portrait){ #snake .work{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(160px,34vh) minmax(0,1fr)} }
+/* spectacle */
+#show{padding:0}
+#shcv{position:absolute;inset:0;width:100%;height:100%;display:block}
+body.m3d #shcv{display:none}
+#show .top{position:absolute;left:12px;right:12px;top:max(10px,env(safe-area-inset-top));z-index:2}
+/* fête */
+#party{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+#party i{position:absolute;top:-40px;font-style:normal;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(540deg)}}
+#bravo{position:fixed;inset:0;z-index:60;display:none;place-items:center;background:rgba(15,40,95,.55);padding:16px}
+#bravo.on{display:grid}
+.box{background:var(--lime);border-radius:32px;padding:22px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;box-shadow:0 20px 60px #0006;animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.box h2{font-size:38px;color:var(--pink)}
+.box img{max-width:100%;max-height:36vh;border-radius:18px;box-shadow:0 6px 18px #0003;background:#fff}
+.box .row{justify-content:center}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:22px;font-weight:800;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+#load{position:absolute;inset:0;display:none;place-items:center;font-family:"Baloo 2";font-size:26px;color:var(--blue-deep)}
+#load.on{display:grid}
+@media (prefers-reduced-motion:reduce){ .mode,.pill.wow{animation:none} }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<section id="home" class="scr on">
+  <div class="corner l"><a class="pill" href="../" aria-label="Retour au site">←</a></div>
+  <div class="corner r"><button class="who" id="who1"></button></div>
+  <h1>L'Atelier <span>du Jasmin</span></h1>
+  <p>Colorie la Tunisie, habille tes amis, invente ton serpent !</p>
+  <div class="modes">
+    <button class="mode" data-mode="2d"><span aria-hidden="true">🖍️</span><b>2D</b><small>à plat, comme un cahier</small></button>
+    <button class="mode" data-mode="3d"><span aria-hidden="true">🧊</span><b>3D</b><small>en relief, sur la terrasse</small></button>
+  </div>
+</section>
+
+<section id="menu" class="scr soft">
+  <div class="top"><button class="pill" data-go="home" aria-label="Retour">←</button><h2>Que veux-tu faire ?</h2><button class="pill" id="mode2" aria-label="Changer 2D / 3D"></button><button class="pill" data-snd aria-label="Musique">🎵</button><button class="who" id="who2"></button></div>
+  <div class="grid">
+    <button class="big c1" data-go="pick:p"><span aria-hidden="true">🏞️</span><div><b>Les paysages</b><small>18 lieux de Tunisie à colorier</small></div></button>
+    <button class="big c2" data-go="pick:c"><span aria-hidden="true">👘</span><div><b>Les costumes</b><small>Habille Nour, Yasmine et Farès</small></div></button>
+    <button class="big c3" data-go="snake"><span aria-hidden="true">🐍</span><div><b>Mon serpent</b><small>Crée ton skin pour Serpent Légendes</small></div></button>
+    <button class="big c4" data-go="gallery"><span aria-hidden="true">🖼️</span><div><b>Ma galerie</b><small id="galCount">Tes dessins</small></div></button>
+    <button class="big c5" data-go="show"><span aria-hidden="true">🎭</span><div><b>Le spectacle</b><small>Tes dessins prennent vie</small></div></button>
+  </div>
+</section>
+
+<section id="pick" class="scr soft">
+  <div class="top"><button class="pill" data-go="menu" aria-label="Retour">←</button><h2 id="pickTitle"></h2></div>
+  <div class="grid" id="pickGrid"></div>
+</section>
+
+<section id="gallery" class="scr soft">
+  <div class="top"><button class="pill" data-go="menu" aria-label="Retour">←</button><h2>Ma galerie</h2><button class="pill sun" data-go="show">🎭 Spectacle</button></div>
+  <div class="grid" id="galGrid"></div>
+</section>
+
+<section id="paint" class="scr">
+  <div class="top"><button class="pill" id="pBack" aria-label="Retour">←</button><h2 id="pTitle"></h2>
+    <button class="pill" id="undo" aria-label="Annuler">↩️</button><button class="pill" id="wipe" aria-label="Tout effacer">🧽</button><button class="pill" data-snd aria-label="Musique">🎵</button><button class="pill go" id="done">✔ Fini</button></div>
+  <div class="work">
+    <div id="stage"><canvas id="cv" width="1024" height="768"></canvas><div id="load">Je prépare ton dessin… 🎨</div></div>
+    <div class="tools"><div class="pal" id="pal"></div><div class="pats" id="pats"></div><div class="meter" aria-hidden="true"><i id="meter"></i></div></div>
+  </div>
+</section>
+
+<section id="snake" class="scr">
+  <div class="top"><button class="pill" data-go="menu" aria-label="Retour">←</button><h2>Mon serpent</h2><button class="pill" data-snd aria-label="Musique">🎵</button><button class="pill go" id="sSave">✔ C'est lui !</button></div>
+  <div class="work">
+    <div id="sstage"><canvas id="scv"></canvas></div>
+    <div class="opts">
+      <h3>1. Où mets-tu la couleur ?</h3><div class="row" id="slots"></div>
+      <div class="mini" id="spal"></div>
+      <h3>2. Son motif</h3><div class="row" id="spat"></div>
+      <h3>3. Son effet</h3><div class="row" id="sfx"></div>
+      <h3>4. Son chapeau</h3><div class="row" id="sacc"></div>
+      <h3>5. Son nom</h3><input id="sname" maxlength="24" autocomplete="off" aria-label="Le nom de ton serpent">
+    </div>
+  </div>
+</section>
+
+<section id="show" class="scr">
+  <div class="top"><button class="pill" data-go="menu" aria-label="Retour">←</button><h2 style="color:#fff;text-shadow:0 2px 6px #0008">Le spectacle</h2><button class="pill" data-snd aria-label="Musique">🎵</button><button class="pill sun" id="shNext">🔀 Changer</button></div>
+  <canvas id="shcv"></canvas>
+</section>
+
+<div id="party"></div>
+<div id="bravo"><div class="box"><h2 id="bTitle">Bravo !</h2><img id="bImg" alt=""><div class="row" id="bRow"></div></div></div>
+<div id="toast"></div>
+
+<script src="../famille.js"></script>
+<script type="module">
+'use strict';
+const $ = id => document.getElementById(id);
+const PARENTS = [{ name:'Anis', color:'#0f766e', emoji:'🧔' }, { name:'Imen', color:'#b4235a', emoji:'👩' }];
+const FAMILY = ['essil', 'salma', 'amine', 'anis', 'imen'];
+
+/* =====================================================================
+   Les dessins
+   ===================================================================== */
+const LAND = [['p-sidi','Sidi Bou Saïd'],['p-medina','La Médina de Tunis'],['p-carthage','Les Ruines de Carthage'],['p-kairouan','Kairouan'],['p-eljem',"L'Amphithéâtre d'El Jem"],['p-zaghouan',"L'Aqueduc de Zaghouan"],
+  ['p-tabarka','La Côte de Tabarka'],['p-aindraham',"Les Montagnes d'Aïn Draham"],['p-ichkeul',"Le Lac d'Ichkeul"],['p-djerba',"L'Île de Djerba"],['p-matmata','Les Maisons de Matmata'],['p-ksar','Le Ksar Ouled Soltane'],
+  ['p-dunes','Les Dunes du Sahara'],['p-tozeur',"L'Oasis de Tozeur"],['p-chott','Le Chott el-Jérid'],['p-lezard','Le Lézard Rouge'],['p-tamerza','Le Canyon de Tamerza'],['p-palais',"Le Palais du Scorpion d'Or"]];
+const COST = [
+  { who:'Nour', img:'avatars/mascotte-nour.webp', items:[['c-nour-1','Jebba de fête'],['c-nour-2','Pêcheur de Djerba'],['c-nour-3','Prince du désert']] },
+  { who:'Yasmine', img:'avatars/mascotte-yasmine.webp', items:[['c-yasmine-1','Farmla et chéchia'],['c-yasmine-2','Melia berbère'],['c-yasmine-3','Caftan de fête']] },
+  { who:'Farès', img:'avatars/mascotte-fares.webp', items:[['c-fares-1','Jebba brodée'],['c-fares-2','Cavalier du désert'],['c-fares-3','Farmla et sarouel']] }];
+const NAME = Object.fromEntries(LAND.concat(...COST.map(c => c.items.map(i => [i[0], c.who + ' · ' + i[1]]))));
+const COLORS = ['#e8333a','#ff7a1a','#ffc928','#fff0a0','#8fd14f','#2f9e44','#1fb8a6','#5cc8f5','#1f6fd8','#27348b','#8a4fd8','#d264c8','#ff8fb8','#ffd9c2','#e0a878','#a8683c','#6b4226','#ffffff','#9aa3ad','#2b2b33'];
+const PATS = [['u','⬤','Uni'],['r','〰️','Rayures'],['p','🔵','Pois'],['z','💠','Zellige'],['a','🌈','Arc-en-ciel'],['g','🧽','Gomme']];
+
+/* =====================================================================
+   Sauvegarde : un petit état envoyé au serveur (skin, dessins finis) + les coloriages gardés sur la tablette
+   ===================================================================== */
+const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } } };
+let player = null, S = null, ART = null;
+const key = () => 'atelier:' + player, akey = () => 'atelier-art:' + player;
+const fresh = () => ({ v:1, t:0, mode:null, done:{}, n:0, skin:null });
+function save(){ S.t = Date.now(); S.n = Object.keys(S.done).length; store.set(key(), S); }
+function saveArt(){ if(!store.set(akey(), ART)){ // tablette pleine : on oublie les plus vieilles vignettes
+    const ids = Object.keys(ART.items).sort((a, b) => (ART.items[a].t || 0) - (ART.items[b].t || 0)); ids.slice(0, Math.ceil(ids.length / 3)).forEach(id => delete ART.items[id].th); store.set(akey(), ART); } }
+const tracked = new Set();
+async function setPlayer(name){
+  player = name;
+  S = Object.assign(fresh(), store.get(key(), null) || {}); S.done = S.done || {};
+  const rst = +store.get('famille-rst:atelier:' + name, 0) || 0;
+  ART = store.get(akey(), null) || { rst, items:{} };
+  if(rst > (ART.rst || 0)) ART = { rst, items:{} };   // un parent a remis l'atelier à zéro
+  ART.items = ART.items || {}; store.set(akey(), ART);
+  if(window.Famille){
+    if(!tracked.has(name)){ tracked.add(name); Famille.track('atelier', name, [key()]); }
+    try{ const r = await Famille.load('atelier', name), d = r && r[key()]; if(d && (d.t || 0) > (S.t || 0) && player === name){ S = Object.assign(fresh(), d); S.done = S.done || {}; store.set(key(), S); } }catch(e){}
+  }
+  renderWho();
+}
+const avatarOf = n => { const k = n.toLowerCase(); if(FAMILY.includes(k)) return `avatars/${k}.webp`; const h = window.Famille && Famille.head && Famille.head(n); return h ? h.img : 'avatars/mascotte-nour.webp'; };
+function renderWho(){ ['who1', 'who2'].forEach(id => { $(id).innerHTML = `<img src="${avatarOf(player)}" alt="">${player.replace(/[<>&]/g, '')}`; }); $('mode2').textContent = S.mode === '3d' ? '🧊 3D' : '🖍️ 2D'; }
+async function choose(){ const n = await Famille.choosePlayer({ title:'Qui dessine ?', extra:PARENTS, cancel:!!player, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n){ await setPlayer(n); applyMode(S.mode); if(cur !== 'home') go('menu'); } return n; }
+
+/* =====================================================================
+   Sons : petits bruits (Web Audio), musique douce (gamme hijaz), voix de Julian (Higgsfield)
+   ===================================================================== */
+let AC = null, master = null, musicOn = store.get('atelier-musique', true), musT = null;
+function audio(){ if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .9; master.connect(AC.destination); }catch(e){} } if(AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, d = .18, type = 'sine', vol = .16, slide = 0, when = 0){
+  if(!audio()) return; const t = AC.currentTime + when, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, f * slide), t + d);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0008, t + d);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + d + .03);
+}
+const HIJAZ = [293.66, 311.13, 369.99, 392, 440, 466.16, 523.25, 587.33, 622.25, 739.99];
+const sfx = {
+  tap(){ tone(660, .07, 'triangle', .1); },
+  fill(i){ tone(HIJAZ[i % HIJAZ.length] * 1.5, .22, 'sine', .2, 1.5); tone(HIJAZ[i % HIJAZ.length] * 3, .12, 'triangle', .05, 1, .03); },
+  undo(){ tone(420, .16, 'sine', .14, .55); },
+  nope(){ tone(180, .1, 'triangle', .08); },
+  win(){ [0, 2, 4, 7, 9].forEach((n, k) => tone(HIJAZ[n] * 2, .5, 'triangle', .14, 1, k * .11)); for(let k = 0; k < 8; k++) tone(1800 + Math.random() * 1800, .2, 'sine', .04, 1, .5 + k * .07); }
+};
+function musicTick(){
+  if(!musicOn || !AC || document.hidden) return;
+  const bar = [0, 2, 3, 4, 3, 2, 4, 7][Math.floor(Math.random() * 8)];
+  tone(HIJAZ[bar], 1.1, 'triangle', .035); if(Math.random() < .55) tone(HIJAZ[(bar + 2) % HIJAZ.length], .9, 'sine', .028, 1, .42);
+  if(Math.random() < .3) tone(HIJAZ[0] / 2, 1.6, 'sine', .04);
+}
+function setMusic(on){ musicOn = on; store.set('atelier-musique', on); clearInterval(musT); if(on){ audio(); musT = setInterval(musicTick, 840); } document.querySelectorAll('[data-snd]').forEach(b => b.textContent = on ? '🎵' : '🔇'); }
+let voice = null; const said = new Set();
+function say(name, once){ if(once && said.has(name)) return; said.add(name); try{ if(voice){ voice.pause(); } voice = new Audio(`atelier/voix/${name}.mp3?v=1`); voice.play().catch(() => said.delete(name)); }catch(e){} }
+addEventListener('pointerdown', () => { if(cur === 'home' && S) say('accueil', true); }, { once:true });
+
+/* =====================================================================
+   Moteur de coloriage : le dessin au trait est découpé en zones ; un toucher remplit la zone
+   ===================================================================== */
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+const loadImg = src => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
+const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const light = (c, k) => [c[0] + (255 - c[0]) * k, c[1] + (255 - c[1]) * k, c[2] + (255 - c[2]) * k];
+function hsl(h, s, l){ const a = s * Math.min(l, 1 - l), f = n => { const k = (n + h * 12) % 12; return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))); }; return [f(0), f(8), f(4)]; }
+// couleur d'un point selon le motif
+function tint(pat, c, x, y){
+  switch(pat){
+    case 'r': return ((x + y) >> 4) & 1 ? light(c, .5) : c;
+    case 'p': { const dx = (x % 30) - 15, dy = ((y + ((x / 30) & 1) * 15) % 30) - 15; return dx * dx + dy * dy < 46 ? light(c, .72) : c; }
+    case 'z': return (Math.floor((x + y) / 22) + Math.floor((x - y + 4096) / 22)) & 1 ? light(c, .55) : c;
+    case 'a': return hsl(((x + y * .6) / 420) % 1, .85, .62);
+    default: return c;
+  }
+}
+async function loadArt(id){
+  const img = await loadImg(`atelier/${id}.webp`), W = img.naturalWidth, H = img.naturalHeight, N = W * H, isChar = id[0] === 'c';
+  const lc = mk(W, H), lx = lc.getContext('2d', { willReadFrequently:true }); lx.drawImage(img, 0, 0);
+  const src = lx.getImageData(0, 0, W, H), sd = src.data;
+  const wall = new Uint8Array(N); for(let i = 0; i < N; i++) wall[i] = sd[i * 4] < 150 ? 1 : 0;
+  // zones : composantes connexes de ce qui n'est pas un trait
+  const lab = new Int32Array(N), stack = new Int32Array(N), regs = [null];
+  for(let s = 0; s < N; s++){
+    if(wall[s] || lab[s]) continue;
+    const id2 = regs.length; let sp = 0, n = 0, x0 = W, y0 = H, x1 = 0, y1 = 0, edge = false; stack[sp++] = s; lab[s] = id2;
+    while(sp){
+      const i = stack[--sp], x = i % W, y = (i / W) | 0; n++;
+      if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y;
+      if(x === 0 || y === 0 || x === W - 1 || y === H - 1) edge = true;
+      if(x > 0 && !wall[i - 1] && !lab[i - 1]){ lab[i - 1] = id2; stack[sp++] = i - 1; }
+      if(x < W - 1 && !wall[i + 1] && !lab[i + 1]){ lab[i + 1] = id2; stack[sp++] = i + 1; }
+      if(y > 0 && !wall[i - W] && !lab[i - W]){ lab[i - W] = id2; stack[sp++] = i - W; }
+      if(y < H - 1 && !wall[i + W] && !lab[i + W]){ lab[i + W] = id2; stack[sp++] = i + W; }
+    }
+    regs.push({ n, x0, y0, x1, y1, sx:s % W, sy:(s / W) | 0, out:isChar && edge && n > 400 });
+  }
+  // la couleur passe un peu sous les traits (3 pixels) pour ne laisser aucun liseré blanc
+  let labD = lab.slice();
+  for(let pass = 0; pass < 3; pass++){
+    const nx = labD.slice();
+    for(let y = 1; y < H - 1; y++) for(let x = 1, i = y * W + 1; x < W - 1; x++, i++){ if(labD[i]) continue; const v = labD[i - 1] || labD[i + 1] || labD[i - W] || labD[i + W]; if(v) nx[i] = v; }
+    labD = nx;
+  }
+  // calque des traits (noir, transparent ailleurs) et fond blanc (découpé autour des personnages)
+  const lineCv = mk(W, H), ld = new ImageData(W, H), baseCv = mk(W, H), bd = new ImageData(W, H);
+  for(let i = 0; i < N; i++){ const j = i * 4; ld.data[j] = 28; ld.data[j + 1] = 30; ld.data[j + 2] = 44; ld.data[j + 3] = 255 - sd[j];
+    bd.data[j] = bd.data[j + 1] = bd.data[j + 2] = 255; bd.data[j + 3] = lab[i] && regs[lab[i]].out ? 0 : 255; }
+  lineCv.getContext('2d').putImageData(ld, 0, 0); baseCv.getContext('2d').putImageData(bd, 0, 0);
+  const colorCv = mk(W, H), cx = colorCv.getContext('2d'), cd = cx.createImageData(W, H), out = mk(W, H), ox = out.getContext('2d');
+  const big = regs.filter(r => r && !r.out && r.n >= 120).length;
+  const art = { id, W, H, isChar, lab, labD, regs, lineCv, baseCv, colorCv, cx, cd, out, ox, fills:new Map(), hist:[], big, anims:0 };
+  const saved = ART.items[id]; if(saved && saved.f) saved.f.forEach(([x, y, c, p]) => { const L = lab[y * W + x]; if(L && !regs[L].out){ art.fills.set(L, { c, p }); paintRegion(art, L, c, p); } });
+  compose(art); return art;
+}
+function compose(a, rect){
+  if(rect) a.cx.putImageData(a.cd, 0, 0, rect[0], rect[1], rect[2], rect[3]); else a.cx.putImageData(a.cd, 0, 0);
+  a.ox.clearRect(0, 0, a.W, a.H); a.ox.drawImage(a.baseCv, 0, 0); a.ox.drawImage(a.colorCv, 0, 0); a.ox.drawImage(a.lineCv, 0, 0);
+  if(a.onDraw) a.onDraw();
+}
+function bbox(a, L){ const r = a.regs[L]; const x0 = Math.max(0, r.x0 - 3), y0 = Math.max(0, r.y0 - 3), x1 = Math.min(a.W - 1, r.x1 + 3), y1 = Math.min(a.H - 1, r.y1 + 3); return [x0, y0, x1, y1]; }
+// remplit une zone (c = couleur ou null pour gommer) ; r2 = rayon² depuis (px, py) pour l'animation
+function paintRegion(a, L, c, p, px, py, r2){
+  const [x0, y0, x1, y1] = bbox(a, L), d = a.cd.data, W = a.W, base = c ? rgb(c) : null;
+  for(let y = y0; y <= y1; y++) for(let x = x0, i = y * W + x0; x <= x1; x++, i++){
+    if(a.labD[i] !== L) continue;
+    if(r2 !== undefined){ const dx = x - px, dy = y - py; if(dx * dx + dy * dy > r2) continue; }
+    const j = i * 4;
+    if(!base){ d[j + 3] = 0; continue; }
+    const t = p && p !== 'u' ? tint(p, base, x, y) : base; d[j] = t[0]; d[j + 1] = t[1]; d[j + 2] = t[2]; d[j + 3] = 255;
+  }
+  return [x0, y0, x1 - x0 + 1, y1 - y0 + 1];
+}
+function fillAnim(a, L, c, p, px, py){
+  const [x0, y0, x1, y1] = bbox(a, L), far = Math.max(Math.hypot(px - x0, py - y0), Math.hypot(px - x1, py - y0), Math.hypot(px - x0, py - y1), Math.hypot(px - x1, py - y1));
+  const t0 = performance.now(), dur = Math.min(420, 160 + far * .5); a.anims++;
+  (function step(){
+    const k = Math.min(1, (performance.now() - t0) / dur), r = far * (1 - Math.pow(1 - k, 2)) + 4;
+    const cur2 = a.fills.get(L); if(!cur2 || cur2.c !== c || cur2.p !== p){ a.anims--; return; }   // zone repeinte entre-temps
+    compose(a, paintRegion(a, L, c, p, px, py, k >= 1 ? undefined : r * r));
+    if(k < 1) requestAnimationFrame(step); else a.anims--;
+  })();
+}
+// la zone sous le doigt : si on tombe sur un trait ou une zone minuscule, on prend la plus proche
+function pickRegion(a, x, y){
+  x = Math.round(x); y = Math.round(y); if(x < 0 || y < 0 || x >= a.W || y >= a.H) return 0;
+  const ok = L => L && !a.regs[L].out; let L = a.lab[y * a.W + x]; if(ok(L) && a.regs[L].n >= 60) return L;
+  let best = ok(L) ? L : 0, bd = 1e9;
+  for(let dy = -16; dy <= 16; dy += 2) for(let dx = -16; dx <= 16; dx += 2){ const xx = x + dx, yy = y + dy; if(xx < 0 || yy < 0 || xx >= a.W || yy >= a.H) continue; const l = a.lab[yy * a.W + xx]; if(!ok(l)) continue; const d = dx * dx + dy * dy - Math.min(200, a.regs[l].n * .5); if(d < bd){ bd = d; best = l; } }
+  return best;
+}
+function persist(a, withThumb){
+  const f = []; a.fills.forEach((v, L) => { const r = a.regs[L]; f.push([r.sx, r.sy, v.c, v.p || 'u']); });
+  const it = ART.items[a.id] = ART.items[a.id] || {}; it.f = f; it.t = Date.now();
+  if(withThumb || !it.th) it.th = thumb(a);
+  if(!f.length) delete ART.items[a.id];
+  saveArt();
+}
+function thumb(a){ const s = 260 / Math.max(a.W, a.H), c = mk(Math.round(a.W * s), Math.round(a.H * s)), x = c.getContext('2d'); x.fillStyle = '#fffdf6'; x.fillRect(0, 0, c.width, c.height); x.drawImage(a.out, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', .72); }
+const coverage = a => { let n = 0; a.fills.forEach((v, L) => { if(a.regs[L].n >= 120) n++; }); return a.big ? n / a.big : 0; };
+
+/* =====================================================================
+   Écran de coloriage
+   ===================================================================== */
+let art = null, color = COLORS[8], pat = 'u', pickKind = 'p', saveT = null;
+const cv = $('cv'), cvx = cv.getContext('2d');
+function buildPalette(){
+  $('pal').innerHTML = COLORS.map((c, i) => `<button class="sw" data-c="${c}" style="background:${c}" aria-label="Couleur ${i + 1}"></button>`).join('');
+  $('pats').innerHTML = PATS.map(p => `<button class="sw" data-p="${p[0]}" aria-label="${p[2]}" title="${p[2]}">${p[1]}</button>`).join('');
+  $('pal').onclick = e => { const b = e.target.closest('[data-c]'); if(!b) return; color = b.dataset.c; if(pat === 'g') pat = 'u'; sfx.fill(COLORS.indexOf(color)); markTools(); };
+  $('pats').onclick = e => { const b = e.target.closest('[data-p]'); if(!b) return; pat = b.dataset.p; sfx.tap(); markTools(); };
+  markTools();
+}
+function markTools(){ document.querySelectorAll('#pal .sw').forEach(b => b.classList.toggle('on', b.dataset.c === color && pat !== 'g' && pat !== 'a')); document.querySelectorAll('#pats .sw').forEach(b => b.classList.toggle('on', b.dataset.p === pat)); }
+async function openArt(id){
+  go('paint'); $('pTitle').textContent = NAME[id] || ''; $('load').classList.add('on'); cv.style.visibility = 'hidden'; art = null; if(T) T.setBoard(null);
+  await new Promise(r => setTimeout(r, 30));
+  let a; try{ a = await loadArt(id); }catch(e){ toast('Ce dessin ne se charge pas. Vérifie la connexion.'); go('pick:' + pickKind); return; }
+  if(cur !== 'paint') return;
+  art = a; cv.width = a.W; cv.height = a.H; a.onDraw = () => { if(S.mode === '3d'){ if(T) T.touchBoard(); } else { cvx.clearRect(0, 0, a.W, a.H); cvx.drawImage(a.out, 0, 0); } };
+  a.onDraw(); if(S.mode === '3d' && T) T.setBoard(a);
+  $('load').classList.remove('on'); cv.style.visibility = ''; meter(); say('colorie', true);
+}
+function meter(){ const k = art ? coverage(art) : 0; $('meter').style.width = Math.round(k * 100) + '%'; $('done').classList.toggle('wow', k >= .9); $('undo').disabled = !art || !art.hist.length; }
+function tapArt(x, y){
+  if(!art) return; const L = pickRegion(art, x, y); if(!L){ sfx.nope(); return; }
+  const prev = art.fills.get(L) || null, c = pat === 'g' ? null : color, p = pat === 'g' ? 'u' : pat;
+  if(prev && prev.c === c && prev.p === p) return;
+  if(!prev && !c) return;
+  art.hist.push([L, prev]); if(art.hist.length > 60) art.hist.shift();
+  if(c){ art.fills.set(L, { c, p }); fillAnim(art, L, c, p, x, y); sfx.fill(COLORS.indexOf(c) + (p === 'a' ? 3 : 0)); }
+  else { art.fills.delete(L); compose(art, paintRegion(art, L, null)); sfx.undo(); }
+  meter(); clearTimeout(saveT); saveT = setTimeout(() => art && persist(art, false), 900);
+}
+cv.addEventListener('pointerdown', e => { if(S.mode === '3d' || !art) return; e.preventDefault(); audio(); const r = cv.getBoundingClientRect(); tapArt((e.clientX - r.left) / r.width * art.W, (e.clientY - r.top) / r.height * art.H); });
+$('undo').onclick = () => { if(!art || !art.hist.length) return; const [L, prev] = art.hist.pop(); if(prev){ art.fills.set(L, prev); compose(art, paintRegion(art, L, prev.c, prev.p)); } else { art.fills.delete(L); compose(art, paintRegion(art, L, null)); } sfx.undo(); meter(); persist(art, false); };
+let wipeArm = 0;
+$('wipe').onclick = () => { if(!art || !art.fills.size) return; if(Date.now() - wipeArm > 2500){ wipeArm = Date.now(); toast('Touche encore 🧽 pour tout effacer'); sfx.tap(); return; } wipeArm = 0; art.fills.clear(); art.hist = []; art.cd.data.fill(0); compose(art); sfx.undo(); meter(); persist(art, true); };
+$('pBack').onclick = () => { if(art && art.fills.size) persist(art, true); sfx.tap(); go(backTo === 'gallery' ? 'gallery' : 'pick:' + pickKind); };
+$('done').onclick = () => {
+  if(!art) return; if(!art.fills.size){ toast('Colorie d\'abord un peu ton dessin 🙂'); sfx.nope(); return; }
+  persist(art, true); S.done[art.id] = Date.now(); save();
+  celebrate(); say(Math.random() < .5 ? 'bravo' : 'galerie'); if(T) T.cheer();
+  $('bTitle').textContent = ['Bravo !', 'Magnifique !', 'Quel artiste !', 'Superbe !'][Math.floor(Math.random() * 4)]; $('bImg').src = ART.items[art.id].th; $('bImg').hidden = false;
+  $('bRow').innerHTML = `<button class="pill go" data-b="pick">🎨 Un autre</button><button class="pill sun" data-b="show">🎭 Spectacle</button><button class="pill" data-b="stay">✏️ Continuer</button>`;
+  $('bravo').classList.add('on');
+};
+$('bravo').onclick = e => { const b = e.target.closest('[data-b]'); if(!b) return; sfx.tap(); $('bravo').classList.remove('on'); const k = b.dataset.b; if(k === 'pick') go('pick:' + pickKind); else if(k === 'show') go('show'); else if(k === 'menu') go('menu'); else if(k === 'serpent') location.href = 'serpent-legendes.html'; };
+function celebrate(n = 46){
+  sfx.win(); const P = $('party'), E = ['🌼', '🤍', '✨', '🌸', '⭐', '🎨'];
+  for(let i = 0; i < n; i++){ const s = document.createElement('i'); s.textContent = E[i % E.length]; s.style.left = Math.random() * 100 + 'vw'; s.style.fontSize = 18 + Math.random() * 26 + 'px'; s.style.animationDuration = 2.2 + Math.random() * 2.4 + 's'; s.style.animationDelay = Math.random() * .9 + 's'; P.appendChild(s); setTimeout(() => s.remove(), 6000); }
+}
+let toastT = null; function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
+
+/* =====================================================================
+   Choix d'un dessin, galerie
+   ===================================================================== */
+let backTo = 'pick';
+function card(id, label, tall){ const it = ART.items[id]; return `<button class="card ${tall ? 'tall' : ''}" data-id="${id}"><img src="${it && it.th ? it.th : `atelier/${id}.webp`}" alt="" loading="lazy">${S.done[id] ? '<span class="ok" aria-label="fini">✔</span>' : ''}<b>${label}</b></button>`; }
+function renderPick(kind){
+  pickKind = kind; $('pickTitle').textContent = kind === 'p' ? 'Choisis un paysage' : 'Choisis un ami et sa tenue';
+  $('pickGrid').innerHTML = kind === 'p' ? LAND.map(l => card(l[0], l[1])).join('')
+    : COST.map(c => `<div class="sect"><img src="${c.img}" alt="">${c.who}</div>` + c.items.map(i => card(i[0], i[1], true)).join('')).join('');
+  say(kind === 'p' ? 'paysage' : 'costume', true);
+}
+function renderGallery(){
+  const ids = Object.keys(ART.items).filter(id => NAME[id] && ART.items[id].th).sort((a, b) => (ART.items[b].t || 0) - (ART.items[a].t || 0));
+  $('galGrid').innerHTML = ids.length ? ids.map(id => card(id, NAME[id], id[0] === 'c')).join('') : '<p class="none">Ta galerie est vide pour l\'instant.<br>Colorie un paysage ou un costume : il viendra se ranger ici ! 🖼️</p>';
+}
+$('pickGrid').onclick = e => { const b = e.target.closest('[data-id]'); if(b){ sfx.tap(); backTo = 'pick'; openArt(b.dataset.id); } };
+$('galGrid').onclick = e => { const b = e.target.closest('[data-id]'); if(b){ sfx.tap(); backTo = 'gallery'; pickKind = b.dataset.id[0]; openArt(b.dataset.id); } };
+
+/* =====================================================================
+   Mon serpent : un skin pour Serpent Légendes
+   ===================================================================== */
+const SPAT = [['uni','Uni'],['rayures','Rayures'],['bandes','Bandes'],['pois','Pois'],['degrade','Dégradé'],['arcenciel','🌈']];
+const SFX = [['mat','Normal'],['brillant','✨ Brillant'],['lumineux','💡 Lumineux']];
+const SACC = [['','Aucun'],['couronne','👑'],['cornes','😈'],['antennes','🐝'],['oreilles','🐱'],['aureole','😇'],['ailes','🪽'],['corne-licorne','🦄'],['crete','🐓'],['lune','🌙']];
+let SK = null, slot = 1;
+const defSkin = () => ({ name:'Serpent de ' + player, head:'#ffc928', cols:['#1f6fd8', '#ffffff', '#e8333a'], pat:'bandes', fx:'mat', acc:'couronne' });
+function mix(a, b, k){ const A = rgb(a), B = rgb(b); return '#' + [0, 1, 2].map(i => Math.round(A[i] + (B[i] - A[i]) * k).toString(16).padStart(2, '0')).join(''); }
+function hslHex(h, s, l){ return '#' + hsl(h, s, l).map(v => Math.round(v).toString(16).padStart(2, '0')).join(''); }
+// la même règle que dans Serpent Légendes (atelierSkin)
+function snakeColor(sp, i, n, t){
+  const c = sp.cols;
+  switch(sp.pat){
+    case 'rayures': return c[i % 2]; case 'bandes': return c[Math.floor(i / 2) % 3]; case 'pois': return i % 3 === 2 ? c[1] : c[0];
+    case 'degrade': { const u = n > 1 ? i / (n - 1) : 0; return u < .5 ? mix(c[0], c[1], u * 2) : mix(c[1], c[2], (u - .5) * 2); }
+    case 'arcenciel': return hslHex((((i * .07 - t * .3) % 1) + 1) % 1, .85, .6);
+    default: return c[0];
+  }
+}
+function renderSnakeUI(){
+  $('slots').innerHTML = [['Tête', SK.head], ['1', SK.cols[0]], ['2', SK.cols[1]], ['3', SK.cols[2]]].map((s, i) => `<button class="slot ${slot === i ? 'on' : ''}" data-s="${i}" style="background:${s[1]}">${s[0]}</button>`).join('');
+  $('spal').innerHTML = COLORS.map(c => `<button class="sw" data-c="${c}" style="background:${c}" aria-label="couleur"></button>`).join('');
+  const chips = (list, val) => list.map(o => `<button class="chip ${val === o[0] ? 'on' : ''}" data-v="${o[0]}">${o[1]}</button>`).join('');
+  $('spat').innerHTML = chips(SPAT, SK.pat); $('sfx').innerHTML = chips(SFX, SK.fx); $('sacc').innerHTML = chips(SACC, SK.acc || '');
+  if(document.activeElement !== $('sname')) $('sname').value = SK.name;
+  if(T) T.setSnake(SK);
+}
+$('slots').onclick = e => { const b = e.target.closest('[data-s]'); if(b){ slot = +b.dataset.s; sfx.tap(); renderSnakeUI(); } };
+$('spal').onclick = e => { const b = e.target.closest('[data-c]'); if(!b) return; if(slot === 0) SK.head = b.dataset.c; else SK.cols[slot - 1] = b.dataset.c; sfx.fill(COLORS.indexOf(b.dataset.c)); slot = slot === 0 ? 1 : slot; renderSnakeUI(); };
+[['spat', 'pat'], ['sfx', 'fx'], ['sacc', 'acc']].forEach(([id, k]) => $(id).onclick = e => { const b = e.target.closest('[data-v]'); if(b){ SK[k] = b.dataset.v; sfx.tap(); renderSnakeUI(); } });
+$('sname').oninput = () => { SK.name = $('sname').value.replace(/[<>&"]/g, '').slice(0, 24) || 'Mon serpent'; };
+$('sSave').onclick = () => {
+  S.skin = JSON.parse(JSON.stringify(SK)); save(); celebrate(); say('pret'); if(T) T.cheer();
+  $('bTitle').textContent = SK.name + ' est prêt !'; $('bImg').hidden = true;
+  $('bRow').innerHTML = `<button class="pill go" data-b="serpent">🐉 Jouer avec lui</button><button class="pill" data-b="menu">🎨 L'atelier</button><button class="pill" data-b="stay">✏️ Le changer</button>`;
+  $('bravo').classList.add('on');
+};
+// aperçu à plat : le serpent ondule
+const scv = $('scv'), scx = scv.getContext('2d');
+function drawSnake2D(x, w, h, sp, t, cy, scale = 1){
+  const n = 14, R = Math.min(w / 19, h / 4) * scale, pts = [];
+  for(let i = 0; i < n; i++){ const u = i / (n - 1); pts.push([w * .5 + (u - .5) * R * 1.3 * (n - 1) * -1, cy + Math.sin(t * 2.6 - i * .55) * R * 1.1]); }
+  for(let i = n - 1; i >= 0; i--){
+    const [px, py] = pts[i], r = i === 0 ? R * 1.25 : R * (1 - Math.max(0, i - n + 5) * .1), c = i === 0 ? sp.head : snakeColor(sp, i, n, t);
+    x.beginPath(); x.arc(px, py + R * 1.15, r * .9, 0, 7); x.fillStyle = 'rgba(20,40,90,.10)'; x.fill();
+    const g = x.createRadialGradient(px - r * .35, py - r * .4, r * .1, px, py, r); g.addColorStop(0, sp.fx === 'mat' ? mix(c, '#ffffff', .28) : '#ffffff'); g.addColorStop(sp.fx === 'brillant' ? .35 : .5, c); g.addColorStop(1, mix(c, '#000000', sp.fx === 'lumineux' ? .05 : .28));
+    if(sp.fx === 'lumineux'){ x.shadowColor = c; x.shadowBlur = r * .9; }
+    x.beginPath(); x.arc(px, py, r, 0, 7); x.fillStyle = g; x.fill(); x.shadowBlur = 0;
+    if(i === 0){
+      [-1, 1].forEach(s => { x.beginPath(); x.arc(px + r * .45, py + s * r * .42, r * .3, 0, 7); x.fillStyle = '#fff'; x.fill(); x.beginPath(); x.arc(px + r * .55, py + s * r * .42, r * .15, 0, 7); x.fillStyle = '#111'; x.fill(); });
+      const acc = SACC.find(a => a[0] === sp.acc); if(acc && acc[0]){ x.font = `${r * 1.5}px serif`; x.textAlign = 'center'; x.fillText(acc[1], px, py - r * .95); }
+    }
+  }
+}
+function snakeLoop(){
+  if(cur !== 'snake' || S.mode === '3d') return;
+  const r = scv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); if(scv.width !== Math.round(r.width * dpr)){ scv.width = Math.round(r.width * dpr); scv.height = Math.round(r.height * dpr); }
+  scx.setTransform(dpr, 0, 0, dpr, 0, 0); scx.clearRect(0, 0, r.width, r.height); drawSnake2D(scx, r.width, r.height, SK, performance.now() / 1000, r.height * .5);
+  requestAnimationFrame(snakeLoop);
+}
+
+/* =====================================================================
+   Le spectacle : un paysage colorié en décor, les amis en costume qui dansent, le serpent qui passe
+   ===================================================================== */
+let SHOW = null, showSeed = 0;
+async function renderOut(id){ const a = await loadArt(id); return a.out; }
+async function prepareShow(){
+  const its = ART.items, by = k => Object.keys(its).filter(id => id[0] === k && its[id].f && its[id].f.length && NAME[id]).sort((a, b) => (its[b].t || 0) - (its[a].t || 0));
+  const lands = by('p'), costs = by('c');
+  const land = lands.length ? lands[showSeed % lands.length] : LAND[showSeed % LAND.length][0];
+  const chars = []; COST.forEach((c, k) => { const mine = costs.filter(id => c.items.some(i => i[0] === id)); chars.push(mine.length ? mine[showSeed % mine.length] : c.items[(showSeed + k) % 3][0]); });
+  const back = await renderOut(land), pups = []; for(const id of chars) pups.push(await renderOut(id));
+  return { back, pups, skin:S.skin || defSkin(), empty:!lands.length && !costs.length };
+}
+async function openShow(){
+  SHOW = null; const my = ++showSeed; let sh; try{ sh = await prepareShow(); }catch(e){ toast('Le spectacle ne se charge pas. Vérifie la connexion.'); return; }
+  if(cur !== 'show' || my !== showSeed) return; SHOW = sh; say('spectacle', true); celebrate(24);
+  if(sh.empty) toast('Colorie un paysage et un costume : ils viendront jouer ici !');
+  if(S.mode === '3d' && T) T.setShow(sh); else showLoop();
+}
+$('shNext').onclick = () => { sfx.tap(); openShow(); };
+const shcv = $('shcv'), shx = shcv.getContext('2d');
+function showLoop(){
+  if(cur !== 'show' || S.mode === '3d' || !SHOW) return;
+  const w = innerWidth, h = innerHeight, dpr = Math.min(2, devicePixelRatio || 1); if(shcv.width !== Math.round(w * dpr) || shcv.height !== Math.round(h * dpr)){ shcv.width = Math.round(w * dpr); shcv.height = Math.round(h * dpr); }
+  const x = shx, t = performance.now() / 1000; x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const b = SHOW.back, s = Math.max(w / b.width, h / b.height) * 1.04, ox = (w - b.width * s) / 2 + Math.sin(t * .3) * 8, oy = (h - b.height * s) / 2;
+  x.drawImage(b, ox, oy, b.width * s, b.height * s); x.fillStyle = 'rgba(255,244,214,.18)'; x.fillRect(0, 0, w, h);
+  const ph = Math.min(h * .62, w * .42), pw = ph * .75, n = SHOW.pups.length;
+  SHOW.pups.forEach((p, i) => {
+    const cx = w * (i + 1) / (n + 1), hop = Math.abs(Math.sin(t * 3 + i * 1.3)) * ph * .09, rot = Math.sin(t * 3 + i * 1.3) * .07;
+    x.beginPath(); x.ellipse(cx, h * .93, pw * .34 * (1 - hop / ph), ph * .035, 0, 0, 7); x.fillStyle = 'rgba(20,30,60,.22)'; x.fill();
+    x.save(); x.translate(cx, h * .93 - hop); x.rotate(rot); x.drawImage(p, -pw / 2, -ph, pw, ph); x.restore();
+  });
+  drawSnake2D(x, w + Math.sin(t * .5) * w * .5, h, SHOW.skin, t, h * .9, .55);
+  requestAnimationFrame(showLoop);
+}
+
+/* =====================================================================
+   Le monde 3D (Three.js, chargé seulement si l'enfant choisit « 3D »)
+   ===================================================================== */
+let T = null, T3loading = null;
+async function init3D(){
+  const THREE = await import('../lib/three-0.170.0.module.min.js');
+  const canvas = $('gl'), renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
+  renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
+  const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(42, 1, .1, 200);
+  // ciel en dégradé
+  const sky = mk(8, 256), sx = sky.getContext('2d'), sg = sx.createLinearGradient(0, 0, 0, 256); sg.addColorStop(0, '#3f8fe8'); sg.addColorStop(.55, '#aee0ff'); sg.addColorStop(1, '#fff0c9'); sx.fillStyle = sg; sx.fillRect(0, 0, 8, 256);
+  const skyT = new THREE.CanvasTexture(sky); skyT.colorSpace = THREE.SRGBColorSpace; scene.background = skyT;
+  scene.add(new THREE.HemisphereLight('#ffffff', '#c9b48a', 1.25)); const sun = new THREE.DirectionalLight('#fff3d0', 1.6); sun.position.set(6, 12, 8); scene.add(sun);
+  const M = (c, o = {}) => new THREE.MeshLambertMaterial(Object.assign({ color:c }, o));
+  const add = (geo, mat, x, y, z, parent = scene) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
+  // la mer, la terrasse carrelée (zellige), le muret, des maisons blanches aux dômes bleus
+  const sea = add(new THREE.CircleGeometry(120, 48), M('#2a86d8'), 0, -1.2, 0); sea.rotation.x = -Math.PI / 2;
+  const tc = mk(256, 256), tx = tc.getContext('2d'); tx.fillStyle = '#fffaf0'; tx.fillRect(0, 0, 256, 256);
+  for(let i = 0; i < 4; i++) for(let j = 0; j < 4; j++){ const cx = i * 64 + 32, cy = j * 64 + 32; tx.fillStyle = (i + j) % 2 ? '#1f6fd8' : '#ffc928'; tx.beginPath(); tx.moveTo(cx, cy - 20); tx.lineTo(cx + 20, cy); tx.lineTo(cx, cy + 20); tx.lineTo(cx - 20, cy); tx.fill(); tx.strokeStyle = '#d9e2f2'; tx.lineWidth = 2; tx.strokeRect(i * 64, j * 64, 64, 64); }
+  const tileT = new THREE.CanvasTexture(tc); tileT.wrapS = tileT.wrapT = THREE.RepeatWrapping; tileT.repeat.set(5, 5); tileT.colorSpace = THREE.SRGBColorSpace;
+  const floor = add(new THREE.CylinderGeometry(9, 9.4, 1.2, 48), [M('#f4efe2'), M('#ffffff', { map:tileT }), M('#f4efe2')], 0, -.6, 0);
+  for(let k = 0; k < 28; k++){ const a = k / 28 * Math.PI * 2; if(Math.abs(a - Math.PI / 2) < .5) continue; const p = add(new THREE.BoxGeometry(1.9, 1, .45), M('#ffffff'), Math.cos(a) * 8.7, .5, Math.sin(a) * 8.7); p.rotation.y = -a + Math.PI / 2; add(new THREE.BoxGeometry(2, .16, .6), M('#1f6fd8'), Math.cos(a) * 8.7, 1.06, Math.sin(a) * 8.7).rotation.y = -a + Math.PI / 2; }
+  [[-15, -16, 5], [-8, -22, 6.5], [4, -24, 5.5], [13, -18, 6], [20, -10, 4.5], [-21, -8, 4.5]].forEach(([x, z, h], k) => { add(new THREE.BoxGeometry(5.5, h, 5.5), M('#ffffff'), x, h / 2 - 1.2, z); add(new THREE.SphereGeometry(2, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), M('#1f6fd8'), x, h - 1.2, z); add(new THREE.BoxGeometry(1.1, 2, .2), M(k % 2 ? '#1f6fd8' : '#ffc928'), x, 0, z + 2.8); });
+  add(new THREE.SphereGeometry(3, 24, 16), new THREE.MeshBasicMaterial({ color:'#fff2b0' }), -26, 22, -50);
+  // buissons de jasmin
+  const bushes = []; [[-6.5, 4.5], [6.8, 3.8], [-7.4, -2.5], [7.2, -3.4]].forEach(([x, z]) => { const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g); bushes.push(g);
+    add(new THREE.CylinderGeometry(.55, .4, .9, 14), M('#c9773e'), 0, .45, 0, g); [[0, 1.5, 0, .95], [.5, 1.2, .3, .7], [-.5, 1.25, -.2, .72]].forEach(b => add(new THREE.SphereGeometry(b[3], 14, 10), M('#3f9e4a'), b[0], b[1], b[2], g));
+    for(let i = 0; i < 16; i++){ const a = Math.random() * 6.3, e = Math.random() * 1.2, r = .98; add(new THREE.SphereGeometry(.09, 6, 5), new THREE.MeshBasicMaterial({ color:'#ffffff' }), Math.cos(a) * Math.cos(e) * r, 1.5 + Math.sin(e) * r, Math.sin(a) * Math.cos(e) * r, g); } });
+  // pétales qui volent
+  const PN = 160, pg = new THREE.BufferGeometry(), pp = new Float32Array(PN * 3), pv = []; for(let i = 0; i < PN; i++){ pp[i * 3] = (Math.random() - .5) * 26; pp[i * 3 + 1] = Math.random() * 12; pp[i * 3 + 2] = (Math.random() - .5) * 26; pv.push(.4 + Math.random() * .7); }
+  pg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); const pc = mk(32, 32), pcx = pc.getContext('2d'); pcx.fillStyle = '#fff'; pcx.beginPath(); pcx.ellipse(16, 16, 14, 8, .6, 0, 7); pcx.fill();
+  const petals = new THREE.Points(pg, new THREE.PointsMaterial({ map:new THREE.CanvasTexture(pc), size:.3, transparent:true, depthWrite:false, opacity:.95 })); scene.add(petals);
+  // le chevalet et sa toile ; pour un personnage, une silhouette découpée debout sur un socle
+  const easel = new THREE.Group(); scene.add(easel); const wood = M('#b8793e');
+  const legL = add(new THREE.BoxGeometry(.22, 6.4, .22), wood, -1.7, 3, -.25, easel); legL.rotation.z = -.1; const legR = add(new THREE.BoxGeometry(.22, 6.4, .22), wood, 1.7, 3, -.25, easel); legR.rotation.z = .1;
+  const legB = add(new THREE.BoxGeometry(.22, 6.2, .22), wood, 0, 2.9, -1.4, easel); legB.rotation.x = .38; add(new THREE.BoxGeometry(5, .22, .5), wood, 0, 1.25, 0, easel);
+  const paper = add(new THREE.BoxGeometry(1, 1, .08), M('#fffdf6'), 0, 3.4, -.06, easel);
+  const socle = add(new THREE.CylinderGeometry(1.7, 1.9, .5, 32), M('#1f6fd8'), 0, .25, 0); add(new THREE.CylinderGeometry(1.5, 1.5, .08, 32), M('#ffc928'), 0, .3, 0, socle); socle.visible = false;
+  const boardMat = new THREE.MeshBasicMaterial({ color:'#ffffff', side:THREE.DoubleSide }), board = add(new THREE.PlaneGeometry(1, 1), boardMat, 0, 3.4, 0); board.visible = false;
+  let boardTex = null, boardArt = null;
+  function setBoard(a){
+    boardArt = a; if(boardTex){ boardTex.dispose(); boardTex = null; }
+    if(!a){ board.visible = false; easel.visible = scn === 'paint' || scn === 'idle'; paper.visible = false; socle.visible = false; return; }
+    boardTex = new THREE.CanvasTexture(a.out); boardTex.colorSpace = THREE.SRGBColorSpace; boardTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    boardMat.map = boardTex; boardMat.transparent = a.isChar; boardMat.alphaTest = a.isChar ? .35 : 0; boardMat.needsUpdate = true;
+    const w = a.isChar ? 3.9 : 5.6, h = w * a.H / a.W; board.scale.set(w, h, 1); board.visible = true;
+    if(a.isChar){ easel.visible = false; socle.visible = true; board.position.set(0, .5 + h / 2, 0); }
+    else { easel.visible = true; paper.visible = true; socle.visible = false; paper.scale.set(w + .3, h + .3, 1); paper.position.y = 1.4 + h / 2 + .15; board.position.set(0, 1.4 + h / 2 + .15, 0); }
+    look.target.set(0, board.position.y, 0); look.w = w; look.h = h; yaw = 0; pitch = .04; zoom = 1;
+  }
+  // le serpent, sur son tapis rond
+  const snakeG = new THREE.Group(); scene.add(snakeG); snakeG.visible = false; const rug = [add(new THREE.CylinderGeometry(3.3, 3.5, .3, 40), M('#e8438f'), 0, .15, 0, snakeG), add(new THREE.CylinderGeometry(2.9, 2.9, .06, 40), M('#fff4d6'), 0, .31, 0, snakeG)];
+  const SN = 16, segs = []; for(let i = 0; i < SN; i++){ const m = add(new THREE.SphereGeometry(i === 0 ? .52 : .4 * (1 - Math.max(0, i - SN + 5) * .1), 20, 14), new THREE.MeshStandardMaterial({ color:'#5cc96b', roughness:.45 }), 0, 0, 0, snakeG); segs.push(m); }
+  const headG = new THREE.Group(); snakeG.add(headG); let accG = new THREE.Group(); headG.add(accG);
+  [-1, 1].forEach(s => { add(new THREE.SphereGeometry(.17, 12, 8), new THREE.MeshBasicMaterial({ color:'#fff' }), s * .22, .2, .36, headG); add(new THREE.SphereGeometry(.09, 10, 8), new THREE.MeshBasicMaterial({ color:'#111' }), s * .23, .22, .49, headG); });
+  let skin = null;
+  function setSnake(sp){
+    skin = sp; headG.remove(accG); accG = new THREE.Group(); headG.add(accG);
+    const gold = new THREE.MeshStandardMaterial({ color:'#ffcf33', metalness:.7, roughness:.3 }), hm = new THREE.MeshStandardMaterial({ color:sp.head, roughness:.45 }), A = (g, m, x, y, z, rx = 0, rz = 0) => { const o = add(g, m, x, y, z, accG); o.rotation.set(rx, 0, rz); return o; };
+    switch(sp.acc){
+      case 'couronne': A(new THREE.CylinderGeometry(.3, .26, .2, 12, 1, true), gold, 0, .52, 0); for(let k = 0; k < 6; k++) A(new THREE.ConeGeometry(.07, .2, 6), gold, Math.cos(k / 6 * 6.283) * .28, .7, Math.sin(k / 6 * 6.283) * .28); break;
+      case 'cornes': [-1, 1].forEach(s => A(new THREE.ConeGeometry(.1, .42, 8), M('#fff4d6'), s * .26, .58, 0, 0, -s * .35)); break;
+      case 'antennes': [-1, 1].forEach(s => { A(new THREE.CylinderGeometry(.025, .025, .45), M('#222'), s * .16, .62, .05, 0, -s * .35); A(new THREE.SphereGeometry(.08, 8, 6), M('#ffcf33'), s * .25, .84, .05); }); break;
+      case 'oreilles': [-1, 1].forEach(s => A(new THREE.ConeGeometry(.16, .3, 4), hm, s * .27, .5, -.02, 0, -s * .3)); break;
+      case 'aureole': A(new THREE.TorusGeometry(.3, .045, 8, 24), new THREE.MeshBasicMaterial({ color:'#fff2a0' }), 0, .78, 0, Math.PI / 2); break;
+      case 'ailes': [-1, 1].forEach(s => { const w = A(new THREE.SphereGeometry(.42, 12, 8), M('#ffffff'), s * .62, .2, -.25); w.scale.set(1, .5, .16); w.rotation.z = s * .5; w.userData.wing = s; }); break;
+      case 'corne-licorne': A(new THREE.ConeGeometry(.09, .6, 10), gold, 0, .72, .12, .25); break;
+      case 'crete': [0, 1, 2].forEach(k => A(new THREE.ConeGeometry(.1, .3, 6), M('#e8333a'), 0, .62 - k * .04, .16 - k * .2)); break;
+      case 'lune': A(new THREE.TorusGeometry(.24, .06, 8, 18, Math.PI * 1.25), new THREE.MeshBasicMaterial({ color:'#fff6c9' }), 0, .82, 0, 0, .9); break;
+    }
+    const metal = sp.fx === 'brillant'; segs.forEach(m => { m.material.metalness = metal ? .7 : 0; m.material.roughness = metal ? .25 : .45; });
+  }
+  // le spectacle : le tableau en grand, les amis en silhouettes qui dansent
+  const showG = new THREE.Group(); scene.add(showG); showG.visible = false;
+  const frame = add(new THREE.BoxGeometry(10.9, 8.3, .3), new THREE.MeshStandardMaterial({ color:'#ffcf33', metalness:.5, roughness:.35 }), 0, 4.6, -4.2, showG);
+  const backMat = new THREE.MeshBasicMaterial({ color:'#ffffff' }), backP = add(new THREE.PlaneGeometry(10.3, 7.72), backMat, 0, 4.6, -4.03, showG); const pups = [];
+  function setShow(sh){
+    pups.forEach(p => { showG.remove(p); p.material.map.dispose(); p.material.dispose(); }); pups.length = 0;
+    if(backMat.map) backMat.map.dispose(); backMat.map = new THREE.CanvasTexture(sh.back); backMat.map.colorSpace = THREE.SRGBColorSpace; backMat.needsUpdate = true;
+    sh.pups.forEach((c, i) => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const m = new THREE.Mesh(new THREE.PlaneGeometry(3, 4), new THREE.MeshBasicMaterial({ map:t, transparent:true, alphaTest:.35, side:THREE.DoubleSide })); m.userData.x = (i - (sh.pups.length - 1) / 2) * 3.3; showG.add(m); pups.push(m); });
+    setSnake(sh.skin);
+  }
+  // caméra : on tourne un peu autour avec le doigt, on zoome en pinçant
+  const look = { target:new THREE.Vector3(0, 3, 0), w:5.6, h:4.2 }, tgt = new THREE.Vector3(0, 3, 0);
+  let scn = 'idle', yaw = 0, pitch = .12, zoom = 1, cyaw = 0, cpitch = .12, cdist = 16, cheerT = 0, stageRect = null;
+  function setScene(s){ scn = s; snakeG.visible = s === 'snake' || s === 'show'; showG.visible = s === 'show'; easel.visible = s === 'idle' || (s === 'paint' && !(boardArt && boardArt.isChar)); board.visible = s === 'paint' && !!boardArt; socle.visible = s === 'paint' && !!(boardArt && boardArt.isChar); paper.visible = s === 'paint' && !!boardArt && !boardArt.isChar;
+    bushes.forEach(b => b.visible = s !== 'show'); rug.forEach(r => r.visible = s === 'snake'); snakeG.position.set(0, 0, s === 'show' ? 1.2 : 0); snakeG.scale.setScalar(s === 'show' ? .6 : 1); yaw = 0; pitch = s === 'snake' ? .5 : .1; zoom = 1; resize(); }
+  function resize(){
+    const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); cam.aspect = w / h;
+    const el = scn === 'paint' ? $('stage') : scn === 'snake' ? $('sstage') : null; stageRect = el ? el.getBoundingClientRect() : { left:0, top:0, width:w, height:h };
+    if(stageRect.width < 10) stageRect = { left:0, top:0, width:w, height:h };
+    cam.setViewOffset(w, h, w / 2 - (stageRect.left + stageRect.width / 2), h / 2 - (stageRect.top + stageRect.height / 2), w, h); cam.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize); const clock = new THREE.Clock(), ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  function frame3(){
+    requestAnimationFrame(frame3); if(S.mode !== '3d' || document.hidden) return;
+    const dt = Math.min(.05, clock.getDelta()), t = clock.elapsedTime, w = innerWidth, h = innerHeight, tan = Math.tan(cam.fov * Math.PI / 360);
+    let dist = 18, idle = 0;
+    if(scn === 'paint'){ tgt.copy(look.target); const sw = stageRect.width / w, sh2 = stageRect.height / h; dist = Math.max(look.h / 2 / tan / sh2, look.w / 2 / (tan * cam.aspect) / sw) * 1.12 / zoom; }
+    else if(scn === 'snake'){ tgt.set(0, .9, 0); const sw = stageRect.width / w, sh2 = stageRect.height / h; dist = Math.max(2.4 / tan / sh2, 3.7 / (tan * cam.aspect) / sw) / zoom; }
+    else if(scn === 'show'){ tgt.set(0, 3.6, -1.5); dist = Math.max(5 / tan, 6 / (tan * cam.aspect)) * 1.05 / zoom; idle = Math.sin(t * .35) * .22; }
+    else { tgt.set(0, 2.6, 0); dist = 19; idle = t * .12; }
+    cyaw += (yaw + idle - cyaw) * Math.min(1, dt * 6); cpitch += (pitch - cpitch) * Math.min(1, dt * 6); cdist += (dist - cdist) * Math.min(1, dt * 5);
+    cam.position.set(tgt.x + Math.sin(cyaw) * Math.cos(cpitch) * cdist, tgt.y + Math.sin(cpitch) * cdist, tgt.z + Math.cos(cyaw) * Math.cos(cpitch) * cdist); cam.lookAt(tgt);
+    // pétales
+    const pa = pg.attributes.position; for(let i = 0; i < PN; i++){ pa.array[i * 3 + 1] -= pv[i] * dt * (cheerT > 0 ? 3 : 1); pa.array[i * 3] += Math.sin(t + i) * dt * .3; if(pa.array[i * 3 + 1] < 0) pa.array[i * 3 + 1] = 11 + Math.random() * 2; } pa.needsUpdate = true;
+    if(cheerT > 0){ cheerT -= dt; if(board.visible) board.rotation.y = Math.sin((1.6 - cheerT) * 7) * .25 * Math.max(0, cheerT / 1.6); } else board.rotation.y = 0;
+    if(board.visible && boardArt && boardArt.isChar) board.position.y = .5 + board.scale.y / 2 + Math.sin(t * 2) * .04;
+    // serpent : il tourne en rond en ondulant
+    if(snakeG.visible && skin){ const R = 2.1; for(let i = 0; i < SN; i++){ const a = t * .9 - i * .2, m = segs[i]; m.position.set(Math.cos(a) * (R + Math.sin(t * 3 - i * .7) * .16), (i === 0 ? .84 : .72) + Math.sin(t * 5 - i * .8) * .06, Math.sin(a) * (R + Math.sin(t * 3 - i * .7) * .16));
+        const c = i === 0 ? skin.head : snakeColor(skin, i, SN, t); m.material.color.set(c); if(skin.fx === 'lumineux'){ m.material.emissive.set(c); m.material.emissiveIntensity = .5; } else m.material.emissiveIntensity = 0; }
+      const a0 = t * .9; headG.position.copy(segs[0].position); headG.rotation.y = -a0; accG.children.forEach(o => { if(o.userData.wing) o.rotation.z = o.userData.wing * (.5 + Math.sin(t * 9) * .35); }); }
+    if(showG.visible) pups.forEach((p, i) => { const hop = Math.abs(Math.sin(t * 3 + i * 1.3)) * .45; p.position.set(p.userData.x, 2.3 + hop, -.6 + Math.sin(t * 1.5 + i) * .4); p.rotation.z = Math.sin(t * 3 + i * 1.3) * .08; p.rotation.y = Math.sin(t * 1.2 + i) * .3; });
+    renderer.render(scene, cam);
+  }
+  // doigts : un toucher court colorie, un glissement tourne, deux doigts zooment
+  const P = new Map(); let moved = 0, pinch0 = 0, zoom0 = 1;
+  function onDown(e){ if(S.mode !== '3d') return; audio(); P.set(e.pointerId, { x:e.clientX, y:e.clientY, x0:e.clientX, y0:e.clientY }); moved = P.size > 1 ? 99 : 0; if(P.size === 2){ const [a, b] = [...P.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = zoom; } }
+  function onMove(e){ const p = P.get(e.pointerId); if(!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+    if(P.size === 1){ moved += Math.abs(dx) + Math.abs(dy); if(moved > 14){ yaw = Math.max(-.7, Math.min(.7, yaw - dx * .006)); pitch = Math.max(-.05, Math.min(scn === 'snake' ? 1.1 : .5, pitch + dy * .005)); } }
+    else if(P.size === 2){ const [a, b] = [...P.values()]; zoom = Math.max(.7, Math.min(2.6, zoom0 * Math.hypot(a.x - b.x, a.y - b.y) / (pinch0 || 1))); } }
+  function onUp(e){ const p = P.get(e.pointerId); if(!p) return; P.delete(e.pointerId);
+    if(moved <= 14 && scn === 'paint' && boardArt && e.type === 'pointerup'){ ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, cam); const hit = ray.intersectObject(board)[0]; if(hit && hit.uv) tapArt(hit.uv.x * boardArt.W, (1 - hit.uv.y) * boardArt.H); } }
+  ['stage', 'sstage', 'show'].forEach(id => { const el = $(id); el.addEventListener('pointerdown', onDown); el.addEventListener('pointermove', onMove); el.addEventListener('pointerup', onUp); el.addEventListener('pointercancel', onUp);
+    el.addEventListener('wheel', e => { if(S.mode === '3d'){ zoom = Math.max(.7, Math.min(2.6, zoom * (e.deltaY < 0 ? 1.1 : .9))); } }, { passive:true }); });
+  resize(); frame3();
+  return { setBoard, touchBoard(){ if(boardTex) boardTex.needsUpdate = true; }, setSnake, setShow, setScene, cheer(){ cheerT = 1.6; }, resize };
+}
+async function applyMode(m){
+  document.body.classList.toggle('m3d', m === '3d');
+  if(m === '3d' && !T){ T3loading = T3loading || init3D().catch(() => null); T = await T3loading; if(!T){ S.mode = '2d'; save(); document.body.classList.remove('m3d'); toast('La 3D ne marche pas sur cet appareil : on passe en 2D.'); } }
+  renderWho();
+}
+
+/* =====================================================================
+   Navigation
+   ===================================================================== */
+let cur = 'home';
+function go(to){
+  const [name, arg] = to.split(':'); cur = name;
+  document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === name));
+  if(name === 'home') say('accueil', true);
+  if(name === 'menu'){ const n = Object.keys(S.done).length; $('galCount').textContent = n ? n + ' dessin' + (n > 1 ? 's' : '') + ' fini' + (n > 1 ? 's' : '') : 'Tes dessins'; say('menu', true); }
+  if(name === 'pick') renderPick(arg || pickKind);
+  if(name === 'gallery') renderGallery();
+  if(name === 'snake'){ SK = JSON.parse(JSON.stringify(S.skin || defSkin())); slot = 1; renderSnakeUI(); say('serpent', true); }
+  if(T) T.setScene(name === 'paint' ? 'paint' : name === 'snake' ? 'snake' : name === 'show' ? 'show' : 'idle');
+  if(name === 'snake') requestAnimationFrame(snakeLoop);
+  if(name === 'show') openShow();
+  if(name !== 'paint') art = null;
+}
+document.addEventListener('click', async e => {
+  const g = e.target.closest('[data-go]'); if(g){ audio(); sfx.tap(); go(g.dataset.go); return; }
+  const m = e.target.closest('[data-mode]'); if(m){ audio(); sfx.tap(); if(musicOn) setMusic(true); S.mode = m.dataset.mode; save(); await applyMode(S.mode); go(START || 'menu'); START = null; return; }
+  if(e.target.closest('[data-snd]')){ setMusic(!musicOn); sfx.tap(); return; }
+  if(e.target.closest('.who')){ sfx.tap(); choose(); return; }
+  if(e.target.closest('#mode2')){ sfx.tap(); S.mode = S.mode === '3d' ? '2d' : '3d'; save(); await applyMode(S.mode); go('menu'); }
+});
+addEventListener('pagehide', () => { if(art && art.fills.size) persist(art, true); });
+document.addEventListener('visibilitychange', () => { if(document.hidden && art && art.fills.size) persist(art, true); });
+addEventListener('resize', () => { if(T) T.resize(); });
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+let START = new URLSearchParams(location.search).get('go') === 'serpent' ? 'snake' : null;
+buildPalette(); setMusic(musicOn); clearInterval(musT);
+(async () => {
+  let p = window.Famille && Famille.player();
+  if(!p) p = await Famille.choosePlayer({ title:'Qui dessine ?', extra:PARENTS, cancel:false, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` });
+  await setPlayer(p || 'Artiste'); say('accueil', true);
+})();
+</script>
+</body>
+</html>
