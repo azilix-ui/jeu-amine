@@ -85,6 +85,9 @@ Autres astuces :
 - **Blocs savoir désactivés** (Réglages) : chaque bloc 📚 donne directement 3 dinars, mais plus de tickets.
 - **Étoiles** : 1 = fini, 2 = 60 % des dinars, 3 = les 3 jasmins. Les jasmins trouvés une première fois rapportent 2 tickets chacun.
 
+### Ludo en ligne : discussion (10/11)
+Bouton 💬 (uniquement en ligne) : emojis, phrases toutes faites, message libre. Détail du serveur dans `docs/serveur.md`.
+
 ## L'Atelier du Jasmin — `jeux/atelier-du-jasmin.html` (coloriage, 2D ou 3D) (10/11)
 
 Demandé par le papa : colorier les paysages des mondes du Jasmin, créer les costumes de Nour, Yasmine et Farès, et inventer un skin pour le jeu de serpents, « dans un monde 3D avec des sons et des animations ».

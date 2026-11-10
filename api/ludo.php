@@ -9,6 +9,10 @@
  *   POST action=create state(JSON)               -> {code, v}
  *   POST action=push code v state(JSON)          -> {v} ou 409 {v, state}
  *
+ * Discussion entre les joueurs d'une partie (à part de l'état, pour ne jamais gêner un coup) :
+ *   GET  ?action=state&code=ABCD&since=N         -> en plus : chat [{id, seat, name, text, ts}] (messages d'identifiant > N)
+ *   POST action=chat code seat name text         -> {id}
+ *
  * Base à part (ludo.sqlite, hors du site public) pour ne pas gêner les autres jeux.
  */
 declare(strict_types=1);
@@ -16,6 +20,8 @@ declare(strict_types=1);
 const MAX_STATE = 24000;
 const MAX_WRITES = 1500;       // envois par adresse (toute la maison partage souvent la même)…
 const WRITE_WINDOW = 600;      // …toutes les 10 minutes
+const MAX_TEXT = 120;          // longueur d'un message
+const CHAT_KEEP = 60;          // messages gardés par partie
 const ROOM_TTL = 43200;        // une partie inactive disparaît après 12 heures
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
@@ -44,6 +50,8 @@ function db(): PDO {
     $pdo->exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=4000;');
     $pdo->exec('CREATE TABLE IF NOT EXISTS rooms (code TEXT PRIMARY KEY, v INTEGER NOT NULL, state TEXT NOT NULL, updated INTEGER NOT NULL)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS writes (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS chat (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL, ts INTEGER NOT NULL, seat INTEGER NOT NULL, name TEXT NOT NULL, text TEXT NOT NULL)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS chat_code ON chat (code, id)');
     return $pdo;
 }
 function limit_writes(): void {
@@ -78,9 +86,16 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 try {
     if ($method === 'GET' && $action === 'state') {
-        $r = room(clean_code($_GET['code'] ?? ''));
+        $code = clean_code($_GET['code'] ?? '');
+        $r = room($code);
         if (!$r) fail(404, "Cette partie n'existe pas ou est terminée.");
-        out(200, ['v' => (int)$r['v'], 'state' => json_decode($r['state'], true)]);
+        $res = ['v' => (int)$r['v'], 'state' => json_decode($r['state'], true)];
+        if (isset($_GET['since'])) {
+            $st = db()->prepare('SELECT id, seat, name, text, ts FROM chat WHERE code = ? AND id > ? ORDER BY id LIMIT ' . CHAT_KEEP);
+            $st->execute([$code, max(0, (int)$_GET['since'])]);
+            $res['chat'] = array_map(fn($m) => ['id' => (int)$m['id'], 'seat' => (int)$m['seat'], 'name' => $m['name'], 'text' => $m['text'], 'ts' => (int)$m['ts']], $st->fetchAll(PDO::FETCH_ASSOC));
+        }
+        out(200, $res);
     }
     if ($method !== 'POST') fail(405, 'Action inconnue.');
 
@@ -89,6 +104,7 @@ try {
         $state = read_state();
         $pdo = db();
         $pdo->prepare('DELETE FROM rooms WHERE updated < ?')->execute([time() - ROOM_TTL]);
+        $pdo->prepare('DELETE FROM chat WHERE ts < ?')->execute([time() - ROOM_TTL]);
         for ($k = 0; $k < 20; $k++) {
             $code = '';
             for ($i = 0; $i < 4; $i++) $code .= CODE_CHARS[random_int(0, strlen(CODE_CHARS) - 1)];
@@ -111,6 +127,22 @@ try {
         $r = room($code);
         if (!$r) fail(404, "Cette partie n'existe pas ou est terminée.");
         out(409, ['v' => (int)$r['v'], 'state' => json_decode($r['state'], true)]);
+    }
+
+    if ($action === 'chat') {
+        limit_writes();
+        $code = clean_code($_POST['code'] ?? '');
+        if (!room($code)) fail(404, "Cette partie n'existe pas ou est terminée.");
+        $clean = fn($t) => trim(preg_replace('/[\x00-\x1F\x7F]+/u', ' ', (string)$t) ?? '');
+        $text = $clean($_POST['text'] ?? ''); $name = $clean($_POST['name'] ?? '');
+        if ($text === '' || mb_strlen($text) > MAX_TEXT) fail(400, 'Message vide ou trop long.');
+        if ($name === '' || mb_strlen($name) > 24) fail(400, 'Prénom invalide.');
+        $seat = max(0, min(3, (int)($_POST['seat'] ?? 0)));
+        $pdo = db();
+        $pdo->prepare('INSERT INTO chat (code, ts, seat, name, text) VALUES (?, ?, ?, ?, ?)')->execute([$code, time(), $seat, $name, $text]);
+        $id = (int)$pdo->lastInsertId();
+        $pdo->prepare('DELETE FROM chat WHERE code = ? AND id <= (SELECT id FROM chat WHERE code = ? ORDER BY id DESC LIMIT 1 OFFSET ' . CHAT_KEEP . ')')->execute([$code, $code]);
+        out(200, ['id' => $id]);
     }
 
     fail(400, 'Action inconnue.');

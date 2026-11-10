@@ -119,6 +119,35 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
 .toast{position:fixed;left:50%;top:26%;transform:translate(-50%,0);font-family:var(--display);font-weight:800;font-size:clamp(30px,6vw,54px);color:#fff;text-shadow:0 4px 0 #0007;pointer-events:none;white-space:nowrap;animation:toast 1.5s cubic-bezier(.16,1,.3,1) forwards;z-index:30}
 @keyframes toast{0%{opacity:0;transform:translate(-50%,20px) scale(.7)}18%{opacity:1;transform:translate(-50%,0) scale(1.08)}30%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-30px)}}
 
+/* discussion en ligne : bouton, fenêtre, bulles et emojis qui s'envolent */
+#chatBtn{position:fixed;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));width:52px;height:52px;border-radius:50%;background:var(--panel);border:2px solid var(--line);font-size:24px;display:none;place-items:center;z-index:40}
+#chatBtn.on{display:grid}
+#chatBtn .dot{position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;border-radius:11px;background:var(--bad);color:#fff;font-size:13px;font-weight:800;display:grid;place-items:center;padding:0 5px}
+#chat{position:fixed;right:max(10px,env(safe-area-inset-right));top:max(72px,calc(env(safe-area-inset-top) + 68px));width:min(360px,calc(100vw - 20px));max-height:calc(100dvh - 90px);background:var(--panel);border:2px solid var(--line);border-radius:24px;padding:12px;display:none;flex-direction:column;gap:10px;z-index:41;box-shadow:0 18px 50px #000a}
+#chat.on{display:flex}
+#chat h3{margin:0;font-family:var(--display);font-size:20px;display:flex;align-items:center;justify-content:space-between}
+#chat h3 button{width:40px;height:40px;border-radius:50%;background:var(--card-hi);font-size:18px}
+#chatLog{flex:1;min-height:70px;max-height:34vh;overflow:auto;display:flex;flex-direction:column;gap:6px;touch-action:pan-y;overscroll-behavior:contain}
+#chatLog p{margin:0;padding:6px 10px;border-radius:14px;background:var(--card);font-size:16px;line-height:1.3;border-left:5px solid var(--c);word-break:break-word;user-select:text;-webkit-user-select:text}
+#chatLog p b{color:var(--c);filter:brightness(1.5);margin-right:6px}
+#chatLog p.big{font-size:30px}
+#chatLog .none{background:none;border:0;color:var(--mist);text-align:center}
+.cemo{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.cemo button{height:48px;border-radius:14px;background:var(--card);font-size:26px;padding:0}
+.cemo button:active,.cphr button:active{transform:scale(.92)}
+.cphr{display:flex;gap:6px;overflow-x:auto;touch-action:pan-x;padding-bottom:2px}
+.cphr button{flex:none;min-height:42px;padding:0 12px;border-radius:14px;background:var(--card-hi);font-size:15px;font-weight:600;white-space:nowrap}
+.cform{display:flex;gap:6px}
+.cform input{flex:1;min-width:0;font:inherit;font-size:17px;padding:10px 12px;border-radius:14px;border:2px solid var(--line);background:#0006;color:var(--ink);user-select:text;-webkit-user-select:text}
+.cform button{min-width:52px;border-radius:14px;background:var(--mint);color:#06281a;font-size:20px;font-weight:800}
+.fly{position:fixed;bottom:16%;z-index:39;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px;animation:fly 3s cubic-bezier(.2,.7,.3,1) forwards}
+.fly i{font-style:normal;font-size:clamp(64px,13vw,110px);line-height:1;filter:drop-shadow(0 6px 10px #0008)}
+.fly span{font-weight:800;font-size:15px;background:var(--c);color:#fff;padding:2px 10px;border-radius:10px;text-shadow:0 1px 2px #0008}
+@keyframes fly{0%{opacity:0;transform:translateY(40px) scale(.4)}12%{opacity:1;transform:translateY(0) scale(1.15)}22%{transform:translateY(-10px) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-46vh) scale(1.1)}}
+.bub{position:fixed;left:50%;top:max(74px,calc(env(safe-area-inset-top) + 70px));transform:translateX(-50%);z-index:39;pointer-events:none;max-width:min(520px,84vw);background:#fff;color:#1c1640;border-radius:20px;padding:10px 16px;font-size:19px;font-weight:600;border:4px solid var(--c);box-shadow:0 10px 30px #0008;animation:bub 4.2s ease forwards;word-break:break-word}
+.bub b{color:var(--c);margin-right:6px}
+@keyframes bub{0%{opacity:0;transform:translate(-50%,-14px)}8%{opacity:1;transform:translate(-50%,0)}88%{opacity:1}100%{opacity:0}}
+
 /* fin, collection, récompense */
 .rank{width:100%;display:flex;flex-direction:column;gap:6px;text-align:left}
 .rank div{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:8px 12px;border-left:6px solid var(--c)}
@@ -231,6 +260,16 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1}
   <div class="hb"><div class="banner" id="banner">…</div></div>
   <div id="chips"></div>
   <button class="big alt roll" id="rollBtn" hidden>🎲 Lancer le dé</button>
+</div>
+
+<!-- Discussion (parties en ligne) -->
+<button id="chatBtn" aria-label="Discuter avec les autres joueurs">💬<span class="dot" id="chatDot" hidden>1</span></button>
+<div id="chat" role="dialog" aria-label="Discussion">
+  <h3>💬 Discussion <button id="chatClose" aria-label="Fermer">✕</button></h3>
+  <div id="chatLog" aria-live="polite"></div>
+  <div class="cemo" id="chatEmo"></div>
+  <div class="cphr" id="chatPhr"></div>
+  <form class="cform" id="chatForm"><input id="chatIn" maxlength="120" autocomplete="off" placeholder="Écris un message…" aria-label="Ton message"><button aria-label="Envoyer">➤</button></form>
 </div>
 
 <!-- Quitter ? -->
@@ -638,14 +677,48 @@ async function joinOnline(c){
   }
   err.textContent = 'Réessaie, quelqu\'un vient de rejoindre en même temps.';
 }
-function startPoll(){ stopPoll(); pollT = setInterval(poll, 1000); }
+function startPoll(){ stopPoll(); chatReset(); pollT = setInterval(poll, 1000); }
 function stopPoll(){ if(pollT) clearInterval(pollT); pollT = null; }
 async function poll(){
   if(mode !== 'online' || !code || busy) return;
-  const r = await api({ action:'state', code }).catch(() => null);
+  const c0 = code, r = await api({ action:'state', code, since:String(chatLast) }).catch(() => null);
+  if(r && r.status === 200 && code === c0 && r.chat) chatReceive(r.chat);
   if(!r || r.status !== 200 || busy) return;
   if(r.v > ver){ ver = r.v; receive(r.state, r.v); }
 }
+/* ---------- discussion entre joueurs (en ligne) : messages courts et emojis ---------- */
+const EMOS = ['👍', '😂', '😮', '😢', '😡', '❤️', '🎉', '👏', '😎', '🤔', '🙏', '👋'], PHRASES = ['Bien joué !', 'Oh non !', 'À toi !', 'Dépêche-toi 😄', 'Bonne chance !', 'Merci !', 'Trop fort !', 'Encore une partie ?'];
+let chatLast = 0, chatFirst = true, chatUnread = 0, chatSendT = 0; const chatSeen = new Set();
+const isEmoji = t => t.length <= 12 && !/[\p{L}\p{N}]/u.test(t);
+function chatReset(){ chatLast = 0; chatFirst = true; chatUnread = 0; chatSeen.clear(); $('chatLog').innerHTML = '<p class="none">Dis bonjour aux autres joueurs 👋</p>'; $('chat').classList.remove('on'); chatUI(); }
+function chatUI(){ const on = mode === 'online' && !!code && (state === 'lobby' || state === 'play' || state === 'end'); $('chatBtn').classList.toggle('on', on); if(!on) $('chat').classList.remove('on'); $('chatDot').hidden = !chatUnread; $('chatDot').textContent = chatUnread > 9 ? '9+' : chatUnread; }
+function chatAdd(m, quiet){
+  if(chatSeen.has(m.id)) return; chatSeen.add(m.id); if(m.id > chatLast) chatLast = m.id;
+  const log = $('chatLog'), none = log.querySelector('.none'); if(none) none.remove();
+  const seat = Math.max(0, Math.min(3, m.seat | 0)), hex = SEATS[seat].hex, emo = isEmoji(m.text), p = document.createElement('p'), b = document.createElement('b');
+  p.style.setProperty('--c', hex); if(emo) p.className = 'big'; b.textContent = m.name; p.append(b, document.createTextNode(m.text)); log.appendChild(p); while(log.children.length > 60) log.firstChild.remove(); log.scrollTop = log.scrollHeight;
+  if(quiet) return;
+  if(emo){ const f = document.createElement('div'), i = document.createElement('i'), s = document.createElement('span'); f.className = 'fly'; f.style.setProperty('--c', hex); f.style.left = 12 + Math.random() * 64 + 'vw'; i.textContent = m.text; s.textContent = m.name; f.append(i, s); document.body.appendChild(f); setTimeout(() => f.remove(), 3100); }
+  else if(!$('chat').classList.contains('on')){ document.querySelectorAll('.bub').forEach(x => x.remove()); const d = document.createElement('div'), b2 = document.createElement('b'); d.className = 'bub'; d.style.setProperty('--c', hex); b2.textContent = m.name; d.append(b2, document.createTextNode(m.text)); document.body.appendChild(d); setTimeout(() => d.remove(), 4300); }
+  if(!m.mine){ try{ sfx.tap(); }catch(e){} if(!$('chat').classList.contains('on')){ chatUnread++; } }
+  chatUI();
+}
+function chatReceive(list){ const quiet = chatFirst || list.length > 4; chatFirst = false; list.forEach(m => chatAdd(m, quiet)); }
+async function chatSend(text){
+  text = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 120); if(!text || mode !== 'online' || !code) return;
+  if(Date.now() - chatSendT < 700) return; chatSendT = Date.now();
+  const seat = G ? G.seats.findIndex(s => s && s.client === ME) : -1;
+  const r = await api({ action:'chat', code, seat:String(Math.max(0, seat)), name:player, text }, true).catch(() => ({ status:0 }));
+  if(r.status === 200 && r.id){ chatFirst = false; chatAdd({ id:r.id, seat:Math.max(0, seat), name:player, text, mine:true }); }
+  else toast(r.error || 'Message non envoyé');
+}
+$('chatEmo').innerHTML = EMOS.map(e => `<button data-t="${e}">${e}</button>`).join(''); $('chatPhr').innerHTML = PHRASES.map(e => `<button data-t="${esc(e)}">${esc(e)}</button>`).join('');
+$('chatEmo').onclick = $('chatPhr').onclick = e => { const b = e.target.closest('[data-t]'); if(b) chatSend(b.dataset.t); };
+$('chatForm').onsubmit = e => { e.preventDefault(); const i = $('chatIn'); chatSend(i.value); i.value = ''; };
+$('chatBtn').onclick = () => { sfx.tap(); const c = $('chat'); c.classList.toggle('on'); if(c.classList.contains('on')){ chatUnread = 0; $('chatLog').scrollTop = $('chatLog').scrollHeight; } chatUI(); };
+$('chatClose').onclick = () => { sfx.tap(); $('chat').classList.remove('on'); };
+['chat', 'chatBtn'].forEach(id => ['pointerdown', 'pointerup', 'pointermove', 'touchstart', 'wheel'].forEach(ev => $(id).addEventListener(ev, e => e.stopPropagation())));
+
 // Appliquer un coup : en local tout de suite ; en ligne, seulement si personne n'a joué entre-temps.
 async function commit(st){
   if(mode === 'local'){ receive(st, 0); return true; }
@@ -815,7 +888,7 @@ addEventListener('resize', resize); resize();
 /* =====================================================================
    Écrans
    ===================================================================== */
-function show(id){ document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id || (id === 'quit' && s.id === 'hud'))); }
+function show(id){ document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id || (id === 'quit' && s.id === 'hud'))); setTimeout(chatUI, 0); }
 function toast(t){ const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 1600); }
 function banner(html){ $('banner').innerHTML = html; }
 function seg(id, val, on){ $(id).querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.v) === String(val)); b.onclick = () => { if(b.disabled) return; sfx.tap(); on(b.dataset.v); }; }); }

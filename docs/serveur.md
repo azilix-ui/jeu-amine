@@ -81,3 +81,10 @@ Demandé par le papa : un soir, c'est lui qui a parcouru le cours d'anglais de S
 ## Têtes des invités (05/11)
 - `famille.js` : dans « Qui joue ? », un invité écrit son pseudo et choisit sa tête parmi les mascottes (`Famille.mascots` : nour, yasmine, fares). `Famille.head(nom)` renvoie la mascotte d'un invité (null pour la famille ; à défaut de choix, une mascotte tirée du pseudo). Gardé dans `localStorage['famille-tetes']` et envoyé au serveur comme progrès du « cours » `profil` (`{tete:id}`).
 - API : `GET ?action=heads` → `{heads:{pseudo:id}}` (lu par `Famille.loadHeads()` au démarrage des jeux, pour les classements). `profil` est dans `COURSES` et `READABLE` ; la page Progression l'ignore.
+
+## Discussion de Ludo en ligne (10/11)
+
+- Table `chat (id, code, ts, seat, name, text)` dans `ludo.sqlite`, à part de l'état de la partie : un message ne peut pas faire échouer un coup.
+- `POST action=chat code seat name text` → `{id}` (texte de 1 à 120 caractères, prénom de 24 au plus, caractères de contrôle retirés, même limite d'envois que les coups). On garde les 60 derniers messages par partie ; ils disparaissent avec la partie (12 h).
+- Lecture sans requête en plus : la tablette ajoute `since=<dernier id>` à son `GET action=state` (une fois par seconde) et reçoit `chat: [...]`.
+- Côté page (`jeux/ludo-legendes.html`) : `chatSend`, `chatReceive`, `chatAdd` ; tout est affiché avec `textContent` (aucun HTML venant d'un message). Un message fait seulement d'emojis s'envole à l'écran ; un texte s'affiche en bulle. L'historique reçu en rejoignant la partie est rangé dans la fenêtre sans animation.
