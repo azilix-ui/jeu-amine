@@ -46,7 +46,7 @@ h1{font-family:var(--display);font-weight:800;margin:0;font-size:clamp(36px,6.5v
 h1 span{color:var(--gold)}
 h2{font-family:var(--display);margin:0;font-size:30px;line-height:1.05}
 .sub{margin:0;color:var(--mist);font-weight:700}
-.title-img{width:100%;border-radius:20px;border:3px solid var(--gold);aspect-ratio:16/9;object-fit:cover;background:#1b2a5e}
+.title-img{width:100%;border-radius:20px;border:3px solid var(--gold);aspect-ratio:16/9;object-fit:cover;background:#1b2a5e;display:block}
 .big{font-family:var(--display);font-weight:800;font-size:24px;min-height:58px;padding:6px 24px;border-radius:20px;background:linear-gradient(#ffe066,#ffc21f);color:#3a2600;box-shadow:0 6px 0 var(--gold-deep)}
 .big:active{transform:translateY(4px);box-shadow:0 2px 0 var(--gold-deep)}
 .big.ghost{background:#ffffff14;color:#fff;box-shadow:0 6px 0 #0006;border:2px solid var(--line)}
@@ -107,7 +107,7 @@ body.menu .back{display:inline-flex}
 <a class="back" href="../index.html">← Famille</a>
 
 <div class="screen on" id="menu"><div class="box">
-  <img class="title-img" src="jasmin/titre.webp" alt="La famille dans un village tunisien bleu et blanc" onerror="this.style.display='none'">
+  <video class="title-img" src="jasmin/titre.mp4" poster="jasmin/titre.webp" autoplay loop muted playsinline disablepictureinpicture aria-label="La famille saute de joie dans un village tunisien bleu et blanc"></video>
   <h1>La Légende <span>du Jasmin</span></h1>
   <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse dix-huit mondes pour les rapporter !</p>
   <button class="who" id="who"></button>
@@ -151,7 +151,7 @@ body.menu .back{display:inline-flex}
   🅰️ <b>Sauter</b> : appui court = petit saut, appui long = grand saut. On peut changer de direction en l'air.<br>
   🅱️ <b>Lancer un piment</b> quand tu as la harissa 🌶️ (sinon B fait courir plus vite).<br>
   🦂 Saute sur les ennemis pour les assommer. ⚠️ Pas sur les cactus : ils piquent !<br>
-  🦔 Le hérisson se met en boule quand tu sautes dessus : touche-le pour le faire rouler.<br>
+  🦔 Le hérisson se met en boule quand tu sautes dessus : touche-le pour le faire rouler. Chaque saut lui enlève un piquant (+100) : il en a 7.<br>
   📚 <b>Bloc savoir</b> (avec un livre) : tape-le par en dessous et réponds à la question pour gagner des 🎟️ tickets.<br>
   🪔 <b>Bloc mosaïque</b> : il cache un bonus. 🎩 Chéchia = tu peux encaisser un coup. 🌶️ Harissa = tu lances des piments. 🍵 Thé à la menthe = super vitesse.<br>
   🪙 Ramasse les dinars et les <b>3 jasmins dorés</b> 🌼 de chaque niveau (un est caché derrière un faux mur !).<br>
@@ -696,7 +696,7 @@ function newLevel(n, fromCheck){
     if(e.t === 'coin' && !e.secret) g.dinarTotal++;
     if(e.t === 'stone'){ o.w = 56; o.h = 52; o.hy = o.y; o.st = 'up'; o.timer = 0; }
     if(e.t === 'mover'){ o.x0 = o.x - T / 2; o.y0 = o.y - T; o.px = o.x0; o.py = o.y0; }
-    if(e.t === 'scorp'){ o.w = 30; o.h = 20; o.sp = 45; } if(e.t === 'hog'){ o.w = 28; o.h = 24; o.sp = 35; o.ball = false; }
+    if(e.t === 'scorp'){ o.w = 30; o.h = 20; o.sp = 45; } if(e.t === 'hog'){ o.w = 28; o.h = 24; o.sp = 35; o.ball = false; o.spikes = 7; }
     if(e.t === 'bird'){ o.w = 30; o.h = 22; o.bx = o.x; o.by = o.y - 10; } if(e.t === 'cactus'){ o.w = 26; o.h = 44; o.cd = 2; }
     if(e.t === 'boss'){ o.w = 120; o.h = 70; o.hp = 3; o.st = 'wait'; o.timer = 0; o.dir = -1; o.inv = 0; }
     g.ents.push(o);
@@ -823,7 +823,7 @@ function step(dt){
   for(const e of g.ents){
     if(!e.alive){ if(e.dying){ e.dying -= dt; e.vy += 1500 * dt; e.y += e.vy * dt; } continue; }
     e.t2 = (e.t2 || 0) + dt;
-    if(e.t === 'coin'){ if(Math.abs(h.x - e.x) < 18 && Math.abs(h.y - 20 - (e.y - 16)) < 28){ e.alive = false; g.dinars++; g.score += 10; sfx.coin(); } continue; }
+    if(e.t === 'coin'){ if(Math.abs(h.x - e.x) < 20 && Math.abs(h.y - 20 - (e.y - 16)) < 38){   /* 38 : une pièce à hauteur de tête se ramasse en passant, sans sauter */ e.alive = false; g.dinars++; g.score += 10; sfx.coin(); } continue; }
     if(e.t === 'gem'){ if(Math.abs(h.x - e.x) < 22 && Math.abs(h.y - 20 - (e.y - 16)) < 32){ e.alive = false; g.gems.add(Math.round(e.x)); g.score += 500; sfx.gem(); addText('🌼 Jasmin doré !', e.x, e.y - 40, '#ffe066', 22); burst(e.x, e.y - 16, '#ffe066', 18); } continue; }
     if(e.t === 'lamp'){ if(!e.on && Math.abs(h.x - e.x) < 24){ e.on = true; g.check = { x:e.x, y:e.y }; sfx.lamp(); addText('Sauvegarde !', e.x, e.y - 60, '#ffe066'); } continue; }
     if(e.t === 'spring'){ if(h.vy > 0 && Math.abs(h.x - e.x) < 22 && h.y >= e.y - 20 && h.y <= e.y + 2){ h.y = e.y - 20; h.vy = -900; h.held = true; e.sq = 1; sfx.spring(); } e.sq = Math.max(0, (e.sq || 0) - dt * 4); continue; }
@@ -861,7 +861,10 @@ function step(dt){
       if(e.t === 'figue'){ e.alive = false; hurt(); continue; }
       if(e.t === 'cactus'){ hurt(); continue; }
       if(fromAbove){ h.vy = -(A ? PH.jump : PH.stomp); h.held = A; h.y = ey0;
-        if(e.t === 'hog'){ if(!e.ball){ e.ball = true; e.vx = 0; e.h = 22; } else e.vx = 0; sfx.stomp(); g.score += 100; addText('+100', e.x, e.y - 30); }
+        if(e.t === 'hog'){ if(!e.ball){ e.ball = true; e.vx = 0; e.h = 22; } else e.vx = 0; sfx.stomp();
+          // +100 par piquant, pas plus : chaque saut lui en fait perdre un ; au dernier, il s'en va
+          if(e.spikes > 0){ e.spikes--; g.score += 100; addText('+100', e.x, e.y - 30); burst(e.x, e.y - 14, '#4a3a2a', 3, 160); }
+          if(e.spikes <= 0){ e.alive = false; e.dying = 1; e.vy = -260; g.kills++; burst(e.x, e.y - 10, '#fff', 8); } }
         else { e.alive = false; e.dying = 1; e.vy = -200; g.kills++; g.score += 100; sfx.stomp(); addText('+100', e.x, e.y - 30); burst(e.x, e.y - 10, '#fff', 8); } }
       else if(e.t === 'hog' && e.ball && !e.vx){ e.vx = (h.x < e.x ? 1 : -1) * 380; e.x += Math.sign(e.vx) * 10; sfx.stomp(); h.inv = Math.max(h.inv, .25); }
       else hurt();
@@ -1098,8 +1101,8 @@ function drawEnt(e, g, t){
       ctx.strokeStyle = '#8a4a12'; ctx.lineWidth = 2; for(let k = -1; k <= 1; k++){ ctx.beginPath(); ctx.moveTo(k * 6, -4); ctx.lineTo(k * 6 - 4, 0 + (k ? lg : -lg)); ctx.stroke(); }
       ctx.fillStyle = '#c47a2a'; ctx.beginPath(); ctx.arc(14, -10, 5, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(-12, -10); ctx.quadraticCurveTo(-22, -26, -8, -30); ctx.lineWidth = 5; ctx.strokeStyle = '#c47a2a'; ctx.stroke(); ctx.fillStyle = '#5a2a0a'; ctx.beginPath(); ctx.moveTo(-8, -30); ctx.lineTo(-2, -26); ctx.lineTo(-6, -24); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(8, -12, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(9, -12, 1.5, 0, 7); ctx.fill(); break; }
-    case 'hog': { if(e.ball){ ctx.translate(0, -11); ctx.rotate(e.spin || 0); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0; k < 8; k++){ const a = k * Math.PI / 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8); ctx.lineTo(Math.cos(a) * 14, Math.sin(a) * 14); ctx.stroke(); } break; }
-      ctx.scale(e.dir, 1); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.ellipse(-2, -11, 14, 11, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0; k < 7; k++){ const a = Math.PI + k * .4; ctx.beginPath(); ctx.moveTo(-2 + Math.cos(a) * 10, -11 + Math.sin(a) * 9); ctx.lineTo(-2 + Math.cos(a) * 17, -11 + Math.sin(a) * 15); ctx.stroke(); }
+    case 'hog': { if(e.ball){ ctx.translate(0, -11); ctx.rotate(e.spin || 0); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0, n = e.spikes === undefined ? 8 : e.spikes; k < n; k++){ const a = k * Math.PI * 2 / n; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8); ctx.lineTo(Math.cos(a) * 14, Math.sin(a) * 14); ctx.stroke(); } break; }
+      ctx.scale(e.dir, 1); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.ellipse(-2, -11, 14, 11, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0, n = e.spikes === undefined ? 7 : e.spikes; k < n; k++){ const a = Math.PI + k * .4; ctx.beginPath(); ctx.moveTo(-2 + Math.cos(a) * 10, -11 + Math.sin(a) * 9); ctx.lineTo(-2 + Math.cos(a) * 17, -11 + Math.sin(a) * 15); ctx.stroke(); }
       ctx.fillStyle = '#e8c8a0'; ctx.beginPath(); ctx.ellipse(10, -8, 7, 6, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(16, -9, 2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(10, -11, 1.5, 0, 7); ctx.fill(); break; }
     case 'bird': if(g.lv.n === 10){ ctx.scale(e.dir, 1); const sw = Math.sin(t * 10) * .4; ctx.fillStyle = '#ff8a2a';   // un poisson
         ctx.beginPath(); ctx.ellipse(0, -12, 14, 9, 0, 0, 7); ctx.fill(); ctx.save(); ctx.translate(-12, -12); ctx.rotate(sw); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-10, -8); ctx.lineTo(-10, 8); ctx.fill(); ctx.restore();

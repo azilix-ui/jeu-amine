@@ -44,7 +44,8 @@ Compte du papa (forfait **Plus**), relié à Claude par le connecteur MCP Higgsf
 | 10/11 | English Garden de Salma : 171 phrases enregistrées (anglais **Raina** `seed_audio` en wav ; français d'Ollie refait avec **Céline**), découpées en clips | `salma/english/voix/*.mp3` | ≈ 17 |
 | 10/11 | Épisodes 3, 4, 5 d'Essil (le piège du fermier, le bassin de Kairouan, le minaret) : 27 images 9:16 `flux_3_image` + 33 phrases de Céline | `essil/videos/{piege,volume,angles}.mp4` | ≈ 72 |
 | 10/11 | L'Atelier du Jasmin : 19 paysages au trait (4:3 ; Sidi Bou Saïd refait une fois, le premier était sorti en couleurs), 9 costumes au trait (3:4), 1 essai, l'image d'accueil (16:9) (`flux_3_image`) + 10 consignes de Julian (2 prises ElevenLabs) | `jeux/atelier/*.webp`, `jeux/atelier/voix/*.mp3` | ≈ 62 |
-| | **Total** (solde Higgsfield le 10/11 : 920,6 crédits) | | **≈ 587** |
+| 10/11 | Jasmin : l'image d'accueil animée (la famille saute, boucle de 5 s ; `kling3_0`, mode std, sans son, même image au début et à la fin pour boucler) | `jeux/jasmin/titre.mp4` | 7,5 |
+| | **Total** (solde Higgsfield le 10/11 : 913,1 crédits) | | **≈ 595** |
 
 La carte mythique de Salma (`verbes`) a une crête de plumes qui rappelle une coiffe ; publiée telle quelle à la demande du papa (02/11).
 
