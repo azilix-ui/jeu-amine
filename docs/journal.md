@@ -88,3 +88,4 @@ Une ligne par réalisation, la plus ancienne en premier. Ajouter une ligne à ch
 - **11/11** : Jasmin : l'ivrogne tombe quand on lui saute dessus, comme les autres ennemis.
 - **11/11** : **Le Jasmin passe à 24 mondes** : Bizerte (pont mobile, barques), Testour (horloge qui tourne à l'envers, grenades), Monastir (tour du ribat, marée, boulets). 6 crédits (solde : 1,1).
 - **11/11** : Atelier du Jasmin : les coloriages sont aussi gardés sur le serveur (cours `atelier-art`) et reviennent sur une autre tablette, dans l'appli installée ou après un vidage du navigateur ; message si la tablette est pleine. Cause du souci d'Amine : les dessins n'étaient gardés que sur la tablette où ils avaient été faits (aucune remise à zéro en base).
+- **11/11** : Atelier du Jasmin : nouveau motif **dégradé** (de la couleur choisie vers le blanc, ou entre deux couleurs avec le bouton « 2 »).

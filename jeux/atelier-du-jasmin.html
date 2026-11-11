@@ -143,6 +143,8 @@ body.m3d #cv{display:none}
 .sw.on{outline:4px solid var(--blue);outline-offset:2px;transform:scale(1.08)}
 .pats{display:grid;grid-template-columns:repeat(3,44px);gap:6px;justify-content:center;border-top:2px dashed #cfd8ee;padding-top:8px}
 .pats .sw{border-radius:14px}
+.sw.c2{background:#fff;position:relative}.sw.c2 i{width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(20,40,90,.35)}.sw.c2::after{content:'2';position:absolute;right:-4px;top:-6px;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font:700 12px/18px system-ui;text-align:center}
+.sw.c2.dim{opacity:.45}.sw.c2.pick{outline:4px solid #ff8c1a;outline-offset:2px;animation:c2p .7s ease-in-out infinite alternate}@keyframes c2p{to{transform:scale(1.15)}}
 .meter{height:12px;border-radius:6px;background:#dfe6f5;overflow:hidden;flex:none}.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8fd14f,#35b44a);transition:width .3s}
 @media (orientation:portrait){
   .work{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
@@ -187,6 +189,7 @@ body.m3d #shcv{display:none}
 .box .row{justify-content:center}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:22px;font-weight:800;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center}
 #toast.on{opacity:1}
+#toast.haut{bottom:auto;top:84px}
 #load{position:absolute;inset:0;display:none;place-items:center;font-family:"Baloo 2";font-size:26px;color:var(--blue-deep)}
 #load.on{display:grid}
 @media (prefers-reduced-motion:reduce){ .mode,.pill.wow{animation:none} }
@@ -311,7 +314,7 @@ const COST = [
   { who:'Farès', img:'avatars/mascotte-fares.webp', items:[['c-fares-1','Jebba brodée'],['c-fares-2','Cavalier du désert'],['c-fares-3','Farmla et sarouel']] }];
 const NAME = Object.fromEntries(LAND.concat(ANIM, ...COST.map(c => c.items.map(i => [i[0], c.who + ' · ' + i[1]]))));
 const COLORS = ['#e8333a','#ff7a1a','#ffc928','#fff0a0','#8fd14f','#2f9e44','#1fb8a6','#5cc8f5','#1f6fd8','#27348b','#8a4fd8','#d264c8','#ff8fb8','#ffd9c2','#e0a878','#a8683c','#6b4226','#ffffff','#9aa3ad','#2b2b33'];
-const PATS = [['u','⬤','Uni'],['r','〰️','Rayures'],['p','🔵','Pois'],['z','💠','Zellige'],['a','🌈','Arc-en-ciel'],['g','🧽','Gomme']];
+const PATS = [['u','⬤','Uni'],['r','〰️','Rayures'],['p','🔵','Pois'],['z','💠','Zellige'],['a','🌈','Arc-en-ciel'],['g','🧽','Gomme'],['d','','Dégradé']];
 
 /* =====================================================================
    Sauvegarde : un petit état envoyé au serveur (skin, dessins finis) + les coloriages gardés sur la tablette
@@ -470,11 +473,13 @@ function bbox(a, L){ const r = a.regs[L]; const x0 = Math.max(0, r.x0 - 3), y0 =
 // remplit une zone (c = couleur ou null pour gommer) ; r2 = rayon² depuis (px, py) pour l'animation
 function paintRegion(a, L, c, p, px, py, r2){
   const [x0, y0, x1, y1] = bbox(a, L), d = a.cd.data, W = a.W, base = c ? rgb(c) : null;
+  const deg = base && p && p[0] === 'd' ? rgb(p.length === 8 ? p.slice(1) : '#ffffff') : null, dh = Math.max(1, y1 - y0);   // dégradé : la couleur en haut de la zone, la 2e en bas
   for(let y = y0; y <= y1; y++) for(let x = x0, i = y * W + x0; x <= x1; x++, i++){
     if(a.labD[i] !== L) continue;
     if(r2 !== undefined){ const dx = x - px, dy = y - py; if(dx * dx + dy * dy > r2) continue; }
     const j = i * 4;
     if(!base){ d[j + 3] = 0; continue; }
+    if(deg){ const k = (y - y0) / dh, q = 1 - k; d[j] = base[0] * q + deg[0] * k; d[j + 1] = base[1] * q + deg[1] * k; d[j + 2] = base[2] * q + deg[2] * k; d[j + 3] = 255; continue; }
     const t = p && p !== 'u' ? tint(p, base, x, y) : base; d[j] = t[0]; d[j + 1] = t[1]; d[j + 2] = t[2]; d[j + 3] = 255;
   }
   return [x0, y0, x1 - x0 + 1, y1 - y0 + 1];
@@ -510,16 +515,19 @@ const coverage = a => { let n = 0; a.fills.forEach((v, L) => { if(a.regs[L].n >=
 /* =====================================================================
    Écran de coloriage
    ===================================================================== */
+let color2 = '#ffffff', pick2 = false;   // dégradé : la 2e couleur (blanc au départ), et « je choisis la 2e couleur »
 let art = null, color = COLORS[8], pat = 'u', pickKind = 'p', saveT = null;
 const cv = $('cv'), cvx = cv.getContext('2d');
 function buildPalette(){
   $('pal').innerHTML = COLORS.map((c, i) => `<button class="sw" data-c="${c}" style="background:${c}" aria-label="Couleur ${i + 1}"></button>`).join('');
-  $('pats').innerHTML = PATS.map(p => `<button class="sw" data-p="${p[0]}" aria-label="${p[2]}" title="${p[2]}">${p[1]}</button>`).join('');
-  $('pal').onclick = e => { const b = e.target.closest('[data-c]'); if(!b) return; color = b.dataset.c; if(pat === 'g') pat = 'u'; sfx.fill(COLORS.indexOf(color)); markTools(); };
-  $('pats').onclick = e => { const b = e.target.closest('[data-p]'); if(!b) return; pat = b.dataset.p; sfx.tap(); markTools(); };
+  $('pats').innerHTML = PATS.map(p => `<button class="sw" data-p="${p[0]}" aria-label="${p[2]}" title="${p[2]}">${p[1]}</button>`).join('') + '<button class="sw c2" id="c2" aria-label="Deuxième couleur du dégradé" title="Deuxième couleur du dégradé"><i></i></button>';
+  $('c2').onclick = e => { e.stopPropagation(); pat = 'd'; pick2 = !pick2; sfx.tap(); if(pick2){ toast('Touche la deuxième couleur du dégradé 🎨'); $('toast').classList.add('haut'); } markTools(); };
+  $('pal').onclick = e => { const b = e.target.closest('[data-c]'); if(!b) return; if(pick2){ color2 = b.dataset.c; pick2 = false; sfx.fill(COLORS.indexOf(color2)); markTools(); return; } color = b.dataset.c; if(pat === 'g') pat = 'u'; sfx.fill(COLORS.indexOf(color)); markTools(); };
+  $('pats').onclick = e => { const b = e.target.closest('[data-p]'); if(!b) return; pat = b.dataset.p; pick2 = false; sfx.tap(); markTools(); };
   markTools();
 }
-function markTools(){ document.querySelectorAll('#pal .sw').forEach(b => b.classList.toggle('on', b.dataset.c === color && pat !== 'g' && pat !== 'a')); document.querySelectorAll('#pats .sw').forEach(b => b.classList.toggle('on', b.dataset.p === pat)); }
+function markTools(){ document.querySelectorAll('#pal .sw').forEach(b => b.classList.toggle('on', b.dataset.c === color && pat !== 'g' && pat !== 'a')); document.querySelectorAll('#pats .sw').forEach(b => b.classList.toggle('on', b.dataset.p === pat));
+  const g = document.querySelector('#pats [data-p="d"]'), c2 = $('c2'); if(g) g.style.background = `linear-gradient(${color},${color2})`; if(c2){ c2.firstChild.style.background = color2; c2.classList.toggle('pick', pick2); c2.classList.toggle('dim', pat !== 'd'); } }
 async function openArt(id){
   go('paint'); $('pTitle').textContent = NAME[id] || ''; $('pip').hidden = true; $('load').classList.add('on'); cv.style.visibility = 'hidden'; art = null; if(T) T.setBoard(null);
   await new Promise(r => setTimeout(r, 30));
@@ -532,7 +540,7 @@ async function openArt(id){
 function meter(){ const k = art ? coverage(art) : 0; $('meter').style.width = Math.round(k * 100) + '%'; $('done').classList.toggle('wow', k >= .9); $('undo').disabled = !art || !art.hist.length; }
 function tapArt(x, y){
   if(!art) return; const L = pickRegion(art, x, y); if(!L){ sfx.nope(); return; }
-  const prev = art.fills.get(L) || null, c = pat === 'g' ? null : color, p = pat === 'g' ? 'u' : pat;
+  const prev = art.fills.get(L) || null, c = pat === 'g' ? null : color, p = pat === 'g' ? 'u' : pat === 'd' ? 'd' + color2 : pat;
   if(prev && prev.c === c && prev.p === p) return;
   if(!prev && !c) return;
   art.hist.push([L, prev]); if(art.hist.length > 60) art.hist.shift();
@@ -754,7 +762,7 @@ function celebrate(n = 46){
   sfx.win(); const P = $('party'), E = ['🌼', '🤍', '✨', '🌸', '⭐', '🎨'];
   for(let i = 0; i < n; i++){ const s = document.createElement('i'); s.textContent = E[i % E.length]; s.style.left = Math.random() * 100 + 'vw'; s.style.fontSize = 18 + Math.random() * 26 + 'px'; s.style.animationDuration = 2.2 + Math.random() * 2.4 + 's'; s.style.animationDelay = Math.random() * .9 + 's'; P.appendChild(s); setTimeout(() => s.remove(), 6000); }
 }
-let toastT = null; function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
+let toastT = null; function toast(m){ const t = $('toast'); t.classList.remove('haut'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
 
 /* =====================================================================
    Choix d'un dessin, galerie
