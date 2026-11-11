@@ -54,6 +54,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .e.pop{animation:pop .35s ease}
 @keyframes pop{from{transform:scale(.2);opacity:0}}
 .e.hide{display:none}
+.spr{width:100%;height:100%;background-repeat:no-repeat;background-size:calc(var(--n) * 100%) 100%;pointer-events:none}
+.spr.an{animation:spr .95s steps(var(--n),jump-none) infinite}
+@keyframes spr{from{background-position:0 0}to{background-position:100% 0}}
 .e.c .body{position:absolute;inset:0;background-size:200% 100%;background-repeat:no-repeat;pointer-events:none}
 .e.c .shade{position:absolute;left:14%;right:14%;bottom:-3px;height:9px;border-radius:50%;background:#0003;z-index:-1}
 .e.c.sleep>*{transform:rotate(-90deg)}
@@ -84,7 +87,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
   #bottom{height:calc(52px + env(safe-area-inset-bottom))}#view{bottom:calc(52px + env(safe-area-inset-bottom))}.hd{width:46px;font-size:0}.hd img{width:40px;height:40px}#barHint{display:none}#title small{display:none}}
 @media (max-width:700px){.tb.quit span{display:none}}
 @media (max-width:560px){#title small{display:none}#barHint{display:none}.tb{min-width:42px;height:44px;padding:0 6px;font-size:22px}#top{gap:5px}}
-@media (prefers-reduced-motion:reduce){.e,.e.hop,.e.munch,.e.pop,.fxp{animation:none;transition:none}}
+@media (prefers-reduced-motion:reduce){.e,.e.hop,.e.munch,.e.pop,.fxp,.spr.an{animation:none;transition:none}}
 </style>
 </head>
 <body>
@@ -272,15 +275,128 @@ const PLACES = {
     items:[['lait', 'lait', 90, F0 - 180], ['pasteque', 'pasteque', 132, F0 - 180], ['poisson', 'poisson', 96, F0 - 122], ['tomate', 'tomate', 136, F0 - 122], ['piment', 'piment', 112, F0 - 64],
       ['verre1', 'verre', 222, 488], ['verre2', 'verre', 256, 488], ['verre3', 'verre', 290, 488], ['harissa', 'harissa', 336, 488], ['makroud', 'makroud', 378, 488],
       ['theiere', 'theiere', 296, F0 - 116], ['marmite', 'marmite', 406, F0 - 116], ['pain', 'pain', 880, F0 - 58], ['orange', 'orange', 916, F0 - 58], ['bambalouni', 'bambalouni', 1066, 430],
-      ['livre', 'livre', 1108, 430], ['darbouka', 'darbouka', 960, F0], ['chat', 'chat', 545, F0], ['arrosoir', 'arrosoir', 656, F1], ['ballon', 'ballon', 758, F1],
+      ['livre', 'livre', 1108, 430], ['darbouka', 'darbouka', 960, F0], ['chat', 'chatR', 545, F0], ['arrosoir', 'arrosoir', 656, F1], ['ballon', 'ballon', 758, F1],
       ['doudou', 'doudou', 392, F1 - 34], ['chechia', 'chechia', 96, F1 - 250], ['paille', 'paille', 152, F1 - 250], ['lunettes', 'lunettes', 1040, 154], ['sac', 'sac', 232, F1],
       ['savon', 'savon', 930, 154], ['lotion', 'lotion', 966, 154], ['canard', 'canard', 1002, 154], ['fouta', 'fouta', 1120, F1],
       ['v-jebba', 'v-jebba', 84, F1 - 138], ['v-foot', 'v-foot', 122, F1 - 138], ['v-astro', 'v-astro', 160, F1 - 138],
       ['v-super', 'v-super', 84, F1 - 34], ['v-or', 'v-or', 122, F1 - 34], ['v-ville', 'v-ville', 160, F1 - 34]],
     start:{ anis:[965, F0], imen:[1085, F0], essil:[806, F1], salma:[812, F0], amine:[250, F1], nour:[745, F0], yasmine:[1185, F0], fares:[420, F0] } }
 };
+/* =====================================================================
+   LES AUTRES LIEUX (12/11) : le café, l'école, le souk, la plage.
+   Les animaux sont les créatures « en vrai » du Jasmin (jeux/jasmin2/) : ici ce sont des amis qu'on caresse et qu'on promène.
+   spr = [image, nombre de cases, largeur, hauteur d'une case] ; fly = reste où on le lâche (il vole ou il nage).
+   ===================================================================== */
+Object.assign(ITEMS, {
+  chatR:{ n:'le chat', z:88, pet:1, d:'chat', spr:['chat', 12, 170, 130] }, chevre:{ n:'la chèvre', z:130, pet:1, d:'chevre', spr:['chevre', 1, 204, 130] },
+  cigogne:{ n:'la cigogne', z:128, pet:1, fly:1, d:'cigogne', spr:['cigogne', 12, 153, 150] }, mouette:{ n:'la mouette', z:100, pet:1, fly:1, d:'mouette', spr:['mouette', 12, 119, 140] },
+  crabe:{ n:'le crabe', z:86, pet:1, d:'crabe', spr:['crabe', 12, 189, 110] }, grenouille:{ n:'la grenouille', z:68, pet:1, d:'grenouille', spr:['grenouille', 12, 115, 120] },
+  herisson:{ n:'le hérisson', z:84, pet:1, d:'herisson', spr:['herisson', 1, 145, 120], alt:['herisson-boule', 1, 116, 110] },
+  poisson:{ n:'le poisson', z:88, pet:1, fly:1, d:'poulpe', spr:['poisson', 1, 174, 120] }, poulpe:{ n:'le poulpe', z:96, pet:1, fly:1, d:'poulpe', spr:['poulpe', 1, 153, 130] },
+  scorpion:{ n:'le scorpion', z:88, pet:1, d:'scorpion', spr:['scorpion', 12, 165, 120] },
+  jus:{ n:'une citronnade', e:'🍹', z:44, food:1, drink:1 }, glace:{ n:'une glace', e:'🍦', z:46, food:1, d:'glace' }, pomme:{ n:'une pomme', e:'🍎', z:38, food:1 }, carotte:{ n:'une carotte', e:'🥕', z:40, food:1 }, raisin:{ n:'du raisin', e:'🍇', z:40, food:1 },
+  dattes:{ n:'des dattes', z:42, food:1, s:() => svg(`<path d="M50 8v26M50 34 28 60M50 34l22 26M50 34v40" stroke="#b98552" stroke-width="5" stroke-linecap="round"/>${[[28, 64], [72, 64], [50, 78], [38, 82], [62, 82], [50, 56]].map(p => `<ellipse cx="${p[0]}" cy="${p[1]}" rx="9" ry="13" fill="#7a3e12" stroke="#4d240a" stroke-width="2"/>`).join('')}`) },
+  poterie:{ n:'une poterie de Nabeul', z:58, s:() => svg(`<path d="M36 12h28l-4 14q26 18 20 44-6 22-30 22T20 70q-6-26 20-44z" fill="#fdfdf8" stroke="#1d6fb8" stroke-width="4" stroke-linejoin="round"/><path d="M22 56h56M26 74h48" stroke="#1d6fb8" stroke-width="4"/><path d="M34 65l8-6 8 6 8-6 8 6" fill="none" stroke="#ffc93c" stroke-width="4"/><circle cx="50" cy="42" r="6" fill="#2e9e4f"/>`) },
+  cartes:{ n:'les cartes', e:'🃏', z:40, toy:1 }, journal:{ n:'le journal', e:'📰', z:42 }, crayon:{ n:'un crayon', e:'✏️', z:36 }, cahier:{ n:'un cahier', e:'📒', z:40 }, globe:{ n:'le globe', e:'🌍', z:48, toy:1 }, regle:{ n:'la règle', e:'📏', z:38 },
+  livreR:{ n:'un livre', e:'📕', z:38 }, livreV:{ n:'un livre', e:'📗', z:38 }, livreB:{ n:'un livre', e:'📘', z:38 }, panier:{ n:'le couffin', e:'🧺', z:52 }, balance:{ n:'la balance', e:'⚖️', z:50, toy:1 }, coquillage:{ n:'un coquillage', e:'🐚', z:36 },
+  volley:{ n:'le ballon de plage', e:'🏐', z:48, toy:1 }, cerfvolant:{ n:'le cerf-volant', e:'🪁', z:64, toy:1, fly:1, d:'cerfvolant' },
+  seau:{ n:'le seau', z:50, s:() => svg(`<path d="M22 34h56l-8 56H30z" fill="#e5484d" stroke="#9b2323" stroke-width="4" stroke-linejoin="round"/><ellipse cx="50" cy="34" rx="28" ry="7" fill="#f4d98a" stroke="#9b2323" stroke-width="4"/><path d="M22 34q28-40 56 0" fill="none" stroke="#9b2323" stroke-width="4"/>`) },
+  pelle:{ n:'la pelle', z:50, s:() => svg(`<path d="M50 10v46" stroke="#ffc93c" stroke-width="8" stroke-linecap="round"/><path d="M34 54h32v20q0 18-16 18T34 74z" fill="#1d6fb8" stroke="#134f86" stroke-width="4" stroke-linejoin="round"/><path d="M40 12h20" stroke="#ffc93c" stroke-width="8" stroke-linecap="round"/>`) },
+  bouee:{ n:'la bouée', z:60, toy:1, s:() => svg(`<circle cx="50" cy="54" r="30" fill="none" stroke="#fff" stroke-width="20"/><circle cx="50" cy="54" r="30" fill="none" stroke="#e5484d" stroke-width="20" stroke-dasharray="24 23"/><circle cx="50" cy="54" r="40" fill="none" stroke="#0003" stroke-width="2"/>`) }
+});
+const etal = col => ({ w:236, h:200, surf:[[-104, 104, -80]], none:1, draw:() => svg(`<path d="M10 40h216v10H10z" fill="${woodD}"/><path d="M18 50v150M218 50v150" stroke="${woodD}" stroke-width="8"/><path d="M0 0h236l-10 44H10z" fill="${col}" stroke="#0003" stroke-width="3"/>${[0, 1, 2, 3, 4].map(i => `<path d="M${24 + i * 47} 0h23l-2 44h-19z" fill="#fff" opacity=".85"/>`).join('')}<path d="M10 44q12 14 24 0t24 0 24 0 24 0 24 0 24 0 24 0 24 0 24 0" fill="none" stroke="${col}" stroke-width="6"/><rect x="6" y="118" width="224" height="16" rx="5" fill="${wood}" stroke="${woodD}" stroke-width="3"/><rect x="14" y="134" width="208" height="66" fill="url(#zel)" stroke="${woodD}" stroke-width="3" opacity=".9"/>`, '0 0 236 200') });
+Object.assign(FIXED, {
+  table:{ w:124, h:76, surf:[[-54, 54, -76]], none:1, draw:() => svg(`<ellipse cx="62" cy="9" rx="60" ry="9" fill="#1d6fb8" stroke="#134f86" stroke-width="3"/><path d="M62 16v46M36 74q26-22 52 0" fill="none" stroke="#134f86" stroke-width="7" stroke-linecap="round"/>`, '0 0 124 76') },
+  banc:{ w:220, h:74, seats:[[-54, -48], [54, -48]], draw:() => svg(`<rect x="4" y="0" width="212" height="26" rx="8" fill="#1d6fb8" stroke="#134f86" stroke-width="3"/><rect x="0" y="22" width="220" height="22" rx="8" fill="url(#ray)" stroke="#0003" stroke-width="3"/><path d="M22 44v30M198 44v30M110 44v30" stroke="#134f86" stroke-width="9" stroke-linecap="round"/>`, '0 0 220 74') },
+  vitrine:{ w:150, h:180, surf:[[-62, 62, -66], [-62, 62, -124]], none:1, draw:() => svg(`<rect x="4" y="4" width="142" height="172" rx="10" fill="#eaf6ff" fill-opacity=".75" stroke="${woodD}" stroke-width="5"/><path d="M8 56h134M8 114h134" stroke="${woodD}" stroke-width="5"/><rect x="0" y="150" width="150" height="30" rx="6" fill="${wood}" stroke="${woodD}" stroke-width="3"/><path d="M20 14l20 26M110 14l20 26" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".8"/>`, '0 0 150 180') },
+  tableau:{ w:290, h:176, tap:['', 'a', 'b', 'c'], draw:s => svg(`<rect x="4" y="4" width="282" height="160" rx="8" fill="#2f6b4f" stroke="${wood}" stroke-width="9"/><rect x="20" y="164" width="250" height="10" rx="4" fill="${woodD}"/><rect x="40" y="158" width="26" height="8" rx="3" fill="#fff"/>` +
+      (s === 'a' ? `<text x="145" y="74" text-anchor="middle" font-size="46" fill="#fff" font-family="sans-serif">A  B  C</text><text x="145" y="132" text-anchor="middle" font-size="44" fill="#ffe27a" font-family="sans-serif">أ  ب  ت</text>`
+      : s === 'b' ? `<text x="145" y="104" text-anchor="middle" font-size="58" fill="#fff" font-family="sans-serif">2 + 3 = 5</text>`
+      : s === 'c' ? `<circle cx="80" cy="64" r="24" fill="none" stroke="#ffe27a" stroke-width="5"/><path d="M80 28v-10M80 110v-10M44 64H34M126 64h-10M54 38l-7-7M106 38l7-7" stroke="#ffe27a" stroke-width="5" stroke-linecap="round"/><path d="M150 130h100v-46l-50-34-50 34z" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M190 130v-30h20v30" fill="none" stroke="#fff" stroke-width="5"/>`
+      : `<text x="145" y="96" text-anchor="middle" font-size="30" fill="#ffffff88" font-family="sans-serif">touche le tableau</text>`), '0 0 290 176') },
+  bureau:{ w:170, h:96, surf:[[-78, 78, -96]], none:1, draw:() => svg(`<rect x="0" y="0" width="170" height="14" rx="5" fill="${wood}" stroke="${woodD}" stroke-width="3"/><rect x="10" y="14" width="150" height="62" fill="#c99a62" stroke="${woodD}" stroke-width="3"/><rect x="92" y="24" width="56" height="20" rx="4" fill="${wood}" stroke="${woodD}" stroke-width="2"/><path d="M16 76v20M154 76v20" stroke="${woodD}" stroke-width="8"/>`, '0 0 170 96') },
+  pupitre:{ w:128, h:88, seats:[[0, -48]], surf:[[-54, 54, -88]], zf:2500,
+    draw:() => svg(`<rect x="24" y="14" width="80" height="12" rx="5" fill="#12a8a0" stroke="#0b6f69" stroke-width="3"/><path d="M34 26v60M94 26v60" stroke="#0b6f69" stroke-width="7"/>`, '0 0 128 88'),
+    front:() => svg(`<rect x="0" y="0" width="128" height="14" rx="5" fill="${wood}" stroke="${woodD}" stroke-width="3"/><rect x="8" y="14" width="112" height="34" fill="#c99a62" stroke="${woodD}" stroke-width="3"/><path d="M14 48v40M114 48v40" stroke="${woodD}" stroke-width="8"/>`, '0 0 128 88') },
+  cloche:{ w:70, h:96, tap:['', ''], draw:() => svg(`<path d="M10 6h50M35 6v18" stroke="${woodD}" stroke-width="7" stroke-linecap="round"/><path d="M35 22q-24 6-24 44l-6 10h60l-6-10q0-38-24-44z" fill="${gold}" stroke="#9a741c" stroke-width="4" stroke-linejoin="round"/><circle cx="35" cy="84" r="8" fill="#9a741c"/>`, '0 0 70 96') },
+  drapeau:{ w:120, h:340, tap:['', ''], draw:() => svg(`<path d="M12 6v334" stroke="#8a97a8" stroke-width="8" stroke-linecap="round"/><circle cx="12" cy="6" r="8" fill="${gold}"/><path d="M16 16h100v66H16z" fill="#e70013" stroke="#0003" stroke-width="2"/><circle cx="66" cy="49" r="19" fill="#fff"/><circle cx="66" cy="49" r="14" fill="#e70013"/><circle cx="70" cy="49" r="11" fill="#fff"/><path d="M71 49l-9.5-3.1 5.9 8.1v-10l-5.9 8.1z" fill="#e70013"/>`, '0 0 120 340') },
+  etalR:etal('#d83a3a'), etalB:etal('#1d6fb8'), etalG:etal('#2e9e4f'), etalO:etal('#f08a24'),
+  jarre:{ w:100, h:140, tap:['', ''], draw:() => svg(`<path d="M34 8h32l-4 18q34 22 26 62-8 44-38 44T12 88Q4 48 38 26z" fill="#c8693a" stroke="#8a4320" stroke-width="5" stroke-linejoin="round"/><path d="M16 70h68M20 96h60" stroke="#8a4320" stroke-width="4"/><path d="M30 83l10-8 10 8 10-8 10 8" fill="none" stroke="#fdfdf8" stroke-width="4"/><ellipse cx="50" cy="8" rx="18" ry="5" fill="#3a1d0c"/>`, '0 0 100 140') },
+  transat:{ w:230, h:110, bed:[[10, -62]], draw:() => svg(`<path d="M-20 -230q120-90 240 0z" fill="url(#ray)" stroke="#0003" stroke-width="3"/><path d="M100 -280v386" stroke="#8a97a8" stroke-width="7" stroke-linecap="round"/><path d="M6 40 60 56h150" fill="none" stroke="${woodD}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 34 62 48h146v14H60L8 46z" fill="#ffc93c" stroke="#b38a1e" stroke-width="3"/><path d="M30 56l-14 54M70 60l18 50M190 62l-16 48M204 62l14 48" stroke="${woodD}" stroke-width="7" stroke-linecap="round"/>`, '0 0 230 110') },
+  glacier:{ w:190, h:170, surf:[[-74, 74, -92]], none:1, draw:() => svg(`<path d="M4 0h182l-12 36H16z" fill="#ec5f8f" stroke="#0003" stroke-width="3"/>${[0, 1, 2, 3].map(i => `<path d="M${24 + i * 44} 0h22l-2 36h-18z" fill="#fff" opacity=".9"/>`).join('')}<path d="M22 36v48M168 36v48" stroke="#8a97a8" stroke-width="6"/><rect x="10" y="78" width="170" height="64" rx="12" fill="#fdfdf8" stroke="#ec5f8f" stroke-width="5"/><text x="95" y="122" text-anchor="middle" font-size="30" font-family="sans-serif">🍦🍧</text><circle cx="46" cy="150" r="18" fill="#39445a"/><circle cx="46" cy="150" r="7" fill="#c9d6e4"/><circle cx="144" cy="150" r="18" fill="#39445a"/><circle cx="144" cy="150" r="7" fill="#c9d6e4"/>`, '0 0 190 170') },
+  chateau:{ w:150, h:120, tap:['', '1', '2'], draw:s => svg(`<path d="M10 120q65-34 130 0z" fill="#e2c27c"/>` + (s ? `<path d="M30 110V64h14v-12h12v12h38v-12h12v12h14v46z" fill="#eccf8e" stroke="#b9975a" stroke-width="3" stroke-linejoin="round"/><path d="M66 110V88q9-12 18 0v22z" fill="#b9975a"/>` : `<path d="M44 112q30-44 62 0z" fill="#eccf8e" stroke="#b9975a" stroke-width="3"/>`) +
+      (s === '2' ? `<path d="M56 52V22h38v30" fill="#eccf8e" stroke="#b9975a" stroke-width="3"/><path d="M52 22h46l-23-20z" fill="#eccf8e" stroke="#b9975a" stroke-width="3" stroke-linejoin="round"/><path d="M75 2v-14" stroke="#7a5a3a" stroke-width="3"/><path d="M75 -12h18l-4 6 4 6H75z" fill="#e70013"/>` : ''), '0 0 150 120') },
+  palmier:{ w:170, h:350, tap:['', ''], draw:() => svg(`<path d="M86 350q14-150-4-270" fill="none" stroke="#8a5a2b" stroke-width="20" stroke-linecap="round"/>${[60, 110, 160, 210, 260, 310].map(y => `<path d="M72 ${y}h26" stroke="#6b431d" stroke-width="4"/>`).join('')}${[[-80, 10], [-58, -34], [-10, -56], [44, -40], [78, 4], [50, 40], [-52, 44]].map(d => `<path d="M82 80q${d[0] * .5} ${d[1] - 20} ${d[0]} ${d[1]}" fill="none" stroke="#2e9e4f" stroke-width="16" stroke-linecap="round"/>`).join('')}<circle cx="70" cy="96" r="9" fill="#7a3e12"/><circle cx="88" cy="102" r="9" fill="#7a3e12"/><circle cx="100" cy="92" r="9" fill="#7a3e12"/>`, '0 0 170 350') },
+  barque:{ w:260, h:90, seats:[[-54, -34], [54, -34]], zf:2500,
+    draw:() => svg(`<path d="M10 22h240l-24 30H34z" fill="#8a5a2b"/>`, '0 0 260 90'),
+    front:() => svg(`<path d="M0 26h260q-10 44-50 54H50Q10 70 0 26z" fill="#fdfdf8" stroke="#134f86" stroke-width="5" stroke-linejoin="round"/><path d="M6 40h248" stroke="#1d6fb8" stroke-width="12"/><path d="M12 58h234" stroke="#e5484d" stroke-width="6"/><circle cx="216" cy="40" r="9" fill="#fff" stroke="#134f86" stroke-width="3"/><circle cx="216" cy="40" r="3.5" fill="#134f86"/>`, '0 0 260 90') },
+  vague:{ w:1180, h:86, none:1, zf:80, draw:() => '', front:() => svg(`<rect x="0" y="6" width="1180" height="80" fill="#3aa0d8" opacity=".78"/><path d="M0 8q30-12 60 0t60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 60 0 40 0" fill="none" stroke="#fff" stroke-width="5" opacity=".9"/>`, '0 0 1180 86') },
+  cactus:{ w:84, h:164, tap:['', ''], draw:() => `<div class="spr" style="background-image:url(jasmin2/cactus.webp);--n:1;width:100%;height:100%"></div>` }
+});
+
+const wall = (x, y, w, h, c = '#fdfdf8') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+const bougain = (x, y) => [[0, 0], [22, 14], [-18, 20], [8, 36], [30, 40], [-8, 52]].map(p => `<circle cx="${x + p[0]}" cy="${y + p[1]}" r="14" fill="${p[0] % 3 ? '#d6338a' : '#e04a9a'}"/>`).join('');
+Object.assign(PLACES, {
+  cafe:{ n:'Le Café du Jasmin', sub:'thé à la menthe et bambalouni', ic:'🫖', floors:[[70, 1210, F0]],
+    bg:() => `<svg class="bg" viewBox="0 0 ${W} ${H}" aria-hidden="true"><rect width="${W}" height="${H}" fill="#bfe6ff"/><circle cx="1150" cy="150" r="36" fill="#ffd84d"/>
+      <rect x="930" y="330" width="320" height="130" fill="#3aa0d8"/><path d="M930 330h320" stroke="#2b86bd" stroke-width="3"/><path d="M1040 372q16-10 32 0l-6 10h-20z" fill="#fdfdf8" stroke="#1d6fb8" stroke-width="2"/><path d="M1056 372v-22l14 16z" fill="#d83a3a"/>
+      ${wall(40, 60, 890, 636)}<path d="M34 46h902v16H34z" fill="#1d6fb8"/><rect x="930" y="460" width="320" height="236" fill="#fdfdf8"/>
+      <path d="M930 60h316v70q-158-70-316 0z" fill="#fdfdf8"/><path d="M930 130q158-70 316 0" fill="none" stroke="#1d6fb8" stroke-width="10"/>
+      ${Array.from({ length:8 }, (_, i) => `<path d="M${946 + i * 38} 470h20v60h-20z" fill="none" stroke="#1d6fb8" stroke-width="5"/>`).join('')}<path d="M930 462h316" stroke="#1d6fb8" stroke-width="10"/>
+      <rect x="300" y="90" width="330" height="62" rx="14" fill="#1d6fb8"/><text x="465" y="134" text-anchor="middle" font-size="36" font-weight="800" fill="#fff" font-family="'Baloo 2',sans-serif">Café du Jasmin</text>
+      <rect x="690" y="190" width="150" height="190" rx="75" fill="#9fd8f5" stroke="#1d6fb8" stroke-width="9"/>${Array.from({ length:5 }, (_, i) => `<path d="M${705 + i * 30} 196v178" stroke="#1d6fb8" stroke-width="4"/>`).join('')}${Array.from({ length:5 }, (_, i) => `<path d="M694 ${220 + i * 34}h142" stroke="#1d6fb8" stroke-width="4"/>`).join('')}
+      <rect x="40" y="600" width="890" height="90" fill="url(#zel)" opacity=".45"/><rect x="40" y="${F0}" width="1206" height="30" fill="url(#dam)" stroke="#8a6a3a" stroke-width="3"/>
+      ${bougain(900, 150)}${bougain(64, 96)}<path d="M34 60v640M1246 60v640" stroke="#e3e9f1" stroke-width="12"/></svg>`,
+    fixed:[['comptoir', 'comptoir', 210, F0], ['evier', 'evier', 142, F0 - 116], ['feu', 'feu', 272, F0 - 116], ['etagere', 'etagere', 200, 430], ['vitrine', 'vitrine', 430, F0],
+      ['table1', 'table', 590, F0], ['banc', 'banc', 780, F0], ['table2', 'table', 968, F0], ['tabouret', 'tabouret', 1080, F0], ['lanterne', 'lanterne', 560, 300], ['cage', 'cage', 880, 360], ['etagere2', 'etagere', 1120, 300], ['radio', 'radio', 1150, 284]],
+    items:[['c-theiere', 'theiere', 210, F0 - 116], ['c-verre1', 'verre', 140, 414], ['c-verre2', 'verre', 180, 414], ['c-verre3', 'verre', 220, 414], ['c-verre4', 'verre', 260, 414],
+      ['c-bamb1', 'bambalouni', 400, F0 - 124], ['c-bamb2', 'bambalouni', 452, F0 - 124], ['c-mak1', 'makroud', 404, F0 - 66], ['c-mak2', 'makroud', 452, F0 - 66],
+      ['c-jus1', 'jus', 570, F0 - 76], ['c-jus2', 'jus', 612, F0 - 76], ['c-cartes', 'cartes', 968, F0 - 76], ['c-journal', 'journal', 1090, 284], ['c-chat', 'chatR', 680, F0], ['c-arrosoir', 'arrosoir', 330, F0 - 116]],
+    start:{} },
+  ecole:{ n:"L'école du quartier", sub:'la classe et la cour', ic:'🏫', floors:[[70, 1210, F0]],
+    bg:() => `<svg class="bg" viewBox="0 0 ${W} ${H}" aria-hidden="true"><rect width="${W}" height="${H}" fill="#bfe6ff"/><circle cx="1160" cy="110" r="36" fill="#ffd84d"/>
+      ${wall(40, 70, 780, 626, '#fff5d6')}<path d="M34 56h792v16H34z" fill="#d83a3a"/><text x="430" y="130" text-anchor="middle" font-size="40" fill="#1d6fb8" font-family="sans-serif" letter-spacing="8">ا ب ت ث ج · A B C D E · 1 2 3</text>
+      <rect x="600" y="180" width="150" height="150" rx="10" fill="#9fd8f5" stroke="#1d6fb8" stroke-width="9"/><path d="M675 180v150M600 255h150" stroke="#1d6fb8" stroke-width="5"/>
+      <circle cx="520" cy="230" r="34" fill="#fff" stroke="#39445a" stroke-width="6"/><path d="M520 230v-20M520 230l14 8" stroke="#39445a" stroke-width="5" stroke-linecap="round"/>
+      <rect x="40" y="${F0}" width="780" height="30" fill="url(#dam)" stroke="#8a6a3a" stroke-width="3"/><rect x="820" y="${F0}" width="430" height="30" fill="#e9d2a0" stroke="#b9975a" stroke-width="3"/>
+      <rect x="820" y="470" width="430" height="220" fill="#fdfdf8"/><path d="M820 470h430" stroke="#1d6fb8" stroke-width="10"/>
+      <path d="M1010 470v-150" stroke="#8a5a2b" stroke-width="18" stroke-linecap="round"/><circle cx="1010" cy="270" r="78" fill="#3fae5f" stroke="#237a40" stroke-width="5"/><circle cx="970" cy="250" r="26" fill="#52c173"/><circle cx="1046" cy="296" r="22" fill="#52c173"/>
+      ${[0, 1, 2].map(i => `<rect x="${900 + i * 46}" y="${F0 - 3}" width="44" height="6" fill="#fff" opacity=".8"/>`).join('')}
+      <path d="M820 70v626" stroke="#c9d6e4" stroke-width="10"/><path d="M34 70v630M1246 470v230" stroke="#e3e9f1" stroke-width="12"/></svg>`,
+    fixed:[['tableau', 'tableau', 250, 380], ['bureau', 'bureau', 150, F0], ['tabouretM', 'tabouret', 290, F0], ['pupitre1', 'pupitre', 430, F0], ['pupitre2', 'pupitre', 580, F0], ['pupitre3', 'pupitre', 730, F0],
+      ['etagere', 'etagere', 430, 300], ['cloche', 'cloche', 860, 560], ['banc', 'banc', 1000, F0], ['fontaine', 'fontaine', 1150, F0], ['drapeau', 'drapeau', 880, 470]],
+    items:[['e-pomme', 'pomme', 110, F0 - 96], ['e-globe', 'globe', 180, F0 - 96], ['e-livre1', 'livreR', 370, 284], ['e-livre2', 'livreV', 410, 284], ['e-livre3', 'livreB', 450, 284], ['e-regle', 'regle', 496, 284],
+      ['e-cahier1', 'cahier', 420, F0 - 88], ['e-crayon1', 'crayon', 452, F0 - 88], ['e-cahier2', 'cahier', 570, F0 - 88], ['e-crayon2', 'crayon', 602, F0 - 88], ['e-cahier3', 'cahier', 730, F0 - 88],
+      ['e-sac1', 'sac', 660, F0], ['e-sac2', 'sac', 510, F0], ['e-ballon', 'ballon', 940, F0], ['e-herisson', 'herisson', 1080, F0], ['e-grenouille', 'grenouille', 1190, F0 - 110], ['e-cigogne', 'cigogne', 1090, 180], ['e-arrosoir', 'arrosoir', 1230, F0]],
+    start:{} },
+  souk:{ n:'Le souk', sub:'épices, poteries et chéchias', ic:'🧺', floors:[[70, 1210, F0]],
+    bg:() => `<svg class="bg" viewBox="0 0 ${W} ${H}" aria-hidden="true"><rect width="${W}" height="${H}" fill="#f3dfb6"/>
+      ${[0, 1, 2, 3].map(i => `<path d="M${40 + i * 300} 696V250q0-150 150-150t150 150v446" fill="#fbeed0" stroke="#d9b877" stroke-width="12"/>`).join('')}
+      <path d="M40 60h1200" stroke="#b98552" stroke-width="14"/>${Array.from({ length:13 }, (_, i) => `<path d="M${70 + i * 95} 66v${26 + (i % 2) * 18}" stroke="#7c5631" stroke-width="3"/><path d="M${58 + i * 95} ${92 + (i % 2) * 18}h24l-4 26h-16z" fill="${['#ffd84d', '#e5484d', '#12a8a0'][i % 3]}" stroke="#7a5a1a" stroke-width="3"/>`).join('')}
+      ${[[90, '#b3202a', '#ffc93c'], [690, '#1d6fb8', '#fdfdf8'], [990, '#2e9e4f', '#ffc93c']].map(t => `<rect x="${t[0]}" y="200" width="150" height="210" fill="${t[1]}" stroke="#0003" stroke-width="3"/><rect x="${t[0] + 14}" y="214" width="122" height="182" fill="none" stroke="${t[2]}" stroke-width="5"/><path d="M${t[0] + 75} 240l40 65-40 65-40-65z" fill="${t[2]}"/><circle cx="${t[0] + 75}" cy="305" r="14" fill="${t[1]}"/>${Array.from({ length:8 }, (_, i) => `<path d="M${t[0] + 8 + i * 19} 410v14" stroke="${t[2]}" stroke-width="4"/>`).join('')}`).join('')}
+      <rect x="40" y="${F0}" width="1206" height="30" fill="#d9c29a" stroke="#8a6a3a" stroke-width="3"/>${Array.from({ length:20 }, (_, i) => `<path d="M${60 + i * 60} ${F0 + 4}v22" stroke="#b9975a" stroke-width="2"/>`).join('')}
+      <path d="M34 60v640M1246 60v640" stroke="#e9d2a0" stroke-width="12"/></svg>`,
+    fixed:[['etal1', 'etalG', 190, F0], ['etal2', 'etalO', 450, F0], ['etal3', 'etalB', 710, F0], ['etal4', 'etalR', 970, F0], ['jarre', 'jarre', 1160, F0], ['lanterne', 'lanterne', 580, 240], ['lanterne2', 'lanterne', 840, 240]],
+    items:[['s-orange', 'orange', 110, F0 - 80], ['s-pasteque', 'pasteque', 152, F0 - 80], ['s-tomate', 'tomate', 196, F0 - 80], ['s-carotte', 'carotte', 236, F0 - 80], ['s-raisin', 'raisin', 274, F0 - 80],
+      ['s-harissa', 'harissa', 370, F0 - 80], ['s-piment', 'piment', 410, F0 - 80], ['s-balance', 'balance', 462, F0 - 80], ['s-pain', 'pain', 524, F0 - 80],
+      ['s-poterie1', 'poterie', 630, F0 - 80], ['s-poterie2', 'poterie', 690, F0 - 80], ['s-chechia', 'chechia', 746, F0 - 80], ['s-paille', 'paille', 794, F0 - 80],
+      ['s-machmoum', 'machmoum', 890, F0 - 80], ['s-darbouka', 'darbouka', 950, F0 - 80], ['s-fouta', 'fouta', 1010, F0 - 80], ['s-lunettes', 'lunettes', 1056, F0 - 80],
+      ['s-panier', 'panier', 330, F0], ['s-chevre', 'chevre', 580, F0], ['s-chat', 'chatR', 850, F0]],
+    start:{} },
+  plage:{ n:'La plage', sub:'la mer, le sable et les glaces', ic:'🏖️', floors:[[70, 1210, F0], [90, 1190, 520, 'w']],
+    bg:() => `<svg class="bg" viewBox="0 0 ${W} ${H}" aria-hidden="true"><rect width="${W}" height="${H}" fill="#bfe6ff"/><circle cx="1120" cy="110" r="46" fill="#ffd84d"/>
+      <path d="M150 150q30-26 60 0 24-18 44 0z M560 96q34-30 68 0 26-20 50 0z" fill="#fff" opacity=".9"/>
+      <path d="M40 330q60-70 140-60l40 60z" fill="#e9d2a0"/><rect x="70" y="280" width="46" height="50" fill="#fdfdf8" stroke="#c9d6e4" stroke-width="2"/><path d="M76 280q17-26 34 0z" fill="#fdfdf8" stroke="#c9d6e4" stroke-width="2"/><rect x="122" y="296" width="40" height="34" fill="#fdfdf8" stroke="#c9d6e4" stroke-width="2"/><rect x="118" y="290" width="48" height="8" fill="#1d6fb8"/>
+      <rect y="328" width="${W}" height="262" fill="#3aa0d8"/><path d="M0 328h1280" stroke="#2b86bd" stroke-width="3"/>${[370, 420, 470].map((y, i) => `<path d="M${40 + i * 70} ${y}q30-12 60 0t60 0M${520 + i * 90} ${y + 10}q30-12 60 0t60 0M${920 - i * 60} ${y - 6}q30-12 60 0t60 0" fill="none" stroke="#fff" stroke-width="4" opacity=".6"/>`).join('')}
+      <path d="M0 596q160-34 320-8t320 0 320-6 320 6v132H0z" fill="#f1dfb4"/>${[[180, 706], [420, 700], [660, 708], [900, 702], [1140, 706]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#d9c08a"/><circle cx="${p[0] + 40}" cy="${p[1] - 8}" r="3" fill="#d9c08a"/>`).join('')}</svg>`,
+    fixed:[['vague', 'vague', 640, 606], ['barque', 'barque', 900, 556], ['transat', 'transat', 200, F0], ['glacier', 'glacier', 470, F0], ['chateau', 'chateau', 720, F0], ['cactus', 'cactus', 1010, F0], ['palmier', 'palmier', 1140, F0]],
+    items:[['p-glace1', 'glace', 430, F0 - 92], ['p-glace2', 'glace', 474, F0 - 92], ['p-jus', 'jus', 516, F0 - 92], ['p-seau', 'seau', 640, F0], ['p-pelle', 'pelle', 800, F0], ['p-coq1', 'coquillage', 860, F0], ['p-coq2', 'coquillage', 340, F0],
+      ['p-volley', 'volley', 930, F0], ['p-bouee', 'bouee', 560, 520], ['p-fouta', 'fouta', 320, F0], ['p-paille', 'paille', 100, F0], ['p-lunettes', 'lunettes', 372, F0], ['p-pasteque', 'pasteque', 80, F0],
+      ['p-crabe', 'crabe', 1060, F0], ['p-mouette', 'mouette', 420, 190], ['p-poulpe', 'poulpe', 300, 560], ['p-poisson', 'poisson', 1120, 540], ['p-cerfvolant', 'cerfvolant', 760, 170]],
+    start:{} }
+});
 // la carte du quartier : [lieu, x %, y %, nom, émoji, ouvert]
-const MAP = [['dar', 24, 66, 'Dar Yasmine', '🏠', 1], ['cafe', 52, 50, 'Le café', '🫖', 0], ['ecole', 78, 64, "L'école", '🏫', 0], ['souk', 40, 90, 'Le souk', '🧺', 0], ['plage', 90, 44, 'La plage', '🏖️', 0]];
+const MAP = [['dar', 24, 66, 'Dar Yasmine', '🏠', 1], ['cafe', 52, 50, 'Le café', '🫖', 1], ['ecole', 78, 64, "L'école", '🏫', 1], ['souk', 40, 90, 'Le souk', '🧺', 1], ['plage', 90, 44, 'La plage', '🏖️', 1]];
 
 /* =====================================================================
    DÉCOUVERTES : la « progression » du monde libre. Rien n'est obligatoire : on les trouve en jouant.
@@ -288,7 +404,11 @@ const MAP = [['dar', 24, 66, 'Dar Yasmine', '🏠', 1], ['cafe', 52, 50, 'Le caf
 const DISC = [['the', '🫖', 'Servir le thé'], ['boire', '🥤', 'Boire un verre'], ['manger', '😋', 'Bon appétit'], ['piment', '🌶️', 'Ça pique !'], ['couscous', '🍲', 'Cuire le couscous'], ['frigo', '🧊', 'Ouvrir le frigo'],
   ['dodo', '😴', 'Au lit'], ['bain', '🛁', 'Prendre un bain'], ['jasmin', '🌼', 'Faire fleurir le jasmin'], ['machmoum', '💐', 'Porter un machmoum'], ['citron', '🍋', 'Cueillir un citron'],
   ['fontaine', '⛲', 'La fontaine'], ['radio', '🎶', 'Mettre la musique'], ['darbouka', '🥁', 'Jouer de la darbouka'], ['chat', '🐈', 'Caresser le chat'], ['oiseau', '🐤', 'Faire chanter le canari'],
-  ['trad', '✨', 'Tenue de fête'], ['chechia', '🧢', 'Porter la chéchia'], ['lampe', '💡', 'Allumer la lumière'], ['veillee', '🛋️', 'La veillée au salon'], ['super', '🦸', 'Super-héros'], ['astro', '🚀', 'Astronaute']];
+  ['trad', '✨', 'Tenue de fête'], ['chechia', '🧢', 'Porter la chéchia'], ['lampe', '💡', 'Allumer la lumière'], ['veillee', '🛋️', 'La veillée au salon'], ['super', '🦸', 'Super-héros'], ['astro', '🚀', 'Astronaute'],
+  ['eleve', '🎒', 'En classe'], ['tableau', '🧑‍🏫', 'Écrire au tableau'], ['cloche', '🔔', 'Sonner la cloche'], ['drapeau', '🇹🇳', 'Le drapeau'], ['herisson', '🦔', 'Le hérisson en boule'], ['grenouille', '🐸', 'La grenouille'], ['cigogne', '🕊️', 'La cigogne'],
+  ['chevre', '🐐', 'Caresser la chèvre'], ['scorpion', '🦂', 'Le scorpion de la jarre'], ['baignade', '🏊', 'Se baigner'], ['sieste', '⛱️', 'La sieste'], ['chateau', '🏰', 'Le château de sable'], ['glace', '🍦', 'Manger une glace'],
+  ['barque', '⛵', 'En barque'], ['crabe', '🦀', 'Le crabe'], ['mouette', '🐦', 'La mouette'], ['poulpe', '🐙', 'Les amis de la mer'], ['dattes', '🌴', 'Cueillir des dattes'], ['cerfvolant', '🪁', 'Le cerf-volant'], ['voyage', '🗺️', 'Visiter tout le quartier']];
+const SPAWN = ['citron', 'machmoum', 'scorpion', 'dattes'];   // objets qui n'existent pas au début : ils apparaissent quand on les trouve
 
 /* =====================================================================
    ÉTAT du monde (une sauvegarde par joueur, petite et versionnée)
@@ -306,13 +426,13 @@ function fill(s){
     Object.entries(P.start || {}).forEach(([id, [x, y]]) => { const c = s.chars[id]; if(!c || !PLACES[c.p] || !isFinite(c.x) || !isFinite(c.y)) s.chars[id] = { p:pid, x, y, pose:'', o:'ville', acc:[] }; });
     P.items.forEach(([id, type, x, y]) => { const it = s.items[id]; if(!it || !isFinite(it.x) || !isFinite(it.y) || (it.p && !PLACES[it.p])) s.items[id] = { p:pid, x, y, s:'', h:'' }; });
   });
-  ['citron', 'machmoum'].forEach(id => { if(!s.items[id]) s.items[id] = { p:'', x:0, y:0, s:'', h:'' }; });
+  SPAWN.forEach(id => { if(!s.items[id]) s.items[id] = { p:'', x:0, y:0, s:'', h:'' }; });
   Object.values(s.chars).forEach(c => { if(!OUTFITS[c.o]) c.o = 'ville'; if(!Array.isArray(c.acc)) c.acc = []; c.x = Math.max(0, Math.min(W, c.x)); c.y = Math.max(0, Math.min(H, c.y)); });
   Object.entries(s.items).forEach(([id, it]) => { if(it.h && !s.chars[it.h]) it.h = ''; if(!typeOf(id)) delete s.items[id]; });
   return s;
 }
 const HOME = {}; Object.entries(PLACES).forEach(([pid, P]) => P.items.forEach(([id, type, x, y]) => { HOME[id] = { p:pid, type, x, y }; }));
-HOME.citron = { type:'citron' }; HOME.machmoum = { type:'machmoum' };
+SPAWN.forEach(id => { HOME[id] = { type:id }; });
 function typeOf(id){ return HOME[id] ? HOME[id].type : null; }
 const IT = id => ITEMS[typeOf(id)];
 function save(){ S.t = Date.now(); clearTimeout(saveT); saveT = setTimeout(() => store.set(key(), S), 350); }
@@ -366,23 +486,24 @@ function mk(cls, id){ const el = document.createElement('div'); el.className = '
 
 function drawFixed(f){
   const e = ents.get(f.id), s = fxState(f.id); e.el.innerHTML = f.T.draw(s); box(e.el, f.x, f.y, f.T.w, f.T.h, 100 + (f.T.none ? 0 : 1));
-  if(e.front){ e.front.innerHTML = f.T.front(s); box(e.front, f.x, f.y, f.T.w, f.T.h, 7000); }
+  if(e.front){ e.front.innerHTML = f.T.front(s); box(e.front, f.x, f.y, f.T.w, f.T.h, f.T.zf || 2500); }   // devant les personnages assis ou dans l'eau, derrière ceux qui sont debout
   if(e.glow){ e.glow.style.display = s === 'on' ? 'block' : 'none'; }
 }
 function drawItem(id){
   const e = ents.get(id), it = S.items[id], T = IT(id); if(!e) return;
-  let x = it.x, y = it.y, z = 2000 + Math.round(it.y);
-  if(it.h){ const h = handOf(it.h); x = h.x; y = h.y + T.z * .45; z = 5000 + Math.round(S.chars[it.h].y) + 1; }
+  const sp = T.spr ? (it.s === 'b' && T.alt ? T.alt : T.spr) : null, w = T.z, h = sp ? T.z * sp[3] / sp[2] : T.z;
+  let x = it.x, y = it.y, z = 3000 + Math.round(it.y);
+  if(it.h){ const hd = handOf(it.h), c = S.chars[it.h]; x = hd.x; y = hd.y + h * .45; z = (c.pose === 'sit' || c.pose === 'bath' ? 1500 + Math.round(c.y / 2) : 5000 + Math.round(c.y)) + 1; }
   e.el.classList.toggle('hide', it.p !== place && !(it.h && S.chars[it.h].p === place) || hidden(it));
-  e.el.innerHTML = T.s ? T.s(it.s) : `<span class="em" style="font-size:${T.z * .92}px">${T.e}</span>`;
-  box(e.el, x, y, T.z, T.z, z);
+  e.el.innerHTML = sp ? `<div class="spr${sp[1] > 1 ? ' an' : ''}" style="background-image:url(jasmin2/${sp[0]}.webp);--n:${sp[1]}"></div>` : T.s ? T.s(it.s) : `<span class="em" style="font-size:${T.z * .92}px">${T.e}</span>`;
+  box(e.el, x, y, w, h, z);
 }
 function drawChar(id){
   const e = ents.get(id), c = S.chars[id], C = CH[id]; if(!e) return; const { w, h } = sizeOf(id, c.o), sit = c.pose === 'sit' || c.pose === 'bath';
   e.el.classList.toggle('hide', c.p !== place); e.el.classList.toggle('sleep', c.pose === 'sleep');
   e.el.innerHTML = doll(C, c);
   const y = sit ? c.y + (1 - C.hip) * h : c.pose === 'sleep' ? c.y + h / 2 - 10 : c.y;   // assis : la ligne des hanches se pose sur le siège
-  box(e.el, c.x, y, w, h, (c.pose === 'bath' ? 6000 : 5000) + Math.round(c.y));
+  box(e.el, c.x, y, w, h, c.pose === 'bath' && !c.a ? 60 : sit ? 1500 + Math.round(c.y / 2) : 5000 + Math.round(c.y));   // dans la mer : derrière la vague
   Object.entries(S.items).forEach(([iid, it]) => { if(it.h === id) drawItem(iid); });
 }
 function render(){
@@ -433,12 +554,13 @@ function land(x, y){
   const below = L.filter(s => s.y >= y - 26).sort((a, b) => a.y - b.y)[0] || L.sort((a, b) => b.y - a.y)[0];
   return { x:Math.max(below.x1, Math.min(below.x2, x)), y:below.y };
 }
-function floorFor(x, y){ const F = PLACES[place].floors.slice().sort((a, b) => Math.abs(a[2] - 60 - y) - Math.abs(b[2] - 60 - y))[0]; return { x:Math.max(F[0], Math.min(F[1], x)), y:F[2] }; }
-function anchorFor(x, y, k){
+function floorFor(x, y){ const d = F => F[3] === 'w' ? Math.max(0, y - F[2] - 80) : Math.abs(F[2] - 60 - y);   // la mer : dès que les pieds sont dans l'eau
+  const F = PLACES[place].floors.slice().sort((a, b) => d(a) - d(b))[0]; return { x:Math.max(F[0], Math.min(F[1], x)), y:F[2], water:F[3] === 'w' }; }
+function anchorFor(x, y, h){   // h : la taille du personnage ; on compare ses hanches (ou son milieu, pour se coucher) à la place libre
   let best = null;
   allFixed().forEach(f => [['seats', 'sit'], ['bed', 'sleep'], ['bath', 'bath']].forEach(([key2, pose]) => (f.T[key2] || []).forEach((a, i) => {
-    const ax = f.x + a[0], ay = f.y + a[1], d = Math.hypot(x - ax, (y - 40) - ay); const used = Object.values(S.chars).some(c => c.p === place && c.a === f.id + ':' + i);
-    if(d < (pose === 'sit' ? 78 : 120) && !used && (!best || d < best.d)) best = { d, x:ax, y:ay, pose, a:f.id + ':' + i, f }; })));
+    const ax = f.x + a[0], ay = f.y + a[1], d = Math.hypot(x - ax, (y - h * (pose === 'sleep' ? .5 : .43)) - ay); const used = Object.values(S.chars).some(c => c.p === place && c.a === f.id + ':' + i);
+    if(d < (pose === 'sit' ? 92 : 130) && !used && (!best || d < best.d)) best = { d, x:ax, y:ay, pose, a:f.id + ':' + i, f }; })));
   return best;
 }
 function dropHeld(cid, keep){ if(keep) return; Object.entries(S.items).forEach(([id, it]) => { if(it.h === cid){ const c = S.chars[cid]; it.h = ''; it.p = c.p; const l = land(c.x + 30, c.y - 40); it.x = l.x; it.y = l.y; drawItem(id); } }); }
@@ -452,9 +574,9 @@ const RULES = [
   // sur un personnage
   { on:'char', when:(T) => T.wear, apply:(id, T, cid) => { const c = S.chars[cid]; c.o = T.wear; goHome(id); drawChar(cid); pulse(cid, 'hop'); sfx.wear(); fx(c.x, c.y - 200 * CH[cid].k, '✨'); toast(`${CH[cid].n} met ${OUTFITS[T.wear].n}`); if(OUTFITS[T.wear].trad) found('trad'); if(T.wear === 'super') found('super'); if(T.wear === 'astro') found('astro'); } },
   { on:'char', when:(T) => T.acc, apply:(id, T, cid) => { const c = S.chars[cid], t = typeOf(id); if(c.acc.includes(t)) return false; if(['chechia', 'paille'].includes(t)) c.acc.filter(a => ['chechia', 'paille'].includes(a)).forEach(a => takeOff(cid, a)); c.acc.push(t); S.items[id].p = ''; S.items[id].h = ''; drawItem(id); drawChar(cid); pulse(cid, 'hop'); sfx.wear(); if(t === 'chechia') found('chechia'); if(t === 'machmoum') found('machmoum'); } },
-  { on:'char', when:(T, it) => T.food && !(typeOf(it.id) === 'verre'), apply:(id, T, cid) => { const c = S.chars[cid]; pulse(cid, 'munch'); sfx.munch(); fx(c.x, c.y - 210 * CH[cid].k, T.hot ? '🥵' : T.drink ? '😊' : '😋'); S.items[id].p = ''; S.items[id].h = ''; drawItem(id); setTimeout(() => { if(HOME[id].p){ goHome(id); save(); } }, 5000); found(T.hot ? 'piment' : 'manger'); if(T.hot) toast(`Ouh là, ça pique ! ${CH[cid].n} a besoin d'eau 💧`); } },
+  { on:'char', when:(T, it) => T.food && !(typeOf(it.id) === 'verre'), apply:(id, T, cid) => { const c = S.chars[cid]; pulse(cid, 'munch'); sfx.munch(); fx(c.x, c.y - 210 * CH[cid].k, T.hot ? '🥵' : T.drink ? '😊' : '😋'); S.items[id].p = ''; S.items[id].h = ''; drawItem(id); setTimeout(() => { if(HOME[id].p){ goHome(id); save(); } }, 5000); found(T.hot ? 'piment' : 'manger'); if(T.d) found(T.d); if(T.hot) toast(`Ouh là, ça pique ! ${CH[cid].n} a besoin d'eau 💧`); } },
   { on:'char', when:(T, it) => typeOf(it.id) === 'verre' && it.s === 'the', apply:(id, T, cid) => { const c = S.chars[cid]; S.items[id].s = ''; give(id, cid); pulse(cid, 'munch'); sfx.sip(); fx(c.x, c.y - 210 * CH[cid].k, '😌'); found('boire'); } },
-  { on:'char', when:() => true, apply:(id, T, cid) => { give(id, cid); sfx.drop(); if(T.pet){ fx(S.chars[cid].x, S.chars[cid].y - 200 * CH[cid].k, '💛'); sfx.meow(); found('chat'); } } },
+  { on:'char', when:() => true, apply:(id, T, cid) => { give(id, cid); sfx.drop(); if(T.pet){ fx(S.chars[cid].x, S.chars[cid].y - 200 * CH[cid].k, '💛'); cry(id); found(T.d || 'chat'); } } },
   // sur un autre objet
   { on:'item', when:(T, it, tid) => typeOf(it.id) === 'theiere' && it.s === 'the' && typeOf(tid) === 'verre', apply:(id, T, tid) => { S.items[tid].s = 'the'; drawItem(tid); pulse(tid, 'hop'); sfx.water(); const t = S.items[tid]; fx(t.h ? S.chars[t.h].x : t.x, (t.h ? S.chars[t.h].y - 120 : t.y - 40), '🫖'); found('the'); return 'keep'; } },
   // sur un meuble
@@ -465,7 +587,7 @@ const RULES = [
       Object.entries(S.items).forEach(([oid, o]) => { if(oid !== id && o.p === place && !o.h && Math.abs(o.x - f.x) < 40 && Math.abs(o.y - f.y) < 30){ o.x = f.x + 62; o.y = f.y; drawItem(oid); } });   // un seul plat sur le feu
       it.x = f.x; it.y = f.y - 4; it.h = ''; it.p = place; drawItem(id);
       if(t === 'theiere' && it.s !== 'eau' && it.s !== 'the'){ toast("Mets d'abord de l'eau dans la théière 💧"); return true; }
-      S.fx[fxKey(f.id)] = 'on'; drawFixed(f); sfx.on(); setTimeout(() => { const o = S.items[id]; if(o.p === 'dar' && !o.h && Math.abs(o.x - f.x) < 90 && Math.abs(o.y - f.y) < 12 && S.fx['dar.' + f.id] === 'on'){ S.items[id].s = t === 'theiere' ? 'the' : 'cuit'; drawItem(id); sfx.star(); if(t === 'marmite'){ found('couscous'); toast('Le couscous est prêt ! 🍲'); } else toast('Le thé est prêt : verse-le dans un verre 🫖'); save(); } }, 2200); return true; } }
+      S.fx[fxKey(f.id)] = 'on'; drawFixed(f); sfx.on(); const pl = place; setTimeout(() => { const o = S.items[id]; if(o.p === pl && !o.h && Math.abs(o.x - f.x) < 90 && Math.abs(o.y - f.y) < 12 && S.fx[pl + '.' + f.id] === 'on'){ S.items[id].s = t === 'theiere' ? 'the' : 'cuit'; sfx.star(); if(place === pl) drawItem(id); if(t === 'marmite'){ found('couscous'); toast('Le couscous est prêt ! 🍲'); } else toast('Le thé est prêt : verse-le dans un verre 🫖'); save(); } }, 2200); return true; } }
 ];
 function give(id, cid){ const prev = heldBy(cid); if(prev && prev !== id) dropHeld(cid); const it = S.items[id]; it.h = cid; it.p = S.chars[cid].p; drawItem(id); }
 function takeOff(cid, t){ const c = S.chars[cid]; c.acc = c.acc.filter(a => a !== t); const iid = Object.keys(S.items).find(i => typeOf(i) === t && !S.items[i].p && !S.items[i].h) || t; const it = S.items[iid]; if(it){ it.p = c.p; it.h = ''; const l = land(c.x + 50 * CH[cid].k, c.y - 30); it.x = l.x; it.y = l.y; drawItem(iid); pulse(iid, 'pop'); } }
@@ -475,6 +597,13 @@ function tapFixed(f){
   const T = f.T, k = fxKey(f.id), s = fxState(f.id);
   if(f.type === 'jasmin'){ if(s === 'f'){ const it = S.items.machmoum; if(it.p || it.h || Object.values(S.chars).some(c => c.acc.includes('machmoum'))){ toast('Tu as déjà un machmoum 🌼'); return; } it.p = place; it.x = f.x + 50; it.y = f.y; drawItem('machmoum'); pulse('machmoum', 'pop'); sfx.star(); S.fx[k] = ''; drawFixed(f); save(); } else toast("Le jasmin a soif : arrose-le avec l'arrosoir 💧"); return; }
   if(f.type === 'citronnier'){ if(s === 'c'){ const it = S.items.citron; if(it.p || it.h){ toast('Tu as déjà un citron 🍋'); return; } it.p = place; it.x = f.x + 56; it.y = f.y; drawItem('citron'); pulse('citron', 'pop'); sfx.star(); S.fx[k] = ''; drawFixed(f); found('citron'); save(); } else toast("Le citronnier a soif : arrose-le avec l'arrosoir 💧"); return; }
+  if(f.type === 'tableau'){ const n = T.tap[(T.tap.indexOf(s) + 1) % T.tap.length]; S.fx[k] = n; drawFixed(f); noise(.12, .05, 3000); if(n) found('tableau'); save(); return; }
+  if(f.type === 'cloche'){ pulse(f.id, 'hop'); [1320, 1320, 1320].forEach((q, i) => tone(q, .3, 'triangle', .14, i * .22)); fx(f.x, f.y - 100, '🔔'); found('cloche'); return; }
+  if(f.type === 'drapeau'){ pulse(f.id, 'hop'); sfx.star(); fx(f.x + 40, f.y - 320, '🇹🇳'); found('drapeau'); return; }
+  if(f.type === 'cactus'){ pulse(f.id, 'hop'); sfx.hop(); fx(f.x, f.y - 170, '😄'); return; }
+  if(f.type === 'jarre'){ pulse(f.id, 'hop'); const it = S.items.scorpion; if(it.p === place && !it.h){ it.p = ''; drawItem('scorpion'); sfx.close(); toast('Le scorpion retourne se cacher dans la jarre'); } else { it.p = place; it.h = ''; it.x = f.x - 110; it.y = f.y; drawItem('scorpion'); pulse('scorpion', 'pop'); sfx.star(); found('scorpion'); toast('Oh ! Un petit scorpion dormait dans la jarre. Il est gentil 🦂'); } save(); return; }
+  if(f.type === 'palmier'){ pulse(f.id, 'hop'); const it = S.items.dattes; if(it.p || it.h){ toast('Tu as déjà des dattes 🌴'); return; } it.p = place; it.x = f.x - 70; it.y = f.y; drawItem('dattes'); pulse('dattes', 'pop'); sfx.star(); found('dattes'); save(); return; }
+  if(f.type === 'chateau'){ const n = T.tap[(T.tap.indexOf(s) + 1) % T.tap.length]; S.fx[k] = n; drawFixed(f); pulse(f.id, 'pop'); sfx.drop(); if(n === '2') found('chateau'); save(); return; }
   if(f.type === 'cage'){ sfx.bird(); [0, 1, 2].forEach(i => setTimeout(() => fx(f.x, f.y - 60, '🎵'), i * 200)); found('oiseau'); return; }
   if(!T.tap) return;
   const n = T.tap[(T.tap.indexOf(s) + 1) % T.tap.length]; S.fx[k] = n; drawFixed(f);
@@ -487,11 +616,12 @@ function tapFixed(f){
 }
 function tapItem(id){ const T = IT(id), it = S.items[id], t = typeOf(id); pulse(id, 'hop');
   if(t === 'darbouka'){ sfx.drum(0); setTimeout(() => sfx.drum(1), 170); setTimeout(() => sfx.drum(1), 300); fx(it.x, it.y - 60, '🥁'); found('darbouka'); }
-  else if(T.pet){ sfx.meow(); fx(it.h ? S.chars[it.h].x : it.x, (it.h ? S.chars[it.h].y - 120 : it.y - 50), '💛'); found('chat'); }
+  else if(T.pet){ cry(id); fx(it.h ? S.chars[it.h].x : it.x, (it.h ? S.chars[it.h].y - 120 : it.y - 50), '💛'); found(T.d || 'chat'); if(T.alt){ it.s = it.s === 'b' ? '' : 'b'; drawItem(id); save(); } }
   else if(T.toy){ sfx.hop(); } else sfx.tap(); }
 function tapChar(id){ const c = S.chars[id]; pulse(id, 'hop'); sfx.hop();
   if(c.acc.length){ takeOff(id, c.acc[c.acc.length - 1]); drawChar(id); save(); } else fx(c.x, c.y - 230 * CH[id].k, pick(['👋', '😄', '🎉', '💛'])); }
 const pick = a => a[Math.floor(Math.random() * a.length)];
+function cry(id){ const t = typeOf(id); if(t === 'chatR' || t === 'chat') sfx.meow(); else if(t === 'chevre'){ tone(330, .3, 'sawtooth', .06, 0, 300); tone(340, .25, 'sawtooth', .05, .12, 290); } else if(['cigogne', 'mouette'].includes(t)) sfx.bird(); else if(t === 'grenouille') tone(140, .18, 'square', .06, 0, 220); else sfx.hop(); }
 
 /* ---------- lâcher (drop) ---------- */
 function hit(x, y, skip){
@@ -512,14 +642,16 @@ function dropItem(id, x, y){
   const T = IT(id), it = S.items[id], A = aim(id, x, y), target = A && A.t, rule = A && A.r;
   if(rule){ const r = rule.apply(id, T, target.kind === 'fixed' ? target.f : target.id); if(r !== false && r !== 'keep'){ save(); check(); return; } if(r === 'keep'){ /* l'objet reste où on l'a lâché */ } }
   if(T.home && !rule){ goHome(id); sfx.drop(); return; }
-  const l = land(x, y + T.z * .3); it.h = ''; it.p = place; it.x = l.x; it.y = l.y; drawItem(id); sfx.drop();
+  const l = T.fly ? { x, y:Math.min(H - 30, y + T.z * .55) } : land(x, y + T.z * .3); it.h = ''; it.p = place; it.x = l.x; it.y = l.y; drawItem(id); sfx.drop(); if(T.fly && T.d) found(T.d);
   // posé sur le feu allumé par hasard : même règle
   save(); check();
 }
 function dropChar(id, x, y){
-  const c = S.chars[id], C = CH[id], a = anchorFor(x, y, C.k);
-  if(a){ c.x = a.x; c.y = a.y; c.pose = a.pose === 'bath' ? 'bath' : a.pose; c.a = a.a; if(a.pose === 'sleep'){ found('dodo'); } if(a.pose === 'bath'){ found('bain'); sfx.water(); if(fxState(a.f.id) !== 'm'){ S.fx[fxKey(a.f.id)] = 'm'; drawFixed(a.f); } } }
-  else { const f = floorFor(x, y); c.x = f.x; c.y = f.y; c.pose = ''; c.a = ''; }
+  const c = S.chars[id], C = CH[id], a = anchorFor(x, y, sizeOf(id, c.o).h);
+  if(a){ c.x = a.x; c.y = a.y; c.pose = a.pose; c.a = a.a; const t = a.f.type;
+    if(a.pose === 'sleep') found(t === 'transat' ? 'sieste' : 'dodo'); if(t === 'pupitre') found('eleve'); if(t === 'barque'){ found('barque'); sfx.water(); }
+    if(t === 'baignoire'){ found('bain'); sfx.water(); if(fxState(a.f.id) !== 'm'){ S.fx[fxKey(a.f.id)] = 'm'; drawFixed(a.f); } } }
+  else { const f = floorFor(x, y); c.x = f.x; c.y = f.y; c.a = ''; c.pose = f.water ? 'bath' : ''; if(f.water){ found('baignade'); sfx.water(); fx(c.x, c.y - 20, '💦'); } }
   drawChar(id); sfx.drop(); save(); check();
 }
 // les découvertes qui dépendent de la scène entière
@@ -576,7 +708,7 @@ function go(pid){
   saveNow();
   if(pid === 'map'){ place = null; stage.innerHTML = `<div id="map">${mapSVG()}${MAP.map(m => `<button class="pl${m[5] ? '' : ' soon'}" data-p="${m[0]}" style="left:${m[1]}%;top:${m[2]}%"><span style="font-size:64px;line-height:1">${m[4]}</span><span class="sign">${m[3]}${m[5] ? '' : ' 🚧'}</span></button>`).join('')}</div>`;
     $('title').innerHTML = `Ma Houma<small>le quartier du Jasmin · choisis un lieu</small>`; bar(); panX = 0; fit(); return; }
-  place = pid; S.seen[pid] = 1; $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
+  place = pid; S.seen[pid] = 1; if(Object.keys(PLACES).every(k => S.seen[k])) setTimeout(() => found('voyage'), 800); $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
 }
 stage.addEventListener('click', e => { const b = e.target.closest('.pl'); if(!b) return; sfx.tap(); if(PLACES[b.dataset.p]) go(b.dataset.p); else toast('Ce lieu est encore en travaux 🚧 Il arrive bientôt !'); });
 $('bMap').onclick = () => { sfx.tap(); go('map'); };
