@@ -106,3 +106,15 @@ Même recette (9 images 9:16 `flux_3_image` par épisode, 11 phrases de Céline,
 - Découpage des prises de Céline : alignement par programmation dynamique sur la durée attendue de chaque phrase (`align.py`), plus fiable que « couper aux plus grands silences » car Céline fait parfois de longues pauses au milieu d'une phrase.
 - Sur la page : chaque épisode a ses formules à retenir et son défi de 5 questions (`?ep=piege`, `?ep=volume`, `?ep=angles`).
 - Sur le PC : `videos temple\piege-du-fermier.mp4`, `volume-bassin-de-kairouan.mp4`, `angles-minaret.mp4`.
+
+## Les fractions pour Essil : 3 épisodes (11/11)
+
+Demandé par le papa : « un cours de mathématique expliquant les opérations sur les fractions, où il faut unifier le dénominateur ». Même recette que la géométrie (problème → « Alors tu… » → « Ça s'appelle… » → « Mais… »), 9 images `flux_3_image` 9:16 par épisode (village tunisien low-poly, petit garçon en tunique bleue et chéchia rouge), 11 phrases de Céline, schémas exacts dessinés en Python (gâteaux coupés, bandes de jardin, bouteilles, fractions écrites empilées). Page : `essil/videos-fractions.html` (onglets `?ep=gateau`, `?ep=potager`, `?ep=citronnade`). Sources du montage : `docs/video-fractions/`.
+
+- **1. Le gâteau de l'Aïd** (`essil/videos/fractions-gateau.mp4`) : 4 enfants → 1/4 ; numérateur / dénominateur ; 4 cousins arrivent → chaque part recoupée en deux : 1/4 = 2/8 (fractions égales) ; × 2 en haut et en bas = **amplifier** (3/4 = 6/8 = 9/12) ; il reste 6/8 → ÷ 2 = 3/4 = **simplifier**. « L'outil secret pour additionner. »
+- **2. Le potager de Jeddi** (`essil/videos/fractions-potager.mp4`) : tomates 1/5 + piments 2/5 = 3/5 (on additionne les hauts) ; oignons 1/2 + fèves 1/3 : pas la même taille, et surtout pas 2/5 ; on redécoupe en sixièmes (6 = 2 × 3) : 3/6 + 2/6 = 5/6 = **mettre au même dénominateur** ; 1/4 + 3/8 = 2/8 + 3/8 = 5/8 ; soustraction 5/6 − 1/3 = 5/6 − 2/6 = 3/6 = 1/2.
+- **3. La citronnade de Tata** (`essil/videos/fractions-citronnade.mp4`) : la moitié des 3/4 de la bouteille = 1/2 × 3/4 = 3/8 (haut × haut, bas × bas, pas besoin du même dénominateur) ; 3/2 L en verres de 1/4 L : 6 verres ; diviser = multiplier par **l'inverse** (on retourne la fraction) : 3/2 × 4 = 12/2 = 6.
+- Voix : une prise par phrase cette fois (texte + « … Voilà. »), puis `cutsingle.py` enlève « Voilà » (parfois coupé en deux morceaux) et les petits souffles. Plus sûr que les prises de 4 phrases : dans une de ces prises, le découpage automatique se trompait de frontière. Les prises groupées faites d'abord (9) n'ont pas servi.
+- Titres jaunes : taille réduite automatiquement quand le texte est long (`\fs`), pour ne pas déborder de l'écran.
+- Coût : 27 images × 2 = 54 crédits, voix ≈ 13 crédits (33 phrases + les 9 prises groupées inutilisées) → ≈ 67 crédits.
+- Sur le PC : `videos temple\fractions-1-gateau-de-l-aid.mp4`, `fractions-2-potager-de-jeddi.mp4`, `fractions-3-citronnade.mp4`.

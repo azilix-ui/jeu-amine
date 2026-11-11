@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&display=swap">
+<title>Pas à pas · Les fractions</title>
+<style>
+/* Les fractions en vidéo pour Essil (même salle de projection que la géométrie) : les épisodes en onglets, la vidéo verticale au centre, ce qu'il faut retenir et un petit défi à côté. */
+:root{ --navy:#1f3c88; --red:#d7263d; --gold:#ffd23f; --paper:#f6f3ec; --ink:#1d2540; --soft:#5b6380; --card:#fff; --ok:#1f9a6b;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Nunito",system-ui,sans-serif; color-scheme:light; }
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--body);color:var(--ink);background:var(--paper);-webkit-tap-highlight-color:transparent}
+.wrap{max-width:1040px;margin:0 auto;padding:16px 16px 48px}
+.back{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:999px;background:var(--card);color:var(--navy);font-weight:800;text-decoration:none;box-shadow:0 3px 0 #0001}
+header{background:var(--navy);color:#fff;border-radius:24px;padding:22px 24px;margin:14px 0 14px;border-bottom:8px solid var(--red)}
+header small{font-weight:800;letter-spacing:.12em;color:var(--gold);font-size:13px}
+h1{font-family:var(--display);font-size:clamp(30px,5vw,46px);margin:4px 0 6px;line-height:1.05}
+header p{margin:0;color:#d8e0f5;font-size:17px;max-width:60ch}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
+.tabs button{font:800 16px var(--body);min-height:48px;padding:8px 16px;border-radius:999px;border:2px solid #d9d4c6;background:#fff;color:var(--ink);cursor:pointer;display:flex;gap:8px;align-items:center}
+.tabs button[aria-selected="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tabs button:disabled{opacity:.55;cursor:default}
+.tabs em{font-style:normal;font-size:12px;background:#f4f1e8;color:var(--soft);border-radius:999px;padding:2px 8px}
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:22px;align-items:start}
+.screen{background:#0d1530;border-radius:28px;padding:10px;box-shadow:0 10px 30px #1f3c8833}
+.screen video{display:block;width:100%;aspect-ratio:9/16;border-radius:20px;background:#000}
+.screen h2{font-family:var(--display);color:#fff;font-size:20px;margin:10px 8px 4px}
+.screen p{color:#aab6d8;margin:0 8px 8px;font-size:14px}
+.card{background:var(--card);border-radius:22px;padding:18px 20px;box-shadow:0 4px 0 #0000000d;margin-bottom:18px}
+.card h3{font-family:var(--display);font-size:22px;margin:0 0 12px;color:var(--navy)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.rule{border:2px solid #e6e2d6;border-radius:16px;padding:12px 14px}
+.rule b{display:block;font-size:15px;color:var(--soft);font-weight:800}
+.rule .f{font-family:var(--display);font-size:24px;color:var(--red);margin:4px 0}
+.rule small{color:var(--soft);font-size:14px}
+.q{border-top:2px dashed #e6e2d6;padding:12px 0}
+.q:first-of-type{border-top:0;padding-top:0}
+.q p{margin:0 0 8px;font-weight:700;font-size:17px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts button{font:800 17px var(--body);min-height:48px;padding:8px 16px;border-radius:14px;border:2px solid #d9d4c6;background:#fff;color:var(--ink);cursor:pointer}
+.opts button.ok{background:#e3f6ee;border-color:var(--ok);color:var(--ok)}
+.opts button.ko{background:#fdeaea;border-color:var(--red);color:var(--red)}
+.why{margin:8px 0 0;color:var(--soft);font-size:15px;min-height:1em}
+.score{font-weight:800;color:var(--navy)}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;margin:0 .12em;font-size:.92em}
+.fr i{font-style:normal;padding:0 .15em}.fr i:first-child{border-bottom:.09em solid currentColor;padding-bottom:.08em}.fr i:last-child{padding-top:.08em}
+.rule .f{line-height:1.25}.q p{line-height:1.9}
+@media (max-width:760px){.grid{grid-template-columns:1fr}.screen{max-width:400px;margin:0 auto}.tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}.tabs button{flex:none;white-space:nowrap;font-size:15px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="back" href="./">← Espace d'Essil</a>
+  <header>
+    <small>PAS À PAS · LES FRACTIONS</small>
+    <h1 id="titre">Les fractions, étape par étape</h1>
+    <p id="sous">Tu réinventes les fractions : partager un gâteau, un jardin, une citronnade… et unifier le dénominateur.</p>
+  </header>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Épisodes"></nav>
+  <div class="grid">
+    <section class="screen">
+      <video id="video" controls playsinline preload="metadata"></video>
+      <h2 id="ep"></h2>
+      <p id="info"></p>
+    </section>
+    <div>
+      <section class="card"><h3>Ce qu'il faut retenir</h3><div class="rules" id="rules"></div></section>
+      <section class="card" id="defi"><h3>Petit défi <span class="score" id="score"></span></h3><div id="qs"></div></section>
+    </div>
+  </div>
+</main>
+<script>
+const EP = [
+  { id:'gateau', n:1, ic:'🎂', titre:'Le gâteau de l\'Aïd', sous:'Les fractions égales : couper le gâteau autrement sans changer la part. Amplifier, simplifier… l\'outil secret pour additionner.', duree:'2 min',
+    rules:[['Une fraction', '3/4', 'en haut, le numérateur : les parts qu\'on prend · en bas, le dénominateur : en combien on coupe'], ['Fractions égales', '1/4 = 2/8', 'la même quantité, coupée en plus de parts'], ['Amplifier', '× en haut et en bas', '3/4 = 6/8 = 9/12'], ['Simplifier', '÷ en haut et en bas', '6/8 = 3/4 (on divise par 2)'], ['Attention', 'jamais + ou −', 'en haut et en bas : seulement × ou ÷ par le même nombre']],
+    q:[{ q:'Dans 3/5, quel est le dénominateur ?', a:'5', o:['3', '5', '8'], why:'C\'est le nombre du bas : le gâteau est coupé en 5 parts.' },
+       { q:'1/2 est égal à…', a:'4/8', o:['2/3', '4/8', '1/4'], why:'On amplifie par 4 : 1 × 4 = 4 et 2 × 4 = 8.' },
+       { q:'Amplifie 2/3 par 5.', a:'10/15', o:['7/8', '10/15', '10/3'], why:'2 × 5 = 10 et 3 × 5 = 15 : en haut ET en bas.' },
+       { q:'Simplifie 6/9.', a:'2/3', o:['2/3', '3/6', '1/3'], why:'On divise en haut et en bas par 3 : 6 ÷ 3 = 2 et 9 ÷ 3 = 3.' },
+       { q:'Laquelle n\'est PAS égale à 1/2 ?', a:'3/5', o:['5/10', '3/5', '6/12'], why:'Pour être égale à 1/2, le bas doit être le double du haut : 3 × 2 = 6, pas 5.' }] },
+  { id:'potager', n:2, ic:'🥕', titre:'Le potager de Jeddi', sous:'Additionner et soustraire les fractions : d\'abord le même dénominateur, et tout devient facile.', duree:'2 min 10',
+    rules:[['Même dénominateur', '2/7 + 3/7 = 5/7', 'on additionne les hauts, le bas ne bouge pas'], ['Dénominateurs différents', 'on amplifie d\'abord', 'pour que les parts aient la même taille'], ['Exemple', '1/2 + 1/3 = 5/6', 'en sixièmes (6 = 2 × 3) : 3/6 + 2/6 = 5/6'], ['Un bas multiple de l\'autre', '1/4 + 3/8 = 5/8', '8 = 2 × 4 : 1/4 devient 2/8, une seule fraction à amplifier'], ['Soustraire', '5/6 − 1/3 = 1/2', 'même règle : 5/6 − 2/6 = 3/6 = 1/2'], ['Le piège', '1/2 + 1/3 ≠ 2/5', 'on n\'additionne jamais les dénominateurs']],
+    q:[{ q:'2/9 + 5/9 = ?', a:'7/9', o:['7/18', '7/9', '10/9'], why:'Même dénominateur : 2 + 5 = 7, et le 9 ne bouge pas.' },
+       { q:'1/2 + 1/4 = ?', a:'3/4', o:['2/6', '3/4', '2/4'], why:'1/2 = 2/4, donc 2/4 + 1/4 = 3/4.' },
+       { q:'2/3 + 1/6 = ?', a:'5/6', o:['3/9', '5/6', '3/6'], why:'2/3 = 4/6 (× 2 en haut et en bas), donc 4/6 + 1/6 = 5/6.' },
+       { q:'3/4 − 1/2 = ?', a:'1/4', o:['2/2', '1/4', '2/4'], why:'1/2 = 2/4, donc 3/4 − 2/4 = 1/4.' },
+       { q:'1/3 + 1/4 = ?', a:'7/12', o:['2/7', '7/12', '1/12'], why:'12 = 3 × 4 : 1/3 = 4/12 et 1/4 = 3/12, donc 7/12.' }] },
+  { id:'citronnade', n:3, ic:'🍋', titre:'La citronnade de Tata', sous:'Multiplier et diviser les fractions : haut × haut, bas × bas… et pour diviser, on retourne la fraction.', duree:'2 min',
+    rules:[['Multiplier', 'haut × haut, bas × bas', '1/2 × 3/4 = 3/8'], ['« La moitié de »', '= × 1/2', 'la moitié de 3/4, c\'est 3/8'], ['Pas besoin', 'du même dénominateur', 'pour multiplier ou diviser'], ['L\'inverse', 'on retourne la fraction', 'l\'inverse de 1/4 est 4/1, c\'est-à-dire 4'], ['Diviser', '× l\'inverse', '3/2 ÷ 1/4 = 3/2 × 4 = 12/2 = 6']],
+    q:[{ q:'2/3 × 4/5 = ?', a:'8/15', o:['6/8', '8/15', '8/8'], why:'2 × 4 = 8 en haut, 3 × 5 = 15 en bas.' },
+       { q:'La moitié de 1/3, c\'est…', a:'1/6', o:['2/3', '1/6', '1/5'], why:'1/2 × 1/3 = 1/6.' },
+       { q:'L\'inverse de 2/5, c\'est…', a:'5/2', o:['5/2', '2/5', '1/5'], why:'On retourne la fraction : le haut passe en bas.' },
+       { q:'1/2 ÷ 1/4 = ?', a:'2', o:['1/8', '2', '4'], why:'1/2 × 4/1 = 4/2 = 2 : il y a 2 quarts dans une moitié.' },
+       { q:'Combien de verres de 1/3 de litre dans 2 litres ?', a:'6', o:['5', '6', '2/3'], why:'2 ÷ 1/3 = 2 × 3 = 6 verres.' }] }
+];
+const $ = id => document.getElementById(id);
+const fr = t => String(t).replace(/(\d+)\/(\d+)/g, '<span class="fr"><i>$1</i><i>$2</i></span>');   // 3/4 → fraction écrite comme au tableau
+function show(e){
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.id === e.id ? 'true' : 'false'));
+  $('titre').textContent = e.titre; $('sous').textContent = e.sous;
+  const v = $('video'); v.pause(); v.poster = `videos/fractions-${e.id}.jpg`; v.src = `videos/fractions-${e.id}.mp4`;
+  $('ep').textContent = `Épisode ${e.n} · ${e.titre}`; $('info').textContent = `${e.duree} · voix de Céline`;
+  $('rules').innerHTML = e.rules.map(([b, f, s]) => `<div class="rule"><b>${b}</b><div class="f">${fr(f)}</div><small>${fr(s)}</small></div>`).join('');
+  const box = $('qs'); box.innerHTML = ''; $('score').textContent = ''; let good = 0, done = 0;
+  e.q.forEach((x, i) => {
+    const d = document.createElement('div'); d.className = 'q';
+    d.innerHTML = `<p>${i + 1}. ${fr(x.q)}</p><div class="opts">${x.o.map(o => `<button type="button" data-v="${o}">${fr(o)}</button>`).join('')}</div><p class="why"></p>`;
+    box.appendChild(d); let first = true;
+    d.querySelectorAll('button').forEach(b => b.onclick = () => {
+      if(d.dataset.ok) return;
+      if(b.dataset.v === x.a){ b.classList.add('ok'); d.dataset.ok = 1; d.querySelector('.why').innerHTML = '✔ ' + fr(x.why); if(first) good++; done++; }
+      else { b.classList.add('ko'); first = false; d.querySelector('.why').textContent = 'Pas tout à fait… essaie encore !'; }
+      if(done === e.q.length) $('score').textContent = `· ${good} / ${e.q.length} du premier coup${good === e.q.length ? ' 🏆' : ''}`;
+    });
+  });
+  try{ localStorage.setItem('essil-fractions', e.id); }catch(err){}
+}
+$('tabs').innerHTML = EP.map(e => `<button type="button" role="tab" data-id="${e.id || ''}" ${e.soon ? 'disabled' : ''}><span>${e.ic}</span>${e.n}. ${e.titre}${e.soon ? '<em>bientôt</em>' : ''}</button>`).join('');
+document.querySelectorAll('#tabs button:not([disabled])').forEach(b => b.onclick = () => show(EP.find(e => e.id === b.dataset.id)));
+let start = EP[0]; try{ const k = new URLSearchParams(location.search).get('ep') || localStorage.getItem('essil-fractions'); start = EP.find(e => e.id === k) || EP[0]; }catch(err){}
+show(start);
+</script>
+</body>
+</html>
