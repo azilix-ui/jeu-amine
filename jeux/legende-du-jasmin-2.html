@@ -53,6 +53,10 @@ h2{font-family:var(--display);margin:0;font-size:30px;line-height:1.05}
 .big.blue{background:linear-gradient(#3f86e8,#1f5fbf);color:#fff;box-shadow:0 6px 0 var(--blue2)}
 .row{display:flex;gap:10px;width:100%;flex-wrap:wrap}
 .row > *{flex:1 1 180px}
+.tenues-w{width:100%;min-width:0}.tlab{margin:0 0 4px;color:var(--mist);font-weight:700;font-size:.85rem;text-align:left}
+.tenues{display:flex;gap:8px;overflow-x:auto;touch-action:pan-x;padding:2px 2px 8px;scrollbar-width:none}.tenues::-webkit-scrollbar{display:none}
+.tenues button{flex:none;min-width:96px;min-height:56px;border-radius:14px;border:2px solid var(--line);background:#ffffff14;color:#fff;font:800 .82rem inherit;font-family:inherit;padding:6px 10px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
+.tenues button span{font-size:1.3rem;line-height:1}.tenues button small{font-weight:700;opacity:.8;font-size:.7rem}.tenues button.on{background:#ffc93c;color:#23324a;border-color:#ffc93c}.tenues button.lock{opacity:.7}
 .who{display:flex;align-items:center;gap:10px;background:#ffffff14;border:2px solid var(--line);border-radius:999px;padding:6px 16px 6px 6px;min-height:56px}
 .av{width:44px;height:44px;border-radius:50%;overflow:hidden;display:grid;place-items:center;font-size:24px;background:#2a3d82;flex:none}
 .av img{width:100%;height:100%;object-fit:cover}
@@ -108,9 +112,10 @@ body.menu .back{display:inline-flex}
 
 <div class="screen on" id="menu"><div class="box">
   <video class="title-img" id="titleVid" src="jasmin/titre.mp4" poster="jasmin/titre.webp" preload="none" muted playsinline disablepictureinpicture aria-label="La famille dans un village tunisien bleu et blanc : passe la souris ou touche l'image pour la voir sauter"></video>
-  <h1>La Légende <span>du Jasmin 2</span></h1>
+  <h1 style="font-size:clamp(1.5rem,4.4vw,2.7rem);white-space:nowrap">La Légende <span>du Jasmin 2</span></h1>
   <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse dix-huit mondes pour les rapporter !<br>Les héros « en vrai » · même aventure, mêmes progrès que le <a href="legende-du-jasmin.html" style="color:inherit">Jasmin 1</a>.</p>
   <button class="who" id="who"></button>
+  <div class="tenues-w"><p class="tlab" id="tLab">Ta tenue</p><div class="tenues" id="tenues"></div></div>
   <button class="big" id="play">▶ Jouer</button>
   <div class="row"><button class="big ghost" id="openRecs">🏆 Records</button><button class="big ghost" id="openOpts">⚙️ Réglages</button><button class="big ghost" id="openHelp">❓ Comment jouer</button></div>
 </div></div>
@@ -552,7 +557,8 @@ async function setPlayer(name){
   if(window.Famille){
     if(!tracked.has(name)){ tracked.add(name); Famille.track('jasmin', name, [skey()]); }
     const r = await Famille.load('jasmin', name), d = r && r[skey()];
-    if(d && player === name && (d.t || 0) > (save.t || 0)){ save = Object.assign(fresh(), d); store.set(skey(), save); renderMenu(); }
+    if(d && player === name && (d.t || 0) > (save.t || 0)){ save = Object.assign(fresh(), d); store.set(skey(), save); renderMenu(); loadBody(name); }
+    try{ const rm = await Famille.load('medina', name), dm = rm && rm[mkey()], lm = store.get(mkey(), null); if(dm && player === name && (!lm || (dm.t || 0) > (lm.t || 0))){ store.set(mkey(), dm); renderTenues(); loadBody(name); } }catch(e){}
   }
 }
 const pcol = () => PEOPLE[(player || '').toLowerCase()] || Object.assign({ mascot:true }, mascotOf(player));
@@ -1164,7 +1170,11 @@ const HEADCROP_P = { essil:[.048, .011, .86], salma:[.066, .024, .88], amine:[.0
 function headCropP(){ const k = (player || '').toLowerCase(); return HEADCROP_P[PEOPLE[k] ? k : mascotOf(player).id] || HEADCROP_P.nour; }
 function headCrop(){ const k = (player || '').toLowerCase(); return HEADCROP[PEOPLE[k] ? k : mascotOf(player).id] || HEADCROP.nour; }
 /* ---------- Jasmin 2 : le héros « en vrai » (planche de profil tirée de vidéos, comme dans Médina Express) ---------- */
-// jasmin2/corps-<id>.webp : 6 x 4 images tournées vers la droite. 0-11 la foulée, 12-19 le saut, 20 debout.
+// jasmin2/corps-<id>[-<tenue>].webp : 6 x 4 images tournées vers la droite. 0-11 la foulée, 12-19 le bond, 20 debout de profil, 21 de face, 22 de face qui soupire.
+// Les tenues sont celles de Médina Express : même garde-robe (`medina:<Prénom>`.skins) et mêmes pièces pour les acheter.
+const TENUES = [{ id:'classique', n:'Classique', ic:'👕', prix:0 }, { id:'jebba', n:'Jebba et chéchia', ic:'🕌', prix:150 }, { id:'foot', n:'Maillot de foot', ic:'⚽', prix:300 }, { id:'super', n:'Super-héros', ic:'🦸', prix:600 }, { id:'astro', n:'Astronaute', ic:'🧑‍🚀', prix:1000 }, { id:'or', n:'Tout en or', ic:'✨', prix:2000 }];
+const mkey = () => 'medina:' + player, garde = () => { const m = store.get(mkey(), {}) || {}; return { m, coins:m.coins || 0, skins:Array.isArray(m.skins) ? m.skins : ['classique'] }; };
+const tenue = () => { const g = garde(); return TENUES.some(k => k.id === save.tenue) && (save.tenue === 'classique' || g.skins.includes(save.tenue)) ? save.tenue : 'classique'; };
 const TAILLE2 = { amine:.8, salma:.9, essil:.97, nour:.92, yasmine:.92, anis:1.08, imen:1.05, fares:1.04 };
 let bodySheet = null;   // { im, cw, ch, feet, top, k }
 function loadBody(name){
@@ -1174,14 +1184,16 @@ function loadBody(name){
     const c = document.createElement('canvas'); c.width = cw; c.height = ch; const x = c.getContext('2d', { willReadFrequently:true }); x.drawImage(im, 2 * cw, 3 * ch, cw, ch, 0, 0, cw, ch);
     const d = x.getImageData(0, 0, cw, ch).data; let top = ch, feet = 0; for(let y = 0; y < ch; y++){ let n = 0; for(let q = 0; q < cw; q++) if(d[(y * cw + q) * 4 + 3] > 120) n++; if(n > 2){ if(y < top) top = y; feet = y; } }
     bodySheet = { im, cw, ch, top, feet, k:TAILLE2[id] }; };
-  im.src = `jasmin2/corps-${id}.webp?v=1`;
+  const tn = tenue(); im.src = `jasmin2/corps-${id}${tn === 'classique' ? '' : '-' + tn}.webp?v=2`;
 }
-function drawBody(cx, h, t, run, air, ph){
+function drawBody(cx, h, t, run, air, ph, sg){
   const b = bodySheet, sc = 76 * b.k / (b.feet - b.top);   // 76 px de haut pour une taille de 1
-  let f; if(h.dead) f = 15; else if(h.swim) f = 14 + Math.floor(t * 5) % 3; else if(air) f = h.vy < -260 ? 13 : h.vy < -90 ? 14 : h.vy < 90 ? 15 : h.vy < 300 ? 16 : 17; else if(run > .12) f = Math.floor((((ph / (Math.PI * 2)) % 1) + 1) % 1 * 12); else f = 20;
+  let f; if(h.dead) f = 15; else if(h.swim) f = 14 + Math.floor(t * 5) % 3; else if(air) f = h.vy < -260 ? 13 : h.vy < -90 ? 14 : h.vy < 90 ? 15 : h.vy < 300 ? 16 : 17; else if(run > .12) f = Math.floor((((ph / (Math.PI * 2)) % 1) + 1) % 1 * 12); else f = h.lookProf ? 20 : sg > .12 && sg < .85 ? 22 : 21;   // à l'arrêt : de profil ; au départ et après 10 s sans bouger : de face, puis le soupir
+  const flip = f >= 21 && h.face < 0; if(flip){ cx.save(); cx.scale(-1, 1); }   // de face, on ne le retourne pas
   const w = b.cw * sc, hh = b.ch * sc; cx.imageSmoothingQuality = 'high';
   if(h.swim){ cx.save(); cx.translate(0, -20); cx.rotate(.9); cx.drawImage(b.im, (f % 6) * b.cw, Math.floor(f / 6) * b.ch, b.cw, b.ch, -w / 2, -b.feet * sc + 26, w, hh); cx.restore(); }
-  else cx.drawImage(b.im, (f % 6) * b.cw, Math.floor(f / 6) * b.ch, b.cw, b.ch, -w / 2, -b.feet * sc + 1, w, hh);
+  else cx.drawImage(b.im, (f % 6) * b.cw, Math.floor(f / 6) * b.ch, b.cw, b.ch, -w / 2, -b.feet * sc + 1 - (f === 22 ? 1.5 : 0), w, hh);
+  if(flip) cx.restore();
   return 76 * b.k;   // hauteur du héros
 }
 function drawHero(cx, h, t){
@@ -1195,10 +1207,10 @@ function drawHero(cx, h, t){
   if(bodySheet){
     if(!h.dead && (run > .15 || (air && Math.abs(h.vx) > 20))){ h.still = t; h.sigh = 0; h.lookProf = true; } else if(h.still === undefined) h.still = t;
     if(h.lookProf && !h.dead && t - h.still > 10){ h.lookProf = false; h.sigh = t; sfx.sigh(); }
-    const H2 = drawBody(cx, h, t, run, air, ph), sg = h.sigh && t - h.sigh < 2.2 ? (t - h.sigh) / 2.2 : -1;
+    const sg = h.sigh && t - h.sigh < 2.2 ? (t - h.sigh) / 2.2 : -1, H2 = drawBody(cx, h, t, run, air, ph, sg);
     if(h.harissa){ cx.fillStyle = '#ff6a1a'; cx.beginPath(); cx.arc(13, -H2 * .42, 4 + Math.sin(t * 12), 0, 7); cx.fill(); }
-    if(sg > .3 && sg < 1){ const k = (sg - .3) / .7; cx.save(); cx.globalAlpha = Math.max(0, 1 - k) * .9; cx.fillStyle = '#ffffff';
-      [[0, 4.5], [.18, 3.6], [.36, 2.8]].forEach(([d, r]) => { const q = Math.max(0, k - d); if(q > 0){ cx.beginPath(); cx.arc(9 + q * 26, -H2 * .8 - q * 12, r + q * 2, 0, 7); cx.fill(); } });
+    if(sg > .3 && sg < 1){ const k = (sg - .3) / .7; cx.save(); if(h.face < 0) cx.scale(-1, 1); cx.globalAlpha = Math.max(0, 1 - k) * .9; cx.fillStyle = '#ffffff';
+      [[0, 4.5], [.18, 3.6], [.36, 2.8]].forEach(([d, r]) => { const q = Math.max(0, k - d); if(q > 0){ cx.beginPath(); cx.arc(6 + q * 26, -H2 * .8 - q * 12, r + q * 2, 0, 7); cx.fill(); } });
       cx.font = '800 9px "Baloo 2", sans-serif'; cx.fillStyle = '#23324a'; cx.textAlign = 'left'; cx.fillText('pff…', 18 + k * 10, -H2 * .9 - k * 8); cx.restore(); }
     if(h.chechia && !h.swim){ cx.save(); cx.translate(0, -H2 + 4); cx.fillStyle = '#c4122f'; cx.beginPath(); cx.moveTo(-9, 0); cx.lineTo(9, 0); cx.lineTo(7.5, -11); cx.lineTo(-7.5, -11); cx.closePath(); cx.fill(); cx.fillStyle = '#8a0a1f'; cx.fillRect(-8, -3, 16, 2.5);
       cx.strokeStyle = '#111'; cx.lineWidth = 1.6; cx.beginPath(); cx.moveTo(0, -11); cx.quadraticCurveTo(-7, -8 + Math.sin(t * 8) * 2, -10, -1); cx.stroke(); cx.restore(); }
@@ -1314,7 +1326,14 @@ function frame(now){
    Écrans : menu, mondes, questions, fin de niveau
    ===================================================================== */
 function show(id){ releaseAll(); keys.l = keys.r = keys.a = keys.b = false; document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); document.body.classList.toggle('menu', id === 'menu'); document.body.classList.toggle('playing', !id); }
-function renderMenu(){ $('who').innerHTML = player ? `${avatarHTML(player)}<span><b>${esc(player)}</b><small>Toucher pour changer de héros</small></span>` : `${avatarHTML('')}<span><b>Qui joue ?</b><small>Choisis ton héros</small></span>`; }
+function renderTenues(){ const g = garde(), cur = tenue(); $('tLab').textContent = player ? `Ta tenue · tu as ${g.coins} 🪙 (les pièces de Médina Express)` : 'Ta tenue';
+  $('tenues').innerHTML = TENUES.map(k => { const has = k.prix === 0 || g.skins.includes(k.id); return `<button class="${cur === k.id ? 'on' : ''} ${has ? '' : 'lock'}" data-tn="${k.id}"><span>${k.ic}</span>${k.n}<small>${has ? (cur === k.id ? 'je la porte' : 'à moi') : '🔒 ' + k.prix + ' 🪙'}</small></button>`; }).join('');
+  const on = $('tenues').querySelector('.on'); if(on) $('tenues').scrollLeft = Math.max(0, on.offsetLeft - 60); }
+$('tenues').onclick = async e => { const b = e.target.closest('[data-tn]'); if(!b) return; audio(); if(!player && !(await choose())) return; const k = TENUES.find(x => x.id === b.dataset.tn), g = garde();
+  if(k.prix > 0 && !g.skins.includes(k.id)){ if(g.coins < k.prix){ sfx.tap(); $('tLab').textContent = `Il te manque ${k.prix - g.coins} 🪙 pour « ${k.n} » : gagne des pièces dans Médina Express !`; return; }
+    const m = Object.assign({}, g.m, { coins:g.coins - k.prix, skins:g.skins.concat(k.id), t:Date.now() }); store.set(mkey(), m); if(window.Famille && Famille.track && !tracked.has('m:' + player)){ tracked.add('m:' + player); Famille.track('medina', player, [mkey()]); } }
+  sfx.tap(); save.tenue = k.id; persist(); renderTenues(); loadBody(player); };
+function renderMenu(){ renderTenues(); $('who').innerHTML = player ? `${avatarHTML(player)}<span><b>${esc(player)}</b><small>Toucher pour changer de héros</small></span>` : `${avatarHTML('')}<span><b>Qui joue ?</b><small>Choisis ton héros</small></span>`; }
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 $('who').onclick = () => { audio(); sfx.tap(); choose(); };
 // un monde est ouvert s'il est le premier du voyage, s'il l'était déjà avec l'ancien ordre (1 à 5), ou si le monde d'avant est réussi
