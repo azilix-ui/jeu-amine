@@ -300,7 +300,7 @@ const TAILLE = { amine:.78, salma:.88, essil:.95, nour:.9, yasmine:.9, anis:1.06
 function applySkin(){
   const h = headOf(player), k = SKINS.find(x => x.id === save.skin) || SKINS[0], base = k.id === 'classique', who = player, sk = save.skin;
   // le corps animé (planche tirée de vidéos) s'il existe pour ce personnage et cette tenue ; sinon le corps en blocs
-  const file = h.id && CORPS[h.id] && CORPS[h.id].includes(k.id) ? `medina/corps-${h.id}${base ? '' : '-' + k.id}.webp?v=2` : null;
+  const file = h.id && CORPS[h.id] && CORPS[h.id].includes(k.id) ? `medina/corps-${h.id}${base ? '' : '-' + k.id}.webp?v=3` : null;
   filmOn = false; H.film.visible = false; H.body.visible = true; filmK = TAILLE[h.id] || 1;
   if(file){ const use = t => { if(player !== who || save.skin !== sk) return; H.film.material.map = t; H.film.material.needsUpdate = true; filmOn = true; H.film.visible = true; H.body.visible = false; H.film.scale.set(1.6 * filmK, 2.62 * filmK, 1); };
     if(filmTex[file]) use(filmTex[file]); else new THREE.TextureLoader().load(file, t => { t.colorSpace = THREE.SRGBColorSpace; t.repeat.set(1 / 6, 1 / 4); filmTex[file] = t; use(t); }); }
