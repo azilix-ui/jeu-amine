@@ -2,7 +2,7 @@
 import { FILET, SELLE, ROBES, RACES, OUTILS, ORDRE, PANSAGE_QCM, HARNAIS_QCM, CHEVAUX, STATS, COULEURS, HEX, RAYONS, NOURRITURE, EPREUVES } from './data.js';
 
 const $ = id => document.getElementById(id);
-const IMG = 'ecuries/img/';
+const IMG = new URL('img/', import.meta.url).href;   // marche depuis essil/les-ecuries.html comme depuis jeux/les-ecuries.html
 const esc = s => String(s).replace(/[<>&"]/g, c => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;' }[c]));
 const shuffle = a => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const pick = (a, n) => shuffle(a).slice(0, n);
@@ -26,7 +26,8 @@ async function setPlayer(name){
 }
 const KIDS = ['essil', 'salma', 'amine', 'anis', 'imen'];
 const avatarOf = n => { const k = n.toLowerCase(); if(KIDS.includes(k)) return `../jeux/avatars/${k}.webp`; const h = window.Famille && Famille.head && Famille.head(n); return h ? '../jeux/' + h.img : '../jeux/avatars/mascotte-nour.webp'; };
-function renderWho(){ $('who1').innerHTML = `<img src="${avatarOf(player)}" alt="">${esc(player)}`; }
+function renderWho(){ $('who1').innerHTML = `<img src="${avatarOf(player)}" alt="">${esc(player)}`;
+  const o = $('owner'); if(o) o.textContent = (/^[aeiouyhàâéèêîôû]/i.test(player) ? "d'" : 'de ') + player; }   // la page de la famille : « Les Écuries de Salma », « d'Amine »…
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui monte à cheval ?', cancel:!!player, extra:[{ name:'Anis', color:'#0f766e', emoji:'🧔' }, { name:'Imen', color:'#b4235a', emoji:'👩' }], avatar:k => `<img src="../jeux/avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 
 /* ---------- sons ---------- */
