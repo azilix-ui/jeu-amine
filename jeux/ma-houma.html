@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Ma Houma</title>
+<meta name="theme-color" content="#1d6fb8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%98%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+<script src="/site.js" defer></script>
+<!-- =====================================================================
+  MA HOUMA : le quartier du Jasmin (« houma » = le quartier, en tunisien).
+  Un monde miniature libre, sans score ni échec : on déplace la famille et les mascottes, on les habille,
+  on manipule les objets et on invente ses histoires. Cahier des charges du papa (11/11), adapté au site :
+  page autonome, joueurs de la famille, sauvegarde par joueur gardée sur le serveur (cours « houma »), découvertes dans Progression.
+  Tout est piloté par des données : ITEMS (objets), FIXED (meubles), PLACES (lieux), RULES (interactions), DISC (découvertes).
+  Pour ajouter un lieu : une entrée dans PLACES (décor, sols, meubles, objets) et sa case sur la carte.
+===================================================================== -->
+<style>
+:root{--blue:#1d6fb8;--blue-d:#134f86;--white:#fdfdf8;--ochre:#e8b566;--ink:#23324a;--sun:#ffc93c;--jas:#2e9e4f;--red:#d83a3a;--bar:64px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#0f3f6e;font-family:"Baloo 2",system-ui,sans-serif;color:var(--ink);overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+#top,#bottom{position:fixed;left:0;right:0;z-index:30;display:flex;align-items:center;gap:8px;padding:6px max(10px,env(safe-area-inset-left)) 6px max(10px,env(safe-area-inset-right));background:linear-gradient(#1d6fb8,#175f9f);color:#fff}
+#top{top:0;height:calc(var(--bar) + env(safe-area-inset-top));padding-top:calc(6px + env(safe-area-inset-top));box-shadow:0 3px 0 #0003}
+#bottom{bottom:0;height:calc(84px + env(safe-area-inset-bottom));padding-bottom:calc(6px + env(safe-area-inset-bottom));box-shadow:0 -3px 0 #0003;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
+#bottom::-webkit-scrollbar{display:none}
+.tb{min-width:50px;height:50px;border-radius:16px;background:#ffffff26;display:grid;place-items:center;font-size:26px;flex:none;padding:0 10px;font-weight:800}
+.tb:active{transform:scale(.94)}.tb:focus-visible,.hd:focus-visible,.pl:focus-visible{outline:4px solid var(--sun);outline-offset:2px}
+#title{flex:1;min-width:0;font-weight:800;font-size:clamp(17px,2.6vw,25px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
+#title small{display:block;font-weight:600;font-size:.62em;opacity:.85}
+#stars{font-size:19px}
+#who img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #fff}
+.hd{flex:none;width:68px;display:grid;justify-items:center;gap:0;font-weight:800;font-size:13px;line-height:1.1;color:#fff;opacity:.55;transition:opacity .2s,transform .15s}
+.hd img{width:54px;height:54px;border-radius:50%;object-fit:cover;border:3px solid #fff;background:#fff}
+.hd.here{opacity:1}.hd.here img{border-color:var(--sun)}.hd:active{transform:scale(.92)}
+#barHint{flex:none;font-size:13px;line-height:1.15;max-width:120px;opacity:.9;font-weight:600}
+#view{position:fixed;left:0;right:0;top:calc(var(--bar) + env(safe-area-inset-top));bottom:calc(84px + env(safe-area-inset-bottom));overflow:hidden;background:#bfe6ff;touch-action:none}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;overflow:hidden}
+#stage>svg.bg{position:absolute;inset:0;width:1280px;height:720px;display:block}
+.e{position:absolute;display:grid;place-items:center;transition:left .16s ease-out,top .2s cubic-bezier(.3,1.5,.6,1),filter .15s}
+.e svg{display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
+.e.i,.e.c{cursor:grab;touch-action:none}
+.e.i .em{line-height:1;pointer-events:none;filter:drop-shadow(0 2px 0 #0002)}
+.e.drag{transition:none;transform:scale(1.14);filter:drop-shadow(0 14px 8px #0005);cursor:grabbing;z-index:9000!important}
+.e.hot{filter:drop-shadow(0 0 0 #fff) drop-shadow(0 0 10px #ffd84d) drop-shadow(0 0 4px #ffd84d)}
+.e.f{cursor:pointer}.e.f.none{pointer-events:none}
+.e.hop{animation:hop .45s ease}
+@keyframes hop{30%{transform:translateY(-26px) scale(1.04,.96)}60%{transform:translateY(0) scale(.97,1.03)}}
+.e.munch{animation:munch .5s ease 2}
+@keyframes munch{50%{transform:scale(1.06,.95)}}
+.e.pop{animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.2);opacity:0}}
+.e.hide{display:none}
+.e.c.sleep svg{transform:rotate(-90deg)}
+.fxp{position:absolute;pointer-events:none;font-size:30px;line-height:1;z-index:9500;animation:rise 1.5s ease-out forwards}
+@keyframes rise{from{opacity:0;transform:translateY(0) scale(.6)}15%{opacity:1}to{opacity:0;transform:translate(var(--dx,12px),-90px) scale(1.15)}}
+.glow{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,#ffe9a0cc,#ffe9a000);mix-blend-mode:screen;z-index:8000}
+#toast{position:fixed;left:50%;top:calc(var(--bar) + env(safe-area-inset-top) + 12px);transform:translate(-50%,-140%);background:#fff;color:var(--ink);font-weight:800;font-size:clamp(16px,2.2vw,21px);padding:10px 20px;border-radius:999px;box-shadow:0 6px 0 #0002,0 0 0 3px var(--sun);z-index:60;transition:transform .35s cubic-bezier(.3,1.4,.6,1);max-width:92vw;text-align:center;pointer-events:none;opacity:0}
+#toast.on{transform:translate(-50%,0);opacity:1}
+/* la carte */
+#map{position:absolute;inset:0}
+#map svg{position:absolute;inset:0;width:100%;height:100%}
+.pl{position:absolute;display:grid;justify-items:center;gap:2px;transform:translate(-50%,-100%);font-weight:800;color:var(--ink)}
+.pl .sign{background:#fff;border-radius:14px;padding:2px 12px;font-size:20px;box-shadow:0 4px 0 #0002;white-space:nowrap;border:3px solid var(--blue)}
+.pl.soon{filter:saturate(.35) brightness(1.05);opacity:.85}.pl.soon .sign{border-color:#9aa9bd;font-size:16px}
+.pl:active{transform:translate(-50%,-100%) scale(.96)}
+/* les panneaux */
+#veil{position:fixed;inset:0;background:#0b2a4acc;z-index:80;display:none;place-items:center;padding:14px}
+#veil.on{display:grid}
+#panel{background:var(--white);border-radius:26px;padding:18px 20px;max-width:min(680px,96vw);max-height:90vh;overflow:auto;box-shadow:0 10px 0 #0003;text-align:center}
+#panel h2{margin:0 0 6px;font-size:28px;line-height:1.1}#panel p{margin:6px 0;font-size:17px;font-weight:600;line-height:1.35}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin:12px 0;text-align:center}
+.dk{border-radius:16px;background:#eef4fb;padding:8px 4px;font-size:13.5px;font-weight:800;line-height:1.15;display:grid;gap:2px;justify-items:center}
+.dk b{font-size:34px;line-height:1.1}.dk.no{opacity:.45;filter:grayscale(1)}.dk.no b{filter:blur(3px)}
+.pill{display:inline-grid;place-items:center;min-height:52px;padding:0 24px;border-radius:999px;background:var(--blue);color:#fff;font-weight:800;font-size:20px;box-shadow:0 5px 0 var(--blue-d);margin:6px}
+.pill.ghost{background:#e6edf6;color:var(--ink);box-shadow:0 5px 0 #c3cfdf}.pill.red{background:var(--red);box-shadow:0 5px 0 #9b2323}
+.pill:active{transform:translateY(3px);box-shadow:none}
+@media (max-height:520px){:root{--bar:46px}.tb{min-width:38px;height:36px;font-size:19px;border-radius:12px}#stars{font-size:15px}#who img{width:30px;height:30px}
+  #bottom{height:calc(52px + env(safe-area-inset-bottom))}#view{bottom:calc(52px + env(safe-area-inset-bottom))}.hd{width:46px;font-size:0}.hd img{width:40px;height:40px}#barHint{display:none}#title small{display:none}}
+@media (max-width:560px){#title small{display:none}#barHint{display:none}.tb{min-width:42px;height:44px;padding:0 6px;font-size:22px}#top{gap:5px}}
+@media (prefers-reduced-motion:reduce){.e,.e.hop,.e.munch,.e.pop,.fxp{animation:none;transition:none}}
+</style>
+</head>
+<body>
+<div id="top">
+  <button class="tb" id="bMap" aria-label="La carte du quartier">🗺️</button>
+  <div id="title">Ma Houma<small>le quartier du Jasmin</small></div>
+  <button class="tb" id="bDisc" aria-label="Mes découvertes"><span id="stars">⭐ 0</span></button>
+  <button class="tb" id="bSnd" aria-label="Le son">🔊</button>
+  <button class="tb" id="bMenu" aria-label="Réglages">⚙️</button>
+  <button class="tb" id="who" aria-label="Changer de joueur">👤</button>
+</div>
+<div id="view"><div id="stage"></div></div>
+<div id="bottom"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="veil"><div id="panel" role="dialog" aria-modal="true"></div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <pattern id="zel" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#fdfdf8"/><path d="M20 4 26 14 36 20 26 26 20 36 14 26 4 20 14 14Z" fill="#1d6fb8"/><circle cx="20" cy="20" r="4" fill="#ffc93c"/><path d="M0 0h6v6H0zM34 0h6v6h-6zM0 34h6v6H0zM34 34h6v6h-6z" fill="#2e9e4f"/></pattern>
+  <pattern id="dam" width="56" height="28" patternUnits="userSpaceOnUse"><rect width="56" height="28" fill="#e9d9b8"/><rect width="28" height="28" fill="#d8c29a"/></pattern>
+  <pattern id="ray" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#fff"/><rect width="16" height="6" fill="#d83a3a"/><rect y="9" width="16" height="3" fill="#1d6fb8"/></pattern>
+</defs></svg>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const W = 1280, H = 720;
+const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const calm = () => window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+/* =====================================================================
+   SONS (synthé : aucun fichier)
+   ===================================================================== */
+let AC = null, muted = store.get('houma-muet', false);
+function ac(){ if(muted) return null; try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if(AC.state === 'suspended') AC.resume(); }catch(e){ AC = null; } return AC; }
+function tone(f, d = .12, type = 'sine', v = .12, when = 0, slide){ const a = ac(); if(!a) return; const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + when; o.type = type; o.frequency.setValueAtTime(f, t); if(slide) o.frequency.exponentialRampToValueAtTime(slide, t + d); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(a.destination); o.start(t); o.stop(t + d + .02); }
+function noise(d = .3, v = .06, hp = 1500){ const a = ac(); if(!a) return; const n = a.createBufferSource(), b = a.createBuffer(1, a.sampleRate * d, a.sampleRate), ch = b.getChannelData(0); for(let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / ch.length); n.buffer = b; const f = a.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp; const g = a.createGain(); g.gain.value = v; n.connect(f).connect(g).connect(a.destination); n.start(); }
+const sfx = {
+  pick(){ tone(520, .07, 'triangle', .1); }, drop(){ tone(260, .09, 'sine', .14, 0, 150); }, tap(){ tone(700, .05, 'square', .05); },
+  open(){ tone(300, .08, 'triangle', .1); tone(450, .1, 'triangle', .1, .07); }, close(){ tone(420, .07, 'triangle', .1); tone(260, .1, 'triangle', .1, .06); },
+  water(){ noise(.5, .07, 2500); }, munch(){ noise(.09, .12, 900); setTimeout(() => noise(.09, .12, 900), 190); }, sip(){ tone(500, .25, 'sine', .08, 0, 900); },
+  drum(k){ tone(k ? 190 : 95, .16, 'sine', .3, 0, k ? 120 : 55); if(k) noise(.05, .1, 3000); }, meow(){ tone(700, .35, 'sawtooth', .05, 0, 420); },
+  bird(){ [2400, 2900, 2500, 3100].forEach((f, i) => tone(f, .09, 'sine', .06, i * .11, f * 1.15)); },
+  hop(){ tone(440, .08, 'triangle', .1); tone(660, .1, 'triangle', .1, .08); }, wear(){ tone(600, .07, 'triangle', .1); tone(800, .09, 'triangle', .1, .07); },
+  star(){ [660, 880, 990, 1320].forEach((f, i) => tone(f, .16, 'triangle', .12, i * .09)); }, on(){ tone(880, .06, 'sine', .09); }, off(){ tone(440, .06, 'sine', .09); },
+  tune(){ [293, 311, 370, 392, 440, 392, 370, 311].forEach((f, i) => tone(f * 2, .2, 'triangle', .07, i * .2)); }
+};
+
+/* =====================================================================
+   PERSONNAGES : la famille et les mascottes (têtes = avatars du site, corps dessinés)
+   k = taille ; skin = peau ; o = tenue de départ ; pal = couleurs de la tenue de ville
+   ===================================================================== */
+const AV = '../jeux/avatars/';
+const CHARS = [
+  { id:'anis', n:'Anis', img:'anis', k:.84, skin:'#d9a27a', pal:['#2f6fd6', '#39445a'] },
+  { id:'imen', n:'Imen', img:'imen', k:.8, skin:'#e0aa84', pal:['#8a2440', '#3d4a66'] },
+  { id:'essil', n:'Essil', img:'essil', k:.75, skin:'#e6b48e', pal:['#8b5cf6', '#2f3b55'] },
+  { id:'salma', n:'Salma', img:'salma', k:.66, skin:'#e9b993', pal:['#ec5f8f', '#5a6b8c'] },
+  { id:'amine', n:'Amine', img:'amine', k:.56, skin:'#dba57c', pal:['#f08a24', '#3b5aa8'] },
+  { id:'nour', n:'Nour', img:'mascotte-nour', k:.58, skin:'#b97a50', o:'farmla', pal:['#12a8a0', '#fdfdf8'] },
+  { id:'yasmine', n:'Yasmine', img:'mascotte-yasmine', k:.66, skin:'#b6744c', o:'keswa', pal:['#c93a3a', '#fdfdf8'] },
+  { id:'fares', n:'Farès', img:'mascotte-fares', k:.82, skin:'#b9794f', o:'jebba', pal:['#2a3f9a', '#fdfdf8'] }
+];
+const CH = Object.fromEntries(CHARS.map(c => [c.id, c]));
+/* Les tenues : chacune dessine le corps habillé (repère 120 x 260, pieds en bas). */
+const gold = '#e3b23c';
+const OUTFITS = {
+  ville:{ n:'tenue de ville', leg:'pal', draw:(c) => tee(c.pal[0]) + legs(c.pal[1]) + sleeves(c.pal[0], 26) },
+  jebba:{ n:'jebba', trad:1, leg:'#fbf8ee', draw:() => robe('#fbf8ee', 236) + `<path d="M60 100v70" stroke="${gold}" stroke-width="4"/><path d="M50 104q10 12 20 0" fill="none" stroke="${gold}" stroke-width="3"/><circle cx="60" cy="124" r="2.4" fill="${gold}"/><circle cx="60" cy="140" r="2.4" fill="${gold}"/>` + sleeves('#fbf8ee', 44) },
+  keswa:{ n:'robe de fête', trad:1, leg:'#c2185b', draw:() => robe('#c2185b', 240) + `<path d="M36 232h48" stroke="${gold}" stroke-width="6"/><path d="M38 150h44" stroke="${gold}" stroke-width="7"/><path d="M48 102q12 16 24 0" fill="none" stroke="${gold}" stroke-width="4"/><path d="M44 200l8 10 8-10 8 10 8-10" fill="none" stroke="${gold}" stroke-width="2.5"/>` + sleeves('#c2185b', 40, gold) },
+  farmla:{ n:'gilet brodé', trad:1, leg:'#fdfdf8', draw:() => tee('#fdfdf8') + `<path d="M34 100h18l-4 60H36zM86 100H68l4 60h12z" fill="#b3202a" stroke="${gold}" stroke-width="2.5"/>` + `<path d="M38 160h44l6 62q-14 10-24-6-10 16-32 6z" fill="#fdfdf8" stroke="#d9d4c3" stroke-width="2"/><rect x="38" y="156" width="44" height="9" rx="4" fill="#12a8a0"/>` + sleeves('#fdfdf8', 40) },
+  tablier:{ n:"tablier d'école", leg:'#39445a', draw:() => robe('#3f86e8', 200) + legsOnly('#39445a') + `<path d="M46 100l14 12 14-12" fill="#fff" stroke="#dfe6f2" stroke-width="2"/><circle cx="60" cy="130" r="2.6" fill="#fff"/><circle cx="60" cy="148" r="2.6" fill="#fff"/><circle cx="60" cy="166" r="2.6" fill="#fff"/><rect x="66" y="150" width="14" height="14" rx="3" fill="#2f6fd6"/>` + sleeves('#3f86e8', 40) },
+  pyjama:{ n:'pyjama', leg:'#bfe0ff', draw:() => tee('url(#pj)') + legs('url(#pj)') + sleeves('#bfe0ff', 36) + `<defs><pattern id="pj" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#d8ecff"/><rect width="4" height="10" fill="#9cc8f5"/></pattern></defs>` },
+  plage:{ n:'tenue de plage', leg:'#12a8a0', draw:() => tee('url(#ray)') + `<path d="M38 160h44l2 40H64l-4-16-4 16H36z" fill="#12a8a0"/>` + sleeves('#fff', 18) }
+};
+function tee(fill){ return `<path d="M36 102q24-10 48 0l-2 64H38z" fill="${fill}" stroke="#0002" stroke-width="1.5"/>`; }
+function legs(fill){ return `<path d="M38 160h44l-2 80H66l-6-56-6 56H40z" fill="${fill}" stroke="#0002" stroke-width="1.5"/>`; }
+function legsOnly(fill){ return `<path d="M44 196h14v44H44zM62 196h14v44H62z" fill="${fill}"/>`; }
+function robe(fill, to){ return `<path d="M36 102q24-10 48 0l10 ${to - 102}q-34 12-68 0z" fill="${fill}" stroke="#0002" stroke-width="1.5"/>`; }
+function sleeves(fill, len, trim){ const y = 104 + len; return `<path d="M36 102l-12 ${len}h13l5-${len - 6}z M84 102l12 ${len}H83l-5-${len - 6}z" fill="${fill}" stroke="#0002" stroke-width="1.2"/>` + (trim ? `<path d="M24 ${y - 2}h13M83 ${y - 2}h13" stroke="${trim}" stroke-width="4"/>` : ''); }
+function doll(c, st){
+  const o = OUTFITS[st.o] || OUTFITS.ville, sit = st.pose === 'sit', sleep = st.pose === 'sleep', a = st.acc || [];
+  const skin = c.skin, long = st.o === 'jebba' || st.o === 'keswa';
+  const legsSkin = `<path d="M44 186h14v54H44zM62 186h14v54H62z" fill="${skin}"/><ellipse cx="49" cy="244" rx="12" ry="7" fill="#3a2c22"/><ellipse cx="71" cy="244" rx="12" ry="7" fill="#3a2c22"/>`;
+  const arms = `<path d="M30 110l-8 56" stroke="${skin}" stroke-width="12" stroke-linecap="round"/><path d="M90 110l8 56" stroke="${skin}" stroke-width="12" stroke-linecap="round"/>`;
+  const body = o.draw(c), lc = o.leg ? (o.leg === 'pal' ? c.pal[1] : o.leg) : skin;
+  const acc = (a.includes('sac') ? `<rect x="14" y="108" width="24" height="50" rx="9" fill="#e5484d" stroke="#0003" stroke-width="1.5"/>` : '');
+  const hat = (a.includes('chechia') ? `<path d="M34 22q26-22 52 0v10H34z" fill="#c8102e" stroke="#0003" stroke-width="1.5"/><path d="M82 14q10 4 8 22" fill="none" stroke="#222" stroke-width="3"/>` : '') +
+    (a.includes('paille') ? `<ellipse cx="60" cy="26" rx="56" ry="10" fill="#f1d28a" stroke="#c9a65a" stroke-width="2"/><path d="M34 26q26-36 52 0z" fill="#f1d28a" stroke="#c9a65a" stroke-width="2"/><path d="M36 22h48" stroke="#d83a3a" stroke-width="5"/>` : '') +
+    (a.includes('lunettes') ? `<rect x="34" y="42" width="22" height="15" rx="7" fill="#1b1b22"/><rect x="64" y="42" width="22" height="15" rx="7" fill="#1b1b22"/><path d="M56 48h8" stroke="#1b1b22" stroke-width="3"/>` : '') +
+    (a.includes('machmoum') ? `<g transform="translate(98 52)"><path d="M0 14V-2" stroke="#2e9e4f" stroke-width="3"/>${[[-6, -4], [6, -4], [0, -10], [-4, 3], [4, 3]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#fff" stroke="#e6e0c8" stroke-width="1"/>`).join('')}</g>` : '');
+  const face = sleep && !c.img.startsWith('mascotte') ? c.img + '-soupir' : sleep ? c.img + '-soupir' : c.img;
+  const up = `${acc}${arms}<rect x="53" y="84" width="14" height="22" rx="6" fill="${skin}"/>${body}
+    <circle cx="22" cy="168" r="7.5" fill="${skin}"/><circle cx="98" cy="168" r="7.5" fill="${skin}"/>
+    <circle cx="60" cy="50" r="43" fill="#fff"/><image href="${AV}${face}.webp" x="-8" y="-9" width="136" height="136" clip-path="url(#hc-${c.id})" preserveAspectRatio="xMidYMid slice"/>${hat}`;
+  const defs = `<defs><clipPath id="hc-${c.id}"><circle cx="60" cy="50" r="40"/></clipPath><clipPath id="sc-${c.id}"><rect x="-20" y="-20" width="160" height="214"/></clipPath></defs>`;
+  // assis : le haut du corps descend, les cuisses partent vers l'avant
+  if(sit) return `<svg viewBox="0 0 120 260">${defs}<g clip-path="url(#sc-${c.id})" transform="translate(0 38)">${up}</g>
+    <path d="M40 216h56v20H40z" fill="${lc}" stroke="#0002" stroke-width="1.5"/><path d="M80 226h16v24H80z" fill="${long ? lc : skin}"/><ellipse cx="92" cy="252" rx="14" ry="7" fill="#3a2c22"/></svg>`;
+  return `<svg viewBox="0 0 120 260">${defs}<ellipse cx="60" cy="250" rx="40" ry="7" fill="#0002"/>${long ? `<ellipse cx="49" cy="244" rx="12" ry="7" fill="#3a2c22"/><ellipse cx="71" cy="244" rx="12" ry="7" fill="#3a2c22"/>` : legsSkin}${up}</svg>`;
+}
+
+/* =====================================================================
+   OBJETS déplaçables. e = émoji, ou s = dessin (viewBox 0 0 100 100) ; z = taille ; tags : food, drink, hold, acc, wear, pet
+   ===================================================================== */
+const svg = (inner, vb = '0 0 100 100') => `<svg viewBox="${vb}">${inner}</svg>`;
+const ITEMS = {
+  orange:{ n:'une orange', e:'🍊', z:40, food:1 }, pasteque:{ n:'de la pastèque', e:'🍉', z:46, food:1 }, pain:{ n:'du pain tabouna', z:50, food:1,
+    s:() => svg(`<ellipse cx="50" cy="62" rx="44" ry="24" fill="#d9a65a" stroke="#a9742f" stroke-width="4"/><path d="M26 56q8-8 14 0M46 52q8-8 14 0M64 60q6-7 12 0" fill="none" stroke="#8a5a20" stroke-width="4" stroke-linecap="round"/>`) },
+  poisson:{ n:'un poisson', e:'🐟', z:44, food:1 }, tomate:{ n:'une tomate', e:'🍅', z:38, food:1 }, lait:{ n:'un verre de lait', e:'🥛', z:40, food:1, drink:1 },
+  citron:{ n:'un citron', e:'🍋', z:36, food:1 }, piment:{ n:'un piment', e:'🌶️', z:38, food:1, hot:1 },
+  makroud:{ n:'un makroud', z:40, food:1, s:() => svg(`<path d="M50 22 88 56 50 90 12 56Z" fill="#c98a3c" stroke="#8a5a20" stroke-width="5" stroke-linejoin="round"/><path d="M30 56h40M50 38v36" stroke="#8a5a20" stroke-width="4"/><circle cx="50" cy="56" r="7" fill="#5b3a1c"/>`) },
+  bambalouni:{ n:'un bambalouni', z:44, food:1, s:() => svg(`<circle cx="50" cy="58" r="34" fill="none" stroke="#e0a04a" stroke-width="22"/><circle cx="50" cy="58" r="34" fill="none" stroke="#fff" stroke-width="5" stroke-dasharray="3 9" stroke-linecap="round"/>`) },
+  harissa:{ n:"de l'harissa", z:38, s:() => svg(`<rect x="24" y="30" width="52" height="62" rx="10" fill="#c8102e" stroke="#7d0a1c" stroke-width="4"/><rect x="20" y="20" width="60" height="16" rx="6" fill="#f2c94c" stroke="#b38a1e" stroke-width="3"/><path d="M38 60q12-18 24 0-12 18-24 0z" fill="#ffd9a0"/>`) },
+  marmite:{ n:'le couscous', z:62, s:(st) => svg(`<ellipse cx="50" cy="48" rx="40" ry="10" fill="${st === 'cuit' ? '#f4d98a' : '#9aa5b5'}" stroke="#56606f" stroke-width="4"/><path d="M12 48h76l-6 40H18z" fill="#b7c0cc" stroke="#56606f" stroke-width="4" stroke-linejoin="round"/><path d="M4 56h10M86 56h10" stroke="#56606f" stroke-width="6" stroke-linecap="round"/>${st === 'cuit' ? `<circle cx="38" cy="46" r="5" fill="#e07b39"/><circle cx="56" cy="44" r="5" fill="#2e9e4f"/><circle cx="66" cy="48" r="4" fill="#c8102e"/>` : ''}`) },
+  theiere:{ n:'la théière', z:58, s:(st) => svg(`<path d="M28 44h44q10 26-6 44H34q-16-18-6-44z" fill="${st === 'the' ? '#d94b4b' : '#3f86e8'}" stroke="#0004" stroke-width="4"/><path d="M72 54q22-6 20-26" fill="none" stroke="${st === 'the' ? '#d94b4b' : '#3f86e8'}" stroke-width="9" stroke-linecap="round"/><path d="M28 54q-20 4-14 22 4 10 16 6" fill="none" stroke="#0005" stroke-width="6"/><path d="M34 44q16-16 32 0z" fill="#f2c94c" stroke="#b38a1e" stroke-width="3"/><circle cx="50" cy="28" r="6" fill="#f2c94c" stroke="#b38a1e" stroke-width="3"/>${st ? `<circle cx="50" cy="66" r="7" fill="#fff8"/>` : ''}`) },
+  verre:{ n:'un verre de thé', z:34, s:(st) => svg(`<path d="M30 20h40l-6 68H36z" fill="#eaf6ff" fill-opacity=".8" stroke="#7fa3c4" stroke-width="4" stroke-linejoin="round"/>${st === 'the' ? `<path d="M33 38h34l-4 46H37z" fill="#b5651d"/><circle cx="44" cy="42" r="4" fill="#f4e2b8"/><circle cx="56" cy="44" r="4" fill="#f4e2b8"/><path d="M50 30q-6-10 4-14" stroke="#2e9e4f" stroke-width="4" fill="none"/>` : ''}<path d="M32 52h36" stroke="#e3b23c" stroke-width="3"/>`) },
+  arrosoir:{ n:"l'arrosoir", z:60, s:(st) => svg(`<path d="M30 40h40v46H30z" fill="${st === 'plein' ? '#12a8a0' : '#7fb9b4'}" stroke="#0b6f69" stroke-width="4" stroke-linejoin="round"/><path d="M70 56l24-22" stroke="#0b6f69" stroke-width="8" stroke-linecap="round"/><path d="M30 46q-22 0-18 22 4 14 18 8" fill="none" stroke="#0b6f69" stroke-width="6"/><path d="M36 40q14-22 28 0" fill="none" stroke="#0b6f69" stroke-width="5"/>${st === 'plein' ? `<circle cx="96" cy="30" r="4" fill="#5ac8ff"/>` : ''}`) },
+  ballon:{ n:'le ballon', e:'⚽', z:46, toy:1 }, livre:{ n:'un livre', e:'📖', z:42 }, doudou:{ n:'le doudou', e:'🧸', z:48 }, canard:{ n:'le canard', e:'🦆', z:40, toy:1 }, savon:{ n:'le savon', e:'🧼', z:36 }, lotion:{ n:'le shampooing', e:'🧴', z:40 },
+  darbouka:{ n:'la darbouka', z:60, toy:1, s:() => svg(`<path d="M22 14h56l-10 30q-4 12 6 44H26q10-32 6-44z" fill="#b3202a" stroke="#6d1118" stroke-width="4" stroke-linejoin="round"/><ellipse cx="50" cy="14" rx="28" ry="8" fill="#f4ead2" stroke="#6d1118" stroke-width="4"/><path d="M30 34h40M32 46h36" stroke="${gold}" stroke-width="4"/><path d="M28 80h44" stroke="${gold}" stroke-width="4"/>`) },
+  fouta:{ n:'la fouta', z:52, s:() => svg(`<rect x="14" y="30" width="72" height="56" rx="6" fill="url(#ray)" stroke="#0003" stroke-width="3"/><path d="M14 86v8M26 86v8M38 86v8M50 86v8M62 86v8M74 86v8M86 86v8" stroke="#d83a3a" stroke-width="3"/>`) },
+  chat:{ n:'le chat', e:'🐈', z:52, pet:1 },
+  chechia:{ n:'la chéchia', z:44, acc:1, s:() => svg(`<path d="M18 70q32-56 64 0v14H18z" fill="#c8102e" stroke="#7d0a1c" stroke-width="4" stroke-linejoin="round"/><path d="M74 40q16 6 12 36" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>`) },
+  paille:{ n:'le chapeau de paille', e:'👒', z:46, acc:1 }, lunettes:{ n:'les lunettes de soleil', e:'🕶️', z:40, acc:1 }, sac:{ n:'le sac à dos', e:'🎒', z:44, acc:1 },
+  machmoum:{ n:'un machmoum de jasmin', z:42, acc:1, s:() => svg(`<path d="M50 96V52" stroke="#2e9e4f" stroke-width="7" stroke-linecap="round"/>${[[32, 40], [68, 40], [50, 22], [38, 60], [62, 60], [50, 44]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="14" fill="#fff" stroke="#e2dcc4" stroke-width="3"/>`).join('')}<path d="M40 84h20" stroke="#c8102e" stroke-width="5"/>`) }
+};
+// les vêtements de l'armoire : un cintre par tenue (ils reviennent tout seuls à leur place)
+Object.keys(OUTFITS).forEach(o => { const col = { ville:'#2f6fd6', jebba:'#fbf8ee', keswa:'#c2185b', farmla:'#b3202a', tablier:'#3f86e8', pyjama:'#bfe0ff', plage:'#12a8a0' }[o];
+  ITEMS['v-' + o] = { n:OUTFITS[o].n, z:46, wear:o, home:1, s:() => svg(`<path d="M50 14q-8 0-8 8M50 22 20 40h60z" fill="none" stroke="#7a5a3a" stroke-width="4" stroke-linecap="round"/><path d="M24 40h52l8 20-12 6v26H28V66l-12-6z" fill="${col}" stroke="#0004" stroke-width="3" stroke-linejoin="round"/>${OUTFITS[o].trad ? `<path d="M50 42v40" stroke="${gold}" stroke-width="4"/>` : ''}`) }; });
+
+/* =====================================================================
+   MEUBLES fixes. Position = milieu du bas (x, y). tap = états qui alternent ; surf = où poser ; inside = intérieur caché quand c'est fermé ;
+   seats / bed / bath = où s'installent les personnages ; front = partie dessinée devant les personnages.
+   ===================================================================== */
+const wood = '#b98552', woodD = '#7c5631';
+const FIXED = {
+  frigo:{ w:120, h:232, tap:['', 'o'], surf:[[-46, 46, -64, 1], [-46, 46, -122, 1], [-46, 46, -180, 1]], inside:[-56, 56, -226, -20], top:[-56, 56, -232],
+    draw:s => svg(`<rect x="4" y="4" width="112" height="224" rx="14" fill="#dfe9f3" stroke="#8fa3bb" stroke-width="4"/>` + (s === 'o'
+      ? `<rect x="12" y="12" width="96" height="208" rx="8" fill="#f7fbff" stroke="#b9c8da" stroke-width="2"/><path d="M12 52h96M12 110h96M12 168h96" stroke="#9fb3cb" stroke-width="4"/><rect x="-22" y="6" width="22" height="220" rx="6" fill="#c9d6e4" stroke="#8fa3bb" stroke-width="3"/>`
+      : `<path d="M8 84h104" stroke="#8fa3bb" stroke-width="4"/><rect x="92" y="30" width="8" height="40" rx="4" fill="#8fa3bb"/><rect x="92" y="100" width="8" height="60" rx="4" fill="#8fa3bb"/><circle cx="30" cy="40" r="8" fill="#ffc93c"/>`), '0 0 120 232') },
+  comptoir:{ w:250, h:116, surf:[[-118, 118, -116]], none:1,
+    draw:() => svg(`<rect x="0" y="12" width="250" height="104" fill="url(#zel)" stroke="${woodD}" stroke-width="3"/><rect x="-4" y="0" width="258" height="16" rx="6" fill="${wood}" stroke="${woodD}" stroke-width="3"/><rect x="24" y="2" width="76" height="10" rx="5" fill="#9aa9bd"/>`, '0 0 250 116') },
+  evier:{ w:80, h:74, tap:['', 'on'], fill:1, draw:s => svg(`<path d="M40 74V30q0-18 22-16" fill="none" stroke="#8a97a8" stroke-width="9" stroke-linecap="round"/><circle cx="26" cy="62" r="8" fill="#1d6fb8"/>${s === 'on' ? `<path d="M62 16v58" stroke="#5ac8ff" stroke-width="8" stroke-linecap="round" stroke-dasharray="10 6"/>` : ''}`, '0 0 80 74') },
+  feu:{ w:96, h:26, tap:['', 'on'], draw:s => svg(`<rect x="6" y="14" width="84" height="12" rx="5" fill="#3a3f4a"/>${s === 'on' ? [22, 38, 54, 70].map(x => `<path d="M${x} 16q-6-10 2-16 6 8 2 16z" fill="#ff8a1e"/>`).join('') : ''}`, '0 0 96 26') },
+  placard:{ w:230, h:104, tap:['', 'o'], surf:[[-104, 104, -12, 1]], inside:[-110, 110, -100, -4],
+    draw:s => svg(`<rect x="2" y="2" width="226" height="100" rx="8" fill="${s === 'o' ? '#f3e6cf' : wood}" stroke="${woodD}" stroke-width="4"/>` + (s === 'o' ? `<path d="M6 94h218" stroke="${woodD}" stroke-width="5"/><rect x="-14" y="2" width="14" height="100" fill="${wood}" stroke="${woodD}" stroke-width="3"/><rect x="230" y="2" width="14" height="100" fill="${wood}" stroke="${woodD}" stroke-width="3"/>`
+      : `<path d="M115 4v96" stroke="${woodD}" stroke-width="4"/><circle cx="102" cy="54" r="6" fill="${gold}"/><circle cx="128" cy="54" r="6" fill="${gold}"/><path d="M30 24l16 28-16 28-16-28zM200 24l16 28-16 28-16-28z" fill="none" stroke="${gold}" stroke-width="3"/>`), '0 0 230 104') },
+  jasmin:{ w:110, h:230, tap:['', ''], water:1,
+    draw:s => svg(`<path d="M34 196h42l-6 34H40z" fill="#c8693a" stroke="#8a4320" stroke-width="4" stroke-linejoin="round"/><path d="M55 196q-30-50 0-100 26-40-6-90" fill="none" stroke="#2e9e4f" stroke-width="8" stroke-linecap="round"/>${[[30, 150], [78, 120], [26, 90], [80, 60], [40, 34], [70, 170], [56, 100]].map(p => `<ellipse cx="${p[0]}" cy="${p[1]}" rx="15" ry="8" fill="#3fae5f" transform="rotate(${p[0] * 3} ${p[0]} ${p[1]})"/>`).join('')}${s === 'f' ? [[22, 140], [86, 112], [20, 80], [88, 52], [36, 24], [64, 150], [50, 88], [72, 28], [36, 110]].map(p => `<g transform="translate(${p[0]} ${p[1]})">${[0, 72, 144, 216, 288].map(a => `<ellipse cx="0" cy="-7" rx="4" ry="7" fill="#fff" stroke="#e6e0c8" stroke-width="1" transform="rotate(${a})"/>`).join('')}<circle r="3" fill="#ffd84d"/></g>`).join('') : ''}`, '0 0 110 230') },
+  fontaine:{ w:180, h:136, tap:['', 'on'], fill:1,
+    draw:s => svg(`<path d="M10 96h160l-10 40H20z" fill="url(#zel)" stroke="${woodD}" stroke-width="4" stroke-linejoin="round"/><ellipse cx="90" cy="96" rx="80" ry="14" fill="#7fd0f5" stroke="#1d6fb8" stroke-width="4"/><path d="M82 96V50h16v46z" fill="#fdfdf8" stroke="#b9c8da" stroke-width="3"/><ellipse cx="90" cy="48" rx="34" ry="9" fill="#fdfdf8" stroke="#b9c8da" stroke-width="3"/>${s === 'on' ? `<path d="M90 44V10M90 14q-30 6-36 60M90 14q30 6 36 60" fill="none" stroke="#5ac8ff" stroke-width="6" stroke-linecap="round" stroke-dasharray="8 7"/>` : ''}`, '0 0 180 136') },
+  cage:{ w:64, h:120, tap:['', ''], draw:() => svg(`<path d="M32 0v24" stroke="#555" stroke-width="3"/><path d="M8 110V58q0-34 24-34t24 34v52z" fill="#fff" fill-opacity=".5" stroke="#1d6fb8" stroke-width="4"/><path d="M20 110V40M32 110V26M44 110V40M8 76h48" stroke="#1d6fb8" stroke-width="3"/><rect x="4" y="106" width="56" height="10" rx="5" fill="#1d6fb8"/><circle cx="32" cy="80" r="11" fill="#ffc93c"/><circle cx="36" cy="77" r="2" fill="#222"/><path d="M42 80l8 2-8 3z" fill="#f08a24"/>`, '0 0 64 120') },
+  lanterne:{ w:50, h:104, tap:['', 'on'], glow:[0, -40, 190], draw:s => svg(`<path d="M25 0v22" stroke="#555" stroke-width="3"/><path d="M10 34h30l6 46H4z" fill="${s === 'on' ? '#ffe27a' : '#cfd8e4'}" stroke="#7a5a1a" stroke-width="4" stroke-linejoin="round"/><path d="M12 22h26l4 12H8zM8 80h34l-6 14H14z" fill="#b8862e" stroke="#7a5a1a" stroke-width="3" stroke-linejoin="round"/><path d="M25 34v46M14 56h22" stroke="#7a5a1a" stroke-width="2.5"/>`, '0 0 50 104') },
+  banquette:{ w:300, h:104, seats:[[-96, -50], [0, -50], [96, -50]], draw:() => svg(`<rect x="4" y="0" width="292" height="60" rx="14" fill="#b3202a" stroke="#6d1118" stroke-width="4"/><path d="M20 14h260M20 30h260" stroke="${gold}" stroke-width="4" stroke-dasharray="14 8"/><rect x="0" y="50" width="300" height="34" rx="12" fill="#d0343f" stroke="#6d1118" stroke-width="4"/><rect x="10" y="82" width="280" height="22" rx="4" fill="${wood}" stroke="${woodD}" stroke-width="3"/>`, '0 0 300 104') },
+  meida:{ w:120, h:58, surf:[[-56, 56, -58]], none:1, draw:() => svg(`<ellipse cx="60" cy="8" rx="58" ry="8" fill="${gold}" stroke="#9a741c" stroke-width="3"/><path d="M36 14l-16 44M84 14l16 44M60 14v44" stroke="${woodD}" stroke-width="6" stroke-linecap="round"/><path d="M26 40h68" stroke="${woodD}" stroke-width="4"/>`, '0 0 120 58') },
+  etagere:{ w:200, h:16, surf:[[-96, 96, -16]], none:1, draw:() => svg(`<rect x="0" y="0" width="200" height="12" rx="4" fill="${wood}" stroke="${woodD}" stroke-width="3"/><path d="M24 12l-10 14M176 12l10 14" stroke="${woodD}" stroke-width="5"/>`, '0 0 200 16') },
+  radio:{ w:76, h:50, tap:['', 'on'], draw:s => svg(`<rect x="2" y="8" width="72" height="40" rx="8" fill="#8a5a2b" stroke="#4d3016" stroke-width="3"/><circle cx="24" cy="28" r="12" fill="#f2e3c2" stroke="#4d3016" stroke-width="2"/><path d="M16 28h16M24 20v16" stroke="#4d3016" stroke-width="2"/><rect x="44" y="18" width="24" height="8" rx="2" fill="${s === 'on' ? '#ffd84d' : '#d8c8a0'}"/><circle cx="50" cy="38" r="4" fill="#222"/><circle cx="62" cy="38" r="4" fill="#222"/><path d="M60 8 72 -6" stroke="#555" stroke-width="3"/>`, '0 0 76 50') },
+  armoire:{ w:150, h:250, tap:['', 'o'], surf:[[-62, 62, -138, 1], [-62, 62, -34, 1]], inside:[-70, 70, -244, -12], top:[-70, 70, -250],
+    draw:s => svg(`<rect x="2" y="2" width="146" height="246" rx="10" fill="${s === 'o' ? '#f3e6cf' : '#1d6fb8'}" stroke="${s === 'o' ? woodD : '#134f86'}" stroke-width="4"/>` + (s === 'o'
+      ? `<path d="M8 28h134" stroke="${woodD}" stroke-width="5"/><path d="M8 132h134" stroke="${woodD}" stroke-width="5"/><rect x="-18" y="2" width="18" height="246" rx="4" fill="#1d6fb8" stroke="#134f86" stroke-width="3"/><rect x="150" y="2" width="18" height="246" rx="4" fill="#1d6fb8" stroke="#134f86" stroke-width="3"/>`
+      : `<path d="M75 4v242" stroke="#134f86" stroke-width="4"/>${[[38, 60], [112, 60], [38, 160], [112, 160]].map(p => `<path d="M${p[0]} ${p[1] - 34}l18 34-18 34-18-34z" fill="none" stroke="#ffc93c" stroke-width="3"/>`).join('')}<circle cx="64" cy="126" r="6" fill="#ffc93c"/><circle cx="86" cy="126" r="6" fill="#ffc93c"/>${Array.from({ length:8 }, (_, i) => `<circle cx="${14 + i * 17.5}" cy="14" r="3" fill="#0b3a66"/><circle cx="${14 + i * 17.5}" cy="236" r="3" fill="#0b3a66"/>`).join('')}`), '0 0 150 250') },
+  lit:{ w:250, h:104, bed:[[10, -62]], draw:() => svg(`<rect x="0" y="6" width="22" height="98" rx="8" fill="${wood}" stroke="${woodD}" stroke-width="4"/><rect x="228" y="40" width="22" height="64" rx="8" fill="${wood}" stroke="${woodD}" stroke-width="4"/><rect x="14" y="52" width="224" height="34" rx="10" fill="#fdfdf8" stroke="#c8cfda" stroke-width="3"/><rect x="24" y="36" width="60" height="26" rx="12" fill="#bfe0ff" stroke="#7fa3c4" stroke-width="3"/><path d="M96 56h140v30H96z" fill="url(#ray)" stroke="#0003" stroke-width="3"/><path d="M20 88v16M232 88v16" stroke="${woodD}" stroke-width="8"/>`, '0 0 250 104') },
+  chevet:{ w:64, h:72, surf:[[-28, 28, -72]], none:1, draw:() => svg(`<rect x="2" y="2" width="60" height="64" rx="6" fill="${wood}" stroke="${woodD}" stroke-width="4"/><path d="M6 34h52" stroke="${woodD}" stroke-width="3"/><circle cx="32" cy="18" r="4" fill="${gold}"/><circle cx="32" cy="50" r="4" fill="${gold}"/><path d="M10 66v6M54 66v6" stroke="${woodD}" stroke-width="6"/>`, '0 0 64 72') },
+  lampe:{ w:50, h:64, tap:['', 'on'], glow:[0, -44, 230], draw:s => svg(`<path d="M12 4h26l10 34H2z" fill="${s === 'on' ? '#ffe27a' : '#e9dcc0'}" stroke="#9a741c" stroke-width="4" stroke-linejoin="round"/><path d="M25 38v18" stroke="#7a5a1a" stroke-width="5"/><ellipse cx="25" cy="58" rx="16" ry="5" fill="#b8862e"/>`, '0 0 50 64') },
+  citronnier:{ w:120, h:210, tap:['', ''], water:1,
+    draw:s => svg(`<path d="M40 176h40l-6 34H46z" fill="#1d6fb8" stroke="#134f86" stroke-width="4" stroke-linejoin="round"/><path d="M60 176V96" stroke="#7c5631" stroke-width="9" stroke-linecap="round"/><circle cx="60" cy="62" r="52" fill="#3fae5f" stroke="#237a40" stroke-width="4"/><circle cx="34" cy="50" r="18" fill="#52c173"/><circle cx="82" cy="78" r="16" fill="#52c173"/>${s === 'c' ? [[34, 76], [78, 40], [60, 96], [92, 70]].map(p => `<ellipse cx="${p[0]}" cy="${p[1]}" rx="9" ry="11" fill="#ffd84d" stroke="#c9a400" stroke-width="2"/>`).join('') : ''}`, '0 0 120 210') },
+  tabouret:{ w:60, h:46, seats:[[0, -44]], draw:() => svg(`<ellipse cx="30" cy="8" rx="28" ry="8" fill="#12a8a0" stroke="#0b6f69" stroke-width="3"/><path d="M12 12l-6 34M48 12l6 34M30 14v32" stroke="${woodD}" stroke-width="6" stroke-linecap="round"/>`, '0 0 60 46') },
+  baignoire:{ w:250, h:112, bath:[[-10, -28]], tap:['', 'm'],
+    draw:() => svg(`<path d="M14 20h222v50q0 30-30 30H44q-30 0-30-30z" fill="#fdfdf8" stroke="#b9c8da" stroke-width="4"/>`, '0 0 250 112'),
+    front:s => svg(`<path d="M6 26h238v6H6z" fill="#e6eef7" stroke="#b9c8da" stroke-width="3"/><path d="M14 30h222v40q0 30-30 30H44q-30 0-30-30z" fill="#fdfdf8" stroke="#8fa3bb" stroke-width="4"/><path d="M16 50h218" stroke="#1d6fb8" stroke-width="10"/><path d="M20 66h210" stroke="#ffc93c" stroke-width="4"/><path d="M40 100v12M210 100v12" stroke="#8fa3bb" stroke-width="8" stroke-linecap="round"/>${s === 'm' ? [[30, 22], [60, 14], [92, 22], [124, 12], [156, 22], [190, 14], [220, 22]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="15" fill="#fff" stroke="#d6e6f5" stroke-width="2"/>`).join('') : ''}`, '0 0 250 112') },
+  lavabo:{ w:90, h:126, tap:['', 'on'], fill:1, draw:s => svg(`<path d="M45 126V70" stroke="#c9d6e4" stroke-width="18"/><path d="M6 48h78q0 30-39 30T6 48z" fill="#fdfdf8" stroke="#b9c8da" stroke-width="4"/><path d="M45 44V18q0-10 14-8" fill="none" stroke="#8a97a8" stroke-width="7" stroke-linecap="round"/>${s === 'on' ? `<path d="M59 12v40" stroke="#5ac8ff" stroke-width="7" stroke-linecap="round" stroke-dasharray="9 6"/>` : ''}`, '0 0 90 126') }
+};
+
+/* =====================================================================
+   LIEUX. floors = sols où l'on marche [x1, x2, y] ; fixed = [id, type, x, y] ; items = [id, type, x, y] ; start = personnages présents au début
+   ===================================================================== */
+const F1 = 350, F0 = 690;   // l'étage et le rez-de-chaussée de la maison
+const PLACES = {
+  dar:{ n:'Dar Yasmine', sub:'la maison', ic:'🏠', floors:[[70, 1210, F0], [70, 1210, F1]],
+    bg:() => `<svg class="bg" viewBox="0 0 ${W} ${H}" aria-hidden="true">
+      <rect width="${W}" height="${H}" fill="#bfe6ff"/><rect y="250" width="${W}" height="110" fill="#3aa0d8"/><circle cx="1130" cy="56" r="34" fill="#ffd84d"/>
+      <path d="M560 250q20-34 40 0zM700 250v-70h14v70zM694 180q13-22 26 0z" fill="#fdfdf8" stroke="#c9d6e4" stroke-width="2"/><path d="M0 250h1280" stroke="#2b86bd" stroke-width="3"/>
+      <rect x="40" y="52" width="484" height="308" fill="#fdfdf8"/><rect x="846" y="52" width="394" height="308" fill="#fdfdf8"/>
+      <rect x="40" y="366" width="1200" height="330" fill="#fdfdf8"/><rect x="430" y="366" width="420" height="330" fill="#fff6e0"/>
+      <path d="M40 52h484M846 52h394" stroke="#1d6fb8" stroke-width="12"/><path d="M34 40h496v14H34zM840 40h406v14H840z" fill="#1d6fb8"/>
+      <rect x="524" y="300" width="322" height="50" fill="#fdfdf8" stroke="#c9d6e4" stroke-width="3"/>${Array.from({ length:8 }, (_, i) => `<path d="M${540 + i * 40} 310h22v30h-22z" fill="none" stroke="#1d6fb8" stroke-width="4"/>`).join('')}
+      <path d="M560 150q120 34 250 0" fill="none" stroke="#7a5a3a" stroke-width="3"/>${[[600, 162, '#d83a3a'], [660, 170, '#ffc93c'], [720, 168, '#12a8a0'], [775, 158, '#fdfdf8']].map(l => `<rect x="${l[0]}" y="${l[1]}" width="34" height="44" rx="4" fill="${l[2]}" stroke="#0003" stroke-width="2"/>`).join('')}
+      <rect x="40" y="${F1}" width="1200" height="18" fill="#c9a26a" stroke="#8a6a3a" stroke-width="3"/><rect x="40" y="${F0}" width="1200" height="30" fill="url(#dam)" stroke="#8a6a3a" stroke-width="3"/>
+      <rect x="40" y="${F1 - 60}" width="484" height="60" fill="url(#zel)" opacity=".5"/><rect x="846" y="${F1 - 150}" width="394" height="150" fill="url(#zel)" opacity=".55"/><rect x="40" y="${F0 - 70}" width="390" height="70" fill="url(#zel)" opacity=".4"/>
+      <path d="M430 366v324M850 366v324M524 52v298M846 52v298" stroke="#c9d6e4" stroke-width="8"/>
+      <path d="M452 690V470q0-90 90-90t90 90" fill="none" stroke="#1d6fb8" stroke-width="10"/><path d="M648 690V470q0-90 90-90t90 90v220" fill="none" stroke="#1d6fb8" stroke-width="10"/>
+      <g transform="translate(34 0)"><path d="M700 690V520q0-48 40-48t40 48v170z" fill="#1d6fb8" stroke="#134f86" stroke-width="5"/>${[[716, 560], [764, 560], [716, 610], [764, 610], [716, 660], [764, 660], [740, 520]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#0b3a66"/>`).join('')}<circle cx="768" cy="590" r="9" fill="none" stroke="#111" stroke-width="4"/></g>
+      <path d="M836 380q-60 30-30 120" fill="none" stroke="#2e9e4f" stroke-width="6"/>${[[826, 396], [806, 424], [800, 456], [812, 486], [840, 410]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="13" fill="#d6338a"/>`).join('')}
+      <rect x="190" y="410" width="110" height="60" rx="8" fill="#9fd8f5" stroke="#1d6fb8" stroke-width="8" opacity="0"/>
+      <rect x="930" y="400" width="92" height="96" rx="46" fill="#9fd8f5" stroke="#1d6fb8" stroke-width="8"/><path d="M976 400v96M930 452h92" stroke="#1d6fb8" stroke-width="5"/>
+      <rect x="1100" y="600" width="0" height="0"/><path d="M880 690h340" stroke="#b3202a" stroke-width="10" stroke-linecap="round" opacity=".5"/>
+      <rect x="350" y="96" width="110" height="130" rx="55" fill="#9fd8f5" stroke="#1d6fb8" stroke-width="8"/><path d="M405 96v130M350 170h110" stroke="#1d6fb8" stroke-width="5"/>
+      <rect x="1090" y="80" width="90" height="100" rx="12" fill="#cfeeff" stroke="${gold}" stroke-width="7"/><path d="M1104 150l24-34M1130 150l14-20" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+      <path d="M34 52v650M1246 52v650" stroke="#e3e9f1" stroke-width="12"/></svg>`,
+    fixed:[['frigo', 'frigo', 112, F0], ['comptoir', 'comptoir', 300, F0], ['evier', 'evier', 232, F0 - 116], ['feu', 'feu', 362, F0 - 116], ['placard', 'placard', 300, 500],
+      ['jasmin', 'jasmin', 474, F0], ['fontaine', 'fontaine', 626, F0], ['lanterne', 'lanterne', 542, 484], ['cage', 'cage', 690, 500],
+      ['banquette', 'banquette', 1070, F0], ['meida', 'meida', 890, F0], ['etagere', 'etagere', 1120, 540], ['radio', 'radio', 1160, 524],
+      ['armoire', 'armoire', 122, F1], ['lit', 'lit', 340, F1], ['chevet', 'chevet', 486, F1], ['lampe', 'lampe', 486, F1 - 72],
+      ['citronnier', 'citronnier', 596, F1], ['tabouret', 'tabouret', 700, F1], ['baignoire', 'baignoire', 1000, F1], ['lavabo', 'lavabo', 1186, F1], ['etagereB', 'etagere', 990, 170]],
+    items:[['lait', 'lait', 90, F0 - 180], ['pasteque', 'pasteque', 132, F0 - 180], ['poisson', 'poisson', 96, F0 - 122], ['tomate', 'tomate', 136, F0 - 122], ['piment', 'piment', 112, F0 - 64],
+      ['verre1', 'verre', 222, 488], ['verre2', 'verre', 256, 488], ['verre3', 'verre', 290, 488], ['harissa', 'harissa', 336, 488], ['makroud', 'makroud', 378, 488],
+      ['theiere', 'theiere', 296, F0 - 116], ['marmite', 'marmite', 406, F0 - 116], ['pain', 'pain', 880, F0 - 58], ['orange', 'orange', 916, F0 - 58], ['bambalouni', 'bambalouni', 1060, 524],
+      ['livre', 'livre', 1098, 524], ['darbouka', 'darbouka', 960, F0], ['chat', 'chat', 545, F0], ['arrosoir', 'arrosoir', 656, F1], ['ballon', 'ballon', 758, F1],
+      ['doudou', 'doudou', 392, F1 - 34], ['chechia', 'chechia', 96, F1 - 250], ['paille', 'paille', 152, F1 - 250], ['lunettes', 'lunettes', 1040, 154], ['sac', 'sac', 232, F1],
+      ['savon', 'savon', 930, 154], ['lotion', 'lotion', 966, 154], ['canard', 'canard', 1002, 154], ['fouta', 'fouta', 1120, F1],
+      ['v-jebba', 'v-jebba', 76, F1 - 138], ['v-keswa', 'v-keswa', 108, F1 - 138], ['v-farmla', 'v-farmla', 140, F1 - 138], ['v-ville', 'v-ville', 172, F1 - 138],
+      ['v-tablier', 'v-tablier', 86, F1 - 34], ['v-pyjama', 'v-pyjama', 122, F1 - 34], ['v-plage', 'v-plage', 158, F1 - 34]],
+    start:{ anis:[965, F0], imen:[1085, F0], essil:[806, F1], salma:[812, F0], amine:[250, F1], nour:[745, F0], yasmine:[1185, F0], fares:[420, F0] } }
+};
+// la carte du quartier : [lieu, x %, y %, nom, émoji, ouvert]
+const MAP = [['dar', 24, 66, 'Dar Yasmine', '🏠', 1], ['cafe', 52, 50, 'Le café', '🫖', 0], ['ecole', 78, 64, "L'école", '🏫', 0], ['souk', 40, 90, 'Le souk', '🧺', 0], ['plage', 90, 44, 'La plage', '🏖️', 0]];
+
+/* =====================================================================
+   DÉCOUVERTES : la « progression » du monde libre. Rien n'est obligatoire : on les trouve en jouant.
+   ===================================================================== */
+const DISC = [['the', '🫖', 'Servir le thé'], ['boire', '🥤', 'Boire un verre'], ['manger', '😋', 'Bon appétit'], ['piment', '🌶️', 'Ça pique !'], ['couscous', '🍲', 'Cuire le couscous'], ['frigo', '🧊', 'Ouvrir le frigo'],
+  ['dodo', '😴', 'Au lit'], ['bain', '🛁', 'Prendre un bain'], ['jasmin', '🌼', 'Faire fleurir le jasmin'], ['machmoum', '💐', 'Porter un machmoum'], ['citron', '🍋', 'Cueillir un citron'],
+  ['fontaine', '⛲', 'La fontaine'], ['radio', '🎶', 'Mettre la musique'], ['darbouka', '🥁', 'Jouer de la darbouka'], ['chat', '🐈', 'Caresser le chat'], ['oiseau', '🐤', 'Faire chanter le canari'],
+  ['trad', '✨', 'Tenue de fête'], ['chechia', '🧢', 'Porter la chéchia'], ['lampe', '💡', 'Allumer la lumière'], ['veillee', '🛋️', 'La veillée au salon'], ['pyjama', '🌙', 'En pyjama']];
+
+/* =====================================================================
+   ÉTAT du monde (une sauvegarde par joueur, petite et versionnée)
+   ===================================================================== */
+let player = null, S = null, place = null, saveT = 0;
+const key = () => 'houma:' + player;
+function fresh(){
+  const s = { v:1, t:0, chars:{}, items:{}, fx:{}, disc:{}, seen:{} };
+  return fill(s);
+}
+// complète une sauvegarde (nouvelle, ancienne ou abîmée) avec tout ce qui manque : rien ne plante si un champ a disparu
+function fill(s){
+  s = s && typeof s === 'object' ? s : {}; s.v = 1; ['chars', 'items', 'fx', 'disc', 'seen'].forEach(k => { if(!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {}; });
+  Object.entries(PLACES).forEach(([pid, P]) => {
+    Object.entries(P.start || {}).forEach(([id, [x, y]]) => { const c = s.chars[id]; if(!c || !PLACES[c.p] || !isFinite(c.x) || !isFinite(c.y)) s.chars[id] = { p:pid, x, y, pose:'', o:CH[id].o || 'ville', acc:[] }; });
+    P.items.forEach(([id, type, x, y]) => { const it = s.items[id]; if(!it || !isFinite(it.x) || !isFinite(it.y) || (it.p && !PLACES[it.p])) s.items[id] = { p:pid, x, y, s:'', h:'' }; });
+  });
+  ['citron', 'machmoum'].forEach(id => { if(!s.items[id]) s.items[id] = { p:'', x:0, y:0, s:'', h:'' }; });
+  Object.values(s.chars).forEach(c => { if(!OUTFITS[c.o]) c.o = 'ville'; if(!Array.isArray(c.acc)) c.acc = []; c.x = Math.max(0, Math.min(W, c.x)); c.y = Math.max(0, Math.min(H, c.y)); });
+  Object.entries(s.items).forEach(([id, it]) => { if(it.h && !s.chars[it.h]) it.h = ''; if(!typeOf(id)) delete s.items[id]; });
+  return s;
+}
+const HOME = {}; Object.entries(PLACES).forEach(([pid, P]) => P.items.forEach(([id, type, x, y]) => { HOME[id] = { p:pid, type, x, y }; }));
+HOME.citron = { type:'citron' }; HOME.machmoum = { type:'machmoum' };
+function typeOf(id){ return HOME[id] ? HOME[id].type : null; }
+const IT = id => ITEMS[typeOf(id)];
+function save(){ S.t = Date.now(); clearTimeout(saveT); saveT = setTimeout(() => store.set(key(), S), 350); }
+function saveNow(){ if(S && player){ clearTimeout(saveT); store.set(key(), S); } }
+addEventListener('pagehide', saveNow); document.addEventListener('visibilitychange', () => { if(document.hidden) saveNow(); else if(player) sync(); });
+
+/* ---------- joueur et serveur ---------- */
+const tracked = new Set();
+async function setPlayer(name){
+  saveNow(); player = name; S = fill(store.get(key(), null));
+  const h = window.Famille && Famille.head && Famille.head(name), k = name.toLowerCase();
+  $('who').innerHTML = `<img src="${CH[k] ? AV + CH[k].img + '.webp' : h ? '../jeux/' + (h.img.split('/jeux/')[1] || 'avatars/mascotte-nour.webp') : AV + 'mascotte-nour.webp'}" alt="${esc(name)}">`;
+  if(window.Famille && !tracked.has(name)){ tracked.add(name); Famille.track('houma', name, [key()]); }
+  await sync(); stars(); go('map');
+}
+// Deux appareils : on garde le monde le plus récent, mais les découvertes des deux se réunissent (rien ne se perd).
+async function sync(){
+  if(!window.Famille || !player) return; const name = player;
+  try{ const r = await Famille.load('houma', name), d = r && r[key()]; if(!d || player !== name) return;
+    const mine = Object.assign({}, S.disc, d.disc || {}), seen = Object.assign({}, S.seen, d.seen || {});
+    if((d.t || 0) > (S.t || 0)){ S = fill(d); S.disc = mine; S.seen = seen; store.set(key(), S); if(place) render(); }
+    else if(Object.keys(mine).length > Object.keys(S.disc).length){ S.disc = mine; S.seen = seen; store.set(key(), S); }
+    stars();
+  }catch(e){}
+}
+async function choose(){ const n = await Famille.choosePlayer({ title:'Qui joue dans la houma ?', cancel:!!player }); if(n) await setPlayer(n); }
+
+/* =====================================================================
+   AFFICHAGE
+   ===================================================================== */
+const stage = $('stage'), view = $('view');
+let scale = 1, panX = 0, panY = 0;
+function fit(){
+  const vw = view.clientWidth, vh = view.clientHeight; scale = Math.min(vw / W, vh / H);
+  if(vw / vh < 1.25) scale = Math.min(vh / H, vw / (W * .5));   // en portrait : on remplit la hauteur et on fait glisser le décor
+  const sw = W * scale, sh = H * scale; panX = Math.min(0, Math.max(vw - sw, panX)); if(sw <= vw) panX = (vw - sw) / 2; panY = (vh - sh) / 2;
+  stage.style.transform = `translate(${panX}px,${Math.max(0, panY)}px) scale(${scale})`;
+}
+addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 200));
+const pt = e => { const r = stage.getBoundingClientRect(); return { x:(e.clientX - r.left) / scale, y:(e.clientY - r.top) / scale }; };
+
+let ents = new Map();   // id -> { id, kind:'c'|'i'|'f', el, front? }
+const fxKey = id => place + '.' + id, fxState = id => S.fx[fxKey(id)] || '';
+function fixedOf(id){ const f = PLACES[place].fixed.find(f => f[0] === id); return f ? { id, T:FIXED[f[1]], type:f[1], x:f[2], y:f[3] } : null; }
+const allFixed = () => PLACES[place].fixed.map(f => ({ id:f[0], T:FIXED[f[1]], type:f[1], x:f[2], y:f[3] }));
+function hidden(it){ if(it.h) return false; return allFixed().some(f => f.T.inside && fxState(f.id) !== 'o' && it.x >= f.x + f.T.inside[0] && it.x <= f.x + f.T.inside[1] && it.y >= f.y + f.T.inside[2] && it.y <= f.y + f.T.inside[3]); }
+function handOf(cid){ const c = S.chars[cid], k = CH[cid].k; if(c.pose === 'sleep') return { x:c.x + 30 * k, y:c.y - 40 * k }; return { x:c.x + 38 * k, y:c.y - (c.pose === 'sit' || c.pose === 'bath' ? 28 : 92) * k }; }
+function box(el, x, y, w, h, z){ el.style.left = (x - w / 2) + 'px'; el.style.top = (y - h) + 'px'; el.style.width = w + 'px'; el.style.height = h + 'px'; el.style.zIndex = z; }
+function mk(cls, id){ const el = document.createElement('div'); el.className = 'e ' + cls; el.dataset.id = id; stage.appendChild(el); return el; }
+
+function drawFixed(f){
+  const e = ents.get(f.id), s = fxState(f.id); e.el.innerHTML = f.T.draw(s); box(e.el, f.x, f.y, f.T.w, f.T.h, 100 + (f.T.none ? 0 : 1));
+  if(e.front){ e.front.innerHTML = f.T.front(s); box(e.front, f.x, f.y, f.T.w, f.T.h, 7000); }
+  if(e.glow){ e.glow.style.display = s === 'on' ? 'block' : 'none'; }
+}
+function drawItem(id){
+  const e = ents.get(id), it = S.items[id], T = IT(id); if(!e) return;
+  let x = it.x, y = it.y, z = 2000 + Math.round(it.y);
+  if(it.h){ const h = handOf(it.h); x = h.x; y = h.y + T.z * .45; z = 5000 + Math.round(S.chars[it.h].y) + 1; }
+  e.el.classList.toggle('hide', it.p !== place && !(it.h && S.chars[it.h].p === place) || hidden(it));
+  e.el.innerHTML = T.s ? T.s(it.s) : `<span class="em" style="font-size:${T.z * .92}px">${T.e}</span>`;
+  box(e.el, x, y, T.z, T.z, z);
+}
+function drawChar(id){
+  const e = ents.get(id), c = S.chars[id], C = CH[id]; if(!e) return;
+  e.el.classList.toggle('hide', c.p !== place); e.el.classList.toggle('sleep', c.pose === 'sleep');
+  e.el.innerHTML = doll(C, c); const w = 120 * C.k, h = 260 * C.k;
+  const y = c.pose === 'sit' || c.pose === 'bath' ? c.y + 26 * C.k : c.pose === 'sleep' ? c.y + h / 2 - 8 : c.y;
+  box(e.el, c.x, y, w, h, (c.pose === 'bath' ? 6000 : 5000) + Math.round(c.y));
+  Object.entries(S.items).forEach(([iid, it]) => { if(it.h === id) drawItem(iid); });
+}
+function render(){
+  stage.innerHTML = ''; ents = new Map(); const P = PLACES[place]; stage.insertAdjacentHTML('beforeend', P.bg());
+  allFixed().forEach(f => { const e = { id:f.id, kind:'f', el:mk('f' + (f.T.tap || f.T.fill || f.T.water || f.T.seats || f.T.bed || f.T.bath ? '' : ' none'), f.id) };
+    if(f.T.front){ e.front = mk('f none', f.id); } if(f.T.glow){ e.glow = document.createElement('div'); e.glow.className = 'glow'; const g = f.T.glow; e.glow.style.cssText = `left:${f.x + g[0] - g[2]}px;top:${f.y + g[1] - g[2]}px;width:${g[2] * 2}px;height:${g[2] * 2}px;display:none`; stage.appendChild(e.glow); }
+    ents.set(f.id, e); drawFixed(f); });
+  Object.keys(S.items).forEach(id => { ents.set(id, { id, kind:'i', el:mk('i', id) }); drawItem(id); });
+  CHARS.forEach(C => { ents.set(C.id, { id:C.id, kind:'c', el:mk('c', C.id) }); drawChar(C.id); });
+  bar(); fit();
+}
+function bar(){
+  $('bottom').innerHTML = (place ? `<span id="barHint">Touche une tête pour l'inviter ici</span>` : '') + CHARS.map(C => `<button class="hd${place && S.chars[C.id].p === place ? ' here' : ''}" data-c="${C.id}" aria-label="${C.n}"><img src="${AV}${C.img}.webp" alt="">${C.n}</button>`).join('');
+}
+$('bottom').onclick = e => { const b = e.target.closest('.hd'); if(!b || !place) return; const id = b.dataset.c, c = S.chars[id]; const F = PLACES[place].floors[0];
+  dropHeld(id, true); c.p = place; c.pose = ''; c.x = Math.round((-panX + view.clientWidth / 2) / scale + (Math.random() * 120 - 60)); c.x = Math.max(F[0], Math.min(F[1], c.x)); c.y = F[2];
+  Object.values(S.items).forEach(it => { if(it.h === id) it.p = place; });
+  drawChar(id); pulse(id, 'pop'); sfx.hop(); bar(); save(); check(); };
+function pulse(id, cls){ const e = ents.get(id); if(!e) return; e.el.classList.remove(cls); void e.el.offsetWidth; e.el.classList.add(cls); setTimeout(() => e.el.classList.remove(cls), 1100); }
+function fx(x, y, emo, dx){ if(calm()) return; const s = document.createElement('span'); s.className = 'fxp'; s.textContent = emo; s.style.left = (x - 15) + 'px'; s.style.top = (y - 30) + 'px'; s.style.setProperty('--dx', (dx == null ? Math.random() * 40 - 20 : dx) + 'px'); stage.appendChild(s); setTimeout(() => s.remove(), 1500); }
+let toastT = 0; function toast(t, ms = 2400){ const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), ms); }
+function stars(){ $('stars').textContent = '⭐ ' + Object.keys(S ? S.disc : {}).filter(k => DISC.some(d => d[0] === k)).length; }
+function found(id){ if(S.disc[id]) return; const d = DISC.find(d => d[0] === id); if(!d) return; S.disc[id] = 1; stars(); save(); sfx.star(); toast(`⭐ Découverte : ${d[2]} ${d[1]}`, 3200); }
+
+/* ---------- la vie du décor : vapeur, notes, bulles, zzz ---------- */
+setInterval(() => { if(!place || document.hidden) return;
+  allFixed().forEach(f => { const s = fxState(f.id);
+    if(f.type === 'radio' && s === 'on') fx(f.x + 20, f.y - 50, Math.random() < .5 ? '🎵' : '🎶');
+    if((f.type === 'fontaine' || f.type === 'evier' || f.type === 'lavabo') && s === 'on') fx(f.x + (f.type === 'fontaine' ? Math.random() * 90 - 45 : 22), f.y - (f.type === 'fontaine' ? 60 : 10), '💧');
+    if(f.type === 'baignoire' && s === 'm') fx(f.x + Math.random() * 180 - 90, f.y - 90, '🫧');
+    if(f.type === 'feu' && s === 'on') fx(f.x, f.y - 40, '♨️'); });
+  Object.entries(S.items).forEach(([id, it]) => { if(it.p === place && !it.h && (it.s === 'cuit' || it.s === 'the') && typeOf(id) !== 'verre') fx(it.x, it.y - IT(id).z, '♨️'); });
+  Object.entries(S.chars).forEach(([id, c]) => { if(c.p === place && c.pose === 'sleep') fx(c.x - 50 * CH[id].k, c.y - 60, '💤', 20); });
+}, 1100);
+
+/* =====================================================================
+   PLACEMENT : où tombe un objet, où se pose un personnage
+   ===================================================================== */
+function surfaces(){
+  const L = PLACES[place].floors.map(f => ({ x1:f[0], x2:f[1], y:f[2], floor:1 }));
+  allFixed().forEach(f => { const open = fxState(f.id) === 'o';
+    (f.T.surf || []).forEach(s => { if(!s[3] || open) L.push({ x1:f.x + s[0], x2:f.x + s[1], y:f.y + s[2] }); });
+    if(f.T.top && !open) L.push({ x1:f.x + f.T.top[0], x2:f.x + f.T.top[1], y:f.y + f.T.top[2] }); });
+  return L;
+}
+function land(x, y){
+  const L = surfaces().filter(s => x >= s.x1 - 14 && x <= s.x2 + 14); if(!L.length) return { x, y:PLACES[place].floors[0][2] };
+  const below = L.filter(s => s.y >= y - 26).sort((a, b) => a.y - b.y)[0] || L.sort((a, b) => b.y - a.y)[0];
+  return { x:Math.max(below.x1, Math.min(below.x2, x)), y:below.y };
+}
+function floorFor(x, y){ const F = PLACES[place].floors.slice().sort((a, b) => Math.abs(a[2] - 60 - y) - Math.abs(b[2] - 60 - y))[0]; return { x:Math.max(F[0], Math.min(F[1], x)), y:F[2] }; }
+function anchorFor(x, y, k){
+  let best = null;
+  allFixed().forEach(f => [['seats', 'sit'], ['bed', 'sleep'], ['bath', 'bath']].forEach(([key2, pose]) => (f.T[key2] || []).forEach((a, i) => {
+    const ax = f.x + a[0], ay = f.y + a[1], d = Math.hypot(x - ax, (y - 40) - ay); const used = Object.values(S.chars).some(c => c.p === place && c.a === f.id + ':' + i);
+    if(d < (pose === 'sit' ? 78 : 120) && !used && (!best || d < best.d)) best = { d, x:ax, y:ay, pose, a:f.id + ':' + i, f }; })));
+  return best;
+}
+function dropHeld(cid, keep){ if(keep) return; Object.entries(S.items).forEach(([id, it]) => { if(it.h === cid){ const c = S.chars[cid]; it.h = ''; it.p = c.p; const l = land(c.x + 30, c.y - 40); it.x = l.x; it.y = l.y; drawItem(id); } }); }
+
+/* =====================================================================
+   RÈGLES D'INTERACTION (pilotées par données, dans l'ordre). src = objet lâché ; sur un personnage, un autre objet ou un meuble.
+   ===================================================================== */
+const heldBy = cid => Object.keys(S.items).find(id => S.items[id].h === cid);
+function goHome(id){ const h = HOME[id], it = S.items[id]; if(!h.p){ it.p = ''; it.h = ''; } else { it.p = h.p; it.x = h.x; it.y = h.y; it.h = ''; it.s = ''; } drawItem(id); if(it.p === place) pulse(id, 'pop'); }
+const RULES = [
+  // sur un personnage
+  { on:'char', when:(T) => T.wear, apply:(id, T, cid) => { const c = S.chars[cid]; c.o = T.wear; goHome(id); drawChar(cid); pulse(cid, 'hop'); sfx.wear(); fx(c.x, c.y - 200 * CH[cid].k, '✨'); toast(`${CH[cid].n} met ${OUTFITS[T.wear].n === 'jebba' ? 'sa jebba' : 'sa ' + OUTFITS[T.wear].n}`.replace('sa tablier', 'son tablier').replace('sa pyjama', 'son pyjama').replace('sa gilet', 'son gilet')); if(OUTFITS[T.wear].trad) found('trad'); if(T.wear === 'pyjama') found('pyjama'); } },
+  { on:'char', when:(T) => T.acc, apply:(id, T, cid) => { const c = S.chars[cid], t = typeOf(id); if(c.acc.includes(t)) return false; if(['chechia', 'paille'].includes(t)) c.acc.filter(a => ['chechia', 'paille'].includes(a)).forEach(a => takeOff(cid, a)); c.acc.push(t); S.items[id].p = ''; S.items[id].h = ''; drawItem(id); drawChar(cid); pulse(cid, 'hop'); sfx.wear(); if(t === 'chechia') found('chechia'); if(t === 'machmoum') found('machmoum'); } },
+  { on:'char', when:(T, it) => T.food && !(typeOf(it.id) === 'verre'), apply:(id, T, cid) => { const c = S.chars[cid]; pulse(cid, 'munch'); sfx.munch(); fx(c.x, c.y - 210 * CH[cid].k, T.hot ? '🥵' : T.drink ? '😊' : '😋'); S.items[id].p = ''; S.items[id].h = ''; drawItem(id); setTimeout(() => { if(HOME[id].p){ goHome(id); save(); } }, 5000); found(T.hot ? 'piment' : 'manger'); if(T.hot) toast(`Ouh là, ça pique ! ${CH[cid].n} a besoin d'eau 💧`); } },
+  { on:'char', when:(T, it) => typeOf(it.id) === 'verre' && it.s === 'the', apply:(id, T, cid) => { const c = S.chars[cid]; S.items[id].s = ''; give(id, cid); pulse(cid, 'munch'); sfx.sip(); fx(c.x, c.y - 210 * CH[cid].k, '😌'); found('boire'); } },
+  { on:'char', when:() => true, apply:(id, T, cid) => { give(id, cid); sfx.drop(); if(T.pet){ fx(S.chars[cid].x, S.chars[cid].y - 200 * CH[cid].k, '💛'); sfx.meow(); found('chat'); } } },
+  // sur un autre objet
+  { on:'item', when:(T, it, tid) => typeOf(it.id) === 'theiere' && it.s === 'the' && typeOf(tid) === 'verre', apply:(id, T, tid) => { S.items[tid].s = 'the'; drawItem(tid); pulse(tid, 'hop'); sfx.water(); const t = S.items[tid]; fx(t.h ? S.chars[t.h].x : t.x, (t.h ? S.chars[t.h].y - 120 : t.y - 40), '🫖'); found('the'); return 'keep'; } },
+  // sur un meuble
+  { on:'fixed', when:(T, it, f) => f.T.fill && ['arrosoir', 'theiere'].includes(typeOf(it.id)), apply:(id, T, f) => { const it = S.items[id]; it.s = typeOf(id) === 'arrosoir' ? 'plein' : 'eau'; sfx.water(); fx(f.x, f.y - f.T.h, '💧'); if(f.type === 'fontaine') found('fontaine'); return 'keep'; } },
+  { on:'fixed', when:(T, it, f) => f.T.water && typeOf(it.id) === 'arrosoir', apply:(id, T, f) => { const it = S.items[id]; if(it.s !== 'plein'){ toast("L'arrosoir est vide : remplis-le à la fontaine ou au robinet 💧"); return 'keep'; }
+      it.s = ''; sfx.water(); [0, 1, 2].forEach(i => setTimeout(() => fx(f.x + i * 16 - 16, f.y - f.T.h * .6, '💧'), i * 150)); S.fx[fxKey(f.id)] = f.type === 'jasmin' ? 'f' : 'c'; setTimeout(() => { drawFixed(f); sfx.star(); }, 500); if(f.type === 'jasmin'){ found('jasmin'); toast('Le jasmin fleurit ! Touche-le pour cueillir un machmoum 🌼'); } else toast('Des citrons ! Touche le citronnier pour en cueillir un 🍋'); return 'keep'; } },
+  { on:'fixed', when:(T, it, f) => f.type === 'feu' && ['theiere', 'marmite'].includes(typeOf(it.id)), apply:(id, T, f) => { const it = S.items[id], t = typeOf(id);
+      Object.entries(S.items).forEach(([oid, o]) => { if(oid !== id && o.p === place && !o.h && Math.abs(o.x - f.x) < 40 && Math.abs(o.y - f.y) < 30){ o.x = f.x + 62; o.y = f.y; drawItem(oid); } });   // un seul plat sur le feu
+      it.x = f.x; it.y = f.y - 4; it.h = ''; it.p = place; drawItem(id);
+      if(t === 'theiere' && it.s !== 'eau' && it.s !== 'the'){ toast("Mets d'abord de l'eau dans la théière 💧"); return true; }
+      S.fx[fxKey(f.id)] = 'on'; drawFixed(f); sfx.on(); setTimeout(() => { const o = S.items[id]; if(o.p === 'dar' && !o.h && Math.abs(o.x - f.x) < 90 && Math.abs(o.y - f.y) < 12 && S.fx['dar.' + f.id] === 'on'){ S.items[id].s = t === 'theiere' ? 'the' : 'cuit'; drawItem(id); sfx.star(); if(t === 'marmite'){ found('couscous'); toast('Le couscous est prêt ! 🍲'); } else toast('Le thé est prêt : verse-le dans un verre 🫖'); save(); } }, 2200); return true; } }
+];
+function give(id, cid){ const prev = heldBy(cid); if(prev && prev !== id) dropHeld(cid); const it = S.items[id]; it.h = cid; it.p = S.chars[cid].p; drawItem(id); }
+function takeOff(cid, t){ const c = S.chars[cid]; c.acc = c.acc.filter(a => a !== t); const iid = Object.keys(S.items).find(i => typeOf(i) === t && !S.items[i].p && !S.items[i].h) || t; const it = S.items[iid]; if(it){ it.p = c.p; it.h = ''; const l = land(c.x + 50 * CH[cid].k, c.y - 30); it.x = l.x; it.y = l.y; drawItem(iid); pulse(iid, 'pop'); } }
+
+/* ---------- toucher (tap) ---------- */
+function tapFixed(f){
+  const T = f.T, k = fxKey(f.id), s = fxState(f.id);
+  if(f.type === 'jasmin'){ if(s === 'f'){ const it = S.items.machmoum; if(it.p || it.h || Object.values(S.chars).some(c => c.acc.includes('machmoum'))){ toast('Tu as déjà un machmoum 🌼'); return; } it.p = place; it.x = f.x + 50; it.y = f.y; drawItem('machmoum'); pulse('machmoum', 'pop'); sfx.star(); S.fx[k] = ''; drawFixed(f); save(); } else toast("Le jasmin a soif : arrose-le avec l'arrosoir 💧"); return; }
+  if(f.type === 'citronnier'){ if(s === 'c'){ const it = S.items.citron; if(it.p || it.h){ toast('Tu as déjà un citron 🍋'); return; } it.p = place; it.x = f.x + 56; it.y = f.y; drawItem('citron'); pulse('citron', 'pop'); sfx.star(); S.fx[k] = ''; drawFixed(f); found('citron'); save(); } else toast("Le citronnier a soif : arrose-le avec l'arrosoir 💧"); return; }
+  if(f.type === 'cage'){ sfx.bird(); [0, 1, 2].forEach(i => setTimeout(() => fx(f.x, f.y - 60, '🎵'), i * 200)); found('oiseau'); return; }
+  if(!T.tap) return;
+  const n = T.tap[(T.tap.indexOf(s) + 1) % T.tap.length]; S.fx[k] = n; drawFixed(f);
+  if(T.inside){ (n === 'o' ? sfx.open : sfx.close)(); Object.keys(S.items).forEach(drawItem); if(f.type === 'frigo' && n === 'o') found('frigo'); }
+  else if(f.type === 'radio'){ if(n === 'on'){ sfx.tune(); found('radio'); } else sfx.off(); }
+  else if(T.fill){ if(n === 'on'){ sfx.water(); if(f.type === 'fontaine') found('fontaine'); } else sfx.off(); }
+  else if(f.type === 'baignoire'){ sfx.water(); }
+  else { (n === 'on' ? sfx.on : sfx.off)(); if(T.glow && n === 'on') found('lampe'); }
+  save();
+}
+function tapItem(id){ const T = IT(id), it = S.items[id], t = typeOf(id); pulse(id, 'hop');
+  if(t === 'darbouka'){ sfx.drum(0); setTimeout(() => sfx.drum(1), 170); setTimeout(() => sfx.drum(1), 300); fx(it.x, it.y - 60, '🥁'); found('darbouka'); }
+  else if(T.pet){ sfx.meow(); fx(it.h ? S.chars[it.h].x : it.x, (it.h ? S.chars[it.h].y - 120 : it.y - 50), '💛'); found('chat'); }
+  else if(T.toy){ sfx.hop(); } else sfx.tap(); }
+function tapChar(id){ const c = S.chars[id]; pulse(id, 'hop'); sfx.hop();
+  if(c.acc.length){ takeOff(id, c.acc[c.acc.length - 1]); drawChar(id); save(); } else fx(c.x, c.y - 230 * CH[id].k, pick(['👋', '😄', '🎉', '💛'])); }
+const pick = a => a[Math.floor(Math.random() * a.length)];
+
+/* ---------- lâcher (drop) ---------- */
+function hit(x, y, skip){
+  // le personnage, puis l'objet, puis le meuble qui se trouve sous le doigt
+  const cs = CHARS.filter(C => C.id !== skip && S.chars[C.id].p === place).map(C => ({ C, c:S.chars[C.id] })).filter(({ C, c }) => Math.abs(x - c.x) < 46 * C.k + 14 && y < c.y + 16 && y > c.y - 262 * C.k).sort((a, b) => b.c.y - a.c.y)[0];
+  const out = []; if(cs) out.push({ kind:'char', id:cs.C.id });
+  const its = Object.keys(S.items).filter(id => id !== skip && S.items[id].p === place && !hidden(S.items[id])).map(id => { const it = S.items[id], T = IT(id), p = it.h ? handOf(it.h) : it; return { id, d:Math.hypot(x - p.x, y - (p.y - T.z / 2)), z:T.z }; }).filter(o => o.d < o.z * .7 + 10).sort((a, b) => a.d - b.d)[0];
+  if(its) out.push({ kind:'item', id:its.id });
+  allFixed().filter(f => Math.abs(x - f.x) < f.T.w / 2 + 12 && y < f.y + 14 && y > f.y - f.T.h - 14).sort((a, b) => a.T.w * a.T.h - b.T.w * b.T.h).forEach(f => out.push({ kind:'fixed', id:f.id, f }));
+  return out;
+}
+// la première cible sous le doigt pour laquelle une règle existe (un objet posé devant un meuble ne le masque pas)
+function aim(id, x, y){ for(const t of hit(x, y, id)){ const r = ruleFor(id, t); if(r) return { t, r }; } return null; }
+function ruleFor(id, target){ if(!target) return null; const T = IT(id), it = Object.assign({ id }, S.items[id]);
+  const arg = target.kind === 'fixed' ? target.f : target.id;
+  return RULES.find(r => r.on === target.kind && r.when(T, it, arg)) || null; }
+function dropItem(id, x, y){
+  const T = IT(id), it = S.items[id], A = aim(id, x, y), target = A && A.t, rule = A && A.r;
+  if(rule){ const r = rule.apply(id, T, target.kind === 'fixed' ? target.f : target.id); if(r !== false && r !== 'keep'){ save(); check(); return; } if(r === 'keep'){ /* l'objet reste où on l'a lâché */ } }
+  if(T.home && !rule){ goHome(id); sfx.drop(); return; }
+  const l = land(x, y + T.z * .3); it.h = ''; it.p = place; it.x = l.x; it.y = l.y; drawItem(id); sfx.drop();
+  // posé sur le feu allumé par hasard : même règle
+  save(); check();
+}
+function dropChar(id, x, y){
+  const c = S.chars[id], C = CH[id], a = anchorFor(x, y, C.k);
+  if(a){ c.x = a.x; c.y = a.y; c.pose = a.pose === 'bath' ? 'bath' : a.pose; c.a = a.a; if(a.pose === 'sleep'){ found('dodo'); } if(a.pose === 'bath'){ found('bain'); sfx.water(); if(fxState(a.f.id) !== 'm'){ S.fx[fxKey(a.f.id)] = 'm'; drawFixed(a.f); } } }
+  else { const f = floorFor(x, y); c.x = f.x; c.y = f.y; c.pose = ''; c.a = ''; }
+  drawChar(id); sfx.drop(); save(); check();
+}
+// les découvertes qui dépendent de la scène entière
+function check(){ if(!place) return;
+  if(place === 'dar'){ const sit = Object.values(S.chars).filter(c => c.p === 'dar' && c.pose === 'sit' && (c.a || '').startsWith('banquette')).length; if(sit >= 3) found('veillee'); } }
+// pour le dessin : le bain se dessine comme « assis »
+const _doll = doll; doll = (C, st) => _doll(C, st.pose === 'bath' ? Object.assign({}, st, { pose:'sit' }) : st);
+
+/* ---------- le doigt ---------- */
+let D = null;   // geste en cours
+view.addEventListener('pointerdown', e => {
+  if(D) return; const el = place ? e.target.closest('.e') : null, p = pt(e);
+  if(!el || el.classList.contains('none')){ D = { pan:1, sx:e.clientX, px:panX, id:e.pointerId }; return; }
+  const id = el.dataset.id, ent = ents.get(id); if(!ent) return; e.preventDefault(); ac();
+  D = { ent, id, sx:e.clientX, sy:e.clientY, moved:false, pid:e.pointerId, ox:0, oy:0 };
+  if(ent.kind !== 'f'){ const r = el.getBoundingClientRect(); D.ox = (e.clientX - (r.left + r.width / 2)) / scale; D.oy = (e.clientY - r.bottom) / scale; }
+  try{ view.setPointerCapture(e.pointerId); }catch(_){}
+});
+view.addEventListener('pointermove', e => {
+  if(!D) return;
+  if(D.pan){ if(W * scale > view.clientWidth){ panX = D.px + (e.clientX - D.sx); fit(); } return; }
+  if(e.pointerId !== D.pid) return;
+  if(!D.moved){ if(Math.hypot(e.clientX - D.sx, e.clientY - D.sy) < 9) return; if(D.ent.kind === 'f') return; D.moved = true; D.ent.el.classList.add('drag'); sfx.pick();
+    if(D.ent.kind === 'c'){ const c = S.chars[D.id]; c.pose = ''; c.a = ''; drawChar(D.id); D.ent.el.classList.add('drag'); } }
+  const p = pt(e), el = D.ent.el, w = el.offsetWidth, h = el.offsetHeight, x = p.x - D.ox, y = p.y - D.oy;
+  el.style.left = (x - w / 2) + 'px'; el.style.top = (y - h) + 'px';
+  if(D.ent.kind === 'c'){ const c = S.chars[D.id]; c.x = x; c.y = y; Object.entries(S.items).forEach(([iid, it]) => { if(it.h === D.id){ drawItem(iid); ents.get(iid).el.style.zIndex = 9001; } }); }
+  // montre où l'objet va agir
+  const A = D.ent.kind === 'i' ? aim(D.id, p.x, p.y - IT(D.id).z * .3) : null, hid = A ? A.t.id : null;
+  if(D.hot !== hid){ if(D.hot && ents.get(D.hot)) ents.get(D.hot).el.classList.remove('hot'); if(hid) ents.get(hid).el.classList.add('hot'); D.hot = hid; }
+});
+function endDrag(e){
+  if(!D) return; const d = D; D = null; if(d.pan) return; if(e.pointerId !== d.pid){ D = d; return; }
+  if(d.hot && ents.get(d.hot)) ents.get(d.hot).el.classList.remove('hot'); d.ent.el.classList.remove('drag');
+  if(!d.moved){ if(d.ent.kind === 'f'){ const f = fixedOf(d.id); if(f) tapFixed(f); } else if(d.ent.kind === 'i') tapItem(d.id); else tapChar(d.id); return; }
+  const p = pt(e), x = Math.max(20, Math.min(W - 20, p.x - d.ox)), y = Math.max(40, Math.min(H - 6, p.y - d.oy));
+  if(d.ent.kind === 'i') dropItem(d.id, x, y - IT(d.id).z * .3); else dropChar(d.id, x, y);
+}
+view.addEventListener('pointerup', endDrag);
+view.addEventListener('pointercancel', e => { if(!D) return; const d = D; D = null; if(d.pan) return; d.ent.el.classList.remove('drag'); if(d.ent.kind === 'i') drawItem(d.id); else { const f = floorFor(S.chars[d.id].x, S.chars[d.id].y); Object.assign(S.chars[d.id], f); drawChar(d.id); } });
+
+/* =====================================================================
+   LA CARTE et la navigation
+   ===================================================================== */
+function mapSVG(){ const house = (x, y, w, h, dome) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fdfdf8" stroke="#c9d6e4" stroke-width="3"/>${dome ? `<path d="M${x + w * .2} ${y}q${w * .3}-${w * .5} ${w * .6} 0z" fill="#fdfdf8" stroke="#c9d6e4" stroke-width="3"/>` : `<rect x="${x - 4}" y="${y - 8}" width="${w + 8}" height="10" fill="#1d6fb8"/>`}<path d="M${x + w / 2 - 14} ${y + h}v-${h * .5}q14-20 28 0v${h * .5}z" fill="#1d6fb8"/><rect x="${x + 10}" y="${y + 14}" width="20" height="24" rx="10" fill="#1d6fb8"/><rect x="${x + w - 30}" y="${y + 14}" width="20" height="24" rx="10" fill="#1d6fb8"/>`;
+  const palm = (x, y) => `<path d="M${x} ${y}q6-50 0-90" fill="none" stroke="#8a5a2b" stroke-width="9" stroke-linecap="round"/>${[-60, -30, 0, 30, 60].map(a => `<path d="M${x} ${y - 90}q${a} -34 ${a * 1.6} -4" fill="none" stroke="#2e9e4f" stroke-width="9" stroke-linecap="round"/>`).join('')}`;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="${W}" height="${H}" fill="#bfe6ff"/><circle cx="1140" cy="80" r="46" fill="#ffd84d"/>
+    <rect y="150" width="${W}" height="120" fill="#3aa0d8"/><path d="M0 268q160-30 320 0t320 0 320 0 320 0v460H0z" fill="#f1dfb4"/>
+    <path d="M880 190q30-14 60 0l-10 16h-40z" fill="#fdfdf8" stroke="#1d6fb8" stroke-width="3"/><path d="M910 190v-34l22 26z" fill="#d83a3a"/>
+    <path d="M100 720q200-260 520-250t560 250z" fill="#e9d2a0"/><path d="M180 720q260-150 470-140t500 140" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round" stroke-dasharray="2 40" opacity=".7"/>
+    ${house(180, 330, 250, 150)}${house(560, 250, 210, 120, 1)}${house(900, 330, 220, 130)}${house(380, 560, 240, 110, 1)}
+    <path d="M1010 120h30v140h-30z" fill="#fdfdf8" stroke="#c9d6e4" stroke-width="3"/><path d="M1004 120q21-40 42 0z" fill="#2e9e4f"/><path d="M1025 80v-22" stroke="#e3b23c" stroke-width="4"/>
+    ${palm(120, 520)}${palm(820, 470)}${palm(1180, 560)}${palm(700, 690)}
+    ${[[470, 318], [800, 250], [1140, 322], [640, 548]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="22" fill="#d6338a"/><circle cx="${p[0] + 22}" cy="${p[1] + 12}" r="16" fill="#e04a9a"/>`).join('')}</svg>`; }
+function go(pid){
+  saveNow();
+  if(pid === 'map'){ place = null; stage.innerHTML = `<div id="map">${mapSVG()}${MAP.map(m => `<button class="pl${m[5] ? '' : ' soon'}" data-p="${m[0]}" style="left:${m[1]}%;top:${m[2]}%"><span style="font-size:64px;line-height:1">${m[4]}</span><span class="sign">${m[3]}${m[5] ? '' : ' 🚧'}</span></button>`).join('')}</div>`;
+    $('title').innerHTML = `Ma Houma<small>le quartier du Jasmin · choisis un lieu</small>`; bar(); panX = 0; fit(); return; }
+  place = pid; S.seen[pid] = 1; $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
+}
+stage.addEventListener('click', e => { const b = e.target.closest('.pl'); if(!b) return; sfx.tap(); if(PLACES[b.dataset.p]) go(b.dataset.p); else toast('Ce lieu est encore en travaux 🚧 Il arrive bientôt !'); });
+$('bMap').onclick = () => { sfx.tap(); go('map'); };
+$('who').onclick = () => { sfx.tap(); choose(); };
+$('bSnd').onclick = () => { muted = !muted; store.set('houma-muet', muted); $('bSnd').textContent = muted ? '🔇' : '🔊'; if(!muted) sfx.tap(); };
+$('bSnd').textContent = muted ? '🔇' : '🔊';
+function panel(html){ $('panel').innerHTML = html; $('veil').classList.add('on'); const b = $('panel').querySelector('button'); if(b) b.focus(); }
+function closePanel(){ $('veil').classList.remove('on'); }
+$('veil').addEventListener('click', e => { if(e.target.id === 'veil' || e.target.closest('[data-close]')) closePanel(); });
+addEventListener('keydown', e => { if(e.key === 'Escape') closePanel(); });
+$('bDisc').onclick = () => { sfx.tap(); const n = DISC.filter(d => S.disc[d[0]]).length;
+  panel(`<h2>Mes découvertes ⭐ ${n} / ${DISC.length}</h2><p>Il n'y a rien à gagner ni à perdre : joue comme tu veux. Les étoiles apparaissent quand tu trouves une nouvelle idée.</p>
+    <div class="grid">${DISC.map(d => `<div class="dk${S.disc[d[0]] ? '' : ' no'}"><b>${d[1]}</b>${S.disc[d[0]] ? d[2] : '?'}</div>`).join('')}</div><button class="pill" data-close>Continuer</button>`); };
+$('bMenu').onclick = () => { sfx.tap();
+  panel(`<h2>Réglages</h2><p>Monde de <b>${esc(player || '')}</b>. Tout est enregistré tout seul.</p>
+    <button class="pill ghost" id="mTidy">🧹 Tout ranger dans ce lieu</button><br><button class="pill red" id="mReset">🗑️ Recommencer mon monde</button><br><button class="pill" data-close>Retour</button>`);
+  $('mTidy').onclick = () => { if(!place){ closePanel(); return; } Object.keys(S.items).forEach(id => { if(HOME[id].p === place){ const h = HOME[id]; Object.assign(S.items[id], { p:h.p, x:h.x, y:h.y, h:'', s:'' }); } }); save(); render(); closePanel(); toast('Tout est rangé 🧹'); };
+  $('mReset').onclick = () => panel(`<h2>Recommencer ?</h2><p>Ton monde reviendra comme au début : les personnages, les objets et les tenues. Tes découvertes ⭐ restent.</p><button class="pill red" id="mYes">Oui, recommencer</button><button class="pill ghost" data-close>Non</button>`) || ($('mYes').onclick = () => { const disc = S.disc, seen = S.seen; S = fresh(); S.disc = disc; S.seen = seen; save(); closePanel(); go(place || 'map'); toast('Ton monde est comme neuf ✨'); });
+};
+
+/* ---------- démarrage ---------- */
+fit();
+(async () => { const p = window.Famille && Famille.player(); if(p) await setPlayer(p); else { S = fresh(); go('map'); await choose(); } window.__houma = { get S(){ return S; }, get place(){ return place; }, go, PLACES, CHARS, DISC, save:saveNow, hit, land }; })();
+</script>
+</body>
+</html>

@@ -27,8 +27,8 @@ declare(strict_types=1);
 
 const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'medina'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
-const READABLE = ['profil', 'atelier', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture', 'amine-nombres', 'ecuries', 'medina', 'atelier-art'];
-const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'amine-nombres', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'atelier', 'ecuries', 'medina', 'atelier-art'];
+const READABLE = ['profil', 'atelier', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture', 'amine-nombres', 'ecuries', 'medina', 'atelier-art', 'houma'];
+const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'amine-nombres', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'atelier', 'ecuries', 'medina', 'atelier-art', 'houma'];
 // Jeu (classements) lié à un cours : une remise à zéro peut aussi effacer ses records.
 const COURSE_GAME = ['serpent3d' => 'serpent3d', 'ludo3d' => 'ludo3d', 'grimpeglace' => 'grimpeglace', 'jasmin' => 'jasmin', 'medina' => 'medina', 'amine-serpentin' => 'serpentin'];
 // Cours qui comptent comme « apprendre » (les jeux n'en font pas partie) : séries de jours et cartes secrètes.
