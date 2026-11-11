@@ -28,7 +28,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 #bottom{bottom:0;height:calc(84px + env(safe-area-inset-bottom));padding-bottom:calc(6px + env(safe-area-inset-bottom));box-shadow:0 -3px 0 #0003;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
 #bottom::-webkit-scrollbar{display:none}
 .tb{min-width:50px;height:50px;border-radius:16px;background:#ffffff26;display:grid;place-items:center;font-size:26px;flex:none;padding:0 10px;font-weight:800}
-.tb:active{transform:scale(.94)}.tb:focus-visible,.hd:focus-visible,.pl:focus-visible{outline:4px solid var(--sun);outline-offset:2px}
+.tb.quit{background:#fff;color:var(--blue-d);font-size:19px;text-decoration:none;display:flex;align-items:center}.tb:active{transform:scale(.94)}.tb:focus-visible,.hd:focus-visible,.pl:focus-visible{outline:4px solid var(--sun);outline-offset:2px}
 #title{flex:1;min-width:0;font-weight:800;font-size:clamp(17px,2.6vw,25px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
 #title small{display:block;font-weight:600;font-size:.62em;opacity:.85}
 #stars{font-size:19px}
@@ -54,7 +54,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .e.pop{animation:pop .35s ease}
 @keyframes pop{from{transform:scale(.2);opacity:0}}
 .e.hide{display:none}
-.e.c.sleep svg{transform:rotate(-90deg)}
+.e.c .body{position:absolute;inset:0;background-size:200% 100%;background-repeat:no-repeat;pointer-events:none}
+.e.c .shade{position:absolute;left:14%;right:14%;bottom:-3px;height:9px;border-radius:50%;background:#0003;z-index:-1}
+.e.c.sleep>*{transform:rotate(-90deg)}
 .fxp{position:absolute;pointer-events:none;font-size:30px;line-height:1;z-index:9500;animation:rise 1.5s ease-out forwards}
 @keyframes rise{from{opacity:0;transform:translateY(0) scale(.6)}15%{opacity:1}to{opacity:0;transform:translate(var(--dx,12px),-90px) scale(1.15)}}
 .glow{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,#ffe9a0cc,#ffe9a000);mix-blend-mode:screen;z-index:8000}
@@ -80,12 +82,14 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .pill:active{transform:translateY(3px);box-shadow:none}
 @media (max-height:520px){:root{--bar:46px}.tb{min-width:38px;height:36px;font-size:19px;border-radius:12px}#stars{font-size:15px}#who img{width:30px;height:30px}
   #bottom{height:calc(52px + env(safe-area-inset-bottom))}#view{bottom:calc(52px + env(safe-area-inset-bottom))}.hd{width:46px;font-size:0}.hd img{width:40px;height:40px}#barHint{display:none}#title small{display:none}}
+@media (max-width:700px){.tb.quit span{display:none}}
 @media (max-width:560px){#title small{display:none}#barHint{display:none}.tb{min-width:42px;height:44px;padding:0 6px;font-size:22px}#top{gap:5px}}
 @media (prefers-reduced-motion:reduce){.e,.e.hop,.e.munch,.e.pop,.fxp{animation:none;transition:none}}
 </style>
 </head>
 <body>
 <div id="top">
+  <a class="tb quit" href="../index.html" aria-label="Quitter le jeu et revenir à l'accueil">✕<span>&nbsp;Quitter</span></a>
   <button class="tb" id="bMap" aria-label="La carte du quartier">🗺️</button>
   <div id="title">Ma Houma<small>le quartier du Jasmin</small></div>
   <button class="tb" id="bDisc" aria-label="Mes découvertes"><span id="stars">⭐ 0</span></button>
@@ -103,6 +107,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
   <pattern id="ray" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#fff"/><rect width="16" height="6" fill="#d83a3a"/><rect y="9" width="16" height="3" fill="#1d6fb8"/></pattern>
 </defs></svg>
 <script src="../famille.js"></script>
+<script src="houma/corps.js"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -135,52 +140,31 @@ const sfx = {
    ===================================================================== */
 const AV = '../jeux/avatars/';
 const CHARS = [
-  { id:'anis', n:'Anis', img:'anis', k:.84, skin:'#d9a27a', pal:['#2f6fd6', '#39445a'] },
-  { id:'imen', n:'Imen', img:'imen', k:.8, skin:'#e0aa84', pal:['#8a2440', '#3d4a66'] },
-  { id:'essil', n:'Essil', img:'essil', k:.75, skin:'#e6b48e', pal:['#8b5cf6', '#2f3b55'] },
-  { id:'salma', n:'Salma', img:'salma', k:.66, skin:'#e9b993', pal:['#ec5f8f', '#5a6b8c'] },
-  { id:'amine', n:'Amine', img:'amine', k:.56, skin:'#dba57c', pal:['#f08a24', '#3b5aa8'] },
-  { id:'nour', n:'Nour', img:'mascotte-nour', k:.58, skin:'#b97a50', o:'farmla', pal:['#12a8a0', '#fdfdf8'] },
-  { id:'yasmine', n:'Yasmine', img:'mascotte-yasmine', k:.66, skin:'#b6744c', o:'keswa', pal:['#c93a3a', '#fdfdf8'] },
-  { id:'fares', n:'Farès', img:'mascotte-fares', k:.82, skin:'#b9794f', o:'jebba', pal:['#2a3f9a', '#fdfdf8'] }
+  { id:'anis', n:'Anis', img:'anis', k:.86, hip:.55 }, { id:'imen', n:'Imen', img:'imen', k:.82, hip:.55 }, { id:'essil', n:'Essil', img:'essil', k:.76, hip:.57 },
+  { id:'salma', n:'Salma', img:'salma', k:.66, hip:.6 }, { id:'amine', n:'Amine', img:'amine', k:.56, hip:.63 },
+  { id:'nour', n:'Nour', img:'mascotte-nour', k:.58, hip:.62 }, { id:'yasmine', n:'Yasmine', img:'mascotte-yasmine', k:.68, hip:.6 }, { id:'fares', n:'Farès', img:'mascotte-fares', k:.84, hip:.56 }
 ];
 const CH = Object.fromEntries(CHARS.map(c => [c.id, c]));
-/* Les tenues : chacune dessine le corps habillé (repère 120 x 260, pieds en bas). */
-const gold = '#e3b23c';
+/* Les corps : les personnages « en vrai » du Jasmin et de Médina Express, vus de face (images fabriquées par docs/houma/build.py
+   à partir des planches jeux/jasmin2/, aucun crédit). Une image par personnage et par tenue : à gauche debout, à droite les yeux fermés (pour dormir).
+   CORPS[id][tenue] = [largeur, hauteur, tête x, tête haut, tête largeur, cou y, main x, main y] en fractions. */
+const CORPS = window.HOUMA_CORPS || {}, gold = '#e3b23c', HK = 286;
 const OUTFITS = {
-  ville:{ n:'tenue de ville', leg:'pal', draw:(c) => tee(c.pal[0]) + legs(c.pal[1]) + sleeves(c.pal[0], 26) },
-  jebba:{ n:'jebba', trad:1, leg:'#fbf8ee', draw:() => robe('#fbf8ee', 236) + `<path d="M60 100v70" stroke="${gold}" stroke-width="4"/><path d="M50 104q10 12 20 0" fill="none" stroke="${gold}" stroke-width="3"/><circle cx="60" cy="124" r="2.4" fill="${gold}"/><circle cx="60" cy="140" r="2.4" fill="${gold}"/>` + sleeves('#fbf8ee', 44) },
-  keswa:{ n:'robe de fête', trad:1, leg:'#c2185b', draw:() => robe('#c2185b', 240) + `<path d="M36 232h48" stroke="${gold}" stroke-width="6"/><path d="M38 150h44" stroke="${gold}" stroke-width="7"/><path d="M48 102q12 16 24 0" fill="none" stroke="${gold}" stroke-width="4"/><path d="M44 200l8 10 8-10 8 10 8-10" fill="none" stroke="${gold}" stroke-width="2.5"/>` + sleeves('#c2185b', 40, gold) },
-  farmla:{ n:'gilet brodé', trad:1, leg:'#fdfdf8', draw:() => tee('#fdfdf8') + `<path d="M34 100h18l-4 60H36zM86 100H68l4 60h12z" fill="#b3202a" stroke="${gold}" stroke-width="2.5"/>` + `<path d="M38 160h44l6 62q-14 10-24-6-10 16-32 6z" fill="#fdfdf8" stroke="#d9d4c3" stroke-width="2"/><rect x="38" y="156" width="44" height="9" rx="4" fill="#12a8a0"/>` + sleeves('#fdfdf8', 40) },
-  tablier:{ n:"tablier d'école", leg:'#39445a', draw:() => robe('#3f86e8', 200) + legsOnly('#39445a') + `<path d="M46 100l14 12 14-12" fill="#fff" stroke="#dfe6f2" stroke-width="2"/><circle cx="60" cy="130" r="2.6" fill="#fff"/><circle cx="60" cy="148" r="2.6" fill="#fff"/><circle cx="60" cy="166" r="2.6" fill="#fff"/><rect x="66" y="150" width="14" height="14" rx="3" fill="#2f6fd6"/>` + sleeves('#3f86e8', 40) },
-  pyjama:{ n:'pyjama', leg:'#bfe0ff', draw:() => tee('url(#pj)') + legs('url(#pj)') + sleeves('#bfe0ff', 36) + `<defs><pattern id="pj" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#d8ecff"/><rect width="4" height="10" fill="#9cc8f5"/></pattern></defs>` },
-  plage:{ n:'tenue de plage', leg:'#12a8a0', draw:() => tee('url(#ray)') + `<path d="M38 160h44l2 40H64l-4-16-4 16H36z" fill="#12a8a0"/>` + sleeves('#fff', 18) }
+  ville:{ n:'ses habits de tous les jours', col:'#2f6fd6' }, jebba:{ n:'sa jebba', trad:1, col:'#fbf8ee' }, foot:{ n:'sa tenue de foot', col:'#c8102e' },
+  astro:{ n:"sa tenue d'astronaute", col:'#e9edf2' }, super:{ n:'sa tenue de super-héros', col:'#5b2a9a' }, or:{ n:'sa tenue en or', col:'#e3b23c' }
 };
-function tee(fill){ return `<path d="M36 102q24-10 48 0l-2 64H38z" fill="${fill}" stroke="#0002" stroke-width="1.5"/>`; }
-function legs(fill){ return `<path d="M38 160h44l-2 80H66l-6-56-6 56H40z" fill="${fill}" stroke="#0002" stroke-width="1.5"/>`; }
-function legsOnly(fill){ return `<path d="M44 196h14v44H44zM62 196h14v44H62z" fill="${fill}"/>`; }
-function robe(fill, to){ return `<path d="M36 102q24-10 48 0l10 ${to - 102}q-34 12-68 0z" fill="${fill}" stroke="#0002" stroke-width="1.5"/>`; }
-function sleeves(fill, len, trim){ const y = 104 + len; return `<path d="M36 102l-12 ${len}h13l5-${len - 6}z M84 102l12 ${len}H83l-5-${len - 6}z" fill="${fill}" stroke="#0002" stroke-width="1.2"/>` + (trim ? `<path d="M24 ${y - 2}h13M83 ${y - 2}h13" stroke="${trim}" stroke-width="4"/>` : ''); }
-function doll(c, st){
-  const o = OUTFITS[st.o] || OUTFITS.ville, sit = st.pose === 'sit', sleep = st.pose === 'sleep', a = st.acc || [];
-  const skin = c.skin, long = st.o === 'jebba' || st.o === 'keswa';
-  const legsSkin = `<path d="M44 186h14v54H44zM62 186h14v54H62z" fill="${skin}"/><ellipse cx="49" cy="244" rx="12" ry="7" fill="#3a2c22"/><ellipse cx="71" cy="244" rx="12" ry="7" fill="#3a2c22"/>`;
-  const arms = `<path d="M30 110l-8 56" stroke="${skin}" stroke-width="12" stroke-linecap="round"/><path d="M90 110l8 56" stroke="${skin}" stroke-width="12" stroke-linecap="round"/>`;
-  const body = o.draw(c), lc = o.leg ? (o.leg === 'pal' ? c.pal[1] : o.leg) : skin;
-  const acc = (a.includes('sac') ? `<rect x="14" y="108" width="24" height="50" rx="9" fill="#e5484d" stroke="#0003" stroke-width="1.5"/>` : '');
-  const hat = (a.includes('chechia') ? `<path d="M34 22q26-22 52 0v10H34z" fill="#c8102e" stroke="#0003" stroke-width="1.5"/><path d="M82 14q10 4 8 22" fill="none" stroke="#222" stroke-width="3"/>` : '') +
-    (a.includes('paille') ? `<ellipse cx="60" cy="26" rx="56" ry="10" fill="#f1d28a" stroke="#c9a65a" stroke-width="2"/><path d="M34 26q26-36 52 0z" fill="#f1d28a" stroke="#c9a65a" stroke-width="2"/><path d="M36 22h48" stroke="#d83a3a" stroke-width="5"/>` : '') +
-    (a.includes('lunettes') ? `<rect x="34" y="42" width="22" height="15" rx="7" fill="#1b1b22"/><rect x="64" y="42" width="22" height="15" rx="7" fill="#1b1b22"/><path d="M56 48h8" stroke="#1b1b22" stroke-width="3"/>` : '') +
-    (a.includes('machmoum') ? `<g transform="translate(98 52)"><path d="M0 14V-2" stroke="#2e9e4f" stroke-width="3"/>${[[-6, -4], [6, -4], [0, -10], [-4, 3], [4, 3]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#fff" stroke="#e6e0c8" stroke-width="1"/>`).join('')}</g>` : '');
-  const face = sleep && !c.img.startsWith('mascotte') ? c.img + '-soupir' : sleep ? c.img + '-soupir' : c.img;
-  const up = `${acc}${arms}<rect x="53" y="84" width="14" height="22" rx="6" fill="${skin}"/>${body}
-    <circle cx="22" cy="168" r="7.5" fill="${skin}"/><circle cx="98" cy="168" r="7.5" fill="${skin}"/>
-    <circle cx="60" cy="50" r="43" fill="#fff"/><image href="${AV}${face}.webp" x="-8" y="-9" width="136" height="136" clip-path="url(#hc-${c.id})" preserveAspectRatio="xMidYMid slice"/>${hat}`;
-  const defs = `<defs><clipPath id="hc-${c.id}"><circle cx="60" cy="50" r="40"/></clipPath><clipPath id="sc-${c.id}"><rect x="-20" y="-20" width="160" height="214"/></clipPath></defs>`;
-  // assis : le haut du corps descend, les cuisses partent vers l'avant
-  if(sit) return `<svg viewBox="0 0 120 260">${defs}<g clip-path="url(#sc-${c.id})" transform="translate(0 38)">${up}</g>
-    <path d="M40 216h56v20H40z" fill="${lc}" stroke="#0002" stroke-width="1.5"/><path d="M80 226h16v24H80z" fill="${long ? lc : skin}"/><ellipse cx="92" cy="252" rx="14" ry="7" fill="#3a2c22"/></svg>`;
-  return `<svg viewBox="0 0 120 260">${defs}<ellipse cx="60" cy="250" rx="40" ry="7" fill="#0002"/>${long ? `<ellipse cx="49" cy="244" rx="12" ry="7" fill="#3a2c22"/><ellipse cx="71" cy="244" rx="12" ry="7" fill="#3a2c22"/>` : legsSkin}${up}</svg>`;
+const metaOf = (id, o) => (CORPS[id] && (CORPS[id][o] || CORPS[id].ville)) || [115, 255, .5, .01, .5, .25, .85, .5];
+function sizeOf(id, o){ const M = metaOf(id, o), h = HK * CH[id].k; return { w:h * M[0] / M[1], h, M }; }
+function doll(C, st){
+  const o = OUTFITS[st.o] ? st.o : 'ville', { w, h, M } = sizeOf(C.id, o), a = st.acc || [];
+  const sit = st.pose === 'sit' || st.pose === 'bath', sleep = st.pose === 'sleep';
+  const cx = M[2] * w, top = M[3] * h, hw = M[4] * w, eye = top + (M[5] * h - top) * .56, u = hw / 80;   // u : l'unité des chapeaux, d'après la largeur de la tête
+  const hat = (a.includes('chechia') ? `<g transform="translate(${cx} ${top}) scale(${u})"><path d="M-30 14q30-34 60 0v12h-60z" fill="#b3151f" stroke="#6d0c14" stroke-width="2"/><path d="M24 2q12 6 9 28" fill="none" stroke="#222" stroke-width="3.5" stroke-linecap="round"/></g>` : '') +
+    (a.includes('paille') ? `<g transform="translate(${cx} ${top}) scale(${u})"><ellipse cx="0" cy="18" rx="64" ry="11" fill="#f1d28a" stroke="#c9a65a" stroke-width="2.5"/><path d="M-30 18q30-42 60 0z" fill="#f1d28a" stroke="#c9a65a" stroke-width="2.5"/><path d="M-28 12h56" stroke="#d83a3a" stroke-width="6"/></g>` : '') +
+    (a.includes('lunettes') ? `<g transform="translate(${cx} ${eye}) scale(${u})"><rect x="-27" y="-9" width="24" height="17" rx="8" fill="#15151c"/><rect x="3" y="-9" width="24" height="17" rx="8" fill="#15151c"/><path d="M-4 -3h8M-27 -3h-8M27 -3h8" stroke="#15151c" stroke-width="3"/></g>` : '') +
+    (a.includes('machmoum') ? `<g transform="translate(${cx + hw * .5} ${eye + 4 * u}) scale(${u * .8})"><path d="M0 22V2" stroke="#2e9e4f" stroke-width="4"/>${[[-8, -4], [8, -4], [0, -12], [-5, 6], [5, 6]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="#fff" stroke="#e6e0c8" stroke-width="1.2"/>`).join('')}</g>` : '');
+  const clip = sit ? `clip-path:inset(0 0 ${((1 - C.hip) * 100).toFixed(1)}% 0);` : '';
+  return `<div class="body" style="background-image:url(houma/c-${C.id}${o === 'ville' ? '' : '-' + o}.webp);background-position:${sleep ? '100%' : '0'} 0;${clip}"></div>${sit || sleep ? '' : `<i class="shade"></i>`}${hat ? `<svg viewBox="0 0 ${w.toFixed(1)} ${h.toFixed(1)}" style="position:absolute;inset:0">${hat}</svg>` : ''}`;
 }
 
 /* =====================================================================
@@ -204,12 +188,12 @@ const ITEMS = {
   fouta:{ n:'la fouta', z:52, s:() => svg(`<rect x="14" y="30" width="72" height="56" rx="6" fill="url(#ray)" stroke="#0003" stroke-width="3"/><path d="M14 86v8M26 86v8M38 86v8M50 86v8M62 86v8M74 86v8M86 86v8" stroke="#d83a3a" stroke-width="3"/>`) },
   chat:{ n:'le chat', e:'🐈', z:52, pet:1 },
   chechia:{ n:'la chéchia', z:44, acc:1, s:() => svg(`<path d="M18 70q32-56 64 0v14H18z" fill="#c8102e" stroke="#7d0a1c" stroke-width="4" stroke-linejoin="round"/><path d="M74 40q16 6 12 36" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>`) },
-  paille:{ n:'le chapeau de paille', e:'👒', z:46, acc:1 }, lunettes:{ n:'les lunettes de soleil', e:'🕶️', z:40, acc:1 }, sac:{ n:'le sac à dos', e:'🎒', z:44, acc:1 },
+  paille:{ n:'le chapeau de paille', e:'👒', z:46, acc:1 }, lunettes:{ n:'les lunettes de soleil', e:'🕶️', z:40, acc:1 }, sac:{ n:'le sac à dos', e:'🎒', z:44 },
   machmoum:{ n:'un machmoum de jasmin', z:42, acc:1, s:() => svg(`<path d="M50 96V52" stroke="#2e9e4f" stroke-width="7" stroke-linecap="round"/>${[[32, 40], [68, 40], [50, 22], [38, 60], [62, 60], [50, 44]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="14" fill="#fff" stroke="#e2dcc4" stroke-width="3"/>`).join('')}<path d="M40 84h20" stroke="#c8102e" stroke-width="5"/>`) }
 };
 // les vêtements de l'armoire : un cintre par tenue (ils reviennent tout seuls à leur place)
-Object.keys(OUTFITS).forEach(o => { const col = { ville:'#2f6fd6', jebba:'#fbf8ee', keswa:'#c2185b', farmla:'#b3202a', tablier:'#3f86e8', pyjama:'#bfe0ff', plage:'#12a8a0' }[o];
-  ITEMS['v-' + o] = { n:OUTFITS[o].n, z:46, wear:o, home:1, s:() => svg(`<path d="M50 14q-8 0-8 8M50 22 20 40h60z" fill="none" stroke="#7a5a3a" stroke-width="4" stroke-linecap="round"/><path d="M24 40h52l8 20-12 6v26H28V66l-12-6z" fill="${col}" stroke="#0004" stroke-width="3" stroke-linejoin="round"/>${OUTFITS[o].trad ? `<path d="M50 42v40" stroke="${gold}" stroke-width="4"/>` : ''}`) }; });
+Object.keys(OUTFITS).forEach(o => { const col = OUTFITS[o].col, extra = { jebba:`<path d="M50 42v40" stroke="${gold}" stroke-width="4"/>`, foot:`<text x="50" y="76" text-anchor="middle" font-size="26" font-weight="800" fill="#fff" font-family="sans-serif">10</text>`, astro:`<rect x="38" y="52" width="24" height="16" rx="3" fill="#7fa3c4"/><path d="M28 42v50M72 42v50" stroke="#f08a24" stroke-width="3"/>`, super:`<path d="M50 48l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="#ffd84d"/>`, or:`<path d="M34 52l8 8M58 50l10 10M40 76l8 8" stroke="#fff6c8" stroke-width="4" stroke-linecap="round"/>`, ville:'' }[o];
+  ITEMS['v-' + o] = { n:OUTFITS[o].n, z:46, wear:o, home:1, s:() => svg(`<path d="M50 14q-8 0-8 8M50 22 20 40h60z" fill="none" stroke="#7a5a3a" stroke-width="4" stroke-linecap="round"/><path d="M24 40h52l8 20-12 6v26H28V66l-12-6z" fill="${col}" stroke="#0004" stroke-width="3" stroke-linejoin="round"/>${extra}`) }; });
 
 /* =====================================================================
    MEUBLES fixes. Position = milieu du bas (x, y). tap = états qui alternent ; surf = où poser ; inside = intérieur caché quand c'est fermé ;
@@ -248,7 +232,7 @@ const FIXED = {
   citronnier:{ w:120, h:210, tap:['', ''], water:1,
     draw:s => svg(`<path d="M40 176h40l-6 34H46z" fill="#1d6fb8" stroke="#134f86" stroke-width="4" stroke-linejoin="round"/><path d="M60 176V96" stroke="#7c5631" stroke-width="9" stroke-linecap="round"/><circle cx="60" cy="62" r="52" fill="#3fae5f" stroke="#237a40" stroke-width="4"/><circle cx="34" cy="50" r="18" fill="#52c173"/><circle cx="82" cy="78" r="16" fill="#52c173"/>${s === 'c' ? [[34, 76], [78, 40], [60, 96], [92, 70]].map(p => `<ellipse cx="${p[0]}" cy="${p[1]}" rx="9" ry="11" fill="#ffd84d" stroke="#c9a400" stroke-width="2"/>`).join('') : ''}`, '0 0 120 210') },
   tabouret:{ w:60, h:46, seats:[[0, -44]], draw:() => svg(`<ellipse cx="30" cy="8" rx="28" ry="8" fill="#12a8a0" stroke="#0b6f69" stroke-width="3"/><path d="M12 12l-6 34M48 12l6 34M30 14v32" stroke="${woodD}" stroke-width="6" stroke-linecap="round"/>`, '0 0 60 46') },
-  baignoire:{ w:250, h:112, bath:[[-10, -28]], tap:['', 'm'],
+  baignoire:{ w:250, h:112, bath:[[-10, -60]], tap:['', 'm'],
     draw:() => svg(`<path d="M14 20h222v50q0 30-30 30H44q-30 0-30-30z" fill="#fdfdf8" stroke="#b9c8da" stroke-width="4"/>`, '0 0 250 112'),
     front:s => svg(`<path d="M6 26h238v6H6z" fill="#e6eef7" stroke="#b9c8da" stroke-width="3"/><path d="M14 30h222v40q0 30-30 30H44q-30 0-30-30z" fill="#fdfdf8" stroke="#8fa3bb" stroke-width="4"/><path d="M16 50h218" stroke="#1d6fb8" stroke-width="10"/><path d="M20 66h210" stroke="#ffc93c" stroke-width="4"/><path d="M40 100v12M210 100v12" stroke="#8fa3bb" stroke-width="8" stroke-linecap="round"/>${s === 'm' ? [[30, 22], [60, 14], [92, 22], [124, 12], [156, 22], [190, 14], [220, 22]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="15" fill="#fff" stroke="#d6e6f5" stroke-width="2"/>`).join('') : ''}`, '0 0 250 112') },
   lavabo:{ w:90, h:126, tap:['', 'on'], fill:1, draw:s => svg(`<path d="M45 126V70" stroke="#c9d6e4" stroke-width="18"/><path d="M6 48h78q0 30-39 30T6 48z" fill="#fdfdf8" stroke="#b9c8da" stroke-width="4"/><path d="M45 44V18q0-10 14-8" fill="none" stroke="#8a97a8" stroke-width="7" stroke-linecap="round"/>${s === 'on' ? `<path d="M59 12v40" stroke="#5ac8ff" stroke-width="7" stroke-linecap="round" stroke-dasharray="9 6"/>` : ''}`, '0 0 90 126') }
@@ -282,17 +266,17 @@ const PLACES = {
       <path d="M34 52v650M1246 52v650" stroke="#e3e9f1" stroke-width="12"/></svg>`,
     fixed:[['frigo', 'frigo', 112, F0], ['comptoir', 'comptoir', 300, F0], ['evier', 'evier', 232, F0 - 116], ['feu', 'feu', 362, F0 - 116], ['placard', 'placard', 300, 500],
       ['jasmin', 'jasmin', 474, F0], ['fontaine', 'fontaine', 626, F0], ['lanterne', 'lanterne', 542, 484], ['cage', 'cage', 690, 500],
-      ['banquette', 'banquette', 1070, F0], ['meida', 'meida', 890, F0], ['etagere', 'etagere', 1120, 540], ['radio', 'radio', 1160, 524],
+      ['banquette', 'banquette', 1070, F0], ['meida', 'meida', 890, F0], ['etagere', 'etagere', 1130, 446], ['radio', 'radio', 1176, 430],
       ['armoire', 'armoire', 122, F1], ['lit', 'lit', 340, F1], ['chevet', 'chevet', 486, F1], ['lampe', 'lampe', 486, F1 - 72],
       ['citronnier', 'citronnier', 596, F1], ['tabouret', 'tabouret', 700, F1], ['baignoire', 'baignoire', 1000, F1], ['lavabo', 'lavabo', 1186, F1], ['etagereB', 'etagere', 990, 170]],
     items:[['lait', 'lait', 90, F0 - 180], ['pasteque', 'pasteque', 132, F0 - 180], ['poisson', 'poisson', 96, F0 - 122], ['tomate', 'tomate', 136, F0 - 122], ['piment', 'piment', 112, F0 - 64],
       ['verre1', 'verre', 222, 488], ['verre2', 'verre', 256, 488], ['verre3', 'verre', 290, 488], ['harissa', 'harissa', 336, 488], ['makroud', 'makroud', 378, 488],
-      ['theiere', 'theiere', 296, F0 - 116], ['marmite', 'marmite', 406, F0 - 116], ['pain', 'pain', 880, F0 - 58], ['orange', 'orange', 916, F0 - 58], ['bambalouni', 'bambalouni', 1060, 524],
-      ['livre', 'livre', 1098, 524], ['darbouka', 'darbouka', 960, F0], ['chat', 'chat', 545, F0], ['arrosoir', 'arrosoir', 656, F1], ['ballon', 'ballon', 758, F1],
+      ['theiere', 'theiere', 296, F0 - 116], ['marmite', 'marmite', 406, F0 - 116], ['pain', 'pain', 880, F0 - 58], ['orange', 'orange', 916, F0 - 58], ['bambalouni', 'bambalouni', 1066, 430],
+      ['livre', 'livre', 1108, 430], ['darbouka', 'darbouka', 960, F0], ['chat', 'chat', 545, F0], ['arrosoir', 'arrosoir', 656, F1], ['ballon', 'ballon', 758, F1],
       ['doudou', 'doudou', 392, F1 - 34], ['chechia', 'chechia', 96, F1 - 250], ['paille', 'paille', 152, F1 - 250], ['lunettes', 'lunettes', 1040, 154], ['sac', 'sac', 232, F1],
       ['savon', 'savon', 930, 154], ['lotion', 'lotion', 966, 154], ['canard', 'canard', 1002, 154], ['fouta', 'fouta', 1120, F1],
-      ['v-jebba', 'v-jebba', 76, F1 - 138], ['v-keswa', 'v-keswa', 108, F1 - 138], ['v-farmla', 'v-farmla', 140, F1 - 138], ['v-ville', 'v-ville', 172, F1 - 138],
-      ['v-tablier', 'v-tablier', 86, F1 - 34], ['v-pyjama', 'v-pyjama', 122, F1 - 34], ['v-plage', 'v-plage', 158, F1 - 34]],
+      ['v-jebba', 'v-jebba', 84, F1 - 138], ['v-foot', 'v-foot', 122, F1 - 138], ['v-astro', 'v-astro', 160, F1 - 138],
+      ['v-super', 'v-super', 84, F1 - 34], ['v-or', 'v-or', 122, F1 - 34], ['v-ville', 'v-ville', 160, F1 - 34]],
     start:{ anis:[965, F0], imen:[1085, F0], essil:[806, F1], salma:[812, F0], amine:[250, F1], nour:[745, F0], yasmine:[1185, F0], fares:[420, F0] } }
 };
 // la carte du quartier : [lieu, x %, y %, nom, émoji, ouvert]
@@ -304,7 +288,7 @@ const MAP = [['dar', 24, 66, 'Dar Yasmine', '🏠', 1], ['cafe', 52, 50, 'Le caf
 const DISC = [['the', '🫖', 'Servir le thé'], ['boire', '🥤', 'Boire un verre'], ['manger', '😋', 'Bon appétit'], ['piment', '🌶️', 'Ça pique !'], ['couscous', '🍲', 'Cuire le couscous'], ['frigo', '🧊', 'Ouvrir le frigo'],
   ['dodo', '😴', 'Au lit'], ['bain', '🛁', 'Prendre un bain'], ['jasmin', '🌼', 'Faire fleurir le jasmin'], ['machmoum', '💐', 'Porter un machmoum'], ['citron', '🍋', 'Cueillir un citron'],
   ['fontaine', '⛲', 'La fontaine'], ['radio', '🎶', 'Mettre la musique'], ['darbouka', '🥁', 'Jouer de la darbouka'], ['chat', '🐈', 'Caresser le chat'], ['oiseau', '🐤', 'Faire chanter le canari'],
-  ['trad', '✨', 'Tenue de fête'], ['chechia', '🧢', 'Porter la chéchia'], ['lampe', '💡', 'Allumer la lumière'], ['veillee', '🛋️', 'La veillée au salon'], ['pyjama', '🌙', 'En pyjama']];
+  ['trad', '✨', 'Tenue de fête'], ['chechia', '🧢', 'Porter la chéchia'], ['lampe', '💡', 'Allumer la lumière'], ['veillee', '🛋️', 'La veillée au salon'], ['super', '🦸', 'Super-héros'], ['astro', '🚀', 'Astronaute']];
 
 /* =====================================================================
    ÉTAT du monde (une sauvegarde par joueur, petite et versionnée)
@@ -319,7 +303,7 @@ function fresh(){
 function fill(s){
   s = s && typeof s === 'object' ? s : {}; s.v = 1; ['chars', 'items', 'fx', 'disc', 'seen'].forEach(k => { if(!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {}; });
   Object.entries(PLACES).forEach(([pid, P]) => {
-    Object.entries(P.start || {}).forEach(([id, [x, y]]) => { const c = s.chars[id]; if(!c || !PLACES[c.p] || !isFinite(c.x) || !isFinite(c.y)) s.chars[id] = { p:pid, x, y, pose:'', o:CH[id].o || 'ville', acc:[] }; });
+    Object.entries(P.start || {}).forEach(([id, [x, y]]) => { const c = s.chars[id]; if(!c || !PLACES[c.p] || !isFinite(c.x) || !isFinite(c.y)) s.chars[id] = { p:pid, x, y, pose:'', o:'ville', acc:[] }; });
     P.items.forEach(([id, type, x, y]) => { const it = s.items[id]; if(!it || !isFinite(it.x) || !isFinite(it.y) || (it.p && !PLACES[it.p])) s.items[id] = { p:pid, x, y, s:'', h:'' }; });
   });
   ['citron', 'machmoum'].forEach(id => { if(!s.items[id]) s.items[id] = { p:'', x:0, y:0, s:'', h:'' }; });
@@ -375,7 +359,8 @@ const fxKey = id => place + '.' + id, fxState = id => S.fx[fxKey(id)] || '';
 function fixedOf(id){ const f = PLACES[place].fixed.find(f => f[0] === id); return f ? { id, T:FIXED[f[1]], type:f[1], x:f[2], y:f[3] } : null; }
 const allFixed = () => PLACES[place].fixed.map(f => ({ id:f[0], T:FIXED[f[1]], type:f[1], x:f[2], y:f[3] }));
 function hidden(it){ if(it.h) return false; return allFixed().some(f => f.T.inside && fxState(f.id) !== 'o' && it.x >= f.x + f.T.inside[0] && it.x <= f.x + f.T.inside[1] && it.y >= f.y + f.T.inside[2] && it.y <= f.y + f.T.inside[3]); }
-function handOf(cid){ const c = S.chars[cid], k = CH[cid].k; if(c.pose === 'sleep') return { x:c.x + 30 * k, y:c.y - 40 * k }; return { x:c.x + 38 * k, y:c.y - (c.pose === 'sit' || c.pose === 'bath' ? 28 : 92) * k }; }
+function handOf(cid){ const c = S.chars[cid], { w, h, M } = sizeOf(cid, c.o), C = CH[cid]; if(c.pose === 'sleep') return { x:c.x + h * .12, y:c.y - 26 };
+  const hx = c.x + (Math.min(.9, M[6]) - .5) * w; return c.pose === 'sit' || c.pose === 'bath' ? { x:hx, y:c.y - h * .08 } : { x:hx, y:c.y - h * (1 - C.hip) + h * .02 }; }
 function box(el, x, y, w, h, z){ el.style.left = (x - w / 2) + 'px'; el.style.top = (y - h) + 'px'; el.style.width = w + 'px'; el.style.height = h + 'px'; el.style.zIndex = z; }
 function mk(cls, id){ const el = document.createElement('div'); el.className = 'e ' + cls; el.dataset.id = id; stage.appendChild(el); return el; }
 
@@ -393,10 +378,10 @@ function drawItem(id){
   box(e.el, x, y, T.z, T.z, z);
 }
 function drawChar(id){
-  const e = ents.get(id), c = S.chars[id], C = CH[id]; if(!e) return;
+  const e = ents.get(id), c = S.chars[id], C = CH[id]; if(!e) return; const { w, h } = sizeOf(id, c.o), sit = c.pose === 'sit' || c.pose === 'bath';
   e.el.classList.toggle('hide', c.p !== place); e.el.classList.toggle('sleep', c.pose === 'sleep');
-  e.el.innerHTML = doll(C, c); const w = 120 * C.k, h = 260 * C.k;
-  const y = c.pose === 'sit' || c.pose === 'bath' ? c.y + 26 * C.k : c.pose === 'sleep' ? c.y + h / 2 - 8 : c.y;
+  e.el.innerHTML = doll(C, c);
+  const y = sit ? c.y + (1 - C.hip) * h : c.pose === 'sleep' ? c.y + h / 2 - 10 : c.y;   // assis : la ligne des hanches se pose sur le siège
   box(e.el, c.x, y, w, h, (c.pose === 'bath' ? 6000 : 5000) + Math.round(c.y));
   Object.entries(S.items).forEach(([iid, it]) => { if(it.h === id) drawItem(iid); });
 }
@@ -465,7 +450,7 @@ const heldBy = cid => Object.keys(S.items).find(id => S.items[id].h === cid);
 function goHome(id){ const h = HOME[id], it = S.items[id]; if(!h.p){ it.p = ''; it.h = ''; } else { it.p = h.p; it.x = h.x; it.y = h.y; it.h = ''; it.s = ''; } drawItem(id); if(it.p === place) pulse(id, 'pop'); }
 const RULES = [
   // sur un personnage
-  { on:'char', when:(T) => T.wear, apply:(id, T, cid) => { const c = S.chars[cid]; c.o = T.wear; goHome(id); drawChar(cid); pulse(cid, 'hop'); sfx.wear(); fx(c.x, c.y - 200 * CH[cid].k, '✨'); toast(`${CH[cid].n} met ${OUTFITS[T.wear].n === 'jebba' ? 'sa jebba' : 'sa ' + OUTFITS[T.wear].n}`.replace('sa tablier', 'son tablier').replace('sa pyjama', 'son pyjama').replace('sa gilet', 'son gilet')); if(OUTFITS[T.wear].trad) found('trad'); if(T.wear === 'pyjama') found('pyjama'); } },
+  { on:'char', when:(T) => T.wear, apply:(id, T, cid) => { const c = S.chars[cid]; c.o = T.wear; goHome(id); drawChar(cid); pulse(cid, 'hop'); sfx.wear(); fx(c.x, c.y - 200 * CH[cid].k, '✨'); toast(`${CH[cid].n} met ${OUTFITS[T.wear].n}`); if(OUTFITS[T.wear].trad) found('trad'); if(T.wear === 'super') found('super'); if(T.wear === 'astro') found('astro'); } },
   { on:'char', when:(T) => T.acc, apply:(id, T, cid) => { const c = S.chars[cid], t = typeOf(id); if(c.acc.includes(t)) return false; if(['chechia', 'paille'].includes(t)) c.acc.filter(a => ['chechia', 'paille'].includes(a)).forEach(a => takeOff(cid, a)); c.acc.push(t); S.items[id].p = ''; S.items[id].h = ''; drawItem(id); drawChar(cid); pulse(cid, 'hop'); sfx.wear(); if(t === 'chechia') found('chechia'); if(t === 'machmoum') found('machmoum'); } },
   { on:'char', when:(T, it) => T.food && !(typeOf(it.id) === 'verre'), apply:(id, T, cid) => { const c = S.chars[cid]; pulse(cid, 'munch'); sfx.munch(); fx(c.x, c.y - 210 * CH[cid].k, T.hot ? '🥵' : T.drink ? '😊' : '😋'); S.items[id].p = ''; S.items[id].h = ''; drawItem(id); setTimeout(() => { if(HOME[id].p){ goHome(id); save(); } }, 5000); found(T.hot ? 'piment' : 'manger'); if(T.hot) toast(`Ouh là, ça pique ! ${CH[cid].n} a besoin d'eau 💧`); } },
   { on:'char', when:(T, it) => typeOf(it.id) === 'verre' && it.s === 'the', apply:(id, T, cid) => { const c = S.chars[cid]; S.items[id].s = ''; give(id, cid); pulse(cid, 'munch'); sfx.sip(); fx(c.x, c.y - 210 * CH[cid].k, '😌'); found('boire'); } },
@@ -511,7 +496,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 /* ---------- lâcher (drop) ---------- */
 function hit(x, y, skip){
   // le personnage, puis l'objet, puis le meuble qui se trouve sous le doigt
-  const cs = CHARS.filter(C => C.id !== skip && S.chars[C.id].p === place).map(C => ({ C, c:S.chars[C.id] })).filter(({ C, c }) => Math.abs(x - c.x) < 46 * C.k + 14 && y < c.y + 16 && y > c.y - 262 * C.k).sort((a, b) => b.c.y - a.c.y)[0];
+  const cs = CHARS.filter(C => C.id !== skip && S.chars[C.id].p === place).map(C => ({ C, c:S.chars[C.id] })).filter(({ C, c }) => { const z = sizeOf(C.id, c.o); return Math.abs(x - c.x) < z.w * .42 + 12 && y < c.y + 16 && y > c.y - z.h - 6; }).sort((a, b) => b.c.y - a.c.y)[0];
   const out = []; if(cs) out.push({ kind:'char', id:cs.C.id });
   const its = Object.keys(S.items).filter(id => id !== skip && S.items[id].p === place && !hidden(S.items[id])).map(id => { const it = S.items[id], T = IT(id), p = it.h ? handOf(it.h) : it; return { id, d:Math.hypot(x - p.x, y - (p.y - T.z / 2)), z:T.z }; }).filter(o => o.d < o.z * .7 + 10).sort((a, b) => a.d - b.d)[0];
   if(its) out.push({ kind:'item', id:its.id });
@@ -540,8 +525,6 @@ function dropChar(id, x, y){
 // les découvertes qui dépendent de la scène entière
 function check(){ if(!place) return;
   if(place === 'dar'){ const sit = Object.values(S.chars).filter(c => c.p === 'dar' && c.pose === 'sit' && (c.a || '').startsWith('banquette')).length; if(sit >= 3) found('veillee'); } }
-// pour le dessin : le bain se dessine comme « assis »
-const _doll = doll; doll = (C, st) => _doll(C, st.pose === 'bath' ? Object.assign({}, st, { pose:'sit' }) : st);
 
 /* ---------- le doigt ---------- */
 let D = null;   // geste en cours
