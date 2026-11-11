@@ -57,6 +57,8 @@ h2{font-family:var(--display);margin:0;font-size:30px;line-height:1.05}
 .tenues{display:flex;gap:8px;overflow-x:auto;touch-action:pan-x;padding:2px 2px 8px;scrollbar-width:none}.tenues::-webkit-scrollbar{display:none}
 .tenues button{flex:none;min-width:96px;min-height:56px;border-radius:14px;border:2px solid var(--line);background:#ffffff14;color:#fff;font:800 .82rem inherit;font-family:inherit;padding:6px 10px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
 .tenues button span{font-size:1.3rem;line-height:1}.tenues button small{font-weight:700;opacity:.8;font-size:.7rem}.tenues button.on{background:#ffc93c;color:#23324a;border-color:#ffc93c}.tenues button.lock{opacity:.7}
+@media (max-height:520px){#end .box{gap:5px;padding:8px 14px}#end h2{font-size:21px;margin:0}#end .stars{font-size:24px;line-height:1}#end .sub{display:none}#end [style*="font-size:40px"]{font-size:24px!important;line-height:1}#end .who{min-height:44px;padding:3px 14px 3px 4px}#end .who .av{width:36px;height:36px}#end .tlab{display:none}#end .big{min-height:46px}}
+.dress{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;min-width:0}
 .who{display:flex;align-items:center;gap:10px;background:#ffffff14;border:2px solid var(--line);border-radius:999px;padding:6px 16px 6px 6px;min-height:56px}
 .av{width:44px;height:44px;border-radius:50%;overflow:hidden;display:grid;place-items:center;font-size:24px;background:#2a3d82;flex:none}
 .av img{width:100%;height:100%;object-fit:cover}
@@ -1462,16 +1464,19 @@ function frame(now){
    Écrans : menu, mondes, questions, fin de niveau
    ===================================================================== */
 function show(id){ releaseAll(); keys.l = keys.r = keys.a = keys.b = false; document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); document.body.classList.toggle('menu', id === 'menu'); document.body.classList.toggle('playing', !id); }
-function renderTenues(){ const g = garde(), cur = tenue(); $('tLab').textContent = player ? `Ta tenue · ta bourse : ${bourse()} 🪙 dinars${g.coins > 0 ? ` (et ${g.coins} pièces de Médina Express)` : ''}` : 'Ta tenue';
-  $('tenues').innerHTML = TENUES.map(k => { const has = k.prix === 0 || g.skins.includes(k.id); return `<button class="${cur === k.id ? 'on' : ''} ${has ? '' : 'lock'}" data-tn="${k.id}"><span>${k.ic}</span>${k.n}<small>${has ? (cur === k.id ? 'je la porte' : 'à moi') : '🔒 ' + prixDinars(k) + ' 🪙'}</small></button>`; }).join('');
-  const on = $('tenues').querySelector('.on'); if(on) $('tenues').scrollLeft = Math.max(0, on.offsetLeft - 60); }
-$('tenues').onclick = async e => { const b = e.target.closest('[data-tn]'); if(!b) return; audio(); if(!player && !(await choose())) return; const k = TENUES.find(x => x.id === b.dataset.tn), g = garde();
+const TZONES = [['tLab', 'tenues'], ['eLab', 'eTenues']];   // la garde-robe du menu et celle de la fin de monde
+function renderTenues(){ TZONES.forEach(([l, t]) => { if($(t)) renderTenuesIn($(l), $(t)); }); }
+function renderTenuesIn(lab, box){ const g = garde(), cur = tenue(); lab.textContent = player ? `Ta tenue · ta bourse : ${bourse()} 🪙 dinars${g.coins > 0 ? ` (et ${g.coins} pièces de Médina Express)` : ''}` : 'Ta tenue';
+  box.innerHTML = TENUES.map(k => { const has = k.prix === 0 || g.skins.includes(k.id); return `<button class="${cur === k.id ? 'on' : ''} ${has ? '' : 'lock'}" data-tn="${k.id}"><span>${k.ic}</span>${k.n}<small>${has ? (cur === k.id ? 'je la porte' : 'à moi') : '🔒 ' + prixDinars(k) + ' 🪙'}</small></button>`; }).join('');
+  const on = box.querySelector('.on'); if(on) box.scrollLeft = Math.max(0, on.offsetLeft - 60); }
+const tenueTap = lab => async e => { const b = e.target.closest('[data-tn]'); if(!b) return; audio(); if(!player && !(await choose())) return; const k = TENUES.find(x => x.id === b.dataset.tn), g = garde();
   if(k.prix > 0 && !g.skins.includes(k.id)){ const pj = prixDinars(k), parDinars = bourse() >= pj;   // on paie avec les dinars du Jasmin ; à défaut, avec les pièces de Médina Express
-    if(!parDinars && g.coins < k.prix){ sfx.tap(); $('tLab').textContent = `Il te manque ${pj - bourse()} 🪙 dinars pour « ${k.n} » : ramasse des pièces dans les mondes !`; return; }
+    if(!parDinars && g.coins < k.prix){ sfx.tap(); $(lab).textContent = `Il te manque ${pj - bourse()} 🪙 dinars pour « ${k.n} » : ramasse des pièces dans les mondes !`; return; }
     if(parDinars) save.bourse -= pj;
     const m = Object.assign({}, g.m, { coins:parDinars ? g.coins : g.coins - k.prix, skins:g.skins.concat(k.id), t:Date.now() }); store.set(mkey(), m); sfx.power(); if(window.Famille && Famille.track && !tracked.has('m:' + player)){ tracked.add('m:' + player); Famille.track('medina', player, [mkey()]); } }
   sfx.tap(); save.tenue = k.id; persist(); renderTenues(); loadBody(player); };
-function renderMenu(){ renderTenues(); $('who').innerHTML = player ? `${avatarHTML(player)}<span><b>${esc(player)}</b><small>Toucher pour changer de héros</small></span>` : `${avatarHTML('')}<span><b>Qui joue ?</b><small>Choisis ton héros</small></span>`; }
+$('tenues').onclick = tenueTap('tLab');
+function renderMenu(){ renderTenues(); if($('eWho')) $('eWho').innerHTML = `${avatarHTML(player)}<span><b>${esc(player)}</b><small>Toucher pour changer de héros</small></span>`; $('who').innerHTML = player ? `${avatarHTML(player)}<span><b>${esc(player)}</b><small>Toucher pour changer de héros</small></span>` : `${avatarHTML('')}<span><b>Qui joue ?</b><small>Choisis ton héros</small></span>`; }
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 $('who').onclick = () => { audio(); sfx.tap(); choose(); };
 // un monde est ouvert s'il est le premier du voyage, s'il l'était déjà avec l'ancien ordre (1 à 5), ou si le monde d'avant est réussi
@@ -1548,6 +1553,7 @@ function speakQ(html){ if(!prefs.sound || !('speechSynthesis' in window)) return
   try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'fr-FR'; if(frVoice) u.voice = frVoice; u.rate = .95; speechSynthesis.speak(u); }catch(e){} }
 // fin de niveau
 function winLevel(){ const g = G0; if(g.done) return; g.done = true; sfx.win(); musicStop(); setTimeout(() => showEnd(true), 900); }
+const DRESS = '<div class="dress"><button class="who" id="eWho"></button><div class="tenues-w"><p class="tlab" id="eLab"></p><div class="tenues" id="eTenues"></div></div></div>';
 async function showEnd(won){
   const g = G0; state = 'end';
   const n = g.lv.n, score = g.score + g.dinars * 10 + (won ? Math.max(0, 300 - Math.floor(g.t)) * 5 : 0);
@@ -1564,12 +1570,14 @@ async function showEnd(won){
        <div style="font-family:var(--display);font-size:40px;font-weight:800;color:var(--gold)">${score}</div>
        <p class="sub">${tk ? `Tu gagnes <b>${tk} tickets 🎟️</b> pour la boutique de Serpent Légendes !` : 'Réponds aux blocs savoir 📚 pour gagner des tickets 🎟️.'}</p>
        ${n === 5 ? `<p class="sub">Tous les jasmins dorés sont rentrés à Sidi Bou Saïd. Bravo, ${esc(player)} !</p>` : ''}
-       <div class="row"><button class="big" id="eNext">${n !== 5 ? 'Monde suivant ▶' : 'Les mondes'}</button><button class="big ghost" id="eAgain">↻ Rejouer</button></div><div class="list" id="eRecs"></div>`
+       ${DRESS}<div class="row"><button class="big" id="eNext">${n !== 5 ? 'Monde suivant ▶' : 'Les mondes'}</button><button class="big ghost" id="eAgain">↻ Rejouer</button></div><div class="list" id="eRecs"></div>`
     : `<h2>Plus de vies…</h2><p class="sub">Ce n'est pas grave : chaque essai te rend plus fort. Les lanternes 🏮 gardent ta place.</p><div class="stats"><span>🪙 +${g.dinars}</span><span>👛 Bourse : ${save.bourse}</span><span>🌼 ${gemsNow.length}/3</span><span>📚 ${g.okQ}</span></div>
-       <div class="row"><button class="big" id="eAgain">↻ Réessayer</button><button class="big ghost" id="eNext">Les mondes</button></div>`;
-  show('end');
-  $('eAgain').onclick = () => { sfx.tap(); startLevel(n); };
-  $('eNext').onclick = () => { sfx.tap(); if(won && n !== 5) intro(ORDER[ORDER.indexOf(n) + 1]); else { G0 = null; openLevels(); } };
+       ${DRESS}<div class="row"><button class="big" id="eAgain">↻ Réessayer</button><button class="big ghost" id="eNext">Les mondes</button></div>`;
+  renderMenu(); show('end');   // avant de repartir : changer de tenue ou de héros
+  $('eTenues').onclick = tenueTap('eLab'); $('eWho').onclick = () => { sfx.tap(); choose(); };
+  // si le héros a changé, le monde visé doit être ouvert pour lui : sinon, la carte des mondes
+  $('eAgain').onclick = () => { sfx.tap(); if(isOpen(n)) startLevel(n); else { G0 = null; openLevels(); } };
+  $('eNext').onclick = () => { sfx.tap(); const nx = ORDER[ORDER.indexOf(n) + 1]; if(won && n !== 5 && isOpen(nx)) intro(nx); else { G0 = null; openLevels(); } };
   if(won && window.Famille){ await Famille.score('jasmin', 'monde' + n, Math.min(999999, score), player);
     const list = await Famille.highscores('jasmin', 'monde' + n, 5); if(list && $('eRecs')) $('eRecs').innerHTML = list.map((r, i) => `<div class="${r.player.toLowerCase() === (player || '').toLowerCase() ? 'me' : ''}"><span>${['🥇', '🥈', '🥉'][i] || i + 1}</span>${avatarHTML(r.player)}<span>${esc(r.player)}</span><b>${r.score}</b></div>`).join(''); }
 }
