@@ -913,7 +913,7 @@ function step(dt){
     if(h.x + HW > ex0 && h.x - HW < ex1 && h.y > ey0 && h.y - HH < ey1){
       const fromAbove = h.vy > 0 && h.y - h.vy * dt <= ey0 + 10;
       if(e.t === 'figue'){ e.alive = false; hurt(); continue; }
-      if(e.t === 'cactus'){ hurt(); continue; }
+      if(e.t === 'cactus' && !(e.kind === 'ivrogne' && fromAbove)){ hurt(); continue; }   // le cactus pique toujours ; l'ivrogne, lui, tombe quand on lui saute dessus, comme les autres ennemis
       if(fromAbove){ h.vy = -(A ? PH.jump : PH.stomp); h.held = A; h.y = ey0;
         if(e.t === 'hog'){ if(!e.ball){ e.ball = true; e.vx = 0; e.h = 22; } else e.vx = 0; sfx.stomp();
           // +100 par piquant, pas plus : chaque saut lui en fait perdre un ; au dernier, il s'en va
