@@ -27,13 +27,14 @@ declare(strict_types=1);
 
 const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'medina'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
-const READABLE = ['profil', 'atelier', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture', 'amine-nombres', 'ecuries', 'medina'];
-const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'amine-nombres', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'atelier', 'ecuries', 'medina'];
+const READABLE = ['profil', 'atelier', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture', 'amine-nombres', 'ecuries', 'medina', 'atelier-art'];
+const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'amine-nombres', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'atelier', 'ecuries', 'medina', 'atelier-art'];
 // Jeu (classements) lié à un cours : une remise à zéro peut aussi effacer ses records.
 const COURSE_GAME = ['serpent3d' => 'serpent3d', 'ludo3d' => 'ludo3d', 'grimpeglace' => 'grimpeglace', 'jasmin' => 'jasmin', 'medina' => 'medina', 'amine-serpentin' => 'serpentin'];
 // Cours qui comptent comme « apprendre » (les jeux n'en font pas partie) : séries de jours et cartes secrètes.
 const LEARNING = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-ecriture', 'amine-nombres'];
 const MAX_DATA = 30000;
+const BIG = ['atelier-art' => 400000];   // les coloriages de l'Atelier (zones et couleurs, sans les vignettes) : plus gros, et sans historique
 const MAX_WRITES = 240;        // écritures par adresse…
 const WRITE_WINDOW = 600;      // …toutes les 10 minutes
 const MAX_FAILS = 8;
@@ -322,7 +323,7 @@ try {
         $course = (string)($_POST['course'] ?? '');
         if (!in_array($course, COURSES, true)) fail(400, 'Cours inconnu.');
         $raw = (string)($_POST['data'] ?? '');
-        if ($raw === '' || strlen($raw) > MAX_DATA || !is_array(json_decode($raw, true))) fail(400, 'Progrès invalides.');
+        if ($raw === '' || strlen($raw) > (BIG[$course] ?? MAX_DATA) || !is_array(json_decode($raw, true))) fail(400, 'Progrès invalides.');
         $data = json_encode(json_decode($raw, true), JSON_UNESCAPED_UNICODE);
         $pdo = db();
         // Un parent a remis ce cours à zéro : la tablette doit d'abord l'appliquer (famille.js), sinon elle renverrait l'ancien état.
@@ -335,6 +336,7 @@ try {
         $n = now();
         if ($prev !== $data) {
             $pdo->prepare('INSERT INTO progress (player, course, data, updated) VALUES (?, ?, ?, ?) ON CONFLICT(player, course) DO UPDATE SET data = excluded.data, updated = excluded.updated')->execute([$p, $course, $data, $n]);
+            if (isset(BIG[$course])) out(200, ['ok' => true, 'changed' => true]);
             // Un instantané par heure au plus : sert à voir la progression dans le temps.
             $st = $pdo->prepare('SELECT created FROM history WHERE player = ? AND course = ? ORDER BY created DESC LIMIT 1'); $st->execute([$p, $course]);
             $last = $st->fetchColumn();
@@ -390,7 +392,7 @@ try {
         check_pass();
         $pdo = db();
         $players = $pdo->query('SELECT name, created, last_seen FROM players ORDER BY last_seen DESC')->fetchAll(PDO::FETCH_ASSOC);
-        $progress = $pdo->query('SELECT player, course, data, updated FROM progress')->fetchAll(PDO::FETCH_ASSOC);
+        $progress = $pdo->query("SELECT player, course, data, updated FROM progress WHERE course <> 'atelier-art'")->fetchAll(PDO::FETCH_ASSOC);
         $since = gmdate('Y-m-d\TH:i:s\Z', time() - 35 * 86400);
         $since = gmdate('Y-m-d\TH:i:s\Z', time() - 120 * 86400);
         $st = $pdo->prepare('SELECT id, player, course, data, created FROM history WHERE created >= ? ORDER BY created ASC'); $st->execute([$since]);

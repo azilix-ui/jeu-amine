@@ -187,8 +187,8 @@
       var f = {action:'progress', player:player, course:course, data:data, rst:String(ack())};
       if(beacon && navigator.sendBeacon){
         var fd = new FormData(); Object.keys(f).forEach(function(k){ fd.append(k, f[k]); });
-        if(navigator.sendBeacon(API, fd)){ lastSent = data; set('famille-sync:' + course + ':' + player, data); }
-        return;
+        if(navigator.sendBeacon(API, fd)){ lastSent = data; set('famille-sync:' + course + ':' + player, data); return; }
+        // trop gros pour un envoi « en partant » : on tente l'envoi normal
       }
       post(f).then(function(j){ if(j && j.reset){ gotReset(j.reset); return; } lastSent = data; set('famille-sync:' + course + ':' + player, data); }).catch(function(){});
     }

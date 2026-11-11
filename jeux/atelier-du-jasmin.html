@@ -321,9 +321,40 @@ let player = null, S = null, ART = null;
 const key = () => 'atelier:' + player, akey = () => 'atelier-art:' + player;
 const fresh = () => ({ v:1, t:0, mode:null, done:{}, n:0, skin:null });
 function save(){ S.t = Date.now(); S.n = Object.keys(S.done).length; store.set(key(), S); }
-function saveArt(){ if(!store.set(akey(), ART)){ // tablette pleine : on oublie les plus vieilles vignettes
-    const ids = Object.keys(ART.items).sort((a, b) => (ART.items[a].t || 0) - (ART.items[b].t || 0)); ids.slice(0, Math.ceil(ids.length / 3)).forEach(id => delete ART.items[id].th); store.set(akey(), ART); } }
+const fkey = () => 'atelier-traits:' + player;
+let fullWarned = false;
+function saveArt(){
+  let ok = store.set(akey(), ART);
+  if(!ok){ // tablette pleine : on oublie les plus vieilles vignettes (elles se refont toutes seules)
+    const ids = Object.keys(ART.items).sort((a, b) => (ART.items[a].t || 0) - (ART.items[b].t || 0)); ids.slice(0, Math.ceil(ids.length / 3)).forEach(id => delete ART.items[id].th); ok = store.set(akey(), ART); }
+  if(!saveTraits()) ok = false;
+  if(!ok && !fullWarned){ fullWarned = true; toast('La tablette est pleine : ce dessin risque de ne pas être gardé. Préviens papa ou maman !'); }
+}
+/* Les zones coloriées (sans les vignettes, trop lourdes) partent aussi sur le serveur de la famille :
+   les coloriages suivent l'enfant d'une tablette à l'autre et reviennent si la tablette a été vidée. */
+function saveTraits(){ const items = {}; Object.keys(ART.items).forEach(id => { const it = ART.items[id]; if(it.f && it.f.length) items[id] = [it.t || 0, it.f]; }); return store.set(fkey(), { rst:ART.rst || 0, items }); }
+function mergeTraits(d){
+  if(!d || !d.items || (d.rst || 0) < (ART.rst || 0)) return 0;
+  let n = 0;
+  Object.keys(d.items).forEach(id => { const v = d.items[id], it = ART.items[id]; if(!NAME[id] || !Array.isArray(v) || !Array.isArray(v[1]) || !v[1].length) return;
+    if(!it || !it.f || (v[0] || 0) > (it.t || 0)){ ART.items[id] = { f:v[1], t:v[0] || 0 }; n++; } });
+  if(n) saveArt();
+  return n;
+}
 const tracked = new Set();
+let thumbing = false;
+async function remakeThumbs(){   // refait, une par une, les vignettes des dessins revenus du serveur
+  if(thumbing) return; thumbing = true; const who = player;
+  try{
+    for(const id of Object.keys(ART.items)){
+      if(player !== who) break; const it = ART.items[id]; if(!it || it.th || !it.f || !NAME[id]) continue;
+      while(cur === 'paint') await new Promise(r => setTimeout(r, 1500));
+      if(player !== who || ART.items[id] !== it || it.th) continue;
+      try{ const a = await loadArt(id); if(player === who && ART.items[id] === it && !it.th){ it.th = thumb(a); store.set(akey(), ART); if(cur === 'gallery') renderGallery(); else if(cur && cur.indexOf('pick') === 0){ const b = document.querySelector('#pickGrid [data-id="' + id + '"] img'); if(b) b.src = it.th; } } }catch(e){}
+      await new Promise(r => setTimeout(r, 120));
+    }
+  }finally{ thumbing = false; }
+}
 async function setPlayer(name){
   player = name;
   S = Object.assign(fresh(), store.get(key(), null) || {}); S.done = S.done || {};
@@ -332,10 +363,12 @@ async function setPlayer(name){
   if(rst > (ART.rst || 0)) ART = { rst, items:{} };   // un parent a remis l'atelier à zéro
   ART.items = ART.items || {}; store.set(akey(), ART);
   if(window.Famille){
-    if(!tracked.has(name)){ tracked.add(name); Famille.track('atelier', name, [key()]); }
+    saveTraits();
+    if(!tracked.has(name)){ tracked.add(name); Famille.track('atelier', name, [key()]); Famille.track('atelier-art', name, [fkey()]); }
     try{ const r = await Famille.load('atelier', name), d = r && r[key()]; if(d && (d.t || 0) > (S.t || 0) && player === name){ S = Object.assign(fresh(), d); S.done = S.done || {}; store.set(key(), S); } }catch(e){}
+    try{ const r = await Famille.load('atelier-art', name); if(player === name && r && mergeTraits(r[fkey()])){ if(cur === 'gallery') renderGallery(); } }catch(e){}
   }
-  renderWho();
+  renderWho(); remakeThumbs();
 }
 const avatarOf = n => { const k = n.toLowerCase(); if(FAMILY.includes(k)) return `avatars/${k}.webp`; const h = window.Famille && Famille.head && Famille.head(n); return h ? h.img : 'avatars/mascotte-nour.webp'; };
 function renderWho(){ ['who1', 'who2'].forEach(id => { $(id).innerHTML = `<img src="${avatarOf(player)}" alt="">${player.replace(/[<>&]/g, '')}`; }); $('mode2').textContent = S.mode === '3d' ? '🧊 3D' : '🖍️ 2D'; }
@@ -735,7 +768,7 @@ function renderPick(kind){
   say(kind === 'p' ? 'paysage' : kind === 'a' ? 'animaux' : 'costume', true);
 }
 function renderGallery(){
-  const ids = Object.keys(ART.items).filter(id => NAME[id] && ART.items[id].th).sort((a, b) => (ART.items[b].t || 0) - (ART.items[a].t || 0));
+  const ids = Object.keys(ART.items).filter(id => NAME[id] && (ART.items[id].th || ART.items[id].f)).sort((a, b) => (ART.items[b].t || 0) - (ART.items[a].t || 0));
   $('galGrid').innerHTML = ids.length ? ids.map(id => card(id, NAME[id], id[0] === 'c')).join('') : '<p class="none">Ta galerie est vide pour l\'instant.<br>Colorie un paysage ou un costume : il viendra se ranger ici ! 🖼️</p>';
 }
 $('pickGrid').onclick = e => { const b = e.target.closest('[data-id]'); if(b){ sfx.tap(); backTo = 'pick'; openArt(b.dataset.id); } };

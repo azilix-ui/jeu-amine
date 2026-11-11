@@ -99,3 +99,7 @@ Demandé par le papa : un soir, c'est lui qui a parcouru le cours d'anglais de S
 - `POST action=hello client name tete status code` toutes les 4 s (onglet visible seulement) → `{online, invites}` : les joueurs vus depuis moins de 15 s (40 au plus), et les invitations reçues (valables 40 s, effacées une fois lues). `status` : `menu`, `salon` (avec le code de sa partie en attente), `joue`, `machine`.
 - `POST action=invite client name tete to code` (limite d'envois comme les coups ; la partie doit exister).
 - `client` = identifiant aléatoire de la tablette (`ludo-client` dans le navigateur). Le salon est visible par toute personne qui ouvre la page du Ludo : il n'y a pas de mot de passe.
+
+## Les coloriages de l'Atelier sur le serveur (11/11)
+
+Cours **`atelier-art`** (dans `COURSES` et `READABLE`) : clé `atelier-traits:<Prénom>` = `{ rst, items:{ <dessin>:[date, [[x, y, couleur, motif], …]] } }`. Taille limite à part (`BIG` dans `api/famille.php` : 400 000 octets au lieu de `MAX_DATA` = 30 000), **pas d'historique** et absent du résumé de Progression (trop lourd). Au-delà de 64 Ko, l'envoi « en partant » (`sendBeacon`) est refusé par le navigateur : `famille.js` retombe sur l'envoi normal, et l'envoi toutes les 15 s fait le reste.
