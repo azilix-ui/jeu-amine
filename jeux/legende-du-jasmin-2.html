@@ -1044,6 +1044,11 @@ function drawTiles(g, t){
   for(let cy = 0; cy < ROWS; cy++) for(let cx = c0; cx < c1; cx++){ if(tileAt(cx, cy) !== 'h') continue; const x = cx * T, y = cy * T, inside = Math.abs(g.hero.x - (x + 16)) < 40 && g.hero.y > y - 10 && g.hero.y - HH < y + T + 10;
     ctx.globalAlpha = inside ? .35 : 1; ctx.fillStyle = g.W.ground; ctx.fillRect(x, y, T, T); if(g.lv.n === 5){ ctx.fillStyle = (cx + cy) % 2 ? '#1f7a8a' : '#c99a2e'; ctx.save(); ctx.translate(x + 16, y + 16); ctx.rotate(Math.PI / 4); ctx.fillRect(-6, -6, 12, 12); ctx.restore(); } ctx.globalAlpha = 1; }
 }
+/* ---------- Jasmin 2 : les créatures « en vrai » (planches tirées de vidéos, voir docs/jasmin2-corps/bete.py) ---------- */
+// jasmin2/<fichier>.webp : une ligne par animation, tournées vers la droite. h = hauteur dessinée, dy = décalage du bas.
+const BETE = { scorp:{ f:'scorpion', cols:12, rows:1, h:36, dy:2 }, crabe:{ f:'crabe', cols:12, rows:1, h:32, dy:2 }, mouette:{ f:'mouette', cols:12, rows:1, h:52, dy:16 }, boss:{ f:'scorpion-or', cols:12, rows:3, h:150, dy:1 } };
+for(const k in BETE){ const b = BETE[k], im = new Image(); im.onload = () => { b.im = im; b.cw = im.naturalWidth / b.cols; b.ch = im.naturalHeight / b.rows; }; im.src = `jasmin2/${b.f}.webp?v=1`; }
+function bete(k, frame, row){ const b = BETE[k], w = b.h * b.cw / b.ch; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(b.im, (frame % b.cols) * b.cw, (row || 0) * b.ch, b.cw, b.ch, -w / 2, -b.h + b.dy, w, b.h); }
 function drawEnt(e, g, t){
   const W = g.W;
   if(!e.alive && !e.dying) return;
@@ -1108,11 +1113,11 @@ function drawEnt(e, g, t){
         ctx.beginPath(); ctx.moveTo(8, -22); ctx.lineTo(10, -30); ctx.lineTo(14, -24); ctx.moveTo(14, -24); ctx.lineTo(18, -30); ctx.lineTo(19, -21); ctx.fill();
         ctx.strokeStyle = '#e8963a'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-12, -14); ctx.quadraticCurveTo(-22, -16, -20, -28 + lg); ctx.stroke(); ctx.lineCap = 'butt';
         ctx.fillStyle = '#b8642a'; ctx.fillRect(-4, -18, 3, 6); ctx.fillRect(2, -18, 3, 6); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(16, -19, 1.6, 0, 7); ctx.fill(); ctx.fillStyle = '#ff8aa8'; ctx.beginPath(); ctx.arc(20, -17, 1.4, 0, 7); ctx.fill(); break; }
-      else if(g.lv.n === 7 || g.lv.n === 8 || g.lv.n === 10){ const lg = Math.sin(t * 16) * 2; ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2;   // un crabe
+      else if(g.lv.n === 7 || g.lv.n === 8 || g.lv.n === 10){ if(BETE.crabe.im){ bete('crabe', Math.floor(t * 14 + e.x * .05)); break; } const lg = Math.sin(t * 16) * 2; ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2;   // un crabe
         for(let k = -1; k <= 1; k += 2) for(let j = 0; j < 3; j++){ ctx.beginPath(); ctx.moveTo(k * 8, -7); ctx.lineTo(k * (14 + j * 2), -2 + (j % 2 ? lg : -lg)); ctx.stroke(); }
         ctx.fillStyle = '#e04a2e'; ctx.beginPath(); ctx.ellipse(0, -9, 13, 8, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(-16, -16 + lg, 5, 0, 7); ctx.arc(16, -16 - lg, 5, 0, 7); ctx.fill();
         ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-4, -19, 3, 0, 7); ctx.arc(4, -19, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(-4 + e.dir, -19, 1.5, 0, 7); ctx.arc(4 + e.dir, -19, 1.5, 0, 7); ctx.fill(); break; }
-      { const f = e.dir; ctx.scale(f, 1); const lg = Math.sin(t * 14) * 2; ctx.fillStyle = '#c47a2a'; ctx.beginPath(); ctx.ellipse(0, -8, 14, 8, 0, 0, 7); ctx.fill();
+      { const f = e.dir; ctx.scale(f, 1); if(BETE.scorp.im){ bete('scorp', Math.floor(t * 16 + e.x * .05)); break; } const lg = Math.sin(t * 14) * 2; ctx.fillStyle = '#c47a2a'; ctx.beginPath(); ctx.ellipse(0, -8, 14, 8, 0, 0, 7); ctx.fill();
       ctx.strokeStyle = '#8a4a12'; ctx.lineWidth = 2; for(let k = -1; k <= 1; k++){ ctx.beginPath(); ctx.moveTo(k * 6, -4); ctx.lineTo(k * 6 - 4, 0 + (k ? lg : -lg)); ctx.stroke(); }
       ctx.fillStyle = '#c47a2a'; ctx.beginPath(); ctx.arc(14, -10, 5, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(-12, -10); ctx.quadraticCurveTo(-22, -26, -8, -30); ctx.lineWidth = 5; ctx.strokeStyle = '#c47a2a'; ctx.stroke(); ctx.fillStyle = '#5a2a0a'; ctx.beginPath(); ctx.moveTo(-8, -30); ctx.lineTo(-2, -26); ctx.lineTo(-6, -24); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(8, -12, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(9, -12, 1.5, 0, 7); ctx.fill(); break; }
@@ -1128,7 +1133,7 @@ function drawEnt(e, g, t){
       if(g.lv.n === 15 || g.lv.n === 17){ ctx.scale(e.dir, 1); const fl = Math.sin(t * 6) * .5; ctx.fillStyle = '#ffffff';   // une cigogne
         ctx.beginPath(); ctx.ellipse(0, -10, 15, 7, 0, 0, 7); ctx.fill(); ctx.save(); ctx.translate(-2, -12); ctx.rotate(-fl); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(-6, -6, 16, 6, -.5, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.ellipse(-16, -10, 7, 4, -.5, 0, 7); ctx.fill(); ctx.restore();
         ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(12, -12); ctx.lineTo(20, -16); ctx.stroke(); ctx.fillStyle = '#e8502a'; ctx.beginPath(); ctx.moveTo(22, -18); ctx.lineTo(34, -14); ctx.lineTo(22, -14); ctx.fill(); ctx.strokeStyle = '#e8502a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-12, -8); ctx.lineTo(-24, -4); ctx.stroke(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(21, -17, 1.4, 0, 7); ctx.fill(); break; }
-      if(g.lv.n === 7 || g.lv.n === 8){ ctx.scale(e.dir, 1); const fl = Math.sin(t * 10) * .6; ctx.fillStyle = '#ffffff';   // une mouette
+      if(g.lv.n === 7 || g.lv.n === 8){ ctx.scale(e.dir, 1); if(BETE.mouette.im){ bete('mouette', Math.floor(t * 14 + e.x * .05)); break; } const fl = Math.sin(t * 10) * .6; ctx.fillStyle = '#ffffff';   // une mouette
         ctx.beginPath(); ctx.ellipse(0, -10, 13, 7, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(11, -13, 5.5, 0, 7); ctx.fill(); ctx.fillStyle = '#9aa8b8'; ctx.save(); ctx.translate(-2, -12); ctx.rotate(-fl); ctx.beginPath(); ctx.ellipse(-6, -6, 14, 5, -.5, 0, 7); ctx.fill(); ctx.restore();
         ctx.fillStyle = '#ffb02e'; ctx.beginPath(); ctx.moveTo(15, -13); ctx.lineTo(22, -11); ctx.lineTo(15, -10); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(12, -14, 1.5, 0, 7); ctx.fill(); break; }
       { ctx.scale(e.dir, 1); const fl = Math.sin(t * 16) * .7; ctx.fillStyle = '#8a6a4a'; ctx.beginPath(); ctx.ellipse(0, -10, 13, 8, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#6a4a2a'; ctx.save(); ctx.translate(-2, -12); ctx.rotate(-fl); ctx.beginPath(); ctx.ellipse(-4, -8, 6, 13, -.4, 0, 7); ctx.fill(); ctx.restore();
@@ -1142,6 +1147,13 @@ function drawEnt(e, g, t){
 }
 function drawBoss(b, t){
   const blink = b.inv > 0 && Math.sin(t * 40) > 0; if(blink) ctx.globalAlpha = .5;
+  if(BETE.boss.im){   // le Scorpion d'Or en vrai : ligne 0 il marche ou fonce, ligne 1 il est sonné, ligne 2 il lance ses braises
+    ctx.save(); ctx.scale(b.dir < 0 ? -1 : 1, 1); if(b.st === 'aim') ctx.translate(Math.sin(t * 50) * 2, 0);
+    if(b.st === 'stun'){ const q = Math.floor(t * 7) % 14; bete('boss', q < 8 ? q : 14 - q, 1); }
+    else if(b.st === 'shoot') bete('boss', Math.floor(t * 12) % 10, 2);
+    else bete('boss', b.st === 'aim' ? 0 : Math.floor(t * (b.st === 'charge' ? 26 : b.st === 'walk' ? 12 : 5)), 0);
+    ctx.restore(); if(b.st === 'stun'){ ctx.fillStyle = '#ffe066'; for(let k = 0; k < 3; k++){ const a = t * 4 + k * 2.1; ctx.font = '16px serif'; ctx.fillText('⭐', (b.dir < 0 ? -40 : 40) + Math.cos(a) * 26, -70 + Math.sin(a) * 8); } }
+    ctx.globalAlpha = 1; return; }
   ctx.scale(b.dir < 0 ? 1 : -1, 1);
   const st = b.st === 'stun', shake = b.st === 'aim' ? Math.sin(t * 50) * 2 : 0;
   ctx.translate(shake, 0);
