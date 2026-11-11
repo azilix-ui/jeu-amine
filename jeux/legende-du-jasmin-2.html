@@ -113,7 +113,7 @@ body.menu .back{display:inline-flex}
 <div class="screen on" id="menu"><div class="box">
   <video class="title-img" id="titleVid" src="jasmin/titre.mp4" poster="jasmin/titre.webp" preload="none" muted playsinline disablepictureinpicture aria-label="La famille dans un village tunisien bleu et blanc : passe la souris ou touche l'image pour la voir sauter"></video>
   <h1>La Légende <span>du Jasmin</span></h1>
-  <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse vingt et un mondes pour les rapporter !</p>
+  <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse vingt-quatre mondes pour les rapporter !</p>
   <button class="who" id="who"></button>
   <div class="tenues-w"><p class="tlab" id="tLab">Ta tenue</p><div class="tenues" id="tenues"></div></div>
   <button class="big" id="play">▶ Jouer</button>
@@ -200,10 +200,14 @@ const WORLDS = [
   { name:'Le Canyon de Tamerza', sub:'Cascade et coups de vent', img:'jasmin/monde18.webp', sky:['#e88a5a', '#fde0c0'], ground:'#b8582e', ground2:'#8a3a1e', edge:'#5a2210', top:'#d8884a', plat:'#7a4a22', haz:'#3fa8a0', mid:'#b8582e', mid2:'#8a3a1e', music:{ bpm:126, root:58 } },
   { name:'Les Ruines de Dougga', sub:'Le théâtre romain et les chèvres', img:'jasmin/monde19.webp', sky:['#7ab8e8', '#fdf0c8'], ground:'#d8c49a', ground2:'#b8a070', edge:'#7a6a44', top:'#8ab85a', plat:'#a89468', haz:'#3fa8c8', mid:'#d8c49a', mid2:'#b8a070', music:{ bpm:108, root:57 } },
   { name:'Les Îles Kerkennah', sub:'De barque en barque, gare aux poulpes', img:'jasmin/monde20.webp', sky:['#8ad8e8', '#fdf6e0'], ground:'#f0deb0', ground2:'#d8c08a', edge:'#a88a5a', top:'#f8ecc8', plat:'#8a5a32', haz:'#3fb8c8', mid:'#f0deb0', mid2:'#d8c08a', music:{ bpm:100, root:62 } },
-  { name:'Le Cap Bon', sub:'Les potiers de Nabeul et les orangers', img:'jasmin/monde21.webp', sky:['#5aa8e8', '#fde8c0'], ground:'#d8804a', ground2:'#b85e2e', edge:'#7a3a18', top:'#6aa84a', plat:'#8a4a22', haz:'#3f9ad0', mid:'#d8804a', mid2:'#b85e2e', music:{ bpm:118, root:59 } }
+  { name:'Le Cap Bon', sub:'Les potiers de Nabeul et les orangers', img:'jasmin/monde21.webp', sky:['#5aa8e8', '#fde8c0'], ground:'#d8804a', ground2:'#b85e2e', edge:'#7a3a18', top:'#6aa84a', plat:'#8a4a22', haz:'#3f9ad0', mid:'#d8804a', mid2:'#b85e2e', music:{ bpm:118, root:59 } },
+  { name:'Le Vieux Port de Bizerte', sub:'Le pont qui se lève et les barques', img:'jasmin/monde22.webp', sky:['#6ab8e8', '#fdf2d8'], ground:'#e8dcc0', ground2:'#c8b890', edge:'#8a7a5a', top:'#f4ecd8', plat:'#5a6a7a', haz:'#2f8ac0', mid:'#e8dcc0', mid2:'#c8b890', music:{ bpm:110, root:60 } },
+  { name:'Testour l\'Andalouse', sub:'L\'horloge qui tourne à l\'envers', img:'jasmin/monde23.webp', sky:['#8ac0e8', '#fdeccc'], ground:'#f0e6d2', ground2:'#d2c2a2', edge:'#9a5a3a', top:'#c8643a', plat:'#8a5a3a', haz:'#4a9ac0', mid:'#f0e6d2', mid2:'#d2c2a2', music:{ bpm:114, root:57 } },
+  { name:'Le Ribat de Monastir', sub:'La tour, les vagues et les boulets', img:'jasmin/monde24.webp', sky:['#f0b070', '#fdeac8'], ground:'#e0b878', ground2:'#c09050', edge:'#7a5a2a', top:'#f0d098', plat:'#8a6a3a', haz:'#3aa0c8', mid:'#e0b878', mid2:'#c09050', music:{ bpm:120, root:55 } }
 ];
 // L'ordre du voyage (les numéros des mondes restent fixes pour les sauvegardes et les records) : le palais reste la fin
-const ORDER = [1, 6, 7, 19, 15, 10, 21, 17, 11, 14, 2, 12, 18, 13, 8, 20, 9, 16, 3, 4, 5];   // 19 Dougga, 20 Kerkennah, 21 Cap Bon ajoutés le 11/11
+const ORDER = [1, 6, 7, 19, 23, 15, 10, 21, 17, 22, 11, 14, 24, 2, 12, 18, 13, 8, 20, 9, 16, 3, 4, 5];   // 19 Dougga, 20 Kerkennah, 21 Cap Bon, puis 22 Bizerte, 23 Testour, 24 Monastir ajoutés le 11/11
+const ORDER21 = [1, 6, 7, 19, 15, 10, 21, 17, 11, 14, 2, 12, 18, 13, 8, 20, 9, 16, 3, 4, 5];   // le voyage à 21 mondes : ce qui était ouvert le reste
 const ORDER18 = [1, 6, 7, 15, 10, 17, 11, 14, 2, 12, 18, 13, 8, 9, 16, 3, 4, 5];   // le voyage à 18 mondes : ce qui était ouvert le reste
 const ORDER13 = [1, 6, 7, 10, 11, 2, 12, 13, 8, 9, 3, 4, 5];   // l'ancien voyage (13 mondes) : ce qui était ouvert le reste
 const posOf = id => ORDER.indexOf(id) + 1;
@@ -255,6 +259,8 @@ function buildLevel(n){
   const coral = (dx, top) => { for(let y = top; y < 14; y++) set(x + dx, y, '#'); };
   const stone = dx => ent('stone', x + dx, 2);
   const ivre = (dx, cy = GY - 1) => ent('cactus', x + dx, cy, { kind:'ivrogne' });   // l'ivrogne comique : il ne bouge pas, il lance des bouteilles à esquiver (demandé par le papa le 11/11)
+  const pont = (k, dist) => { for(let i = x; i < x + k; i++){ set(i, 13, '~'); set(i, 14, '~'); } ent('mover', x + 1, GY, { w:k - 2, dist, axis:'y', kind:'pont' }); x += k; };   // Bizerte : le pont mobile monte et redescend
+  const horloge = (k, y, dist) => { for(let i = x; i < x + k; i++){ set(i, 13, '~'); set(i, 14, '~'); } ent('mover', x + Math.floor(k / 2) - 2, y, { w:3, dist, axis:'c', kind:'aiguille' }); x += k; };   // Testour : une plateforme au bout de l'aiguille, qui tourne à l'envers
   const boat = (k, dist) => { for(let i = x; i < x + k; i++){ set(i, 13, '~'); set(i, 14, '~'); } ent('mover', x + 1, GY - 1, { w:3, dist, axis:'x', kind:'boat' }); x += k; };   // Kerkennah : une barque qui va et vient
   // ---- niveau par niveau ----   (hid = bloc invisible ❤️, warpIn / warpOut = la jarre magique vers la salle secrète et la jarre où l'on ressort)
   if(n === 1){
@@ -435,6 +441,36 @@ function buildLevel(n){
     M.fragile(7); M.flat(7); ivre(-2); deco(-5, 'jar');
     M.blocks('cpc', 8); e('hog', -2); M.secret(); e('bird', 3, GY - 5);
     M.flat(8, { coins:4 }); warpOut(-3); M.check(); M.mover(10, GY - 3, 5, 'x', true); M.flat(6, { coins:3 }); stone(-3); hid(-3);
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
+  } else if(n === 22){   // Bizerte : le pont mobile qui se lève, les barques du vieux port
+    sign(3, 'Le vieux port de Bizerte : attends que le pont redescende !'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3); pont(8, 3); M.flat(6, { coins:3 }); e('bird', 2, GY - 5);
+    boat(10, 5); M.flat(5); boat(9, 4); M.flat(6, { coins:3 }); gem(-3, GY - 6);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3);
+    pont(9, 4); gem(-5, GY - 6); M.flat(5); e('scorp', 2);
+    M.step(2, 4); M.step(4, 5, { coins:3 }); M.step(2, 4); M.flat(6); ivre(-2); e('bird', -4, GY - 6);
+    M.blocks('cpc', 8); e('scorp', -2); M.secret();
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); pont(8, 3); M.flat(5); boat(10, 5); M.flat(6, { coins:3 }); hid(-3);
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
+  } else if(n === 23){   // Testour : les aiguilles de l'horloge tournent à l'envers, les grenades tombent
+    sign(3, "L'horloge de Testour tourne à l'envers !"); deco(8, 'jar'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3); M.flat(10, { coins:4 }); stone(-7); stone(-3);
+    horloge(12, GY - 4, 6); gem(-6, GY - 9); M.flat(6, { coins:3 }); e('bird', 2, GY - 5);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3);
+    M.step(2, 4); M.step(4, 5, { coins:3 }); stone(-3); M.step(2, 4); M.flat(5); e('scorp', 2);
+    horloge(12, GY - 4, 6); M.flat(7); ivre(-2); deco(-5, 'jar');
+    M.blocks('cpc', 8); e('scorp', -2); M.secret(); e('bird', 3, GY - 5);
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); horloge(13, GY - 5, 7); gem(-7, GY - 10); M.flat(6, { coins:3 }); stone(-3); hid(-3);
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
+  } else if(n === 24){   // Monastir : on grimpe la tour du ribat, les vagues montent au pied des remparts, les boulets roulent
+    sign(3, 'Le ribat de Monastir : grimpe la tour, gare aux boulets !'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3); M.tide(5); M.flat(5); M.tide(6); M.flat(6, { coins:3 }); e('bird', 2, GY - 5);
+    M.flat(4); M.mover(5, GY - 1, 7, 'y'); M.step(7, 7, { coins:4 }); gem(-3, GY - 10); e('scorp', -3, GY - 8); M.stairs(7, -1);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3);
+    M.step(2, 5); e('scorp', -2, GY - 3); M.step(4, 5, { coins:3 }); M.step(6, 5); e('scorp', -2, GY - 7); M.step(4, 4); M.step(2, 4); M.flat(6); ivre(-2);
+    M.tide(7); gem(-4, GY); M.flat(6, { coins:3 }); e('bird', -2, GY - 5);
+    M.blocks('cpc', 8); e('scorp', -2); M.secret();
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); M.mover(10, GY - 3, 5, 'x', true); M.flat(6, { coins:3 }); hid(-3);
     M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
   } else {
     sign(3, 'Le palais du Scorpion…'); M.flat(12, { coins:5 }); hid(-4);
@@ -747,7 +783,7 @@ function newLevel(n, fromCheck){
     if(e.t === 'coin' && !e.secret) g.dinarTotal++;
     if(e.t === 'stone'){ o.w = 56; o.h = 52; o.hy = o.y; o.st = 'up'; o.timer = 0; }
     if(e.t === 'mover'){ o.x0 = o.x - T / 2; o.y0 = o.y - T; o.px = o.x0; o.py = o.y0; }
-    if(e.t === 'scorp'){ o.w = 30; o.h = 20; o.sp = n === 19 ? 78 : 45; }   // à Dougga ce sont des chèvres : elles chargent if(e.t === 'hog'){ o.w = 28; o.h = 24; o.sp = 35; o.ball = false; o.spikes = 7; }
+    if(e.t === 'scorp'){ o.w = 30; o.h = 20; o.sp = n === 19 ? 78 : n === 24 ? 70 : 45; }   // à Monastir ce sont des boulets qui roulent   // à Dougga ce sont des chèvres : elles chargent if(e.t === 'hog'){ o.w = 28; o.h = 24; o.sp = 35; o.ball = false; o.spikes = 7; }
     if(e.t === 'bird'){ o.w = 30; o.h = 22; o.bx = o.x; o.by = o.y - 10; } if(e.t === 'cactus'){ o.w = 26; o.h = 44; o.cd = 2; if(e.kind === 'ivrogne'){ o.w = 30; o.h = 54; o.cd = 2.6; o.throwT = 0; } }
     if(e.t === 'boss'){ o.w = 120; o.h = 70; o.hp = 3; o.st = 'wait'; o.timer = 0; o.dir = -1; o.inv = 0; }
     g.ents.push(o);
@@ -810,7 +846,7 @@ function step(dt){
   g.t += dt;
   const L = keys.l || touch.l.size > 0 || pad.l, R = keys.r || touch.r.size > 0 || pad.r, A = keys.a || touch.a.size > 0 || pad.a, B = keys.b || touch.b.size > 0 || pad.b;
   // plateformes mobiles
-  g.ents.forEach(e => { if(e.t !== 'mover') return; const sn = Math.sin(g.t * (e.kind === 'train' ? .7 : .9) + e.x0 * .01), off = (e.kind === 'train' ? Math.max(-1, Math.min(1, sn * 1.4)) : sn) * e.dist * T / 2 + e.dist * T / 2; /* le train marque l'arrêt à chaque quai */ const nx = e.axis === 'x' ? e.x0 + off : e.x0, ny = e.axis === 'y' ? e.y0 - off : e.y0; e.dx = nx - e.px; e.dy = ny - e.py; e.px = nx; e.py = ny; });
+  g.ents.forEach(e => { if(e.t !== 'mover') return; const sn = Math.sin(g.t * (e.kind === 'train' ? .7 : .9) + e.x0 * .01), off = (e.kind === 'train' ? Math.max(-1, Math.min(1, sn * 1.4)) : sn) * e.dist * T / 2 + e.dist * T / 2; /* le train marque l'arrêt à chaque quai */ let nx = e.axis === 'x' ? e.x0 + off : e.x0, ny = e.axis === 'y' ? e.y0 - off : e.y0; if(e.axis === 'c'){ const a = -(g.t * .75 + e.x0 * .01), R = e.dist * T / 2; nx = e.x0 + Math.cos(a) * R; ny = e.y0 + Math.sin(a) * R; }   /* 'c' : en cercle, dans le sens inverse des aiguilles d'une montre */ e.dx = nx - e.px; e.dy = ny - e.py; e.px = nx; e.py = ny; });
   // dalles fragiles
   g.frag.forEach((v, k) => { v.t -= dt; if(!v.gone && v.t <= 0){ v.gone = true; v.t = 3; const [cx, cy] = k.split(',').map(Number); for(let i = 0; i < 6; i++) g.parts.push({ x:cx * T + 16, y:cy * T + 10, vx:(Math.random() - .5) * 160, vy:Math.random() * 60, life:.8, c:g.W.ground2, r:4, grav:true }); } else if(v.gone && v.t <= 0){ g.frag.delete(k); } });
   if(h.dead){ h.deadT += dt; h.vy += PH.g * dt; h.y += h.vy * dt; return; }
@@ -870,7 +906,7 @@ function step(dt){
   const footC = tileAt(Math.floor(h.x / T), Math.floor((h.y - 2) / T)), midC = tileAt(Math.floor(h.x / T), Math.floor((h.y - 20) / T));
   if(footC === '^' || midC === '^') hurt();
   if(footC === '~' || h.y > ROWS * T + 40){ h.inv = 0; h.chechia = false; h.harissa = false; die(); return; }
-  if(g.lv.n === 8 && tileAt(Math.floor(h.x / T), 13) === 'w' && h.y > tideY(g.t) + 10){ h.inv = 0; h.chechia = false; h.harissa = false; die(); return; }
+  if((g.lv.n === 8 || g.lv.n === 24) && tileAt(Math.floor(h.x / T), 13) === 'w' && h.y > tideY(g.t) + 10){ h.inv = 0; h.chechia = false; h.harissa = false; die(); return; }
   // entités
   let nearWarp = false;
   for(const e of g.ents){
@@ -1022,7 +1058,7 @@ function drawTiles(g, t){
     const fr = c === 'f' ? g.frag.get(cx + ',' + cy) : null, shk = fr ? Math.sin(t * 60) * 1.5 : 0;
     const openTop = !SOLID.has(tileAt(cx, cy - 1)) && tileAt(cx, cy - 1) !== 'h', openRight = !SOLID.has(tileAt(cx + 1, cy)) && tileAt(cx + 1, cy) !== 'h';
     let face = W.ground, side = W.ground2;
-    if(c === 'b'){ face = ['#6fa8e8', '#b07a44', '#d2a65a', '#9aa8b8', '#c99a2e', '#3f8fc0', '#c8b48a', '#e0b46a', '#a8703e', '#7a8a9a', '#c89a5a', '#b8a8d8', '#a8482a', '#2f8a6a', '#a89070', '#b8743a', '#8aa85a', '#9a4a2a', '#c8b48a', '#c89a5a', '#c8643a'][g.lv.n - 1] || '#b07a44'; side = shade(face, .7); }
+    if(c === 'b'){ face = ['#6fa8e8', '#b07a44', '#d2a65a', '#9aa8b8', '#c99a2e', '#3f8fc0', '#c8b48a', '#e0b46a', '#a8703e', '#7a8a9a', '#c89a5a', '#b8a8d8', '#a8482a', '#2f8a6a', '#a89070', '#b8743a', '#8aa85a', '#9a4a2a', '#c8b48a', '#c89a5a', '#c8643a', '#7a8a9a', '#c8643a', '#c09050'][g.lv.n - 1] || '#b07a44'; side = shade(face, .7); }
     if(c === 'w'){ face = shade(W.ground, .86); side = shade(W.ground, .7); }
     if(c === 'R'){ face = '#5a4a72'; side = '#3a2a52'; }
     if(c === 'm'){ face = '#f4eeff'; side = '#cfc0f0'; }
@@ -1056,9 +1092,9 @@ function drawTiles(g, t){
       else if(g.lv.n === 17 && c === '#'){ ctx.fillStyle = shade(face, .88); ctx.beginPath(); ctx.arc(x + 8 + (cx * 7 % 16), y + 18, 3, 0, 7); ctx.fill(); }
       else if(g.lv.n === 18 && c === '#'){ ctx.fillStyle = shade(face, .84); ctx.fillRect(x, y + 6 + (cx % 3) * 7, T, 3); ctx.fillStyle = shade(face, 1.1); ctx.fillRect(x, y + 24, T, 2); }
       else if(g.lv.n === 13 && c === '#'){ ctx.fillStyle = shade(face, .85); ctx.fillRect(x, y + 6 + (cx % 2) * 10, T, 4); ctx.fillStyle = shade(face, 1.12); ctx.fillRect(x, y + 22, T, 2); }
-      else if(g.lv.n === 19 && c === '#'){ ctx.fillStyle = shade(face, .86); ctx.fillRect(x, y + 15, T, 2); ctx.fillRect(x + ((cx + cy) % 2) * 16, y, 2, 15); ctx.fillRect(x + ((cx + cy + 1) % 2) * 16, y + 17, 2, 15); }   // Dougga : gros blocs de pierre
+      else if((g.lv.n === 19 || g.lv.n === 22 || g.lv.n === 24) && c === '#'){ ctx.fillStyle = shade(face, .86); ctx.fillRect(x, y + 15, T, 2); ctx.fillRect(x + ((cx + cy) % 2) * 16, y, 2, 15); ctx.fillRect(x + ((cx + cy + 1) % 2) * 16, y + 17, 2, 15); }   // Dougga : gros blocs de pierre
       else if(g.lv.n === 20 && c === '#'){ ctx.fillStyle = shade(face, .9); ctx.beginPath(); ctx.arc(x + 8 + (cx * 5 % 16), y + 18, 1.6, 0, 7); ctx.arc(x + 20, y + 26 - (cy % 2) * 8, 1.4, 0, 7); ctx.fill(); }   // Kerkennah : sable
-      else if(g.lv.n === 21 && c === '#'){ ctx.fillStyle = shade(face, .88); ctx.fillRect(x, y + 10 + (cx % 3) * 4, T, 3); }   // Cap Bon : terre rouge
+      else if((g.lv.n === 21 || g.lv.n === 23) && c === '#'){ ctx.fillStyle = shade(face, .88); ctx.fillRect(x, y + 10 + (cx % 3) * 4, T, 3); }   // Cap Bon : terre rouge
       else if(c === '#' || c === 'B'){ // mosaïque du palais
         ctx.fillStyle = (cx + cy) % 2 ? '#1f7a8a' : '#c99a2e'; ctx.save(); ctx.translate(x + 16, y + 16); ctx.rotate(Math.PI / 4); ctx.fillRect(-6, -6, 12, 12); ctx.restore(); }
       if(c === 'f'){ ctx.strokeStyle = '#5a4636'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 6, y + 2); ctx.lineTo(x + 14, y + 14); ctx.lineTo(x + 10, y + 28); ctx.moveTo(x + 22, y + 4); ctx.lineTo(x + 18, y + 18); ctx.stroke(); }
@@ -1080,7 +1116,7 @@ function drawTiles(g, t){
     ctx.restore();
     // faux mur : un peu transparent quand on est dedans
   }
-  if(g.lv.n === 8){ const ys = tideY(g.t); for(let cx = c0; cx < c1; cx++){ if(g.lv.G[13][cx] !== 'w') continue; const x = cx * T, wy = ys + Math.sin(t * 3 + cx) * 2;
+  if(g.lv.n === 8 || g.lv.n === 24){ const ys = tideY(g.t); for(let cx = c0; cx < c1; cx++){ if(g.lv.G[13][cx] !== 'w') continue; const x = cx * T, wy = ys + Math.sin(t * 3 + cx) * 2;
       ctx.globalAlpha = .82; ctx.fillStyle = W.haz; ctx.fillRect(x, wy, T + 1, ROWS * T - wy); ctx.globalAlpha = 1; ctx.fillStyle = '#ffffffcc'; ctx.fillRect(x, wy, T + 1, 3); } }
   // faux murs dessinés comme des murs (sauf quand le héros est dedans)
   for(let cy = 0; cy < ROWS; cy++) for(let cx = c0; cx < c1; cx++){ if(tileAt(cx, cy) !== 'h') continue; const x = cx * T, y = cy * T, inside = Math.abs(g.hero.x - (x + 16)) < 40 && g.hero.y > y - 10 && g.hero.y - HH < y + T + 10;
@@ -1117,7 +1153,12 @@ function drawEnt(e, g, t){
       if(e.near){ ctx.fillStyle = '#fff'; ctx.font = '800 22px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⬇', 0, -70 + Math.sin(t * 6) * 4); ctx.font = '800 12px "Baloo 2", sans-serif'; ctx.fillText('ne bouge plus…', 0, -96); }
       break; }
     case 'heart': { ctx.translate(0, -18 + Math.sin(t * 3) * 3); ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.fillText('❤️', 0, 9); break; }
-    case 'stone': if(g.lv.n === 21){ const j = e.st === 'warn' ? Math.sin(t * 60) * 2 : 0; ctx.translate(j, 0);   // une grosse orange du Cap Bon
+    case 'stone': if(g.lv.n === 23){ const j = e.st === 'warn' ? Math.sin(t * 60) * 2 : 0; ctx.translate(j, 0);   // une grosse grenade de Testour
+        ctx.strokeStyle = '#5a7a2a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -52); ctx.lineTo(0, -52 - 400); ctx.stroke();
+        const gr = ctx.createRadialGradient(-8, -34, 4, 0, -26, 28); gr.addColorStop(0, '#f06a6a'); gr.addColorStop(1, '#a8162a'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, -25, 25, 0, 7); ctx.fill();
+        ctx.fillStyle = '#8a1220'; ctx.beginPath(); ctx.moveTo(-7, -49); ctx.lineTo(-9, -58); ctx.lineTo(-4, -53); ctx.lineTo(0, -60); ctx.lineTo(4, -53); ctx.lineTo(9, -58); ctx.lineTo(7, -49); ctx.closePath(); ctx.fill();
+        if(e.st === 'warn' || e.st === 'fall'){ ctx.fillStyle = '#fff'; ctx.font = '800 14px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('! !', 0, -20); } break; }
+      if(g.lv.n === 21){ const j = e.st === 'warn' ? Math.sin(t * 60) * 2 : 0; ctx.translate(j, 0);   // une grosse orange du Cap Bon
         ctx.strokeStyle = '#5a7a2a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -52); ctx.lineTo(0, -52 - 400); ctx.stroke();
         const gr = ctx.createRadialGradient(-8, -34, 4, 0, -26, 28); gr.addColorStop(0, '#ffc266'); gr.addColorStop(1, '#f07a1a'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, -26, 26, 0, 7); ctx.fill();
         ctx.fillStyle = '#4a8a2a'; ctx.beginPath(); ctx.ellipse(8, -53, 9, 4.5, -.5, 0, 7); ctx.fill(); ctx.fillStyle = '#7a4a1e'; ctx.fillRect(-1.5, -56, 3, 6);
@@ -1142,6 +1183,16 @@ function drawEnt(e, g, t){
         ctx.fillStyle = '#7a1414'; ctx.fillRect(x + DX, y + DY, w, 30); ctx.fillStyle = '#c4222a'; rr(ctx, x, y, w, 32, 5); ctx.fill(); ctx.fillStyle = '#f4e3b0'; for(let k = 10; k < w - 16; k += 26) rr(ctx, x + k, y + 8, 16, 12, 3), ctx.fill();
         ctx.fillStyle = '#ffc93c'; ctx.fillRect(x, y, w, 3); ctx.fillRect(x, y + 26, w, 2); ctx.fillStyle = '#222'; for(const k of [16, w - 16]){ ctx.beginPath(); ctx.arc(x + k, y + 36, 7, 0, 7); ctx.fill(); }
         ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.arc(x + w - 4, y + 14, 4, 0, 7); ctx.fill(); return; }
+      if(e.kind === 'pont'){ const x = e.px, y = e.py, w = e.w * T;   // le pont mobile de Bizerte : deux pylônes fixes, le tablier monte et descend
+        ctx.fillStyle = '#5a6a7a'; ctx.fillRect(e.x0 - 12, e.y0 - 150, 10, 150 + 40); ctx.fillRect(e.x0 + w + 2, e.y0 - 150, 10, 150 + 40); ctx.fillRect(e.x0 - 14, e.y0 - 156, w + 28, 8);
+        ctx.strokeStyle = '#3a4652'; ctx.lineWidth = 2; ctx.beginPath(); for(const k of [6, w - 6]){ ctx.moveTo(x + k, y); ctx.lineTo(e.x0 + k, e.y0 - 150); } ctx.stroke();
+        ctx.fillStyle = '#3a4652'; ctx.fillRect(x + DX, y + DY, w, 12); ctx.fillStyle = '#7a8a9a'; ctx.fillRect(x, y, w, 12); ctx.fillStyle = '#c8d2dc'; ctx.fillRect(x, y, w, 3);
+        ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y - 14); ctx.lineTo(x + w, y - 14); for(let k = 0; k <= w; k += 16){ ctx.moveTo(x + k, y - 14); ctx.lineTo(x + k, y); } ctx.stroke(); return; }
+      if(e.kind === 'aiguille'){ const x = e.px, y = e.py, w = e.w * T, cx0 = e.x0 + w / 2, cy0 = e.y0 + 6, R = e.dist * T / 2;   // l'horloge de Testour : le cadran, l'aiguille, et la plateforme au bout
+        ctx.globalAlpha = .5; ctx.fillStyle = '#fdf6e4'; ctx.beginPath(); ctx.arc(cx0, cy0, R + 16, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = '#1f6fa8'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx0, cy0, R + 16, 0, 7); ctx.stroke();
+        ctx.fillStyle = '#23324a'; ctx.font = '800 15px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; [['12', 0, -1], ['9', 1, 0], ['6', 0, 1], ['3', -1, 0]].forEach(([n, ax, ay]) => ctx.fillText(n, cx0 + ax * (R + 2), cy0 + ay * (R + 2) + 5));   // à l'envers : le 9 est à droite et le 3 à gauche
+        ctx.strokeStyle = '#23324a'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx0, cy0); ctx.lineTo(x + w / 2, y + 6); ctx.stroke(); ctx.lineCap = 'butt'; ctx.fillStyle = '#c99a2e'; ctx.beginPath(); ctx.arc(cx0, cy0, 7, 0, 7); ctx.fill();
+        ctx.fillStyle = '#7a4a22'; ctx.fillRect(x + DX, y + DY, w, 12); ctx.fillStyle = '#c8643a'; rr(ctx, x, y, w, 14, 4); ctx.fill(); ctx.fillStyle = '#ffc93c'; ctx.fillRect(x + 4, y + 3, w - 8, 3); return; }
       if(e.kind === 'boat'){ const x = e.px, y = e.py, w = e.w * T, bob = Math.sin(t * 2.2 + e.x0) * 1.5;   // une barque de Kerkennah
         ctx.fillStyle = '#7a4a22'; ctx.beginPath(); ctx.moveTo(x - 10, y + bob); ctx.lineTo(x + w + 14, y + bob); ctx.quadraticCurveTo(x + w + 2, y + 26, x + w - 12, y + 26); ctx.lineTo(x + 10, y + 26); ctx.quadraticCurveTo(x - 4, y + 22, x - 10, y + bob); ctx.fill();
         ctx.fillStyle = '#2a8ac8'; ctx.fillRect(x - 8, y + 3 + bob, w + 18, 4); ctx.fillStyle = '#f4ead2'; ctx.fillRect(x - 6, y + bob, w + 16, 3);
@@ -1160,16 +1211,19 @@ function drawEnt(e, g, t){
         ctx.fillStyle = '#1f6fa8'; ctx.fillRect(x, y + 10 + wv(0), w, 2); ctx.strokeStyle = '#ffe9c8'; ctx.lineWidth = 1.5; ctx.beginPath(); for(const ex of [x, x + w]) for(let k = 2; k < 12; k += 3){ ctx.moveTo(ex, y + k + wv(ex - x)); ctx.lineTo(ex + (ex === x ? -5 : 5), y + k + 1 + wv(ex - x)); } ctx.stroke(); return; }
       { const x = e.px, y = e.py, w = e.w * T; ctx.fillStyle = shade(W.plat, .7); ctx.fillRect(x + DX, y + DY, w, 12); ctx.fillStyle = '#c2185b'; rr(ctx, x, y, w, 14, 4); ctx.fill(); ctx.fillStyle = '#ffc93c'; for(let k = 0; k < w; k += 12) ctx.fillRect(x + k + 2, y + 4, 6, 6); ctx.fillStyle = '#7a1040'; ctx.fillRect(x, y + 12, w, 3); } return;
     case 'power': { ctx.translate(0, -12); ctx.font = '24px serif'; ctx.textAlign = 'center'; ctx.fillText(e.kind === 'chechia' ? '🎩' : e.kind === 'harissa' ? '🌶️' : '🍵', 0, 9); break; }
-    case 'scorp': if(g.lv.n === 19 && BETE.chevre.im){ ctx.scale(e.dir, 1); const q = t * 13 + e.x * .05; ctx.translate(0, -Math.abs(Math.sin(q)) * 4); ctx.rotate(Math.sin(q) * .09); bete('chevre', 0); break; }   // une chèvre de Dougga : elle galope
+    case 'scorp': if(g.lv.n === 24){ ctx.translate(0, -13); ctx.rotate((e.x / 13) % (Math.PI * 2));   // un boulet de canon du ribat : il roule
+        const gr = ctx.createRadialGradient(-4, -5, 2, 0, 0, 14); gr.addColorStop(0, '#7a8088'); gr.addColorStop(1, '#23262c'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill();
+        ctx.fillStyle = '#3a3e46'; ctx.fillRect(-2, -13, 4, 5); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(-5, -5, 3, 0, 7); ctx.fill(); break; }
+      if(g.lv.n === 19 && BETE.chevre.im){ ctx.scale(e.dir, 1); const q = t * 13 + e.x * .05; ctx.translate(0, -Math.abs(Math.sin(q)) * 4); ctx.rotate(Math.sin(q) * .09); bete('chevre', 0); break; }   // une chèvre de Dougga : elle galope
       if(g.lv.n === 17){ ctx.scale(e.dir, 1); if(BETE.grenouille.im){ bete('grenouille', Math.floor(t * 12 + e.x * .05)); break; } const hop = Math.abs(Math.sin(t * 6 + e.x * .01)) * 5; ctx.translate(0, -hop);   // une grenouille du marais
         ctx.fillStyle = '#4a9a3a'; ctx.beginPath(); ctx.ellipse(0, -9, 13, 9, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#3a7a2a'; ctx.beginPath(); ctx.ellipse(-10, -3, 7, 4, .4, 0, 7); ctx.ellipse(8, -3, 6, 4, -.4, 0, 7); ctx.fill();
         ctx.fillStyle = '#c8e8a0'; ctx.beginPath(); ctx.ellipse(3, -6, 8, 4, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#4a9a3a'; ctx.beginPath(); ctx.arc(4, -17, 5, 0, 7); ctx.arc(12, -16, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(4, -18, 3, 0, 7); ctx.arc(12, -17, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(5, -18, 1.5, 0, 7); ctx.arc(13, -17, 1.5, 0, 7); ctx.fill(); break; }
-      if(g.lv.n === 6 || g.lv.n === 11 || g.lv.n === 14){ ctx.scale(e.dir, 1); if(BETE.chat.im){ bete('chat', Math.floor(t * 14 + e.x * .05)); break; } const lg = Math.sin(t * 12) * 3; ctx.fillStyle = '#e8963a';   // un chat de la médina
+      if(g.lv.n === 6 || g.lv.n === 11 || g.lv.n === 14 || g.lv.n === 23){ ctx.scale(e.dir, 1); if(BETE.chat.im){ bete('chat', Math.floor(t * 14 + e.x * .05)); break; } const lg = Math.sin(t * 12) * 3; ctx.fillStyle = '#e8963a';   // un chat de la médina
         ctx.fillRect(-10, -8, 3, 8 + lg * .3); ctx.fillRect(6, -8, 3, 8 - lg * .3); ctx.beginPath(); ctx.ellipse(0, -12, 13, 7, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(13, -18, 7, 0, 7); ctx.fill();
         ctx.beginPath(); ctx.moveTo(8, -22); ctx.lineTo(10, -30); ctx.lineTo(14, -24); ctx.moveTo(14, -24); ctx.lineTo(18, -30); ctx.lineTo(19, -21); ctx.fill();
         ctx.strokeStyle = '#e8963a'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-12, -14); ctx.quadraticCurveTo(-22, -16, -20, -28 + lg); ctx.stroke(); ctx.lineCap = 'butt';
         ctx.fillStyle = '#b8642a'; ctx.fillRect(-4, -18, 3, 6); ctx.fillRect(2, -18, 3, 6); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(16, -19, 1.6, 0, 7); ctx.fill(); ctx.fillStyle = '#ff8aa8'; ctx.beginPath(); ctx.arc(20, -17, 1.4, 0, 7); ctx.fill(); break; }
-      else if(g.lv.n === 7 || g.lv.n === 8 || g.lv.n === 10 || g.lv.n === 20){ if(BETE.crabe.im){ bete('crabe', Math.floor(t * 14 + e.x * .05)); break; } const lg = Math.sin(t * 16) * 2; ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2;   // un crabe
+      else if(g.lv.n === 7 || g.lv.n === 8 || g.lv.n === 10 || g.lv.n === 20 || g.lv.n === 22){ if(BETE.crabe.im){ bete('crabe', Math.floor(t * 14 + e.x * .05)); break; } const lg = Math.sin(t * 16) * 2; ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2;   // un crabe
         for(let k = -1; k <= 1; k += 2) for(let j = 0; j < 3; j++){ ctx.beginPath(); ctx.moveTo(k * 8, -7); ctx.lineTo(k * (14 + j * 2), -2 + (j % 2 ? lg : -lg)); ctx.stroke(); }
         ctx.fillStyle = '#e04a2e'; ctx.beginPath(); ctx.ellipse(0, -9, 13, 8, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(-16, -16 + lg, 5, 0, 7); ctx.arc(16, -16 - lg, 5, 0, 7); ctx.fill();
         ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-4, -19, 3, 0, 7); ctx.arc(4, -19, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(-4 + e.dir, -19, 1.5, 0, 7); ctx.arc(4 + e.dir, -19, 1.5, 0, 7); ctx.fill(); break; }
@@ -1195,7 +1249,7 @@ function drawEnt(e, g, t){
       if(g.lv.n === 15 || g.lv.n === 17){ ctx.scale(e.dir, 1); if(BETE.cigogne.im){ bete('cigogne', Math.floor(t * 10 + e.x * .05)); break; } const fl = Math.sin(t * 6) * .5; ctx.fillStyle = '#ffffff';   // une cigogne
         ctx.beginPath(); ctx.ellipse(0, -10, 15, 7, 0, 0, 7); ctx.fill(); ctx.save(); ctx.translate(-2, -12); ctx.rotate(-fl); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(-6, -6, 16, 6, -.5, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.ellipse(-16, -10, 7, 4, -.5, 0, 7); ctx.fill(); ctx.restore();
         ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(12, -12); ctx.lineTo(20, -16); ctx.stroke(); ctx.fillStyle = '#e8502a'; ctx.beginPath(); ctx.moveTo(22, -18); ctx.lineTo(34, -14); ctx.lineTo(22, -14); ctx.fill(); ctx.strokeStyle = '#e8502a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-12, -8); ctx.lineTo(-24, -4); ctx.stroke(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(21, -17, 1.4, 0, 7); ctx.fill(); break; }
-      if(g.lv.n === 7 || g.lv.n === 8){ ctx.scale(e.dir, 1); if(BETE.mouette.im){ bete('mouette', Math.floor(t * 14 + e.x * .05)); break; } const fl = Math.sin(t * 10) * .6; ctx.fillStyle = '#ffffff';   // une mouette
+      if(g.lv.n === 7 || g.lv.n === 8 || g.lv.n === 22 || g.lv.n === 24){ ctx.scale(e.dir, 1); if(BETE.mouette.im){ bete('mouette', Math.floor(t * 14 + e.x * .05)); break; } const fl = Math.sin(t * 10) * .6; ctx.fillStyle = '#ffffff';   // une mouette
         ctx.beginPath(); ctx.ellipse(0, -10, 13, 7, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(11, -13, 5.5, 0, 7); ctx.fill(); ctx.fillStyle = '#9aa8b8'; ctx.save(); ctx.translate(-2, -12); ctx.rotate(-fl); ctx.beginPath(); ctx.ellipse(-6, -6, 14, 5, -.5, 0, 7); ctx.fill(); ctx.restore();
         ctx.fillStyle = '#ffb02e'; ctx.beginPath(); ctx.moveTo(15, -13); ctx.lineTo(22, -11); ctx.lineTo(15, -10); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(12, -14, 1.5, 0, 7); ctx.fill(); break; }
       { ctx.scale(e.dir, 1); if(BETE.faucon.im){ bete('faucon', Math.floor(t * 16 + e.x * .05)); break; } const fl = Math.sin(t * 16) * .7; ctx.fillStyle = '#8a6a4a'; ctx.beginPath(); ctx.ellipse(0, -10, 13, 8, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#6a4a2a'; ctx.save(); ctx.translate(-2, -12); ctx.rotate(-fl); ctx.beginPath(); ctx.ellipse(-4, -8, 6, 13, -.4, 0, 7); ctx.fill(); ctx.restore();
@@ -1421,7 +1475,7 @@ function renderMenu(){ renderTenues(); $('who').innerHTML = player ? `${avatarHT
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 $('who').onclick = () => { audio(); sfx.tap(); choose(); };
 // un monde est ouvert s'il est le premier du voyage, s'il l'était déjà avec l'ancien ordre (1 à 5), ou si le monde d'avant est réussi
-function isOpen(id){ const i = ORDER.indexOf(id), j = ORDER13.indexOf(id), k = ORDER18.indexOf(id); return i === 0 || !!save.best[id] || (id <= 5 && id <= save.unlocked) || !!save.best[ORDER[i - 1]] || (j > 0 && !!save.best[ORDER13[j - 1]]) || (k > 0 && !!save.best[ORDER18[k - 1]]); }
+function isOpen(id){ const i = ORDER.indexOf(id), j = ORDER13.indexOf(id), k = ORDER18.indexOf(id); return i === 0 || !!save.best[id] || (id <= 5 && id <= save.unlocked) || !!save.best[ORDER[i - 1]] || (j > 0 && !!save.best[ORDER13[j - 1]]) || (k > 0 && !!save.best[ORDER18[k - 1]]) || (ORDER21.indexOf(id) > 0 && !!save.best[ORDER21[ORDER21.indexOf(id) - 1]]); }
 async function openLevels(){
   audio(); if(!player){ const n = await choose(); if(!n) return; }
   const nextId = ORDER.find(id => isOpen(id) && !save.best[id]);
@@ -1454,7 +1508,10 @@ const STORY = ["Le Scorpion d'Or a volé les jasmins dorés de Sidi Bou Saïd ! 
   "Dans le canyon de Tamerza, une cascade tombe dans un bassin. Le vent souffle par moments : quand il se lève, attends qu'il se calme avant de sauter !",
   "À Dougga, une ville romaine dort sur la colline. Grimpe les gradins du vieux théâtre, mais attention : les chèvres chargent et les pierres tombent !",
   "Aux îles Kerkennah, les pêcheurs attrapent les poissons avec des palmes plantées dans la mer. Saute de barque en barque, plonge… et gare aux poulpes !",
-  "Au Cap Bon, les potiers de Nabeul empilent leurs jarres et les orangers croulent sous les fruits. Les piles s'effritent, et les oranges tombent !"];
+  "Au Cap Bon, les potiers de Nabeul empilent leurs jarres et les orangers croulent sous les fruits. Les piles s'effritent, et les oranges tombent !",
+  "Dans le vieux port de Bizerte, un grand pont se lève pour laisser passer les bateaux. Attends qu'il redescende pour monter dessus, et saute de barque en barque !",
+  "À Testour, la ville des Andalous, l'horloge de la mosquée tourne à l'envers ! Monte au bout de l'aiguille et laisse-toi porter… gare aux grenades qui tombent.",
+  "À Monastir, un ribat doré garde la mer depuis plus de mille ans. Grimpe sa tour, attends que les vagues se retirent, et saute par-dessus les boulets de canon !"];
 function intro(n){
   const w = WORLDS[n - 1];
   $('introBox').innerHTML = `${n === 5 ? `<img class="boss-img" src="jasmin/boss.webp" alt="Le Scorpion d'Or" onerror="this.remove()">` : `<img class="title-img" src="${w.img}" alt="" onerror="this.remove()" style="aspect-ratio:21/9">`}

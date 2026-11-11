@@ -86,3 +86,4 @@ Une ligne par réalisation, la plus ancienne en premier. Ajouter une ligne à ch
 - **11/11** : **Le Jasmin passe à 21 mondes** : Dougga (théâtre romain, chèvres), Kerkennah (barques, poulpes), Cap Bon (poteries, oranges qui tombent). Nouvel ennemi demandé par le papa : **l'ivrogne comique** qui lance des bouteilles à esquiver (2 dans la Médina, 1 caché dans chaque nouveau monde). 12 crédits (solde : 7,1).
 - **11/11** : **Jasmin : la bourse.** Les dinars ramassés s'additionnent d'un monde à l'autre (le compteur ne repart plus de zéro) et servent à acheter les tenues dans le Jasmin (75 à 1000 dinars). Rattrapage : 30 dinars par monde déjà réussi.
 - **11/11** : Jasmin : l'ivrogne tombe quand on lui saute dessus, comme les autres ennemis.
+- **11/11** : **Le Jasmin passe à 24 mondes** : Bizerte (pont mobile, barques), Testour (horloge qui tourne à l'envers, grenades), Monastir (tour du ribat, marée, boulets). 6 crédits (solde : 1,1).
