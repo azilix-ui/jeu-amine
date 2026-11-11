@@ -21,9 +21,38 @@ const tracked = new Set();
 async function setPlayer(name){
   player = name; S = Object.assign(fresh(), store.get(key(), null) || {});
   if(window.Famille){ if(!tracked.has(name)){ tracked.add(name); Famille.track('ecuries', name, [key()]); }
-    try{ const r = await Famille.load('ecuries', name), d = r && r[key()]; if(d && (d.t || 0) > (S.t || 0) && player === name){ S = Object.assign(fresh(), d); store.set(key(), S); } }catch(e){} }
+    await sync(name); }
   if(!S.horses[S.cur]) S.cur = Object.keys(S.horses)[0]; decay(); renderWho(); coins(0);
 }
+/* Deux appareils (PC le matin, tablette le soir) : on RÉUNIT les deux sauvegardes au lieu de garder la plus récente.
+   Sinon un onglet resté ouvert sur le PC réécrivait par-dessus les achats faits sur la tablette (Essil, 11/11).
+   Rien ne se perd : chevaux et matériel = tout ce qui existe d'un côté ou de l'autre, records = le meilleur, pièces = l'appareil le plus récent. */
+function merge(d){
+  let ch = false; const newer = (d.t || 0) > (S.t || 0);
+  Object.entries(d.horses || {}).forEach(([id, h]) => { const m = S.horses[id]; if(!m){ S.horses[id] = h; ch = true; } else if((h.t || 0) > (m.t || 0)) Object.assign(m, h); });
+  Object.keys(d.owned || {}).forEach(k => { if(!S.owned[k]){ S.owned[k] = 1; ch = true; } });
+  Object.entries(d.best || {}).forEach(([k, v]) => { if(v != null && (S.best[k] == null || v < S.best[k])){ S.best[k] = v; ch = true; } });
+  Object.entries(d.ecole || {}).forEach(([k, v]) => { if(v > (S.ecole[k] || 0)){ S.ecole[k] = v; ch = true; } });
+  Object.entries(d.n || {}).forEach(([k, v]) => { if(v > (S.n[k] || 0)){ S.n[k] = v; ch = true; } });
+  if(newer){ if(S.coins !== d.coins){ S.coins = d.coins; ch = true; } if(d.cur && S.horses[d.cur] && !syncedOnce) S.cur = d.cur; }
+  return ch;
+}
+let syncedOnce = false, syncing = false;
+async function sync(name){
+  if(!window.Famille || !name || syncing) return; syncing = true;
+  try{ const r = await Famille.load('ecuries', name), d = r && r[key()];
+    if(d && player === name && S){ const had = Object.keys(S.horses).length, ch = merge(d); syncedOnce = true;
+      // l'autre appareil n'a pas tout ce qu'on a ici : on renvoie la sauvegarde réunie
+      const more = Object.keys(S.horses).some(id => !(d.horses || {})[id]) || Object.keys(S.owned).some(k => !(d.owned || {})[k]);
+      if(ch || more){ S.t = Math.max(S.t || 0, d.t || 0); store.set(key(), S); }   // sans avancer l'heure : les pièces restent celles du dernier appareil où l'on a vraiment joué
+      if(ch){ coins(0); if(Object.keys(S.horses).length > had && typeof refreshAfterSync === 'function') refreshAfterSync(); } } }catch(e){}
+  syncing = false;
+}
+function refreshAfterSync(){ if(['hub', 'market', 'concours', 'shop'].includes(cur)) go(cur); }
+// un onglet resté ouvert reprend ce qui a été fait ailleurs dès qu'on y revient, puis toutes les minutes
+document.addEventListener('visibilitychange', () => { if(!document.hidden && player) sync(player); });
+window.addEventListener('focus', () => { if(player) sync(player); });
+setInterval(() => { if(!document.hidden && player) sync(player); }, 60000);
 const KIDS = ['essil', 'salma', 'amine', 'anis', 'imen'];
 const avatarOf = n => { const k = n.toLowerCase(); if(KIDS.includes(k)) return `../jeux/avatars/${k}.webp`; const h = window.Famille && Famille.head && Famille.head(n); return h ? '../jeux/' + h.img : '../jeux/avatars/mascotte-nour.webp'; };
 function renderWho(){ $('who1').innerHTML = `<img src="${avatarOf(player)}" alt="">${esc(player)}`;
