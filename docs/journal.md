@@ -92,3 +92,4 @@ Une ligne par réalisation, la plus ancienne en premier. Ajouter une ligne à ch
 - **11/11** : Atelier du Jasmin : crayon noir et feutre (ferment les zones), 8 motifs de plus (arabesque, fleurs, étoiles, cœurs…), tampons (48 emojis, 3 tailles), annuler pour tout, feuilles blanches « Je dessine », 6 dessins pas à pas (chat, poisson, maison, fleur, bateau, papillon).
 - **11/11** : Jasmin : à la fin d'un monde, la boîte « Monde suivant » permet aussi de changer de tenue (et d'en acheter) et de changer de héros.
 - **11/11** : Jasmin : le bandeau du haut affiche aussi le prénom du joueur et le nom du monde.
+- **11/11** : **Le Miroir Magique** (`salma/miroir-magique.html`, cours `salma-symetrie`) : la symétrie niveau CE2 pour Salma, 7 étapes (pliage, axe, nombre d'axes, bon reflet, coloriage sur quadrillage, reflet dans l'eau, point par point) et un miroir magique pour dessiner des rosaces. Tickets pour Serpent Légendes, carte dans Progression. Aucun crédit.

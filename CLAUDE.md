@@ -26,7 +26,7 @@ Ces fichiers `.md` sont bloqués en ligne par `.htaccess`. Une copie de cette fi
 | **Anis** | le papa, propriétaire du site (c'est lui qui parle à Claude) | vert sarcelle `#0f766e`, `jeux/avatars/anis.webp` |
 | **Imen** | la maman | framboise `#b4235a`, `jeux/avatars/imen.webp` |
 | **Essil** | 12 ans, collège : allemand, latin, maths (vidéos géométrie et fractions), équitation (Les Écuries d'Essil) | bleu `#1f3c88` + rail rouge `#d7263d` |
-| **Salma** | 8 ans, CE2 : anglais, français (conjugaison), maths (soustraction, géométrie, monnaie), exposé cheval | vert `#1f6b44` + ciel `#5aaedc` |
+| **Salma** | 8 ans, CE2 : anglais, français (conjugaison), maths (soustraction, géométrie, symétrie, monnaie), exposé cheval | vert `#1f6b44` + ciel `#5aaedc` |
 | **Amine** | 5 ans, grande section : jeux, écriture (Ardoise magique), nombres (Planète des Nombres), derja tunisienne | nuit `#2a1f4f` + lune `#fff1bf` / citrouille `#ff8c1a` |
 
 Ordre d'affichage voulu : **Essil, Salma, Amine**. Les prénoms et les avatars peuvent apparaître sur le site (accord du papa).
@@ -42,7 +42,7 @@ site.js                chargé par toutes les pages : appli installable (service
 manifest.webmanifest, sw.js, icons/   l'application à installer sur l'écran d'accueil (voir docs/serveur.md)
 progression.html       tableau de bord des parents (mot de passe parent), avec le journal des visites
 essil/  index.html, deutsch-express.html, via-romana.html, videos-geometrie.html et videos-fractions.html (+ videos/ : épisodes « Pas à pas »), les-ecuries.html (club hippique 3D, + ecuries/ : code et images)
-salma/  index.html, english-garden.html, weather-station.html (+ meteo/ : images et voix), atelier-des-verbes.html, atelier-des-formes.html, marche-d-ollie.html (monnaie, 3D), jardin-des-nombres.html, le-grand-galop.html, cheval/ (images et vidéos)
+salma/  index.html, english-garden.html, weather-station.html (+ meteo/ : images et voix), atelier-des-verbes.html, atelier-des-formes.html, miroir-magique.html (symétrie), marche-d-ollie.html (monnaie, 3D), jardin-des-nombres.html, le-grand-galop.html, cheval/ (images et vidéos)
 amine/  index.html, ardoise-magique.html (+ lettres.js : modèles des 78 lettres), planete-des-nombres.html (+ nombres/ : aliens, décor, voix des nombres), la-nuit-d-amine.html, la-nuit-d-amine-2.html, nahki-tounsi.html, serpentin.html, voix/api.php
 jeux/   les-ecuries.html (les Écuries pour toute la famille : même code que essil/ecuries/), serpent-legendes.html, ludo-legendes.html, grimpe-glace.html, medina-express.html (course infinie 3D, + medina/ : planches des corps animés), legende-du-jasmin-2.html (**« le Jasmin » = cette version** depuis le 11/11 : héros et créatures « en vrai », + jasmin2/ : planches ; images de décor dans jasmin/), legende-du-jasmin.html (l'ancienne version aux héros dessinés, gardée en ligne, liée seulement depuis Progression), atelier-du-jasmin.html (coloriage 2D / 3D, + atelier/ : dessins au trait et voix), avatars/ (5 avatars + têtes de profil `-profil` et « soupir » `-soupir` pour le héros du Jasmin, têtes vues de dos `-dos` pour Médina Express, 3 mascottes d'invités, 15 cartes légendes, illustrations Ludo et Grimpe-Glace), cartes/ (illustrations des skins)
 lib/    three-0.170.0.module.min.js (Three.js, copié ici : aucune dépendance en ligne)

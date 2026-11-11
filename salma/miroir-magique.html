@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Le Miroir Magique</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%AA%9E%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* L'Atelier des Verbes reprend le monde du Jardin des Nombres (ciel, herbe, Ollie).
+   Ancien commentaire du Jardin : le monde de Salma (ciel, herbe, Ollie la chouette) — accueil = chemin de 8 étapes ; exercice = Ollie qui parle,
+   la soustraction posée sur une feuille de cahier à petits carreaux, retenues au stylo rouge, grand pavé de chiffres pour la tablette. */
+:root{
+  --sky:#7cc8f2; --sky2:#b8e4fb; --grass:#5dbb63; --grass2:#3f9a48;
+  --card:#ffffff; --ink:#23324a; --soft:#566781;
+  --coral:#ff6b5b; --coral-deep:#c8473a; --sun:#ffc93c; --plum:#7a4fe0; --mint:#1fa98e; --mint-deep:#147a66;
+  --paper:#fdfdf8; --grid:#cfe0f3; --margin:#f19a9a; --pen:#24407e; --red:#d32f2f;
+  --display:"Baloo 2","Comic Sans MS","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Trebuchet MS",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;margin:0}
+body{font-family:var(--body);color:var(--ink);font-size:18px;line-height:1.4;
+  background:linear-gradient(var(--sky) 0%,var(--sky2) 62%,var(--grass) 62%,var(--grass2) 100%) fixed;background-color:var(--sky)}
+::selection{background:var(--sun);color:var(--ink)}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:4px solid var(--plum);outline-offset:3px}
+[hidden]{display:none!important}
+.wrap{max-width:980px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(36px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:16px}
+
+/* barre du haut */
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{background:var(--card);border-radius:999px;min-height:48px;padding:10px 18px;font-weight:800;font-size:17px;box-shadow:0 4px 0 #0002;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.chip.round{width:48px;padding:0;justify-content:center;font-size:22px}
+.stars{margin-left:auto;font-family:var(--display);font-size:21px;font-variant-numeric:tabular-nums}
+
+/* Ollie et sa bulle */
+.teacher{display:flex;align-items:flex-end;gap:10px}
+.owl{width:96px;flex:none;transform-origin:50% 100%}
+.owl.talk{animation:bob .5s ease-in-out 2}
+@keyframes bob{50%{transform:translateY(-6px) rotate(-3deg)}}
+.bubble{position:relative;background:var(--card);border-radius:22px;padding:14px 18px;font-size:clamp(18px,2.4vw,22px);font-weight:800;box-shadow:0 5px 0 #0002;min-width:0;flex:1}
+.bubble::before{content:"";position:absolute;left:-14px;bottom:22px;border:10px solid transparent;border-right:16px solid var(--card)}
+.bubble b.n{font-family:var(--display);color:var(--pen);font-size:1.15em}
+.bubble b.r{color:var(--red)}
+.bubble small{display:block;font-weight:600;color:var(--soft);font-size:.82em;margin-top:4px}
+
+h1{font-family:var(--display);font-weight:800;font-size:clamp(36px,6.5vw,62px);line-height:1;margin:0;color:#fff;text-shadow:0 4px 0 #2a7fb4;text-wrap:balance}
+.lead{margin:6px 0 0;color:#fff;font-weight:800;font-size:19px;text-shadow:0 2px 0 #2a7fb4}
+
+/* chemin des étapes */
+.path{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:620px){.path{grid-template-columns:1fr}}
+.step{background:var(--card);border-radius:24px;padding:14px 16px;display:flex;align-items:center;gap:14px;text-align:left;box-shadow:0 6px 0 var(--edge,#0002);transition:transform .12s;min-width:0}
+.step:hover:not(:disabled){transform:translateY(-3px)}
+.step:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 var(--edge,#0002)}
+.step .ic{font-size:40px;line-height:1;width:58px;height:58px;display:grid;place-items:center;border-radius:18px;background:#eef7ff;flex:none}
+.step .tx{min-width:0;flex:1}
+.step .num{font-weight:800;color:var(--soft);font-size:14px}
+.step b{display:block;font-family:var(--display);font-size:23px;line-height:1.1}
+.step .sub{color:var(--soft);font-size:15px}
+.step .st{font-size:20px;letter-spacing:1px;color:#e0a100;white-space:nowrap}
+.step:disabled{opacity:.62;cursor:not-allowed}
+.step.next{outline:4px solid var(--sun);outline-offset:2px}
+
+/* cahier à petits carreaux */
+.sheet{--sq:clamp(46px,9vw,66px);align-self:center;background-color:var(--paper);
+  background-image:linear-gradient(90deg,transparent calc(var(--sq)*.9 - 1px),var(--margin) calc(var(--sq)*.9 - 1px),var(--margin) calc(var(--sq)*.9 + 1px),transparent calc(var(--sq)*.9 + 1px)),
+   linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:100% 100%,calc(var(--sq)/2) calc(var(--sq)/2),calc(var(--sq)/2) calc(var(--sq)/2);
+  border-radius:10px;box-shadow:0 10px 24px -10px rgba(20,40,70,.45),0 2px 0 #0001;padding:calc(var(--sq)*.35) calc(var(--sq)*.6) calc(var(--sq)*.4) calc(var(--sq)*1.3);display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap}
+.op{display:grid;grid-template-columns:var(--sq) repeat(var(--n),var(--sq));grid-auto-rows:auto;font-family:var(--display);font-weight:800;color:var(--pen);font-variant-numeric:tabular-nums}
+.op .lab{font-family:var(--body);font-size:15px;color:#7e8ca3;text-align:center;font-weight:800;height:26px}
+.op .cell{position:relative;height:var(--sq);display:grid;place-items:center;font-size:calc(var(--sq)*.72);line-height:1;border-radius:10px;transition:background .2s}
+.op .cell.on{background:rgba(255,201,60,.38)}
+.op .minus{font-size:calc(var(--sq)*.7)}
+.op .bar{grid-column:1 / -1;height:4px;background:var(--pen);border-radius:2px;margin:4px 0 6px}
+.op .res{border:3px dashed transparent}
+.op .res.on{border-color:var(--sun);background:#fff8de}
+.op .res.ok{color:var(--mint-deep)}
+.op .res.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.op .mk{position:absolute;font-size:calc(var(--sq)*.34);color:var(--red);font-family:var(--body);font-weight:800;line-height:1;animation:pen .5s cubic-bezier(.16,1,.3,1)}
+.op .mk.top{left:2px;top:6px}
+.op .mk.bot{left:calc(var(--sq)*-.14);top:calc(var(--sq)*-.06)}
+@keyframes pen{from{transform:scale(2.2);opacity:0}}
+.proof{font-family:var(--display);font-size:20px;color:var(--soft);text-align:center;margin:0}
+.proof b{color:var(--mint-deep)}
+
+/* boutons de réponse et pavé */
+.zone{display:flex;flex-direction:column;gap:12px;align-items:center}
+.choices{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:var(--display);font-weight:800;font-size:22px;min-height:56px;padding:10px 26px;border-radius:20px;background:var(--card);color:var(--ink);box-shadow:0 6px 0 #0002}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #0002}
+.btn.go{background:var(--coral);color:#fff;box-shadow:0 6px 0 var(--coral-deep)}
+.btn.ok{background:var(--mint-deep);color:#fff;box-shadow:0 6px 0 #0d5244}
+.btn.red{background:#fff;color:var(--red);border:3px solid var(--red)}
+.btn.red[aria-pressed="true"]{background:var(--red);color:#fff}
+.btn:disabled{opacity:.4}
+.pad{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:min(100%,520px)}
+.pad button{font-family:var(--display);font-weight:800;font-size:32px;height:64px;border-radius:18px;background:var(--card);color:var(--pen);box-shadow:0 5px 0 #0002}
+.pad button:active{transform:translateY(4px);box-shadow:0 1px 0 #0002}
+.tools{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:14px;height:14px;border-radius:50%;background:#fff8;box-shadow:inset 0 0 0 2px #fff}
+.dots i.done{background:var(--mint)}
+.dots i.now{background:var(--sun)}
+.hops{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-family:var(--display);font-weight:800}
+.hops span{background:#fff;border-radius:12px;padding:4px 10px;color:var(--pen);box-shadow:0 3px 0 #0002}
+.hops span.f{background:#eef7ff;color:var(--soft)}
+
+/* leçon */
+.card{background:var(--card);border-radius:24px;padding:18px 20px;box-shadow:0 6px 0 #0002;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+.ages{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;font-family:var(--display);font-weight:800;font-size:26px}
+.ages div{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ages .e{font-size:54px;line-height:1}
+.rule{background:#fff8de;border:3px solid var(--sun);border-radius:18px;padding:12px 16px;font-weight:800;font-size:20px;max-width:560px}
+
+/* résultats */
+.result{align-items:center;text-align:center}
+.result .big{font-size:64px;letter-spacing:6px;color:#e0a100;line-height:1}
+.problem{font-size:clamp(19px,2.6vw,23px);font-weight:800;max-width:640px}
+
+.float{position:fixed;font-size:38px;pointer-events:none;z-index:50;animation:rise 1.5s ease-out forwards}
+@keyframes rise{to{transform:translateY(-55vh) rotate(25deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------- reste du style de l'Atelier des Verbes ---------- */
+:root{ --g1:#2a7fb4; --g2:#c8473a; --g3:#147a66 }
+.g1{color:var(--g1)} .g2{color:var(--g2)} .g3{color:var(--g3)} .r{color:var(--red)}
+.tk{margin-left:10px;color:var(--plum)}
+.tools{margin-top:-4px}
+.tkbtn{background:var(--plum);color:#fff;box-shadow:0 6px 0 #4b2a9c;text-decoration:none;display:inline-flex;align-items:center}
+.card.ex{gap:18px}
+.verb{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,54px);line-height:1.1;color:var(--pen);text-align:center}
+.verb small{font-family:var(--body);font-size:.42em;color:var(--soft);font-weight:800}
+.verb.phrase{font-size:clamp(24px,4vw,34px);color:var(--ink);max-width:720px}
+.blank{display:inline-block;min-width:2.6em;border-bottom:5px dotted var(--sun);color:transparent;text-align:center}
+.blank.filled{color:var(--mint-deep);border-bottom-color:var(--mint);min-width:0}
+.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,560px)}
+.answers.ends{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ans{font-family:var(--display);font-weight:800;font-size:clamp(22px,3.2vw,28px);min-height:64px;padding:10px 14px;border-radius:20px;background:#f5f8fc;border:3px solid #dde6f2;color:var(--ink);box-shadow:0 5px 0 #0001}
+.ans:active:not(:disabled){transform:translateY(3px)}
+.ans.good{background:#dcf7ec;border-color:var(--mint);color:var(--mint-deep)}
+.ans.bad{background:#ffe3e0;border-color:var(--coral);color:var(--coral-deep)}
+.ans.shake{animation:shake .4s}
+.ans:disabled:not(.good):not(.bad){opacity:.55}
+.baskets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:100%}
+@media (max-width:560px){.baskets{grid-template-columns:1fr}}
+.bk{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:120px;font-size:22px}
+.bk .bi{font-size:44px;line-height:1}
+.bk small{font-family:var(--body);font-size:14px;color:var(--soft)}
+.g1b{border-color:#9fd0f0}.g2b{border-color:#ffb3a8}.g3b{border-color:#8fd8c3}
+.bubble .plus{display:inline-block;background:var(--plum);color:#fff;border-radius:999px;padding:0 10px;font-size:.85em}
+.help{margin:0;text-align:center;color:#fff;font-weight:800;text-shadow:0 2px 0 #2a7fb4}
+.rule{line-height:1.6}
+.fiche,.carnet{align-items:stretch;text-align:left}
+.fiche h2,.carnet h2{font-family:var(--display);margin:0;font-size:28px}
+.fiche h2 small{font-size:16px;background:var(--ink);color:#fff;border-radius:8px;padding:2px 8px;vertical-align:middle}
+.fiche p{margin:0;font-weight:700}
+.fiche .btn{align-self:flex-start}
+.gtab{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:620px){.gtab{grid-template-columns:1fr}}
+.gc{border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:4px;font-weight:700}
+.gc b{font-family:var(--display);font-size:22px}
+.gc span{font-family:var(--display);font-size:24px;font-weight:800}
+.g1c{background:#e4f3fd;color:#1d5c84}.g2c{background:#ffe9e5;color:#9a3328}.g3c{background:#dff5ee;color:#0f5c4c}
+.tscroll{overflow-x:auto;border-radius:14px;border:2px solid #dde6f2}
+.tscroll table{border-collapse:collapse;width:100%;min-width:640px;font-size:16px}
+.tscroll th,.tscroll td{padding:7px 10px;border-bottom:1px solid #e6edf6;text-align:center}
+.tscroll thead th{background:#eef4fb;font-size:14px}
+.tscroll tbody th{text-align:left;font-family:var(--display);color:var(--pen)}
+.prog{height:16px;border-radius:8px;background:#eef4fb;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--mint);border-radius:8px}
+.clist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.clist li{display:grid;grid-template-columns:32px 1fr auto auto;gap:10px;align-items:center;background:#f5f8fc;border-radius:12px;padding:8px 12px}
+.clist .st{color:#e0a100;letter-spacing:1px}
+.clist small{color:var(--soft);font-weight:700;min-width:70px;text-align:right}
+.vlist{display:flex;flex-wrap:wrap;gap:8px}
+.vk{background:#ffe9e5;color:#9a3328;border-radius:999px;padding:6px 14px;font-weight:800}
+.vk small{color:var(--soft);font-weight:700}
+.vk.ok{background:#dcf7ec;color:var(--mint-deep)}
+
+/* ---------- Atelier des Formes ---------- */
+.tk{margin-left:10px;color:var(--plum)}
+.tkbtn{background:var(--plum);color:#fff;box-shadow:0 6px 0 #4b2a9c;text-decoration:none;display:inline-flex;align-items:center}
+.card.ex{gap:16px}
+.fig{width:min(100%,460px);height:auto;max-height:46vh;touch-action:none;user-select:none;-webkit-user-select:none;background:var(--paper);border-radius:18px;box-shadow:inset 0 0 0 2px #dde6f2}
+.fig .f{fill:#e4f3fd;stroke:var(--pen);stroke-width:4;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.fig .f.open{fill:none}
+.fig .cod{fill:none;stroke:var(--red);stroke-width:2.5;vector-effect:non-scaling-stroke}
+.fig .vx{fill:var(--sun);stroke:#b07800;stroke-width:2;vector-effect:non-scaling-stroke}
+.fig .side{stroke:var(--mint);stroke-width:9;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.75}
+.fig .eq{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.fig .eq.good{stroke:var(--mint-deep)} .fig .eq.bad{stroke:var(--coral)}
+.fig text{font-family:var(--display);font-weight:800;fill:var(--pen);paint-order:stroke;stroke:#fff;stroke-width:.12;stroke-linejoin:round}
+.counter{font-family:var(--display);font-weight:800;font-size:26px;color:var(--pen)}
+.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,560px)}
+.answers.n4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:560px){.answers.n4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ans{font-family:var(--display);font-weight:800;font-size:clamp(20px,3vw,26px);min-height:64px;padding:10px 14px;border-radius:20px;background:#f5f8fc;border:3px solid #dde6f2;color:var(--ink);box-shadow:0 5px 0 #0001}
+.ans:active:not(:disabled){transform:translateY(3px)}
+.ans.good{background:#dcf7ec;border-color:var(--mint);color:var(--mint-deep)}
+.ans.bad{background:#ffe3e0;border-color:var(--coral);color:var(--coral-deep)}
+.ans.shake{animation:shake .4s}
+.ans:disabled:not(.good):not(.bad){opacity:.55}
+.ans.thumb{padding:6px;display:grid;place-items:center}
+.ans.thumb svg{width:100%;height:auto;max-height:130px;background:none;box-shadow:none}
+.riddle{font-family:var(--display);font-weight:800;font-size:clamp(22px,3.4vw,30px);color:var(--pen);max-width:640px;line-height:1.25}
+.two{display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%}
+.two .fig{width:min(100%,360px);max-height:40vh}
+.desc{display:grid;grid-template-columns:auto auto;gap:10px 16px;align-items:center;justify-items:start;font-weight:800;font-size:20px}
+.desc .lab{justify-self:end;text-align:right}
+.stepper{display:inline-flex;align-items:center;gap:8px;border-radius:18px;padding:4px;border:3px solid transparent}
+.stepper button{width:52px;height:52px;border-radius:16px;background:#eef4fb;font-size:28px;font-weight:800;color:var(--pen)}
+.stepper output{font-family:var(--display);font-size:32px;min-width:44px;text-align:center;color:var(--pen)}
+.seg{display:inline-flex;gap:8px;flex-wrap:wrap;border-radius:18px;padding:4px;border:3px solid transparent}
+.seg button{min-height:52px;padding:6px 16px;border-radius:16px;background:#eef4fb;font-weight:800;font-size:18px;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--pen);color:#fff}
+.stepper.bad,.seg.bad{border-color:var(--coral);background:#ffe3e0}
+.stepper.good,.seg.good{border-color:var(--mint);background:#dcf7ec}
+.fixme{grid-column:2;color:var(--coral-deep);font-size:16px;margin-top:-6px}
+.rule{line-height:1.6}
+.help{margin:0;text-align:center;color:#fff;font-weight:800;text-shadow:0 2px 0 #2a7fb4}
+.bubble .plus{display:inline-block;background:var(--plum);color:#fff;border-radius:999px;padding:0 10px;font-size:.85em}
+
+/* l'ardoise à figures */
+.slate{width:min(100%,calc(56vh * 1.43 + 28px));min-width:min(100%,420px);border-radius:24px;padding:14px;background:linear-gradient(135deg,#a8743e,#7b4f26);box-shadow:0 10px 0 #5a3517,0 18px 30px -10px #0008;display:flex;flex-direction:column;gap:10px}
+.board{width:100%;height:auto;display:block;border-radius:12px;background:#24483a;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:inset 0 0 30px #0007}
+.board .node{fill:#ffffff66}
+.board .gl{stroke:#ffffff14;stroke-width:1;vector-effect:non-scaling-stroke}
+.board .node.on{fill:var(--sun)}
+.board .pend{fill:none;stroke:var(--sun);stroke-width:3;vector-effect:non-scaling-stroke}
+.board .chalk{stroke:#f7f5ee;stroke-width:5;stroke-linecap:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 2px #fff6)}
+.board .rubber{stroke:#f7f5ee99;stroke-width:4;stroke-dasharray:8 8;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.board .fill{fill:#ffe06622}
+.board .ok{stroke:#7dffb0;fill:none;stroke-width:3;vector-effect:non-scaling-stroke}
+.board .ko{stroke:#ff6b5b;fill:none;stroke-width:5;vector-effect:non-scaling-stroke}
+.board .kofill{fill:#ff6b5b}
+.board text{font-family:var(--display);font-weight:800;fill:#ffe066}
+.slate .tools{margin:0}
+.slate .btn{min-height:52px;font-size:19px;padding:8px 18px}
+.goal{font-family:var(--display);font-weight:800;font-size:clamp(20px,3vw,26px);color:#fff;background:#0003;border-radius:14px;padding:8px 14px;text-align:center}
+.fiche,.carnet{align-items:stretch;text-align:left}
+.fiche h2,.carnet h2{font-family:var(--display);margin:0;font-size:28px}
+.fiche h2 small{font-size:16px;background:var(--ink);color:#fff;border-radius:8px;padding:2px 8px;vertical-align:middle}
+.fiche p{margin:0;font-weight:700}
+.fiche .btn{align-self:flex-start}
+.ftab{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:2px solid var(--ink);border-radius:12px;overflow:hidden}
+.ftab > div{border-right:2px solid var(--ink);display:flex;flex-direction:column}
+.ftab > div:last-child{border-right:0}
+.ftab svg{width:100%;height:auto;background:none;box-shadow:none;border-radius:0;max-height:none}
+.ftab span{border-top:2px solid var(--ink);padding:6px;text-align:center;font-weight:800}
+@media (max-width:560px){.ftab span{font-size:14px}}
+.defn{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.defn svg{width:220px;max-width:100%}
+.prog{height:16px;border-radius:8px;background:#eef4fb;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--mint);border-radius:8px}
+.clist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.clist li{display:grid;grid-template-columns:32px 1fr auto auto;gap:10px;align-items:center;background:#f5f8fc;border-radius:12px;padding:8px 12px}
+.clist .st{color:#e0a100;letter-spacing:1px}
+.clist small{color:var(--soft);font-weight:700;min-width:70px;text-align:right}
+.vlist{display:flex;flex-wrap:wrap;gap:8px}
+.vk{background:#ffe9e5;color:#9a3328;border-radius:999px;padding:6px 14px;font-weight:800}
+.vk small{color:var(--soft);font-weight:700}
+.vk.ok{background:#dcf7ec;color:var(--mint-deep)}
+/* ---------- Le Miroir Magique (symétrie) ---------- */
+.fig.sym .axe,.pix .axe,.pts .axe{stroke:var(--red);stroke-width:3.5;stroke-dasharray:10 7;stroke-linecap:round;vector-effect:non-scaling-stroke;fill:none}
+.fig.sym .axe.sol{stroke:var(--mint-deep)}
+.fig .ghost{stroke-width:3;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.fig .ghost.good{fill:#1fa98e77;stroke:var(--mint-deep)} .fig .ghost.bad{fill:#ff6b5b77;stroke:var(--coral-deep)}
+.fig .cl{stroke:#8094b4;stroke-width:3;stroke-dasharray:8 7;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.fig .hd{fill:#fff;stroke:var(--plum);stroke-width:3;vector-effect:non-scaling-stroke}
+.fig .cand{cursor:pointer}.fig .cand text{fill:var(--plum);stroke:none}
+.fig .cand.off{opacity:.2}.fig .cand.yes .hd{fill:#dcf7ec;stroke:var(--mint-deep)}.fig .cand.no .hd{fill:#ffe3e0;stroke:var(--coral-deep)}
+.pix,.pts{--r:1;--w:500px;--h:54vh;width:min(100%,var(--w),calc(var(--h) * var(--r)));height:auto;touch-action:none;user-select:none;-webkit-user-select:none;background:var(--paper);border-radius:18px;box-shadow:inset 0 0 0 2px #dde6f2}
+.pix.small{--w:300px;--h:30vh}.pix.big{--w:560px;--h:58vh}
+.pts{--w:640px;--r:1.208}
+.pix .gl,.pts .gl{stroke:#c3d6ee;stroke-width:1.2;vector-effect:non-scaling-stroke}
+.pix .zone{fill:#fff6d6}.pix .zone.water,.pts .water{fill:#d3edff}
+.pix .c{stroke:#fff;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.pix .ko,.pts .ko{stroke:var(--red);stroke-width:5;stroke-linecap:round;vector-effect:non-scaling-stroke;fill:none}
+.pix .qm{font-family:var(--display);font-weight:800;font-size:2.2px;fill:#b9c8dd}
+.ans.thumb .pix{--h:150px;box-shadow:none;background:none;pointer-events:none}
+.answers.n3{grid-template-columns:repeat(3,minmax(0,1fr));width:min(100%,640px)}
+.answers.n5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.pal{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.sw{width:52px;height:52px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 2px #0003;display:grid;place-items:center;font-size:22px;padding:0}
+.sw.gom{background:#fff}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 4px var(--ink);transform:scale(1.1)}
+.pts .node{fill:#8fa6c6}
+.pts .seg{stroke:var(--pen);stroke-width:4.5;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.pts .seg.m{stroke:var(--mint-deep)}
+.pts .pt{fill:var(--pen)}.pts .pt.m{fill:var(--mint-deep)}
+.pts .pt.cur{fill:var(--sun);stroke:#b07800;stroke-width:3;vector-effect:non-scaling-stroke;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.55}}
+.pts text{font-family:var(--display);font-weight:800;font-size:.52px;fill:var(--pen);paint-order:stroke;stroke:#fff;stroke-width:.14px;stroke-linejoin:round}
+.pts text.m{fill:var(--mint-deep)}.pts text.hn{fill:var(--red)}
+.pts .hint{stroke:var(--red);stroke-width:3;stroke-dasharray:5 5;vector-effect:non-scaling-stroke}
+.pts .full{fill:#1fa98e33}
+.seg button{font-family:inherit}
+.bubble.hold{min-height:calc(4.2em + 28px)}
+@media (max-width:620px){.bubble.hold{min-height:calc(8.4em + 28px)}}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+/* ---------- Ollie, la chouette de Salma ---------- */
+const OWL = `<svg class="owl" viewBox="0 0 120 130" aria-hidden="true">
+  <ellipse cx="60" cy="124" rx="38" ry="5" fill="#0002"/>
+  <path d="M22 40 L30 14 L46 32 Z M98 40 L90 14 L74 32 Z" fill="#7a4b2a"/>
+  <ellipse cx="60" cy="74" rx="42" ry="50" fill="#9a6236"/>
+  <ellipse cx="60" cy="88" rx="28" ry="32" fill="#f3d9b1"/>
+  <path d="M44 84 q4 4 8 0 M56 92 q4 4 8 0 M68 84 q4 4 8 0 M50 100 q4 4 8 0 M62 100 q4 4 8 0" stroke="#d8b585" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="42" cy="52" r="17" fill="#fff"/><circle cx="78" cy="52" r="17" fill="#fff"/>
+  <circle cx="44" cy="54" r="8" fill="#23324a"/><circle cx="76" cy="54" r="8" fill="#23324a"/>
+  <circle cx="47" cy="51" r="2.5" fill="#fff"/><circle cx="79" cy="51" r="2.5" fill="#fff"/>
+  <path d="M54 64 L66 64 L60 74 Z" fill="#ffb02e"/>
+  <rect x="26" y="34" width="68" height="7" rx="3" fill="#23324a"/><path d="M36 34 L84 34 L60 20 Z" fill="#23324a"/>
+  <path d="M84 37 q10 6 6 18" stroke="#ffc93c" stroke-width="3" fill="none"/><circle cx="90" cy="56" r="4" fill="#ffc93c"/>
+  <path d="M18 74 q-6 22 10 34 M102 74 q6 22 -10 34" stroke="#7a4b2a" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M48 120 l-4 6 M52 120 l0 6 M68 120 l0 6 M72 120 l4 6" stroke="#ffb02e" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+
+/* ---------- outils ---------- */
+const app = document.getElementById('app');
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY = 'salma-symetrie';
+let data = { stars:{}, done:{}, tickets:0, figs:{}, t:0 };
+try{ Object.assign(data, JSON.parse(localStorage.getItem(KEY) || '{}')); }catch(e){}
+function save(){ data.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} }
+const totalStars = () => Object.values(data.stars).reduce((a,b) => a + b, 0);
+function note(tag, ok){ data.figs = data.figs || {}; const v = data.figs[tag] || (data.figs[tag] = { ok:0, ko:0 }); ok ? v.ok++ : v.ko++; }
+
+/* ---------- son et voix ---------- */
+let muted = false; try{ muted = localStorage.getItem(KEY + '-muet') === '1'; }catch(e){}
+let ac = null, frVoice = null;
+function tone(f,d,t=0,type='triangle',vol=.12){ if(muted) return; try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); const o=ac.createOscillator(),g=ac.createGain(),s=ac.currentTime+t; o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g).connect(ac.destination);o.start(s);o.stop(s+d+.02); }catch(e){} }
+const sfx = { ok(){ tone(660,.12); tone(880,.16,.08); }, no(){ tone(240,.25,0,'sine',.1); }, tap(){ tone(900,.05,0,'triangle',.06); }, ticket(){ tone(1046,.08,0,'square',.05); tone(1318,.1,.07,'square',.05); }, win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.22,i*.1)); } };
+function pickVoice(){ try{ const vs = speechSynthesis.getVoices(); frVoice = vs.find(v=>/^fr[-_]FR/i.test(v.lang)) || vs.find(v=>/^fr/i.test(v.lang)) || null; }catch(e){} }
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(html){
+  talk();
+  if(muted || !('speechSynthesis' in window)) return;
+  const t = String(html).replace(/<small>.*?<\/small>/g,'').replace(/<[^>]+>/g,'').replace(/_{2,}/g,' ... ').replace(/«|»/g,'').replace(/🎟️|⭐/g,'');
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='fr-FR'; if(frVoice) u.voice=frVoice; u.rate=.95; u.pitch=1.1; speechSynthesis.speak(u); }catch(e){}
+}
+function hush(){ try{ speechSynthesis.cancel(); }catch(e){} }
+function talk(){ document.querySelectorAll('.owl').forEach(o => { o.classList.remove('talk'); void o.offsetWidth; o.classList.add('talk'); }); }
+function confetti(){ for(let i=0;i<10;i++){ const s=document.createElement('span'); s.className='float'; s.textContent=pick(['⭐','🎟️','🪞','🦋','🎉']); s.style.left=rnd(5,90)+'vw'; s.style.top=rnd(55,90)+'vh'; s.style.animationDelay=(i*60)+'ms'; document.body.appendChild(s); setTimeout(()=>s.remove(),1800); } }
+
+function topbar(back){
+  return `<div class="top">
+    ${back ? `<button class="chip" id="back">← Le miroir</button>` : `<a class="chip" href="./">← Espace Salma</a>`}
+    <button class="chip round" id="mute" aria-label="${muted ? 'Activer' : 'Couper'} le son">${muted ? '🔇' : '🔊'}</button>
+    <div class="chip stars" aria-label="Étoiles et tickets">⭐ ${totalStars()} <span class="tk">🎟️ ${data.tickets}</span></div></div>`;
+}
+function wireTop(back){
+  const b = document.getElementById('back'); if(b) b.onclick = () => { sfx.tap(); hush(); (back || home)(); };
+  document.getElementById('mute').onclick = e => { muted = !muted; try{ localStorage.setItem(KEY+'-muet', muted?'1':'0'); }catch(_){} e.currentTarget.textContent = muted ? '🔇' : '🔊'; if(muted) hush(); };
+}
+const teacher = html => `<div class="teacher">${OWL}<div class="bubble" id="say" aria-live="polite">${html}</div></div>`;
+function say(html, voice=true){ const s = document.getElementById('say'); if(s){ s.innerHTML = html; s.style.minHeight = Math.max(parseFloat(s.style.minHeight) || 0, s.offsetHeight) + 'px'; }   // la bulle ne rétrécit plus : le quadrillage ne saute pas sous le doigt
+  if(voice) speak(html); }
+
+/* =====================================================================
+   La symétrie (CE2) : axe de symétrie, pliage, compléter une figure sur quadrillage
+   ===================================================================== */
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const poly = pts => 'M' + pts.map(p => p[0] + ' ' + p[1]).join('L') + 'Z';
+const reg = (n, r, st = -90) => Array.from({ length:n }, (_, i) => { const a = (st + i * 360 / n) * Math.PI / 180; return [+(r * Math.cos(a)).toFixed(3), +(r * Math.sin(a)).toFixed(3)]; });
+const starPts = Array.from({ length:10 }, (_, i) => { const a = (-90 + i * 36) * Math.PI / 180, r = i % 2 ? 1.5 : 3.8; return [+(r * Math.cos(a)).toFixed(3), +(r * Math.sin(a)).toFixed(3)]; });
+// Chaque figure est centrée sur (0,0). ax = ses axes de symétrie : l'angle de la droite (0 = horizontale, 90 = verticale, 45 = « \ », 135 = « / »).
+const SH = {
+  coeur:{ n:'le cœur', d:'M0 3.4 C-1.2 2.2 -3.6 .6 -3.6 -1.4 C-3.6 -3 -1.6 -3.9 0 -2 C1.6 -3.9 3.6 -3 3.6 -1.4 C3.6 .6 1.2 2.2 0 3.4Z', ax:[90] },
+  papillon:{ n:'le papillon', d:'M0 -1.6 C1 -4.2 4.2 -3.8 3.8 -1.2 C3.6 0 2.6 .4 1.8 .5 C3.2 1 3.2 3.4 1.6 3.2 C.8 3.1 .3 2.2 0 1.4 C-.3 2.2 -.8 3.1 -1.6 3.2 C-3.2 3.4 -3.2 1 -1.8 .5 C-2.6 .4 -3.6 0 -3.8 -1.2 C-4.2 -3.8 -1 -4.2 0 -1.6Z', ax:[90] },
+  maison:{ n:'la maison', d:poly([[0,-3.4],[3,-.6],[3,3.2],[-3,3.2],[-3,-.6]]), ax:[90] },
+  fleche:{ n:'la flèche', d:poly([[-3.6,-1.2],[.4,-1.2],[.4,-3],[3.8,0],[.4,3],[.4,1.2],[-3.6,1.2]]), ax:[0] },
+  isocele:{ n:'le triangle isocèle', d:poly([[0,-3.4],[2.4,3],[-2.4,3]]), ax:[90] },
+  equi:{ n:'le triangle équilatéral', d:poly(reg(3, 3.6)), ax:[90, 30, 150] },
+  carre:{ n:'le carré', d:poly([[-3,-3],[3,-3],[3,3],[-3,3]]), ax:[0, 45, 90, 135] },
+  rectangle:{ n:'le rectangle', d:poly([[-3.8,-2.2],[3.8,-2.2],[3.8,2.2],[-3.8,2.2]]), ax:[0, 90] },
+  losange:{ n:'le losange', d:poly([[0,-3.6],[2.4,0],[0,3.6],[-2.4,0]]), ax:[0, 90] },
+  cerfvolant:{ n:'le cerf-volant', d:poly([[0,-3.4],[2.4,-1],[0,3.6],[-2.4,-1]]), ax:[90] },
+  trapiso:{ n:'le trapèze', d:poly([[-3.6,2.2],[-1.8,-2.2],[1.8,-2.2],[3.6,2.2]]), ax:[90] },
+  T:{ n:'la lettre T', d:poly([[-3,-3.4],[3,-3.4],[3,-1.6],[.9,-1.6],[.9,3.4],[-.9,3.4],[-.9,-1.6],[-3,-1.6]]), ax:[90] },
+  H:{ n:'la lettre H', d:poly([[-3,-3.4],[-1.2,-3.4],[-1.2,-.9],[1.2,-.9],[1.2,-3.4],[3,-3.4],[3,3.4],[1.2,3.4],[1.2,.9],[-1.2,.9],[-1.2,3.4],[-3,3.4]]), ax:[0, 90] },
+  E:{ n:'la lettre E', d:poly([[-2.6,-3.4],[2.6,-3.4],[2.6,-2],[-1,-2],[-1,-.7],[1.8,-.7],[1.8,.7],[-1,.7],[-1,2],[2.6,2],[2.6,3.4],[-2.6,3.4]]), ax:[0] },
+  etoile:{ n:"l'étoile", d:poly(starPts), ax:[90, 126, 162, 18, 54] },
+  croix:{ n:'la croix', d:poly([[-1.1,-3.4],[1.1,-3.4],[1.1,-1.1],[3.4,-1.1],[3.4,1.1],[1.1,1.1],[1.1,3.4],[-1.1,3.4],[-1.1,1.1],[-3.4,1.1],[-3.4,-1.1],[-1.1,-1.1]]), ax:[0, 45, 90, 135] },
+  // sans axe de symétrie
+  parallelo:{ n:'le parallélogramme', d:poly([[-3.8,2.2],[-1.4,-2.2],[3.8,-2.2],[1.4,2.2]]), ax:[], why:"C'est le grand piège : on a envie de le plier, mais ça dépasse toujours." },
+  quelconque:{ n:'ce triangle', d:poly([[-3.4,2.8],[3.6,2],[-1,-3.2]]), ax:[], why:'Ses trois côtés sont tous différents.' },
+  F:{ n:'la lettre F', d:poly([[-2.4,-3.4],[2.6,-3.4],[2.6,-2],[-.8,-2],[-.8,-.7],[1.6,-.7],[1.6,.7],[-.8,.7],[-.8,3.4],[-2.4,3.4]]), ax:[] },
+  Z:{ n:'la lettre Z', d:poly([[-2.8,-3.4],[2.8,-3.4],[2.8,-2],[-.4,2],[2.8,2],[2.8,3.4],[-2.8,3.4],[-2.8,2],[.4,-2],[-2.8,-2]]), ax:[], why:'On peut la faire tourner, mais on ne peut pas la plier en deux moitiés qui se superposent.' },
+  drapeau:{ n:'le drapeau', d:poly([[-2.6,-3.4],[-1.6,-3.4],[2.8,-1.8],[-1.6,-.2],[-1.6,3.4],[-2.6,3.4]]), ax:[] },
+  eclair:{ n:"l'éclair", d:poly([[.6,-3.6],[-2.6,.4],[-.4,.4],[-1.4,3.6],[2.6,-.8],[.4,-.8],[1.8,-3.6]]), ax:[] },
+  traprect:{ n:'ce trapèze', d:poly([[-3,2.4],[-3,-2.4],[1,-2.4],[3.4,2.4]]), ax:[], why:'Un côté est droit, l\'autre est penché.' }
+};
+const norm = a => ((Math.round(a) % 180) + 180) % 180;
+const axesOf = (k, r) => SH[k].ax.map(a => norm(a + r));
+const axisLine = (a, cls = 'axe') => `<line class="${cls}" x1="-4.9" y1="0" x2="4.9" y2="0" transform="rotate(${a})"/>`;
+function figSVG(k, r = 0, extra = ''){ return `<svg class="fig sym" viewBox="-5 -5 10 10" role="img" aria-label="une figure"><g transform="rotate(${r})"><path class="f" d="${SH[k].d}"/></g><g class="layer">${extra}</g></svg>`; }
+function svgPoint(svg, e){ const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+const calm = () => window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
+let uid = 0;
+// Le pliage : la moitié d'un côté de la droite se rabat sur l'autre. Verte si elle se superpose, rouge si elle dépasse.
+function fold(svg, k, r, a, ok){
+  const id = 'hf' + (++uid), layer = svg.querySelector('.layer');
+  layer.insertAdjacentHTML('beforeend', `<defs><clipPath id="${id}"><rect x="-8" y="-8" width="16" height="8"/></clipPath></defs>${axisLine(a)}<g transform="rotate(${a})"><g id="g${id}"><g clip-path="url(#${id})"><g transform="rotate(${r - a})"><path class="ghost ${ok ? 'good' : 'bad'}" d="${SH[k].d}"/></g></g></g></g>`);
+  const g = svg.querySelector('#g' + id);
+  if(calm()){ g.setAttribute('transform', 'scale(1,-1)'); return; }
+  const t0 = performance.now();
+  (function tick(now){ const t = Math.min(1, (now - t0) / 1300), s = Math.cos(Math.PI * t); g.setAttribute('transform', `scale(1,${s.toFixed(3)})`); if(t < 1 && g.isConnected) requestAnimationFrame(tick); })(t0);
+}
+
+/* ---------- quadrillages à cases ---------- */
+const COL = { b:'#3f86e8', r:'#e5484d', y:'#f5b300', g:'#2e9e4f', k:'#8a5a2b', o:'#f08a24', p:'#8b5cf6', t:'#12b5a6', n:'#23324a', f:'#f472b6' };
+const CNAME = { b:'bleu', r:'rouge', y:'jaune', g:'vert', k:'marron', o:'orange', p:'violet', t:'turquoise', n:'noir', f:'rose' };
+function parse(rows){ const m = new Map(); rows.forEach((row, y) => [...row].forEach((c, x) => { if(c !== '.') m.set(x + ',' + y, c === '#' ? 'b' : c); })); return m; }
+const mirrorMap = (m, o, W, H) => new Map([...m].map(([k, c]) => { const [x, y] = k.split(',').map(Number); return [o === 'v' ? (W - 1 - x) + ',' + y : x + ',' + (H - 1 - y), c]; }));
+const cellsHTML = m => [...m].map(([k, c]) => { const [x, y] = k.split(',').map(Number); return `<rect class="c" x="${x + .06}" y="${y + .06}" width=".88" height=".88" rx=".14" fill="${COL[c]}"/>`; }).join('');
+function pixSVG(W, H, o, at, cells, extra = ''){
+  let g = '';
+  for(let i = 0; i <= W; i++) g += `<line class="gl" x1="${i}" y1="0" x2="${i}" y2="${H}"/>`;
+  for(let j = 0; j <= H; j++) g += `<line class="gl" x1="0" y1="${j}" x2="${W}" y2="${j}"/>`;
+  const ax = o === 'v' ? `<line class="axe" x1="${at}" y1="-.45" x2="${at}" y2="${H + .45}"/>` : o === 'h' ? `<line class="axe" x1="-.45" y1="${at}" x2="${W + .45}" y2="${at}"/>` : '';
+  return `<svg class="pix" style="--r:${((W + 1.2) / (H + 1.2)).toFixed(3)}" viewBox="-.6 -.6 ${W + 1.2} ${H + 1.2}" role="img" aria-label="un quadrillage avec un axe de symétrie">${extra}${g}<g class="cells">${cells ? cellsHTML(cells) : ''}</g>${ax}<g class="marks"></g></svg>`;
+}
+// moitiés gauches (4 colonnes ; la colonne de droite touche l'axe) : dépliées, elles font un dessin
+const HALVES = [
+  { n:'un cœur', rows:['.##.','####','####','####','.###','..##','...#','....'] },
+  { n:'un papillon', rows:['#...','##.#','####','.###','####','###.','##.#','....'] },
+  { n:'un sapin', rows:['...#','..##','..##','.###','.###','####','...#','...#'] },
+  { n:'une maison', rows:['...#','..##','.###','####','.###','.###','.##.','.##.'] },
+  { n:'une fusée', rows:['...#','..##','..##','..##','..##','.###','####','#..#'] },
+  { n:'un robot', rows:['..#.','.###','.#.#','.###','####','#.##','..##','..#.'] },
+  { n:'une couronne', rows:['....','#...','#..#','##.#','####','####','####','....'] },
+  { n:'un champignon', rows:['..##','.###','####','####','...#','...#','..##','....'] }
+];
+// moitiés du haut (8 colonnes, 4 lignes ; la ligne du bas touche l'eau), en couleurs
+const TOPS = [
+  { n:'le voilier', rows:['...ry...','..rryy..','.rrryyy.','.kkkkkk.'] },
+  { n:'la maison', rows:['...rr...','..rrrr..','.oooooo.','.oobboo.'] },
+  { n:'les deux arbres', rows:['.gg...y.','gggg....','.gg..gg.','.kk..kk.'] },
+  { n:'la montagne', rows:['...p..y.','..ppp...','.ppppp..','ppppppp.'] },
+  { n:'le château', rows:['o.o..o.o','ooo..ooo','oooooooo','ooobbooo'] },
+  { n:'le palmier', rows:['.gg.gg..','..ggg...','...k....','.yykyyy.'] }
+];
+/* ---------- figures à points (nœuds du quadrillage 11 x 9) ---------- */
+const PFIGS = [
+  { n:'une maison', o:'v', pts:[[5,1],[2,4],[2,7],[5,7]] },
+  { n:'un diamant', o:'v', pts:[[5,1],[3,1],[1,3],[5,8]] },
+  { n:'un sapin', o:'v', pts:[[5,0],[3,3],[4,3],[2,6],[5,6]] },
+  { n:'une fusée', o:'v', pts:[[5,0],[3,3],[3,6],[1,8],[5,7]] },
+  { n:'une couronne', o:'v', pts:[[5,6],[1,6],[1,2],[3,4],[5,1]] },
+  { n:'un cœur', o:'v', pts:[[5,2],[4,1],[2,1],[1,2],[1,4],[5,8]] },
+  { n:'la montagne et son reflet', o:'h', pts:[[1,4],[3,1],[5,3],[7,0],[9,4]] },
+  { n:'la maison et son reflet', o:'h', pts:[[2,4],[2,2],[5,0],[8,2],[8,4]] }
+];
+
+/* ---------- les étapes ---------- */
+const CH = [
+  { id:'reconnaitre', icon:'🦋', name:'Symétrique ou pas ?', sub:'On plie pour vérifier', edge:'#5aaedc', make:mkSym,
+    rule:`Une figure est <b>symétrique</b> si on peut la <b>plier</b> en deux moitiés qui <b>se superposent exactement</b>.<br>La droite du pli s'appelle l'<b class="r">axe de symétrie</b>.<br>Si une moitié dépasse quand on plie, ce n'est pas un axe.` },
+  { id:'axe', icon:'✂️', name:"Où est l'axe ?", sub:'Trouver la droite du pli', edge:'#ffc93c', make:mkAxis,
+    rule:`L'<b class="r">axe de symétrie</b> partage la figure en <b>deux moitiés identiques</b>, comme un miroir.<br>Il peut être <b>debout</b>, <b>couché</b> ou <b>penché</b>.<br>Touche la droite où tu plierais la figure.` },
+  { id:'compter', icon:'🔢', name:"Combien d'axes ?", sub:'Zéro, un ou plusieurs', edge:'#7a4fe0', make:mkCount,
+    rule:`Une figure peut avoir <b>un seul</b> axe de symétrie, <b>plusieurs</b>, ou <b>aucun</b>.<br>Cherche tous les plis possibles : debout, couché, et en diagonale.<br>⚠️ Les diagonales du rectangle ne sont pas des axes !` },
+  { id:'reflet', icon:'🪞', name:'Le bon reflet', sub:'Choisir le symétrique', edge:'#1fa98e', make:mkReflet,
+    rule:`Dans un miroir, la figure est <b>retournée</b> : ce qui est <b>près de l'axe reste près de l'axe</b>.<br>Chaque case et son reflet sont <b>à la même distance</b> de l'axe, <b>juste en face</b>.<br>⚠️ Une figure qui a seulement <b>glissé</b> n'est pas son symétrique.` },
+  { id:'colorier', icon:'🟦', name:'Colorie le reflet', sub:'Axe vertical', edge:'#3f86e8', make:mkPaintV,
+    rule:`Pour compléter une figure par symétrie :<br>1. je choisis une case coloriée ;<br>2. je <b>compte les carreaux</b> jusqu'à l'axe ;<br>3. je colorie la case <b>en face</b>, à la <b>même distance</b> de l'autre côté.<br>Touche les cases pour les colorier, puis <b>✔ Corrige-moi</b>.` },
+  { id:'eau', icon:'🌊', name:"Le reflet dans l'eau", sub:'Axe horizontal et couleurs', edge:'#12b5a6', make:mkPaintH,
+    rule:`Ici l'axe est <b>couché</b>, comme la surface d'un lac : l'image se reflète <b>en dessous</b>, la tête en bas.<br>Ce qui touche l'eau en haut touche l'eau en bas.<br>Choisis la <b>bonne couleur</b> avant de colorier chaque case.` },
+  { id:'tracer', icon:'📍', name:'Point par point', sub:'Tracer le symétrique', edge:'#ff6b5b', make:mkPoints,
+    rule:`Pour tracer le symétrique d'une figure, on place le symétrique de <b>chaque point</b> :<br>• même ligne (juste en face) ;<br>• <b>même nombre de carreaux</b> jusqu'à l'axe.<br>Un point <b>posé sur l'axe</b> ne bouge pas. Ensuite, on relie les points à la règle.` }
+];
+const unlocked = i => i === 0 || (data.stars[CH[i - 1].id] || 0) > 0;
+const ROT45 = [0, 45, 90, 135, 180, 225, 270, 315];
+function mkSym(){
+  const yes = shuffle(['coeur','papillon','maison','fleche','isocele','etoile','T','E','losange','trapiso','cerfvolant']).slice(0, 5);
+  const no = ['parallelo', ...shuffle(['quelconque','F','Z','drapeau','eclair','traprect']).slice(0, 2)];
+  return shuffle([...yes, ...no]).map((k, i) => ({ t:'sym', k, r:i < 3 ? 0 : pick([0, 0, 90, 180, -30, 25, 45]) }));
+}
+function mkAxis(){
+  const one = shuffle(['coeur','papillon','maison','fleche','isocele','T','E','cerfvolant','trapiso']).slice(0, 4), two = shuffle(['rectangle','losange','H']).slice(0, 2);
+  return [...one.slice(0, 2), ...shuffle([...one.slice(2), ...two])].map((k, i) => ({ t:'axis', k, r:i < 2 ? pick([0, 90]) : pick(ROT45) }));
+}
+function mkCount(){ return [pick(['coeur','isocele','T']), 'rectangle', ...shuffle(['carre','equi','parallelo', pick(['losange','H']), pick(['F','Z']), pick(['croix','cerfvolant'])]).slice(0, 5)].map(k => ({ t:'count', k })); }
+function mkReflet(){
+  return ['v','v','v','v','h','h'].map(o => {
+    for(;;){
+      const rows = []; for(let y = 0; y < 6; y++){ const a = rnd(0, 3), b = rnd(a, 3); rows.push([0,1,2,3].map(x => x >= a && x <= b ? '#' : '.').join('')); }
+      const rev = s => [...s].reverse().join('');
+      const good = rows.map(rev), slide = rows.slice(), shift = rows.map((_, y) => rev(rows[(y + 1) % 6]));
+      const key = a => a.join('|'); if(new Set([key(good), key(slide), key(shift)]).size < 3) continue;
+      const full = right => { const m = new Map(); rows.forEach((row, y) => [...(row + right[y])].forEach((c, x) => { if(c !== '.') m.set(o === 'v' ? x + ',' + y : y + ',' + x, 'b'); })); return m; };
+      const half = new Map(); rows.forEach((row, y) => [...row].forEach((c, x) => { if(c !== '.') half.set(o === 'v' ? x + ',' + y : y + ',' + x, 'b'); }));
+      return { t:'reflet', o, half, opts:shuffle([{ v:'good', m:full(good) }, { v:'slide', m:full(slide) }, { v:'shift', m:full(shift) }]) };
+    }
+  });
+}
+function mkPaintV(){ return shuffle(HALVES).slice(0, 5).map((h, i) => { const left = parse(h.rows), right = mirrorMap(left, 'v', 8, 8), flip = i % 2 === 1; return { t:'paint', o:'v', W:8, H:8, at:4, given:flip ? right : left, target:flip ? left : right, colors:['b'], name:h.n, tag:'colorier le reflet (axe vertical)' }; }); }
+function mkPaintH(){ return shuffle(TOPS).slice(0, 4).map(h => { const top = parse(h.rows); return { t:'paint', o:'h', W:8, H:8, at:4, given:top, target:mirrorMap(top, 'h', 8, 8), colors:[...new Set(top.values())], name:h.n, water:true, tag:"colorier le reflet (axe horizontal)" }; }); }
+function mkPoints(){ const v = shuffle(PFIGS.filter(f => f.o === 'v')), h = shuffle(PFIGS.filter(f => f.o === 'h')); return [v.find(f => f.pts.length === 4), ...v.filter(f => f.pts.length > 4).slice(0, 2), h[0], v.filter(f => f.pts.length > 4)[2] || h[1]].map(f => ({ t:'points', f })); }
+
+/* ---------- une séance ---------- */
+let S = null;
+function start(i){
+  const c = CH[i];
+  S = { i, c, k:0, errors:0, earned:0, list:c.make() };
+  app.innerHTML = topbar(true) + teacher(`Avant de commencer, voici la règle de l'étape <b class="n">${c.name}</b>.`) +
+    `<div class="card"><div class="rule">${c.rule}</div><button class="btn go" id="go">J'ai compris, on y va !</button></div>`;
+  wireTop(); speak(`Voici la règle. ` + c.rule);
+  document.getElementById('go').onclick = () => { sfx.tap(); hush(); next(); };
+}
+function dots(){ return `<div class="dots" aria-label="Question ${S.k + 1} sur ${S.list.length}">${S.list.map((_, j) => `<i class="${j < S.k ? 'done' : j === S.k ? 'now' : ''}"></i>`).join('')}</div>`; }
+function frame(q, body, help){
+  app.innerHTML = topbar(true) + teacher(q) + `<div class="card ex">${body}</div>` + (help ? `<p class="help">${help}</p>` : '') + dots();
+  wireTop(); speak(q);
+}
+function next(){
+  if(S.k >= S.list.length) return finish();
+  const q = S.list[S.k];
+  ({ sym:askSym, axis:askAxis, count:askCount, reflet:askReflet, paint:askPaint, points:askPoints })[q.t](q);
+}
+function answered(ok, tag, expl, btn, goodSel, soft){
+  app.querySelectorAll('.ans').forEach(x => { x.disabled = true; if(goodSel && x.matches(goodSel)) x.classList.add('good'); });
+  if(ok){ S.earned++; data.tickets++; sfx.ok(); setTimeout(sfx.ticket, 220); if(btn) btn.classList.add('good'); }
+  else { S.errors++; sfx.no(); if(btn){ btn.classList.add('bad'); btn.classList.add('shake'); } }
+  note(tag, ok); save();
+  const tk = app.querySelector('.tk'); if(tk) tk.textContent = '🎟️ ' + data.tickets;
+  say((ok ? pick(['Bravo !', 'Exactement !', 'Super, Salma !', 'Oui !', 'Parfait !']) + ' <span class="plus">+1 🎟️</span> ' : soft ? 'Tu y es arrivée, avec un peu d\'aide. ' : 'Pas tout à fait. ') + expl);
+  const card = app.querySelector('.card.ex');
+  card.insertAdjacentHTML('beforeend', `<button class="btn ok" id="nx">${S.k + 1 < S.list.length ? 'Suivant →' : 'Terminer'}</button>`);
+  const nx = document.getElementById('nx'); nx.focus({ preventScroll:true }); setTimeout(() => nx.scrollIntoView({ block:'nearest', behavior:'smooth' }), 150);
+  nx.onclick = () => { sfx.tap(); hush(); S.k++; next(); };
+}
+
+/* 1. Symétrique ou pas ? */
+function askSym(q){
+  const sh = SH[q.k], has = sh.ax.length > 0;
+  frame(`Si on <b>plie</b> cette figure, les deux moitiés peuvent-elles <b>se superposer</b> ?`, `${figSVG(q.k, q.r)}
+    <div class="answers"><button class="ans" data-v="1">✅ Oui, elle est symétrique</button><button class="ans" data-v="0">❌ Non, aucun axe</button></div>`);
+  const good = has ? '1' : '0';
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const svg = app.querySelector('.fig');
+    if(has) fold(svg, q.k, q.r, axesOf(q.k, q.r)[0], true); else fold(svg, q.k, q.r, 90, false);
+    const expl = has ? `On plie le long de la <b class="r">droite rouge</b> : les deux moitiés se superposent. ${cap(sh.n)} a un <b>axe de symétrie</b>.`
+      : `Quand on plie, une moitié <b class="r">dépasse</b> : ${sh.n} n'a <b>aucun axe de symétrie</b>. ${sh.why || ''}`;
+    answered(b.dataset.v === good, has ? 'reconnaître une figure symétrique' : 'reconnaître une figure sans axe', expl, b, `[data-v="${good}"]`);
+  });
+}
+/* 2. Où est l'axe ? */
+function askAxis(q){
+  const C = [0, 45, 90, 135], good = axesOf(q.k, q.r);
+  const cand = C.map((a, i) => { const x = 4.45 * Math.cos(a * Math.PI / 180), y = 4.45 * Math.sin(a * Math.PI / 180);
+    return `<g class="cand" data-a="${a}">${axisLine(a, 'cl')}<circle class="hd" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r=".5"/><text x="${x.toFixed(2)}" y="${(y + .27).toFixed(2)}" font-size=".72" text-anchor="middle">${i + 1}</text></g>`; }).join('');
+  frame(`Où plierais-tu cette figure ? Touche son <b class="r">axe de symétrie</b>.`, figSVG(q.k, q.r, cand), `Touche une des quatre droites en pointillés, loin du centre.`);
+  const svg = app.querySelector('.fig'); let done = false;
+  svg.addEventListener('pointerdown', e => {
+    if(done) return; const p = svgPoint(svg, e); if(Math.hypot(p.x, p.y) < .8) return;
+    const ang = norm(Math.atan2(p.y, p.x) * 180 / Math.PI), dist = a => { const d = Math.abs(ang - a) % 180; return Math.min(d, 180 - d); };
+    const a = C.reduce((m, c) => dist(c) < dist(m) ? c : m, C[0]); if(dist(a) > 16) return;
+    done = true; const ok = good.includes(a);
+    svg.querySelectorAll('.cand').forEach(g => { if(+g.dataset.a !== a) g.classList.add('off'); else g.classList.add(ok ? 'yes' : 'no'); });
+    fold(svg, q.k, q.r, a, ok);
+    if(!ok) setTimeout(() => { if(svg.isConnected) svg.querySelector('.layer').insertAdjacentHTML('beforeend', axisLine(good[0], 'axe sol')); }, 1500);
+    const more = good.length > 1 ? ` ${cap(SH[q.k].n)} en a même <b>${good.length}</b> !` : '';
+    answered(ok, "trouver l'axe de symétrie", ok ? `En pliant sur cette droite, les deux moitiés se superposent : c'est bien un <b>axe de symétrie</b>.${more}` : `Sur cette droite, une moitié <b class="r">dépasse</b>. Le bon axe est la droite <b>verte</b>.`);
+  });
+}
+/* 3. Combien d'axes ? */
+function askCount(q){
+  const sh = SH[q.k], n = sh.ax.length;
+  frame(`Combien d'<b class="r">axes de symétrie</b> a ${sh.n} ?`, `${figSVG(q.k, 0)}
+    <div class="answers n5">${[0, 1, 2, 3, 4].map(v => `<button class="ans" data-v="${v}">${v}</button>`).join('')}</div>`, `Cherche tous les plis : debout, couché et en diagonale.`);
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const svg = app.querySelector('.fig');
+    svg.querySelector('.layer').insertAdjacentHTML('beforeend', sh.ax.map(a => axisLine(a)).join(''));
+    if(q.k === 'rectangle') fold(svg, q.k, 0, 30, false); else if(!n) fold(svg, q.k, 0, 90, false);
+    const extra = q.k === 'rectangle' ? ' Regarde : si on plie sur une <b>diagonale</b>, ça dépasse.' : q.k === 'carre' || q.k === 'croix' ? ' Deux droits et deux en diagonale.' : q.k === 'equi' ? ' Un par sommet.' : sh.why ? ' ' + sh.why : '';
+    answered(+b.dataset.v === n, `compter les axes : ${sh.n.replace(/^(le |la |l'|ce )/, '')}`, (n ? `${cap(sh.n)} a <b>${n} axe${n > 1 ? 's' : ''} de symétrie</b>.` : `${cap(sh.n)} n'a <b>aucun axe de symétrie</b>.`) + extra, b, `[data-v="${n}"]`);
+  });
+}
+/* 4. Le bon reflet */
+function askReflet(q){
+  const W = q.o === 'v' ? 8 : 6, H = q.o === 'v' ? 6 : 8, at = 4;
+  const qm = q.o === 'v' ? `<text class="qm" x="6" y="3.6" text-anchor="middle">?</text>` : `<text class="qm" x="3" y="6.6" text-anchor="middle">?</text>`;
+  frame(`Quel dessin montre la figure et son <b>symétrique</b> par rapport à l'<b class="r">axe rouge</b> ?`,
+    `<div class="two">${pixSVG(W, H, q.o, at, q.half, '').replace('<g class="marks">', qm + '<g class="marks">').replace('class="pix"', 'class="pix small"')}</div>
+     <div class="answers n3">${q.opts.map((o, i) => `<button class="ans thumb" data-v="${o.v}" aria-label="Dessin ${i + 1}">${pixSVG(W, H, q.o, at, o.m)}</button>`).join('')}</div>`);
+  const line = q.o === 'v' ? 'sur la même ligne' : 'dans la même colonne';
+  app.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const v = b.dataset.v;
+    const expl = v === 'good' ? `Chaque case a son reflet <b>à la même distance</b> de l'axe, ${line}.`
+      : v === 'slide' ? `Piège ! Ici la figure a seulement <b>glissé</b> : elle n'est pas retournée. Dans un miroir, ce qui est près de l'axe reste près de l'axe.`
+      : `Presque ! Ce reflet est <b>décalé</b> : chaque case et son reflet doivent rester ${line}.`;
+    answered(v === 'good', 'choisir le bon reflet', expl, b, '[data-v="good"]');
+  });
+}
+/* 5 et 6. Colorier le reflet */
+function askPaint(q){
+  const multi = q.colors.length > 1; let color = q.colors[0], mine = new Map(), tries = 0, locked = false, mode = null;
+  const low = [...q.given.keys()].some(k => { const [x, y] = k.split(',').map(Number); return (q.o === 'v' ? x : y) < q.at; });
+  const free = (x, y) => x >= 0 && y >= 0 && x < q.W && y < q.H && ((q.o === 'v' ? x : y) >= q.at) === low;
+  const zone = q.o === 'v' ? `<rect class="zone" x="${low ? q.at : 0}" y="0" width="${q.at}" height="${q.H}"/>` : `<rect class="zone ${q.water ? 'water' : ''}" x="0" y="${low ? q.at : 0}" width="${q.W}" height="${q.at}"/>`;
+  frame(q.o === 'v' ? `Colorie le <b>symétrique</b> de la figure, de l'autre côté de l'<b class="r">axe rouge</b>.` : `L'image se reflète dans l'eau. Colorie son <b>reflet</b> sous l'<b class="r">axe rouge</b>, avec les bonnes couleurs.`,
+    `${pixSVG(q.W, q.H, q.o, q.at, null, zone)}
+     ${multi ? `<div class="pal" role="group" aria-label="Couleurs">${q.colors.map((c, i) => `<button class="sw" data-c="${c}" style="background:${COL[c]}" aria-label="${CNAME[c]}" aria-pressed="${i === 0}"></button>`).join('')}</div>` : ''}
+     <div class="tools"><button class="btn" id="wipe">🧽 Tout effacer</button><button class="btn go" id="check">✔ Corrige-moi</button></div>`,
+    `Touche une case pour la colorier, touche-la encore pour l'effacer.`);
+  document.getElementById('say').classList.add('hold');
+  const svg = app.querySelector('.pix'), cells = svg.querySelector('.cells'), marks = svg.querySelector('.marks');
+  const draw = () => { cells.innerHTML = cellsHTML(q.given) + cellsHTML(mine); };
+  draw();
+  app.querySelectorAll('.sw').forEach(b => b.onclick = () => { sfx.tap(); color = b.dataset.c; app.querySelectorAll('.sw').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  const cellAt = e => { const p = svgPoint(svg, e); return [Math.floor(p.x), Math.floor(p.y)]; };
+  const apply = (x, y) => { const k = x + ',' + y; if(!free(x, y)) return; const had = mine.get(k);
+    if(mode === null) mode = had === color ? 'erase' : 'paint';
+    if(mode === 'erase'){ if(!mine.has(k)) return; mine.delete(k); } else { if(had === color) return; mine.set(k, color); }
+    marks.innerHTML = ''; draw(); };
+  svg.addEventListener('pointerdown', e => { if(locked) return; e.preventDefault(); mode = null; const [x, y] = cellAt(e); if(free(x, y)) sfx.tap(); apply(x, y); try{ svg.setPointerCapture(e.pointerId); }catch(_){} });
+  svg.addEventListener('pointermove', e => { if(locked || mode === null || !e.buttons && e.pointerType === 'mouse') return; const [x, y] = cellAt(e); apply(x, y); });
+  const up = () => { mode = null; }; svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+  document.getElementById('wipe').onclick = () => { if(locked) return; sfx.tap(); mine.clear(); marks.innerHTML = ''; draw(); };
+  document.getElementById('check').onclick = () => {
+    if(locked) return; tries++;
+    const bad = [...mine].filter(([k, c]) => q.target.get(k) !== c), missing = [...q.target.keys()].filter(k => !mine.has(k)).length;
+    const end = (ok, expl, soft) => { locked = true; document.getElementById('wipe').remove(); document.getElementById('check').remove(); const pal = app.querySelector('.pal'); if(pal) pal.remove(); answered(ok, q.tag, expl, null, null, soft); };
+    if(!bad.length && !missing){ confetti(); return end(tries === 1, `Regarde, tu as dessiné <b>${q.name}</b> ! Chaque case est à la même distance de l'axe que son reflet.`, true); }
+    if(tries >= 3){ mine = new Map(q.target); marks.innerHTML = ''; draw(); return end(false, `Voici la solution : c'était <b>${q.name}</b>. Compte les carreaux de chaque case jusqu'à l'axe, puis autant de l'autre côté.`); }
+    sfx.no();
+    marks.innerHTML = bad.map(([k]) => { const [x, y] = k.split(',').map(Number); return `<path class="ko" d="M${x + .25} ${y + .25}L${x + .75} ${y + .75}M${x + .75} ${y + .25}L${x + .25} ${y + .75}"/>`; }).join('');
+    say(!mine.size ? `Colorie d'abord les cases du reflet, puis touche Corrige-moi.` : (bad.length ? `<b>${bad.length} case${bad.length > 1 ? 's' : ''}</b> ${bad.length > 1 ? 'ne sont' : "n'est"} pas à la bonne place${multi ? ' ou pas de la bonne couleur' : ''} (les croix rouges). ` : '') + (missing ? `Il manque encore <b>${missing} case${missing > 1 ? 's' : ''}</b>. ` : '') + `Pour chaque case, compte les carreaux jusqu'à l'axe : son reflet est juste en face, à la même distance.`);
+    if(!mine.size) tries--;
+  };
+}
+/* 7. Point par point */
+function askPoints(q){
+  const f = q.f, v = f.o === 'v', L = 'ABCDEFGH';
+  const mir = p => v ? [10 - p[0], p[1]] : [p[0], 8 - p[1]], onAx = p => v ? p[0] === 5 : p[1] === 4, dist = p => Math.abs(v ? p[0] - 5 : p[1] - 4);
+  const todo = f.pts.map((_, i) => i).filter(i => !onAx(f.pts[i])), placed = new Set(); let cur = 0, wrong = 0, hint = false, miss = null, done = false;
+  let grid = ''; for(let i = 0; i <= 10; i++) grid += `<line class="gl" x1="${i}" y1="0" x2="${i}" y2="8"/>`; for(let j = 0; j <= 8; j++) grid += `<line class="gl" x1="0" y1="${j}" x2="10" y2="${j}"/>`;
+  let nodes = ''; for(let i = 0; i <= 10; i++) for(let j = 0; j <= 8; j++) nodes += `<circle class="node" cx="${i}" cy="${j}" r=".09"/>`;
+  const ask = () => `Place le symétrique du point <b class="n">${L[todo[cur]]}</b> : touche le bon endroit sur le quadrillage.`;
+  frame(ask(), `<svg class="pts" viewBox="-.8 -.8 11.6 9.6" role="img" aria-label="un quadrillage à points avec un axe de symétrie">${v ? '' : '<rect class="water" x="0" y="4" width="10" height="4"/>'}${grid}${nodes}<g class="layer"></g></svg>`,
+    `Compte les carreaux entre le point et l'axe. Les points posés sur l'axe ne bougent pas.`);
+  document.getElementById('say').classList.add('hold');
+  const svg = app.querySelector('.pts'), layer = svg.querySelector('.layer');
+  const lab = (p, t, m) => { const s = m ? 1 : -1, dx = v ? s * (onAx(p) ? 0 : .42) : .38, dy = v ? -.3 : s * (onAx(p) ? 0 : .5) + (onAx(p) ? -.3 : .12); return `<text x="${p[0] + (onAx(p) && v ? .3 : dx)}" y="${p[1] + dy}" text-anchor="middle" class="${m ? 'm' : ''}">${t}</text>`; };
+  function draw(){
+    let h = '';
+    if(done) h += `<path class="full" d="${poly([...f.pts, ...f.pts.slice().reverse().map(mir)])}"/>`;
+    h += v ? `<line class="axe" x1="5" y1="-.6" x2="5" y2="8.6"/>` : `<line class="axe" x1="-.6" y1="4" x2="10.6" y2="4"/>`;
+    for(let i = 0; i + 1 < f.pts.length; i++){ const a = f.pts[i], b = f.pts[i + 1]; h += `<line class="seg" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`;
+      if((onAx(a) || placed.has(i)) && (onAx(b) || placed.has(i + 1))){ const c = mir(a), d = mir(b); h += `<line class="seg m" x1="${c[0]}" y1="${c[1]}" x2="${d[0]}" y2="${d[1]}"/>`; } }
+    if(hint && !done){ const p = f.pts[todo[cur]], e = v ? [5, p[1]] : [p[0], 4]; h += `<line class="hint" x1="${p[0]}" y1="${p[1]}" x2="${e[0]}" y2="${e[1]}"/><text class="hn" x="${(p[0] + e[0]) / 2}" y="${(p[1] + e[1]) / 2 - .22}" text-anchor="middle">${dist(p)}</text>`; }
+    f.pts.forEach((p, i) => { const isCur = !done && todo[cur] === i; h += `<circle class="pt${isCur ? ' cur' : ''}" cx="${p[0]}" cy="${p[1]}" r="${isCur ? .26 : .19}"/>` + lab(p, L[i], false);
+      if(placed.has(i)){ const m = mir(p); h += `<circle class="pt m" cx="${m[0]}" cy="${m[1]}" r=".19"/>` + lab(m, L[i] + '′', true); } });
+    if(miss) h += `<path class="ko" d="M${miss[0] - .22} ${miss[1] - .22}L${miss[0] + .22} ${miss[1] + .22}M${miss[0] + .22} ${miss[1] - .22}L${miss[0] - .22} ${miss[1] + .22}"/>`;
+    layer.innerHTML = h;
+  }
+  draw();
+  svg.addEventListener('pointerdown', e => {
+    if(done) return; const p = svgPoint(svg, e), n = [Math.round(p.x), Math.round(p.y)];
+    if(n[0] < 0 || n[1] < 0 || n[0] > 10 || n[1] > 8 || Math.hypot(p.x - n[0], p.y - n[1]) > .48) return;
+    const i = todo[cur], src = f.pts[i], goal = mir(src), d = dist(src);
+    if(n[0] === goal[0] && n[1] === goal[1]){
+      placed.add(i); cur++; hint = false; miss = null; sfx.ok();
+      if(cur >= todo.length){ done = true; draw(); confetti(); return answered(wrong === 0, 'tracer le symétrique point par point', `Tu as tracé <b>${f.n}</b> ! Chaque point et son symétrique sont à la même distance de l'axe.`, null, null, true); }
+      draw(); say(`Oui ! <b class="n">${L[i]}′</b> est à ${d} carreau${d > 1 ? 'x' : ''} de l'axe, comme ${L[i]}. Maintenant, le point <b class="n">${L[todo[cur]]}</b>.`);
+    } else {
+      wrong++; hint = true; miss = n; sfx.no(); draw();
+      say(`Pas là. Le point <b class="n">${L[i]}</b> est à <b>${d} carreau${d > 1 ? 'x' : ''}</b> de l'axe : son symétrique est juste en face, à ${d} carreau${d > 1 ? 'x' : ''} de l'autre côté.`);
+    }
+  });
+}
+
+/* ---------- le miroir magique : dessin libre avec symétrie automatique ---------- */
+const MODES = [['v', '↔️', 'Un axe debout'], ['h', '↕️', 'Un axe couché'], ['2', '➕', 'Deux axes'], ['4', '✳️', 'Quatre axes']];
+function miroir(){
+  const N = 16, PAL = ['r', 'o', 'y', 'g', 't', 'b', 'p', 'f', 'n'];
+  const art = data.art && data.art.c ? data.art : (data.art = { m:'v', c:{} }); let color = 'p', mode = null, dirty = false;
+  const axes = m => (m === 'v' || m === '2' || m === '4' ? `<line class="axe" x1="${N / 2}" y1="-.4" x2="${N / 2}" y2="${N + .4}"/>` : '') + (m === 'h' || m === '2' || m === '4' ? `<line class="axe" x1="-.4" y1="${N / 2}" x2="${N + .4}" y2="${N / 2}"/>` : '') + (m === '4' ? `<line class="axe" x1="0" y1="0" x2="${N}" y2="${N}"/><line class="axe" x1="${N}" y1="0" x2="0" y2="${N}"/>` : '');
+  hush();
+  app.innerHTML = topbar(true) + teacher(`Voici ton <b>miroir magique</b>, Salma ! Dessine d'un côté : le miroir dessine le <b>symétrique</b> tout seul. Essaie avec deux ou quatre axes pour faire des rosaces.`) +
+    `<div class="card ex"><div class="seg" role="group" aria-label="Les axes">${MODES.map(([k, ic, n]) => `<button data-m="${k}" aria-pressed="${art.m === k}">${ic} ${n}</button>`).join('')}</div>
+      ${pixSVG(N, N, '', 0, null).replace('class="pix"', 'class="pix big"').replace('<g class="marks">', '<g class="marks axes">')}
+      <div class="pal" role="group" aria-label="Couleurs">${PAL.map(c => `<button class="sw" data-c="${c}" style="background:${COL[c]}" aria-label="${CNAME[c]}" aria-pressed="${c === color}"></button>`).join('')}<button class="sw gom" data-c="" aria-label="gomme" aria-pressed="false">🧽</button></div>
+      <div class="tools"><button class="btn" id="wipe">🗑️ Nouvelle feuille</button></div></div>`;
+  wireTop(); speak(document.getElementById('say').innerHTML);
+  const svg = app.querySelector('.pix'), cells = svg.querySelector('.cells'), ax = svg.querySelector('.axes');
+  const draw = () => { cells.innerHTML = cellsHTML(new Map(Object.entries(art.c))); ax.innerHTML = axes(art.m); };
+  draw();
+  const twins = (x, y) => { const a = [[x, y]], m = art.m, r = N - 1;
+    if(m === 'v' || m === '2' || m === '4') a.push([r - x, y]); if(m === 'h' || m === '2' || m === '4') a.push([x, r - y]); if(m === '2' || m === '4') a.push([r - x, r - y]);
+    if(m === '4') a.slice().forEach(([i, j]) => a.push([j, i])); return a; };
+  const apply = (x, y) => { if(x < 0 || y < 0 || x >= N || y >= N) return; const k = x + ',' + y; if(mode === null) mode = color && art.c[k] !== color ? 'paint' : 'erase';
+    if(mode === 'paint' ? art.c[k] === color : !art.c[k]) return; twins(x, y).forEach(([i, j]) => { if(mode === 'paint') art.c[i + ',' + j] = color; else delete art.c[i + ',' + j]; }); dirty = true; draw(); };
+  const cellAt = e => { const p = svgPoint(svg, e); return [Math.floor(p.x), Math.floor(p.y)]; };
+  svg.addEventListener('pointerdown', e => { e.preventDefault(); mode = null; apply(...cellAt(e)); try{ svg.setPointerCapture(e.pointerId); }catch(_){} });
+  svg.addEventListener('pointermove', e => { if(mode === null || !e.buttons && e.pointerType === 'mouse') return; apply(...cellAt(e)); });
+  const up = () => { mode = null; if(dirty){ dirty = false; save(); } }; svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+  app.querySelectorAll('.sw').forEach(b => b.onclick = () => { sfx.tap(); color = b.dataset.c; app.querySelectorAll('.sw').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  app.querySelectorAll('.seg button').forEach(b => b.onclick = () => { sfx.tap(); art.m = b.dataset.m; app.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); save(); draw(); });
+  document.getElementById('wipe').onclick = () => { sfx.tap(); art.c = {}; save(); draw(); };
+}
+
+function finish(){
+  const total = S.list.length, good = total - S.errors, st = S.errors === 0 ? 3 : S.errors <= 2 ? 2 : 1;
+  const bonus = st === 3 ? 3 : 0;
+  data.stars[S.c.id] = Math.max(data.stars[S.c.id] || 0, st); data.done[S.c.id] = (data.done[S.c.id] || 0) + 1;
+  data.tickets += bonus; data.last = new Date().toISOString(); save();
+  sfx.win(); confetti();
+  const nextI = S.i + 1 < CH.length ? S.i + 1 : -1;
+  const msg = (st === 3 ? `Sans faute, Salma ! ` : `${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} sur ${total}. `) + `Tu gagnes <b>${S.earned + bonus} tickets 🎟️</b>${bonus ? ' (dont 3 de bonus pour le sans-faute)' : ''}. Tu en as ${data.tickets} en tout pour Serpent Légendes !`;
+  app.innerHTML = topbar(true) + teacher(msg) +
+    `<div class="card result"><div class="big" aria-label="${st} étoiles sur 3">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</div>
+     <b style="font-family:var(--display);font-size:26px">${S.c.name}</b>
+     <div class="choices"><button class="btn" id="again">↻ Recommencer</button>${nextI >= 0 ? `<button class="btn go" id="nxt">Étape suivante →</button>` : `<button class="btn go" id="path">Le miroir</button>`}</div>
+     <a class="btn tkbtn" href="../jeux/serpent-legendes.html">🎟️ Dépenser mes tickets dans Serpent Légendes</a></div>`;
+  wireTop(); speak(msg);
+  const i = S.i; S = null;
+  document.getElementById('again').onclick = () => { sfx.tap(); start(i); };
+  const n = document.getElementById('nxt'); if(n) n.onclick = () => { sfx.tap(); start(nextI); };
+  const pth = document.getElementById('path'); if(pth) pth.onclick = () => { sfx.tap(); home(); };
+}
+
+/* =====================================================================
+   Accueil
+   ===================================================================== */
+function home(greet){
+  hush(); S = null;
+  const next = CH.findIndex((c, i) => unlocked(i) && !(data.stars[c.id] > 0));
+  app.innerHTML = topbar(false) +
+    `<div><h1>Le Miroir Magique</h1><p class="lead">La symétrie : trouver l'axe, compléter une figure (CE2)</p></div>` +
+    teacher(next === 0 && !totalStars()
+      ? `Bonjour Salma ! Aujourd'hui, on joue avec les <b>miroirs</b> : on plie des figures, on cherche leur <b>axe de symétrie</b> et on dessine leur reflet. Chaque bonne réponse te donne un <b>ticket 🎟️</b>.`
+      : next >= 0 ? `Tu as déjà <b>${data.tickets} tickets 🎟️</b>, Salma ! Ta prochaine étape : <b class="n">${CH[next].name}</b>.` : `Tu as fini toutes les étapes, Salma ! Refais-les pour gagner 3 étoiles partout, ou dessine des rosaces dans ton miroir magique.`) +
+    `<div class="tools"><button class="btn" id="fiche">📋 Ma leçon</button><button class="btn go" id="miroir">🪞 Mon miroir magique</button><button class="btn" id="carnet">📈 Mon carnet</button><a class="btn tkbtn" href="../jeux/serpent-legendes.html">🎟️ ${data.tickets} → Serpent Légendes</a></div>` +
+    `<div class="path">${CH.map((c, i) => {
+      const s = data.stars[c.id] || 0, open = unlocked(i);
+      return `<button class="step${i === next ? ' next' : ''}" data-i="${i}" style="--edge:${c.edge}" ${open ? '' : 'disabled aria-disabled="true"'}>
+        <span class="ic" aria-hidden="true">${open ? c.icon : '🔒'}</span>
+        <span class="tx"><span class="num">Étape ${i + 1}</span><b>${c.name}</b><span class="sub">${open ? c.sub : 'Termine l\'étape d\'avant'}</span></span>
+        <span class="st" aria-label="${s} étoiles sur 3">${'★'.repeat(s)}${'☆'.repeat(3 - s)}</span></button>`; }).join('')}</div>`;
+  wireTop();
+  app.querySelectorAll('.step').forEach(b => b.onclick = () => { if(b.disabled) return; sfx.tap(); start(+b.dataset.i); });
+  document.getElementById('fiche').onclick = () => { sfx.tap(); fiche(); };
+  document.getElementById('miroir').onclick = () => { sfx.tap(); miroir(); };
+  document.getElementById('carnet').onclick = () => { sfx.tap(); carnet(); };
+  if(greet) speak(document.getElementById('say').innerHTML);
+}
+
+/* ---------- la leçon ---------- */
+function fiche(){
+  hush();
+  const mini = (k, r) => figSVG(k, r, SH[k].ax.map(a => axisLine(a + r)).join('')).replace('class="fig sym"', 'class="fig sym" style="max-height:170px"');
+  const demo = parse(['..#.', '.###', '####', '..##', '..##', '.###']), full = new Map([...demo, ...mirrorMap(demo, 'v', 8, 6)]);
+  app.innerHTML = topbar(true) + teacher(`Voici ta leçon sur la <b>symétrie</b>. Touche 🔊 Lire pour que je la lise.`) +
+    `<div class="card fiche"><h2>La symétrie <small>CE2</small></h2>
+      <p>Une figure a un <b style="color:var(--red)">axe de symétrie</b> si, quand on la <b>plie</b> le long de cette droite, les deux moitiés <b>se superposent exactement</b>.</p>
+      <div class="ftab"><div>${mini('papillon', 0)}<span>1 axe</span></div><div>${mini('rectangle', 0)}<span>2 axes</span></div><div>${mini('parallelo', 0)}<span>aucun axe</span></div></div>
+      <p>Une figure peut avoir <b>un</b> axe, <b>plusieurs</b> axes, ou <b>aucun</b>. Le carré en a 4. Attention : les diagonales du rectangle ne sont pas des axes.</p>
+      <h2>Compléter une figure par symétrie</h2>
+      <div class="defn">${pixSVG(8, 6, 'v', 4, full).replace(/class="pix" style="[^"]*"/, 'class="pix" style="--w:260px;--r:1.278;flex:none"')}<p style="flex:1;min-width:220px">Sur un quadrillage, chaque case (ou chaque point) et son symétrique sont :<br>• <b>juste en face</b>, sur la même ligne ;<br>• <b>à la même distance</b> de l'axe : je compte les carreaux.<br><br>Un point posé <b>sur l'axe</b> ne bouge pas.</p></div>
+      <button class="btn" id="read">🔊 Lire</button></div>`;
+  wireTop();
+  document.getElementById('read').onclick = () => speak(`La symétrie. Une figure a un axe de symétrie si, quand on la plie le long de cette droite, les deux moitiés se superposent exactement. Une figure peut avoir un axe, plusieurs axes, ou aucun. Le carré en a quatre. Les diagonales du rectangle ne sont pas des axes. Pour compléter une figure par symétrie sur un quadrillage, chaque case et son symétrique sont juste en face, à la même distance de l'axe : je compte les carreaux. Un point posé sur l'axe ne bouge pas.`);
+}
+
+/* ---------- le carnet ---------- */
+function carnet(){
+  hush();
+  const review = Object.entries(data.figs).filter(([, v]) => v.ko > 0).sort((a, b) => (b[1].ko - b[1].ok / 3) - (a[1].ko - a[1].ok / 3)).slice(0, 8);
+  const strong = Object.entries(data.figs).filter(([, v]) => v.ok >= 3 && v.ko === 0).map(([k]) => k);
+  const doneN = CH.filter(c => data.stars[c.id] > 0).length;
+  app.innerHTML = topbar(true) + teacher(`Voici ton carnet, Salma : <b>${doneN} étape${doneN > 1 ? 's' : ''} sur ${CH.length}</b>, ${totalStars()} étoiles et ${data.tickets} tickets 🎟️.`) +
+    `<div class="card carnet"><h2>Mes étapes</h2><div class="prog"><i style="width:${Math.round(doneN / CH.length * 100)}%"></i></div>
+      <ul class="clist">${CH.map(c => { const s = data.stars[c.id] || 0; return `<li><span aria-hidden="true">${c.icon}</span><b>${c.name}</b><span class="st">${'★'.repeat(s)}${'☆'.repeat(3 - s)}</span><small>${data.done[c.id] ? data.done[c.id] + ' fois' : 'pas encore'}</small></li>`; }).join('')}</ul></div>
+    <div class="card carnet"><h2>À revoir</h2>${review.length ? `<div class="vlist">${review.map(([k, v]) => `<span class="vk">${esc(k)} <small>${v.ok} ✔ · ${v.ko} ✘</small></span>`).join('')}</div>` : `<p>Rien à revoir pour l'instant. Bravo !</p>`}
+      ${strong.length ? `<h2>Bien compris</h2><div class="vlist">${strong.map(k => `<span class="vk ok">${esc(k)}</span>`).join('')}</div>` : ''}</div>`;
+  wireTop(); speak(document.getElementById('say').innerHTML);
+}
+
+/* ---------- démarrage : reprendre les progrès gardés sur le serveur (autre tablette) ---------- */
+home(false);
+window.__sym = { start, CH, SH, get S(){ return S; }, get data(){ return data; }, miroir };
+if(window.Famille){
+  Famille.track('salma-symetrie', 'Salma', [KEY]);
+  Famille.load('salma-symetrie', 'Salma').then(r => {
+    const d = r && r[KEY];
+    if(d && (d.t || 0) > (data.t || 0) && (d.tickets || 0) >= (data.tickets || 0)){ data = Object.assign({ stars:{}, done:{}, tickets:0, figs:{} }, d); try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} if(!S && document.querySelector('.path')) home(false); }
+  });
+}
+</script>
+</body></html>
