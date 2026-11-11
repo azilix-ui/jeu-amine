@@ -113,7 +113,7 @@ body.menu .back{display:inline-flex}
 <div class="screen on" id="menu"><div class="box">
   <video class="title-img" id="titleVid" src="jasmin/titre.mp4" poster="jasmin/titre.webp" preload="none" muted playsinline disablepictureinpicture aria-label="La famille dans un village tunisien bleu et blanc : passe la souris ou touche l'image pour la voir sauter"></video>
   <h1>La Légende <span>du Jasmin</span></h1>
-  <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse dix-huit mondes pour les rapporter !</p>
+  <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse vingt et un mondes pour les rapporter !</p>
   <button class="who" id="who"></button>
   <div class="tenues-w"><p class="tlab" id="tLab">Ta tenue</p><div class="tenues" id="tenues"></div></div>
   <button class="big" id="play">▶ Jouer</button>
@@ -197,10 +197,14 @@ const WORLDS = [
   { name:"L'Aqueduc de Zaghouan", sub:"Le temple des Eaux et le courant", img:'jasmin/monde15.webp', sky:['#7ec4ec', '#eaf6e0'], ground:'#c8b48a', ground2:'#a08a62', edge:'#6a5a3a', top:'#7cb85a', plat:'#8a6a42', haz:'#4aa8d8', mid:'#c8b48a', mid2:'#a08a62', music:{ bpm:116, root:62 } },
   { name:'Le Ksar Ouled Soltane', sub:'Les greniers empilés jusqu\'au ciel', img:'jasmin/monde16.webp', sky:['#3f7fd0', '#f6d8a8'], ground:'#d0965a', ground2:'#a86e3a', edge:'#7a4a22', top:'#e0b07a', plat:'#7a5a32', haz:'#8a4a22', mid:'#d0965a', mid2:'#a86e3a', music:{ bpm:112, root:55 } },
   { name:"Le Lac d'Ichkeul", sub:'Les flamants roses du marais', img:'jasmin/monde17.webp', sky:['#f4b8c8', '#fde8e0'], ground:'#8aa86a', ground2:'#6a8a4a', edge:'#4a6a3a', top:'#a8c878', plat:'#6a8a4a', haz:'#6aa8c8', mid:'#a8c878', mid2:'#6a8a4a', music:{ bpm:104, root:60 } },
-  { name:'Le Canyon de Tamerza', sub:'Cascade et coups de vent', img:'jasmin/monde18.webp', sky:['#e88a5a', '#fde0c0'], ground:'#b8582e', ground2:'#8a3a1e', edge:'#5a2210', top:'#d8884a', plat:'#7a4a22', haz:'#3fa8a0', mid:'#b8582e', mid2:'#8a3a1e', music:{ bpm:126, root:58 } }
+  { name:'Le Canyon de Tamerza', sub:'Cascade et coups de vent', img:'jasmin/monde18.webp', sky:['#e88a5a', '#fde0c0'], ground:'#b8582e', ground2:'#8a3a1e', edge:'#5a2210', top:'#d8884a', plat:'#7a4a22', haz:'#3fa8a0', mid:'#b8582e', mid2:'#8a3a1e', music:{ bpm:126, root:58 } },
+  { name:'Les Ruines de Dougga', sub:'Le théâtre romain et les chèvres', img:'jasmin/monde19.webp', sky:['#7ab8e8', '#fdf0c8'], ground:'#d8c49a', ground2:'#b8a070', edge:'#7a6a44', top:'#8ab85a', plat:'#a89468', haz:'#3fa8c8', mid:'#d8c49a', mid2:'#b8a070', music:{ bpm:108, root:57 } },
+  { name:'Les Îles Kerkennah', sub:'De barque en barque, gare aux poulpes', img:'jasmin/monde20.webp', sky:['#8ad8e8', '#fdf6e0'], ground:'#f0deb0', ground2:'#d8c08a', edge:'#a88a5a', top:'#f8ecc8', plat:'#8a5a32', haz:'#3fb8c8', mid:'#f0deb0', mid2:'#d8c08a', music:{ bpm:100, root:62 } },
+  { name:'Le Cap Bon', sub:'Les potiers de Nabeul et les orangers', img:'jasmin/monde21.webp', sky:['#5aa8e8', '#fde8c0'], ground:'#d8804a', ground2:'#b85e2e', edge:'#7a3a18', top:'#6aa84a', plat:'#8a4a22', haz:'#3f9ad0', mid:'#d8804a', mid2:'#b85e2e', music:{ bpm:118, root:59 } }
 ];
 // L'ordre du voyage (les numéros des mondes restent fixes pour les sauvegardes et les records) : le palais reste la fin
-const ORDER = [1, 6, 7, 15, 10, 17, 11, 14, 2, 12, 18, 13, 8, 9, 16, 3, 4, 5];
+const ORDER = [1, 6, 7, 19, 15, 10, 21, 17, 11, 14, 2, 12, 18, 13, 8, 20, 9, 16, 3, 4, 5];   // 19 Dougga, 20 Kerkennah, 21 Cap Bon ajoutés le 11/11
+const ORDER18 = [1, 6, 7, 15, 10, 17, 11, 14, 2, 12, 18, 13, 8, 9, 16, 3, 4, 5];   // le voyage à 18 mondes : ce qui était ouvert le reste
 const ORDER13 = [1, 6, 7, 10, 11, 2, 12, 13, 8, 9, 3, 4, 5];   // l'ancien voyage (13 mondes) : ce qui était ouvert le reste
 const posOf = id => ORDER.indexOf(id) + 1;
 
@@ -250,6 +254,8 @@ function buildLevel(n){
   const warpOut = dx => { wOut = ent('warp', x + dx, GY - 1, { exit:true }); }; // la jarre d'où l'on ressort
   const coral = (dx, top) => { for(let y = top; y < 14; y++) set(x + dx, y, '#'); };
   const stone = dx => ent('stone', x + dx, 2);
+  const ivre = (dx, cy = GY - 1) => ent('cactus', x + dx, cy, { kind:'ivrogne' });   // l'ivrogne comique : il ne bouge pas, il lance des bouteilles à esquiver (demandé par le papa le 11/11)
+  const boat = (k, dist) => { for(let i = x; i < x + k; i++){ set(i, 13, '~'); set(i, 14, '~'); } ent('mover', x + 1, GY - 1, { w:3, dist, axis:'x', kind:'boat' }); x += k; };   // Kerkennah : une barque qui va et vient
   // ---- niveau par niveau ----   (hid = bloc invisible ❤️, warpIn / warpOut = la jarre magique vers la salle secrète et la jarre où l'on ressort)
   if(n === 1){
     sign(3, '→ cours, A saute'); M.flat(14, { coins:6 }); hid(-5);
@@ -283,10 +289,10 @@ function buildLevel(n){
   } else if(n === 6){   // la médina : les toits, les chats, les tapis volants
     sign(3, 'Les toits de la médina !'); deco(8, 'jar'); M.flat(12, { coins:5 }); hid(-4);
     M.blocks('bSb', 8); e('scorp', -3); M.step(2, 6, { coins:4 }); M.step(4, 5); deco(-2, 'jar', GY - 5);
-    M.mover(10, GY - 4, 4, 'x'); M.step(4, 6, { coins:4 }); M.stairs(4, -1); M.check(); M.flat(8); warpIn(-3); e('scorp', 4);
+    M.mover(10, GY - 4, 4, 'x'); M.step(4, 6, { coins:4 }); ivre(-2, GY - 5); M.stairs(4, -1); M.check(); M.flat(8); warpIn(-3); e('scorp', 4);
     M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13); gem(10, GY - 9); M.flat(6);
     M.blocks('cpc', 8); M.secret(); e('bird', 3, GY - 5); M.step(3, 6, { coins:4 }); M.mover(10, GY - 3, 4, 'x'); M.step(3, 5); M.step(2, 4);
-    M.check(); M.flat(8, { coins:4 }); warpOut(-5); e('scorp', 3); e('scorp', 6); deco(-1, 'jar'); M.spring(); M.flat(6); gem(-4, GY - 8);
+    M.check(); M.flat(8, { coins:4 }); warpOut(-5); e('scorp', 3); e('scorp', 6); deco(-1, 'jar'); M.spring(); M.flat(6); gem(-4, GY - 8); ivre(-1);
     M.mover(10, GY - 2, 4, 'x'); M.flat(6, { coins:3 }); hid(-3); M.blocks('S', 6); M.stairs(4); M.step(4, 4); M.gap(2); M.stairs(4, -1); M.flat(4); M.door();
   } else if(n === 7){   // Carthage : les ruines qui s'effritent, les crabes, les mouettes
     sign(3, 'Les vieilles pierres s\'effritent !'); deco(9, 'column'); M.flat(12, { coins:5 }); hid(-4);
@@ -399,6 +405,36 @@ function buildLevel(n){
     M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13); gem(10, GY - 9); M.flat(6);
     M.blocks('cpc', 8); e('hog', -2); M.secret(); e('bird', 3, GY - 5);
     M.flat(8, { coins:4 }); warpOut(-3); M.check(); M.gap(2, true); M.flat(4); M.mover(9, GY - 3, 4, 'x', true); M.flat(6); hid(-3);
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
+  } else if(n === 19){   // Dougga : les gradins du théâtre romain, les chèvres qui chargent, les pierres qui tombent
+    sign(3, 'Les ruines de Dougga : gare aux chèvres !'); deco(8, 'column'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3); M.stairs(5); M.step(5, 5, { coins:3 }); M.stairs(5, -1); M.flat(6); deco(-3, 'column');
+    M.flat(10, { coins:4 }); stone(-7); stone(-3); e('scorp', -5);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3);
+    M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3]], 13, true); gem(10, GY - 9); M.flat(6);
+    M.fragile(6); M.flat(6); e('bird', 2, GY - 5); deco(-2, 'arch'); ivre(-4);
+    M.blocks('cpc', 8); e('scorp', -2); M.secret();
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); M.stairs(4); M.step(4, 4); stone(-2); M.gap(3, true); M.step(4, 4); M.stairs(4, -1); M.flat(4); hid(-3);
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
+  } else if(n === 20){   // Kerkennah : on saute de barque en barque, on plonge, les poulpes jaillissent
+    sign(3, 'Saute de barque en barque !'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3); boat(10, 5); M.flat(6, { coins:3 }); e('bird', 2, GY - 4);
+    M.sea(18); coins(x - 16, 12, 3, true); gem(-9, 13); e('bird', -13, 11); e('bird', -5, 12);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3);
+    boat(12, 7); gem(-6, GY - 5); M.flat(5); e('scorp', 2);
+    boat(9, 4); M.flat(7, { coins:3 }); ivre(-2); e('bird', -5, GY - 5);
+    M.blocks('cpc', 8); e('scorp', -2); M.secret();
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); boat(11, 6); M.flat(6, { coins:3 }); hid(-3);
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
+  } else if(n === 21){   // Cap Bon : les piles de poteries qui s'effritent, les oranges qui tombent des arbres
+    sign(3, 'Les potiers de Nabeul : gare aux oranges qui tombent !'); deco(8, 'jar'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('hog', -3); M.flat(10, { coins:4 }); stone(-7); stone(-3); deco(-1, 'jar');
+    M.plats([[0, GY - 2, 3, 'f'], [4, GY - 4, 3, 'f'], [8, GY - 6, 3, 'f'], [12, GY - 4, 3]], 16, true); gem(9, GY - 8); M.flat(6, { coins:3 }); e('bird', 2, GY - 5);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3); deco(-6, 'jar');
+    M.step(2, 4); M.step(4, 5, { coins:3 }); stone(-3); M.step(2, 4); M.flat(5); e('scorp', 2);
+    M.fragile(7); M.flat(7); ivre(-2); deco(-5, 'jar');
+    M.blocks('cpc', 8); e('hog', -2); M.secret(); e('bird', 3, GY - 5);
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); M.mover(10, GY - 3, 5, 'x', true); M.flat(6, { coins:3 }); stone(-3); hid(-3);
     M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
   } else {
     sign(3, 'Le palais du Scorpion…'); M.flat(12, { coins:5 }); hid(-4);
@@ -711,8 +747,8 @@ function newLevel(n, fromCheck){
     if(e.t === 'coin' && !e.secret) g.dinarTotal++;
     if(e.t === 'stone'){ o.w = 56; o.h = 52; o.hy = o.y; o.st = 'up'; o.timer = 0; }
     if(e.t === 'mover'){ o.x0 = o.x - T / 2; o.y0 = o.y - T; o.px = o.x0; o.py = o.y0; }
-    if(e.t === 'scorp'){ o.w = 30; o.h = 20; o.sp = 45; } if(e.t === 'hog'){ o.w = 28; o.h = 24; o.sp = 35; o.ball = false; o.spikes = 7; }
-    if(e.t === 'bird'){ o.w = 30; o.h = 22; o.bx = o.x; o.by = o.y - 10; } if(e.t === 'cactus'){ o.w = 26; o.h = 44; o.cd = 2; }
+    if(e.t === 'scorp'){ o.w = 30; o.h = 20; o.sp = n === 19 ? 78 : 45; }   // à Dougga ce sont des chèvres : elles chargent if(e.t === 'hog'){ o.w = 28; o.h = 24; o.sp = 35; o.ball = false; o.spikes = 7; }
+    if(e.t === 'bird'){ o.w = 30; o.h = 22; o.bx = o.x; o.by = o.y - 10; } if(e.t === 'cactus'){ o.w = 26; o.h = 44; o.cd = 2; if(e.kind === 'ivrogne'){ o.w = 30; o.h = 54; o.cd = 2.6; o.throwT = 0; } }
     if(e.t === 'boss'){ o.w = 120; o.h = 70; o.hp = 3; o.st = 'wait'; o.timer = 0; o.dir = -1; o.inv = 0; }
     g.ents.push(o);
   });
@@ -868,8 +904,9 @@ function step(dt){
       if(e.vx) g.ents.forEach(o => { if(o !== e && o.alive && ['scorp', 'hog', 'bird', 'cactus'].includes(o.t) && Math.abs(o.x - e.x) < 26 && Math.abs(o.y - e.y) < 26){ o.alive = false; o.dying = 1; o.vy = -350; g.kills++; g.score += 200; sfx.stomp(); addText('+200', o.x, o.y - 30); } });
       if(e.y > ROWS * T + 60) e.alive = false;
     } else if(e.t === 'bird'){ e.x = e.bx + Math.sin(e.t2 * 1.2) * 70; e.y = e.by + Math.sin(e.t2 * 2.6) * 18; e.dir = Math.cos(e.t2 * 1.2) > 0 ? 1 : -1; }
-    else if(e.t === 'cactus'){ e.cd -= dt; if(e.cd <= 0 && Math.abs(h.x - e.x) < 420){ e.cd = 2.4; const dx = h.x - e.x; g.ents.push({ t:'figue', x:e.x, y:e.y - 40, vx:Math.sign(dx) * Math.min(260, Math.abs(dx) * .9 + 60), vy:-420, alive:true, w:14, h:14 }); } }
-    else if(e.t === 'figue'){ e.vy += 1200 * dt; e.x += e.vx * dt; e.y += e.vy * dt; if(e.y > ROWS * T || solidAt(Math.floor(e.x / T), Math.floor(e.y / T))){ e.alive = false; burst(e.x, e.y, '#c2185b', 6, 120); } }
+    else if(e.t === 'cactus'){ e.cd -= dt; if(e.throwT > 0) e.throwT -= dt; const iv = e.kind === 'ivrogne'; if(iv) e.dir = h.x < e.x ? -1 : 1; if(e.cd <= 0 && Math.abs(h.x - e.x) < 420){ e.cd = iv ? 2.9 : 2.4; const dx = h.x - e.x; if(iv){ e.throwT = .5; sfx.jump(); }
+      g.ents.push({ t:'figue', x:e.x + (iv ? Math.sign(dx) * 14 : 0), y:e.y - (iv ? 52 : 40), vx:Math.sign(dx) * Math.min(260, Math.abs(dx) * .9 + 60), vy:iv ? -460 : -420, alive:true, w:14, h:14, bottle:iv, rot:Math.sign(dx) || 1 }); } }
+    else if(e.t === 'figue'){ e.vy += 1200 * dt; e.x += e.vx * dt; e.y += e.vy * dt; if(e.y > ROWS * T || solidAt(Math.floor(e.x / T), Math.floor(e.y / T))){ e.alive = false; burst(e.x, e.y, e.bottle ? '#b8773a' : '#c2185b', e.bottle ? 9 : 6, 120); if(e.bottle) sfx.brick(); } }
     else if(e.t === 'boss'){ bossStep(e, h, dt); continue; }
     // contact avec le héros
     const ex0 = e.x - e.w / 2, ex1 = e.x + e.w / 2, ey0 = e.y - e.h, ey1 = e.y;
@@ -985,7 +1022,7 @@ function drawTiles(g, t){
     const fr = c === 'f' ? g.frag.get(cx + ',' + cy) : null, shk = fr ? Math.sin(t * 60) * 1.5 : 0;
     const openTop = !SOLID.has(tileAt(cx, cy - 1)) && tileAt(cx, cy - 1) !== 'h', openRight = !SOLID.has(tileAt(cx + 1, cy)) && tileAt(cx + 1, cy) !== 'h';
     let face = W.ground, side = W.ground2;
-    if(c === 'b'){ face = ['#6fa8e8', '#b07a44', '#d2a65a', '#9aa8b8', '#c99a2e', '#3f8fc0', '#c8b48a', '#e0b46a', '#a8703e', '#7a8a9a', '#c89a5a', '#b8a8d8', '#a8482a', '#2f8a6a', '#a89070', '#b8743a', '#8aa85a', '#9a4a2a'][g.lv.n - 1]; side = shade(face, .7); }
+    if(c === 'b'){ face = ['#6fa8e8', '#b07a44', '#d2a65a', '#9aa8b8', '#c99a2e', '#3f8fc0', '#c8b48a', '#e0b46a', '#a8703e', '#7a8a9a', '#c89a5a', '#b8a8d8', '#a8482a', '#2f8a6a', '#a89070', '#b8743a', '#8aa85a', '#9a4a2a', '#c8b48a', '#c89a5a', '#c8643a'][g.lv.n - 1] || '#b07a44'; side = shade(face, .7); }
     if(c === 'w'){ face = shade(W.ground, .86); side = shade(W.ground, .7); }
     if(c === 'R'){ face = '#5a4a72'; side = '#3a2a52'; }
     if(c === 'm'){ face = '#f4eeff'; side = '#cfc0f0'; }
@@ -1019,6 +1056,9 @@ function drawTiles(g, t){
       else if(g.lv.n === 17 && c === '#'){ ctx.fillStyle = shade(face, .88); ctx.beginPath(); ctx.arc(x + 8 + (cx * 7 % 16), y + 18, 3, 0, 7); ctx.fill(); }
       else if(g.lv.n === 18 && c === '#'){ ctx.fillStyle = shade(face, .84); ctx.fillRect(x, y + 6 + (cx % 3) * 7, T, 3); ctx.fillStyle = shade(face, 1.1); ctx.fillRect(x, y + 24, T, 2); }
       else if(g.lv.n === 13 && c === '#'){ ctx.fillStyle = shade(face, .85); ctx.fillRect(x, y + 6 + (cx % 2) * 10, T, 4); ctx.fillStyle = shade(face, 1.12); ctx.fillRect(x, y + 22, T, 2); }
+      else if(g.lv.n === 19 && c === '#'){ ctx.fillStyle = shade(face, .86); ctx.fillRect(x, y + 15, T, 2); ctx.fillRect(x + ((cx + cy) % 2) * 16, y, 2, 15); ctx.fillRect(x + ((cx + cy + 1) % 2) * 16, y + 17, 2, 15); }   // Dougga : gros blocs de pierre
+      else if(g.lv.n === 20 && c === '#'){ ctx.fillStyle = shade(face, .9); ctx.beginPath(); ctx.arc(x + 8 + (cx * 5 % 16), y + 18, 1.6, 0, 7); ctx.arc(x + 20, y + 26 - (cy % 2) * 8, 1.4, 0, 7); ctx.fill(); }   // Kerkennah : sable
+      else if(g.lv.n === 21 && c === '#'){ ctx.fillStyle = shade(face, .88); ctx.fillRect(x, y + 10 + (cx % 3) * 4, T, 3); }   // Cap Bon : terre rouge
       else if(c === '#' || c === 'B'){ // mosaïque du palais
         ctx.fillStyle = (cx + cy) % 2 ? '#1f7a8a' : '#c99a2e'; ctx.save(); ctx.translate(x + 16, y + 16); ctx.rotate(Math.PI / 4); ctx.fillRect(-6, -6, 12, 12); ctx.restore(); }
       if(c === 'f'){ ctx.strokeStyle = '#5a4636'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 6, y + 2); ctx.lineTo(x + 14, y + 14); ctx.lineTo(x + 10, y + 28); ctx.moveTo(x + 22, y + 4); ctx.lineTo(x + 18, y + 18); ctx.stroke(); }
@@ -1050,6 +1090,7 @@ function drawTiles(g, t){
 // jasmin2/<fichier>.webp : une ligne par animation, tournées vers la droite. h = hauteur dessinée, dy = décalage du bas.
 const BETE = { scorp:{ f:'scorpion', cols:12, rows:1, h:36, dy:2 }, crabe:{ f:'crabe', cols:12, rows:1, h:32, dy:2 }, mouette:{ f:'mouette', cols:12, rows:1, h:52, dy:16 }, chat:{ f:'chat', cols:12, rows:1, h:40, dy:2 }, grenouille:{ f:'grenouille', cols:12, rows:1, h:34, dy:2 }, cigogne:{ f:'cigogne', cols:12, rows:1, h:72, dy:26 }, faucon:{ f:'faucon', cols:12, rows:1, h:60, dy:20 }, chauve:{ f:'chauve-souris', cols:12, rows:1, h:40, dy:10 },
   herisson:{ f:'herisson', cols:1, rows:1, h:30, dy:2 }, boule:{ f:'herisson-boule', cols:1, rows:1, h:26, dy:0 }, cactus:{ f:'cactus', cols:1, rows:1, h:52, dy:2 }, poisson:{ f:'poisson', cols:1, rows:1, h:30, dy:0 },   // une seule image : c'est le code qui les fait bouger
+  ivrogne:{ f:'ivrogne', cols:2, rows:1, h:60, dy:2 }, chevre:{ f:'chevre', cols:1, rows:1, h:38, dy:2 }, poulpe:{ f:'poulpe', cols:1, rows:1, h:38, dy:8 },
   boss:{ f:'scorpion-or', cols:12, rows:3, h:150, dy:1 } };
 for(const k in BETE){ const b = BETE[k], im = new Image(); im.onload = () => { b.im = im; b.cw = im.naturalWidth / b.cols; b.ch = im.naturalHeight / b.rows; }; im.src = `jasmin2/${b.f}.webp?v=1`; }
 function bete(k, frame, row){ const b = BETE[k], w = b.h * b.cw / b.ch; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(b.im, (frame % b.cols) * b.cw, (row || 0) * b.ch, b.cw, b.ch, -w / 2, -b.h + b.dy, w, b.h); }
@@ -1076,7 +1117,12 @@ function drawEnt(e, g, t){
       if(e.near){ ctx.fillStyle = '#fff'; ctx.font = '800 22px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⬇', 0, -70 + Math.sin(t * 6) * 4); ctx.font = '800 12px "Baloo 2", sans-serif'; ctx.fillText('ne bouge plus…', 0, -96); }
       break; }
     case 'heart': { ctx.translate(0, -18 + Math.sin(t * 3) * 3); ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.fillText('❤️', 0, 9); break; }
-    case 'stone': if(g.lv.n === 16){ const j = e.st === 'warn' ? Math.sin(t * 60) * 2 : 0; ctx.translate(j, 0);   // un sac de grain des ghorfas
+    case 'stone': if(g.lv.n === 21){ const j = e.st === 'warn' ? Math.sin(t * 60) * 2 : 0; ctx.translate(j, 0);   // une grosse orange du Cap Bon
+        ctx.strokeStyle = '#5a7a2a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -52); ctx.lineTo(0, -52 - 400); ctx.stroke();
+        const gr = ctx.createRadialGradient(-8, -34, 4, 0, -26, 28); gr.addColorStop(0, '#ffc266'); gr.addColorStop(1, '#f07a1a'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, -26, 26, 0, 7); ctx.fill();
+        ctx.fillStyle = '#4a8a2a'; ctx.beginPath(); ctx.ellipse(8, -53, 9, 4.5, -.5, 0, 7); ctx.fill(); ctx.fillStyle = '#7a4a1e'; ctx.fillRect(-1.5, -56, 3, 6);
+        if(e.st === 'warn' || e.st === 'fall'){ ctx.fillStyle = '#7a2a0a'; ctx.font = '800 14px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('! !', 0, -20); } break; }
+      if(g.lv.n === 16){ const j = e.st === 'warn' ? Math.sin(t * 60) * 2 : 0; ctx.translate(j, 0);   // un sac de grain des ghorfas
         ctx.strokeStyle = '#7a5a32'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -52); ctx.lineTo(0, -52 - 400); ctx.stroke();
         ctx.fillStyle = '#c8a46a'; ctx.beginPath(); ctx.moveTo(-14, -52); ctx.quadraticCurveTo(-32, -26, -24, -2); ctx.lineTo(24, -2); ctx.quadraticCurveTo(32, -26, 14, -52); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#a8844a'; ctx.fillRect(-14, -54, 28, 6);
         ctx.fillStyle = '#7a5a32'; ctx.font = '800 14px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(e.st === 'warn' || e.st === 'fall' ? '! !' : '🌾', 0, -20); break; }
@@ -1096,6 +1142,11 @@ function drawEnt(e, g, t){
         ctx.fillStyle = '#7a1414'; ctx.fillRect(x + DX, y + DY, w, 30); ctx.fillStyle = '#c4222a'; rr(ctx, x, y, w, 32, 5); ctx.fill(); ctx.fillStyle = '#f4e3b0'; for(let k = 10; k < w - 16; k += 26) rr(ctx, x + k, y + 8, 16, 12, 3), ctx.fill();
         ctx.fillStyle = '#ffc93c'; ctx.fillRect(x, y, w, 3); ctx.fillRect(x, y + 26, w, 2); ctx.fillStyle = '#222'; for(const k of [16, w - 16]){ ctx.beginPath(); ctx.arc(x + k, y + 36, 7, 0, 7); ctx.fill(); }
         ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.arc(x + w - 4, y + 14, 4, 0, 7); ctx.fill(); return; }
+      if(e.kind === 'boat'){ const x = e.px, y = e.py, w = e.w * T, bob = Math.sin(t * 2.2 + e.x0) * 1.5;   // une barque de Kerkennah
+        ctx.fillStyle = '#7a4a22'; ctx.beginPath(); ctx.moveTo(x - 10, y + bob); ctx.lineTo(x + w + 14, y + bob); ctx.quadraticCurveTo(x + w + 2, y + 26, x + w - 12, y + 26); ctx.lineTo(x + 10, y + 26); ctx.quadraticCurveTo(x - 4, y + 22, x - 10, y + bob); ctx.fill();
+        ctx.fillStyle = '#2a8ac8'; ctx.fillRect(x - 8, y + 3 + bob, w + 18, 4); ctx.fillStyle = '#f4ead2'; ctx.fillRect(x - 6, y + bob, w + 16, 3);
+        ctx.strokeStyle = '#5a3a1a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + w * .45, y + bob); ctx.lineTo(x + w * .45, y - 62 + bob); ctx.stroke();
+        ctx.fillStyle = '#fdf6e4'; ctx.beginPath(); ctx.moveTo(x + w * .45 + 3, y - 60 + bob); ctx.lineTo(x + w + 2, y - 10 + bob); ctx.lineTo(x + w * .45 + 3, y - 8 + bob); ctx.closePath(); ctx.fill(); return; }
       if(e.kind === 'flamingo'){ const x = e.px, y = e.py, w = e.w * T, fl = Math.sin(t * 7 + e.x0) * .5, mx = x + w / 2;   // un flamant rose : on marche sur son dos
         ctx.strokeStyle = '#e86a8a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(mx - 6, y + 16); ctx.lineTo(mx - 10, y + 50); ctx.lineTo(mx - 4, y + 66); ctx.moveTo(mx + 6, y + 16); ctx.lineTo(mx + 14, y + 44); ctx.lineTo(mx + 20, y + 40); ctx.stroke();
         ctx.fillStyle = '#ff9ab2'; ctx.beginPath(); ctx.ellipse(mx, y + 8, w / 2, 12, 0, 0, 7); ctx.fill();
@@ -1109,7 +1160,8 @@ function drawEnt(e, g, t){
         ctx.fillStyle = '#1f6fa8'; ctx.fillRect(x, y + 10 + wv(0), w, 2); ctx.strokeStyle = '#ffe9c8'; ctx.lineWidth = 1.5; ctx.beginPath(); for(const ex of [x, x + w]) for(let k = 2; k < 12; k += 3){ ctx.moveTo(ex, y + k + wv(ex - x)); ctx.lineTo(ex + (ex === x ? -5 : 5), y + k + 1 + wv(ex - x)); } ctx.stroke(); return; }
       { const x = e.px, y = e.py, w = e.w * T; ctx.fillStyle = shade(W.plat, .7); ctx.fillRect(x + DX, y + DY, w, 12); ctx.fillStyle = '#c2185b'; rr(ctx, x, y, w, 14, 4); ctx.fill(); ctx.fillStyle = '#ffc93c'; for(let k = 0; k < w; k += 12) ctx.fillRect(x + k + 2, y + 4, 6, 6); ctx.fillStyle = '#7a1040'; ctx.fillRect(x, y + 12, w, 3); } return;
     case 'power': { ctx.translate(0, -12); ctx.font = '24px serif'; ctx.textAlign = 'center'; ctx.fillText(e.kind === 'chechia' ? '🎩' : e.kind === 'harissa' ? '🌶️' : '🍵', 0, 9); break; }
-    case 'scorp': if(g.lv.n === 17){ ctx.scale(e.dir, 1); if(BETE.grenouille.im){ bete('grenouille', Math.floor(t * 12 + e.x * .05)); break; } const hop = Math.abs(Math.sin(t * 6 + e.x * .01)) * 5; ctx.translate(0, -hop);   // une grenouille du marais
+    case 'scorp': if(g.lv.n === 19 && BETE.chevre.im){ ctx.scale(e.dir, 1); const q = t * 13 + e.x * .05; ctx.translate(0, -Math.abs(Math.sin(q)) * 4); ctx.rotate(Math.sin(q) * .09); bete('chevre', 0); break; }   // une chèvre de Dougga : elle galope
+      if(g.lv.n === 17){ ctx.scale(e.dir, 1); if(BETE.grenouille.im){ bete('grenouille', Math.floor(t * 12 + e.x * .05)); break; } const hop = Math.abs(Math.sin(t * 6 + e.x * .01)) * 5; ctx.translate(0, -hop);   // une grenouille du marais
         ctx.fillStyle = '#4a9a3a'; ctx.beginPath(); ctx.ellipse(0, -9, 13, 9, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#3a7a2a'; ctx.beginPath(); ctx.ellipse(-10, -3, 7, 4, .4, 0, 7); ctx.ellipse(8, -3, 6, 4, -.4, 0, 7); ctx.fill();
         ctx.fillStyle = '#c8e8a0'; ctx.beginPath(); ctx.ellipse(3, -6, 8, 4, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#4a9a3a'; ctx.beginPath(); ctx.arc(4, -17, 5, 0, 7); ctx.arc(12, -16, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(4, -18, 3, 0, 7); ctx.arc(12, -17, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(5, -18, 1.5, 0, 7); ctx.arc(13, -17, 1.5, 0, 7); ctx.fill(); break; }
       if(g.lv.n === 6 || g.lv.n === 11 || g.lv.n === 14){ ctx.scale(e.dir, 1); if(BETE.chat.im){ bete('chat', Math.floor(t * 14 + e.x * .05)); break; } const lg = Math.sin(t * 12) * 3; ctx.fillStyle = '#e8963a';   // un chat de la médina
@@ -1117,7 +1169,7 @@ function drawEnt(e, g, t){
         ctx.beginPath(); ctx.moveTo(8, -22); ctx.lineTo(10, -30); ctx.lineTo(14, -24); ctx.moveTo(14, -24); ctx.lineTo(18, -30); ctx.lineTo(19, -21); ctx.fill();
         ctx.strokeStyle = '#e8963a'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-12, -14); ctx.quadraticCurveTo(-22, -16, -20, -28 + lg); ctx.stroke(); ctx.lineCap = 'butt';
         ctx.fillStyle = '#b8642a'; ctx.fillRect(-4, -18, 3, 6); ctx.fillRect(2, -18, 3, 6); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(16, -19, 1.6, 0, 7); ctx.fill(); ctx.fillStyle = '#ff8aa8'; ctx.beginPath(); ctx.arc(20, -17, 1.4, 0, 7); ctx.fill(); break; }
-      else if(g.lv.n === 7 || g.lv.n === 8 || g.lv.n === 10){ if(BETE.crabe.im){ bete('crabe', Math.floor(t * 14 + e.x * .05)); break; } const lg = Math.sin(t * 16) * 2; ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2;   // un crabe
+      else if(g.lv.n === 7 || g.lv.n === 8 || g.lv.n === 10 || g.lv.n === 20){ if(BETE.crabe.im){ bete('crabe', Math.floor(t * 14 + e.x * .05)); break; } const lg = Math.sin(t * 16) * 2; ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2;   // un crabe
         for(let k = -1; k <= 1; k += 2) for(let j = 0; j < 3; j++){ ctx.beginPath(); ctx.moveTo(k * 8, -7); ctx.lineTo(k * (14 + j * 2), -2 + (j % 2 ? lg : -lg)); ctx.stroke(); }
         ctx.fillStyle = '#e04a2e'; ctx.beginPath(); ctx.ellipse(0, -9, 13, 8, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(-16, -16 + lg, 5, 0, 7); ctx.arc(16, -16 - lg, 5, 0, 7); ctx.fill();
         ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-4, -19, 3, 0, 7); ctx.arc(4, -19, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(-4 + e.dir, -19, 1.5, 0, 7); ctx.arc(4 + e.dir, -19, 1.5, 0, 7); ctx.fill(); break; }
@@ -1131,7 +1183,8 @@ function drawEnt(e, g, t){
       if(e.ball){ ctx.translate(0, -11); ctx.rotate(e.spin || 0); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0, n = e.spikes === undefined ? 8 : e.spikes; k < n; k++){ const a = k * Math.PI * 2 / n; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8); ctx.lineTo(Math.cos(a) * 14, Math.sin(a) * 14); ctx.stroke(); } break; }
       ctx.scale(e.dir, 1); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.ellipse(-2, -11, 14, 11, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0, n = e.spikes === undefined ? 7 : e.spikes; k < n; k++){ const a = Math.PI + k * .4; ctx.beginPath(); ctx.moveTo(-2 + Math.cos(a) * 10, -11 + Math.sin(a) * 9); ctx.lineTo(-2 + Math.cos(a) * 17, -11 + Math.sin(a) * 15); ctx.stroke(); }
       ctx.fillStyle = '#e8c8a0'; ctx.beginPath(); ctx.ellipse(10, -8, 7, 6, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(16, -9, 2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(10, -11, 1.5, 0, 7); ctx.fill(); break; }
-    case 'bird': if(g.lv.n === 10){ ctx.scale(e.dir, 1); if(BETE.poisson.im){   // le poisson en vrai : dessiné par tranches, la queue ondule
+    case 'bird': if(g.lv.n === 20 && BETE.poulpe.im){ const q = Math.sin(t * 5 + e.x * .05) * .1; ctx.scale(1 - q, 1 + q); bete('poulpe', 0); break; }   // un poulpe de Kerkennah : il se gonfle et se dégonfle
+      if(g.lv.n === 10){ ctx.scale(e.dir, 1); if(BETE.poisson.im){   // le poisson en vrai : dessiné par tranches, la queue ondule
           const b = BETE.poisson, w = b.h * b.cw / b.ch, N = 8, sw2 = b.cw / N; for(let k = 0; k < N; k++){ const amp = (1 - k / (N - 1)) * 3.2, oy = Math.sin(t * 9 + e.x * .05 - k * .7) * amp; ctx.drawImage(b.im, k * sw2, 0, sw2 + .5, b.ch, -w / 2 + k * w / N, -12 - b.h / 2 + oy, w / N + .6, b.h); } break; }
         const sw = Math.sin(t * 10) * .4; ctx.fillStyle = '#ff8a2a';   // un poisson
         ctx.beginPath(); ctx.ellipse(0, -12, 14, 9, 0, 0, 7); ctx.fill(); ctx.save(); ctx.translate(-12, -12); ctx.rotate(sw); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-10, -8); ctx.lineTo(-10, 8); ctx.fill(); ctx.restore();
@@ -1147,9 +1200,13 @@ function drawEnt(e, g, t){
         ctx.fillStyle = '#ffb02e'; ctx.beginPath(); ctx.moveTo(15, -13); ctx.lineTo(22, -11); ctx.lineTo(15, -10); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(12, -14, 1.5, 0, 7); ctx.fill(); break; }
       { ctx.scale(e.dir, 1); if(BETE.faucon.im){ bete('faucon', Math.floor(t * 16 + e.x * .05)); break; } const fl = Math.sin(t * 16) * .7; ctx.fillStyle = '#8a6a4a'; ctx.beginPath(); ctx.ellipse(0, -10, 13, 8, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#6a4a2a'; ctx.save(); ctx.translate(-2, -12); ctx.rotate(-fl); ctx.beginPath(); ctx.ellipse(-4, -8, 6, 13, -.4, 0, 7); ctx.fill(); ctx.restore();
       ctx.fillStyle = '#f4efe6'; ctx.beginPath(); ctx.arc(11, -14, 6, 0, 7); ctx.fill(); ctx.fillStyle = '#ffb02e'; ctx.beginPath(); ctx.moveTo(16, -14); ctx.lineTo(22, -12); ctx.lineTo(16, -11); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(12, -15, 1.6, 0, 7); ctx.fill(); break; }
-    case 'cactus': { if(BETE.cactus.im){ const q = 1 + Math.sin(t * 3 + e.x) * .035; ctx.scale(1 / q, q); bete('cactus', 0); break; }   // le cactus en vrai : il respire ctx.fillStyle = '#4a9a4a'; rr(ctx, -8, -44, 16, 44, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(-12, -24, 6, 10, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(12, -30, 6, 10, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#c2185b'; [[-12, -34], [12, -40], [0, -46]].forEach(([a, b]) => { ctx.beginPath(); ctx.ellipse(a, b, 4, 5, 0, 0, 7); ctx.fill(); });
+    case 'cactus': { if(e.kind === 'ivrogne'){   // l'ivrogne comique : il titube ; quand il lance, il prend la pose du lanceur
+        const lance = e.throwT > 0; ctx.scale(e.dir || 1, 1); ctx.rotate(lance ? -.08 : Math.sin(t * 2.3 + e.x) * .13);
+        if(BETE.ivrogne.im) bete('ivrogne', lance ? 1 : 0); else { ctx.font = '40px serif'; ctx.textAlign = 'center'; ctx.fillText('🥴', 0, -8); }
+        if(!lance && Math.sin(t * 1.3 + e.x) > .75){ ctx.rotate(-Math.sin(t * 2.3 + e.x) * .13); ctx.scale(e.dir || 1, 1); ctx.font = '800 11px "Baloo 2", sans-serif'; ctx.fillStyle = '#23324a'; ctx.textAlign = 'center'; ctx.fillText('hips !', 0, -64); }
+        break; } if(BETE.cactus.im){ const q = 1 + Math.sin(t * 3 + e.x) * .035; ctx.scale(1 / q, q); bete('cactus', 0); break; }   // le cactus en vrai : il respire ctx.fillStyle = '#4a9a4a'; rr(ctx, -8, -44, 16, 44, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(-12, -24, 6, 10, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(12, -30, 6, 10, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#c2185b'; [[-12, -34], [12, -40], [0, -46]].forEach(([a, b]) => { ctx.beginPath(); ctx.ellipse(a, b, 4, 5, 0, 0, 7); ctx.fill(); });
       ctx.fillStyle = '#fff'; [[-3, -30], [3, -30]].forEach(([a, b]) => { ctx.beginPath(); ctx.arc(a, b, 2.5, 0, 7); ctx.fill(); }); ctx.fillStyle = '#222'; [[-3, -30], [3, -30]].forEach(([a, b]) => { ctx.beginPath(); ctx.arc(a, b, 1.2, 0, 7); ctx.fill(); }); break; }
-    case 'figue': { ctx.fillStyle = e.fire ? '#ff6a1a' : '#c2185b'; ctx.beginPath(); ctx.ellipse(0, -6, 7, 8, t * 6, 0, 7); ctx.fill(); if(e.fire){ ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.arc(0, -6, 3, 0, 7); ctx.fill(); } break; }
+    case 'figue': { if(e.bottle){ ctx.translate(0, -8); ctx.rotate(t * 11 * (e.rot || 1)); ctx.fillStyle = '#7a4a1e'; rr(ctx, -4, -4, 8, 13, 2.5); ctx.fill(); ctx.fillRect(-1.8, -11, 3.6, 8); ctx.fillStyle = '#e8d9a8'; ctx.fillRect(-4, 0, 8, 5); ctx.fillStyle = '#c9a227'; ctx.fillRect(-2.2, -12.5, 4.4, 2.2); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(-3, -3, 1.6, 9); break; }   /* la bouteille de l'ivrogne */ ctx.fillStyle = e.fire ? '#ff6a1a' : '#c2185b'; ctx.beginPath(); ctx.ellipse(0, -6, 7, 8, t * 6, 0, 7); ctx.fill(); if(e.fire){ ctx.fillStyle = '#ffe066'; ctx.beginPath(); ctx.arc(0, -6, 3, 0, 7); ctx.fill(); } break; }
     case 'boss': drawBoss(e, t); break;
   }
   ctx.restore();
@@ -1358,7 +1415,7 @@ function renderMenu(){ renderTenues(); $('who').innerHTML = player ? `${avatarHT
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 $('who').onclick = () => { audio(); sfx.tap(); choose(); };
 // un monde est ouvert s'il est le premier du voyage, s'il l'était déjà avec l'ancien ordre (1 à 5), ou si le monde d'avant est réussi
-function isOpen(id){ const i = ORDER.indexOf(id), j = ORDER13.indexOf(id); return i === 0 || !!save.best[id] || (id <= 5 && id <= save.unlocked) || !!save.best[ORDER[i - 1]] || (j > 0 && !!save.best[ORDER13[j - 1]]); }
+function isOpen(id){ const i = ORDER.indexOf(id), j = ORDER13.indexOf(id), k = ORDER18.indexOf(id); return i === 0 || !!save.best[id] || (id <= 5 && id <= save.unlocked) || !!save.best[ORDER[i - 1]] || (j > 0 && !!save.best[ORDER13[j - 1]]) || (k > 0 && !!save.best[ORDER18[k - 1]]); }
 async function openLevels(){
   audio(); if(!player){ const n = await choose(); if(!n) return; }
   const nextId = ORDER.find(id => isOpen(id) && !save.best[id]);
@@ -1388,7 +1445,10 @@ const STORY = ["Le Scorpion d'Or a volé les jasmins dorés de Sidi Bou Saïd ! 
   "Le long aqueduc romain de Zaghouan apportait l'eau jusqu'à Carthage. Sur son canal, le courant te pousse : profite-en… ou bats-toi contre lui !",
   "Au Ksar Ouled Soltane, les greniers « ghorfas » sont empilés comme des boîtes. Grimpe jusqu'en haut, mais gare aux sacs de grain qui tombent !",
   "Sur le lac d'Ichkeul, des milliers d'oiseaux se reposent. Monte sur le dos des flamants roses pour traverser le marais, sans tomber à l'eau !",
-  "Dans le canyon de Tamerza, une cascade tombe dans un bassin. Le vent souffle par moments : quand il se lève, attends qu'il se calme avant de sauter !"];
+  "Dans le canyon de Tamerza, une cascade tombe dans un bassin. Le vent souffle par moments : quand il se lève, attends qu'il se calme avant de sauter !",
+  "À Dougga, une ville romaine dort sur la colline. Grimpe les gradins du vieux théâtre, mais attention : les chèvres chargent et les pierres tombent !",
+  "Aux îles Kerkennah, les pêcheurs attrapent les poissons avec des palmes plantées dans la mer. Saute de barque en barque, plonge… et gare aux poulpes !",
+  "Au Cap Bon, les potiers de Nabeul empilent leurs jarres et les orangers croulent sous les fruits. Les piles s'effritent, et les oranges tombent !"];
 function intro(n){
   const w = WORLDS[n - 1];
   $('introBox').innerHTML = `${n === 5 ? `<img class="boss-img" src="jasmin/boss.webp" alt="Le Scorpion d'Or" onerror="this.remove()">` : `<img class="title-img" src="${w.img}" alt="" onerror="this.remove()" style="aspect-ratio:21/9">`}
