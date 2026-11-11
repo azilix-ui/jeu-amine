@@ -1252,6 +1252,10 @@ function headCrop(){ const k = (player || '').toLowerCase(); return HEADCROP[PEO
 // Les tenues sont celles de Médina Express : même garde-robe (`medina:<Prénom>`.skins) et mêmes pièces pour les acheter.
 const TENUES = [{ id:'classique', n:'Classique', ic:'👕', prix:0 }, { id:'jebba', n:'Jebba et chéchia', ic:'🕌', prix:150 }, { id:'foot', n:'Maillot de foot', ic:'⚽', prix:300 }, { id:'super', n:'Super-héros', ic:'🦸', prix:600 }, { id:'astro', n:'Astronaute', ic:'🧑‍🚀', prix:1000 }, { id:'or', n:'Tout en or', ic:'✨', prix:2000 }];
 const mkey = () => 'medina:' + player, garde = () => { const m = store.get(mkey(), {}) || {}; return { m, coins:m.coins || 0, skins:Array.isArray(m.skins) ? m.skins : ['classique'] }; };
+// La bourse : tous les dinars ramassés dans le Jasmin, gardés d'un monde à l'autre (`save.bourse`). Elle sert à acheter les tenues (prix en dinars = la moitié du prix en pièces de Médina Express).
+// Première fois : un rattrapage de 30 dinars par monde déjà réussi, puisque les dinars d'avant n'étaient pas gardés.
+const bourse = () => { if(typeof save.bourse !== 'number') save.bourse = 30 * Object.keys(save.best || {}).length; return save.bourse; };
+const prixDinars = k => Math.round(k.prix / 2);
 const tenue = () => { const g = garde(); return TENUES.some(k => k.id === save.tenue) && (save.tenue === 'classique' || g.skins.includes(save.tenue)) ? save.tenue : 'classique'; };
 const TAILLE2 = { amine:.8, salma:.9, essil:.97, nour:.92, yasmine:.92, anis:1.08, imen:1.05, fares:1.04 };
 let bodySheet = null;   // { im, cw, ch, feet, top, k }
@@ -1381,7 +1385,7 @@ function drawHUD(g){
   ctx.save(); ctx.scale(s, s);
   ctx.fillStyle = '#0b1e46bb'; rr(ctx, 10, top, 390, 46, 14); ctx.fill();
   ctx.font = '800 20px "Baloo 2", sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
-  ctx.fillText(`❤️ ${g.lives}   🪙 ${g.dinars}   🌼 ${g.gems.size}/3   ${g.hero.chechia ? '🎩' : ''}${g.hero.harissa ? '🌶️' : ''}${g.hero.tea > 0 ? '🍵' : ''}`, 22, top + 30);
+  ctx.fillText(`❤️ ${g.lives}   🪙 ${bourse() + (g.banked ? 0 : g.dinars)}   🌼 ${g.gems.size}/3   ${g.hero.chechia ? '🎩' : ''}${g.hero.harissa ? '🌶️' : ''}${g.hero.tea > 0 ? '🍵' : ''}`, 22, top + 30);
   ctx.textAlign = 'right'; ctx.fillStyle = '#ffe066'; ctx.fillText(String(g.score + g.dinars * 10), 388, top + 30);
   ctx.restore();
   const b = g.bossOn && g.ents.find(e => e.t === 'boss' && e.alive);
@@ -1404,12 +1408,14 @@ function frame(now){
    Écrans : menu, mondes, questions, fin de niveau
    ===================================================================== */
 function show(id){ releaseAll(); keys.l = keys.r = keys.a = keys.b = false; document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); document.body.classList.toggle('menu', id === 'menu'); document.body.classList.toggle('playing', !id); }
-function renderTenues(){ const g = garde(), cur = tenue(); $('tLab').textContent = player ? `Ta tenue · tu as ${g.coins} 🪙 (les pièces de Médina Express)` : 'Ta tenue';
-  $('tenues').innerHTML = TENUES.map(k => { const has = k.prix === 0 || g.skins.includes(k.id); return `<button class="${cur === k.id ? 'on' : ''} ${has ? '' : 'lock'}" data-tn="${k.id}"><span>${k.ic}</span>${k.n}<small>${has ? (cur === k.id ? 'je la porte' : 'à moi') : '🔒 ' + k.prix + ' 🪙'}</small></button>`; }).join('');
+function renderTenues(){ const g = garde(), cur = tenue(); $('tLab').textContent = player ? `Ta tenue · ta bourse : ${bourse()} 🪙 dinars${g.coins > 0 ? ` (et ${g.coins} pièces de Médina Express)` : ''}` : 'Ta tenue';
+  $('tenues').innerHTML = TENUES.map(k => { const has = k.prix === 0 || g.skins.includes(k.id); return `<button class="${cur === k.id ? 'on' : ''} ${has ? '' : 'lock'}" data-tn="${k.id}"><span>${k.ic}</span>${k.n}<small>${has ? (cur === k.id ? 'je la porte' : 'à moi') : '🔒 ' + prixDinars(k) + ' 🪙'}</small></button>`; }).join('');
   const on = $('tenues').querySelector('.on'); if(on) $('tenues').scrollLeft = Math.max(0, on.offsetLeft - 60); }
 $('tenues').onclick = async e => { const b = e.target.closest('[data-tn]'); if(!b) return; audio(); if(!player && !(await choose())) return; const k = TENUES.find(x => x.id === b.dataset.tn), g = garde();
-  if(k.prix > 0 && !g.skins.includes(k.id)){ if(g.coins < k.prix){ sfx.tap(); $('tLab').textContent = `Il te manque ${k.prix - g.coins} 🪙 pour « ${k.n} » : gagne des pièces dans Médina Express !`; return; }
-    const m = Object.assign({}, g.m, { coins:g.coins - k.prix, skins:g.skins.concat(k.id), t:Date.now() }); store.set(mkey(), m); if(window.Famille && Famille.track && !tracked.has('m:' + player)){ tracked.add('m:' + player); Famille.track('medina', player, [mkey()]); } }
+  if(k.prix > 0 && !g.skins.includes(k.id)){ const pj = prixDinars(k), parDinars = bourse() >= pj;   // on paie avec les dinars du Jasmin ; à défaut, avec les pièces de Médina Express
+    if(!parDinars && g.coins < k.prix){ sfx.tap(); $('tLab').textContent = `Il te manque ${pj - bourse()} 🪙 dinars pour « ${k.n} » : ramasse des pièces dans les mondes !`; return; }
+    if(parDinars) save.bourse -= pj;
+    const m = Object.assign({}, g.m, { coins:parDinars ? g.coins : g.coins - k.prix, skins:g.skins.concat(k.id), t:Date.now() }); store.set(mkey(), m); sfx.power(); if(window.Famille && Famille.track && !tracked.has('m:' + player)){ tracked.add('m:' + player); Famille.track('medina', player, [mkey()]); } }
   sfx.tap(); save.tenue = k.id; persist(); renderTenues(); loadBody(player); };
 function renderMenu(){ renderTenues(); $('who').innerHTML = player ? `${avatarHTML(player)}<span><b>${esc(player)}</b><small>Toucher pour changer de héros</small></span>` : `${avatarHTML('')}<span><b>Qui joue ?</b><small>Choisis ton héros</small></span>`; }
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
@@ -1422,7 +1428,7 @@ async function openLevels(){
   $('levels').innerHTML = ORDER.map(n => { const w = WORLDS[n - 1], b = save.best[n], open = isOpen(n), g = (save.gems[n] || []).length;
     return `<button class="lvl ${n === nextId ? 'next' : ''}" data-n="${n}" ${open ? '' : 'disabled'} style="background-image:url('${w.img}')"><span class="num">${posOf(n)}</span><b>${open ? w.name : '🔒 ' + w.name}</b><small>${w.sub}</small><span class="st">${b ? '★'.repeat(b.stars) + '☆'.repeat(3 - b.stars) : '☆☆☆'} <small>🌼 ${g}/3${b ? ' · ' + b.score : ''}</small></span></button>`; }).join('');
   const totG = Object.values(save.gems).reduce((a, x) => a + x.length, 0);
-  $('lvlStats').innerHTML = `<span>🌼 Jasmins : ${totG}/${WORLDS.length * 3}</span><span>🎟️ Tickets : ${save.tickets}</span><span>📚 Bonnes réponses : ${save.answers.ok}</span>`;
+  $('lvlStats').innerHTML = `<span>🌼 Jasmins : ${totG}/${WORLDS.length * 3}</span><span>👛 Bourse : ${bourse()} 🪙</span><span>🎟️ Tickets : ${save.tickets}</span><span>📚 Bonnes réponses : ${save.answers.ok}</span>`;
   document.querySelectorAll('.lvl').forEach(b => b.onclick = () => { if(b.disabled) return; sfx.tap(); intro(+b.dataset.n); });
   show('levelsScr'); const nx = document.querySelector('.lvl.next'); if(nx) try{ nx.scrollIntoView({ block:'nearest' }); }catch(e){}
 }
@@ -1461,8 +1467,9 @@ function resume(){ if(state !== 'pause') return; state = 'play'; show(null); las
 document.addEventListener('visibilitychange', () => { if(document.hidden) pauseGame(); });
 $('pauseBtn').onclick = () => { sfx.tap(); pauseGame(); };
 $('resume').onclick = () => { sfx.tap(); resume(); };
-$('restart').onclick = () => { sfx.tap(); startLevel(G0.lv.n); };
-$('toLevels').onclick = () => { sfx.tap(); state = 'menu'; G0 = null; musicStop(); openLevels(); };
+const encaisse = () => { if(G0 && G0.dinars){ save.bourse = bourse() + G0.dinars; G0.dinars = 0; persist(); } };   // on quitte ou on recommence : les dinars déjà ramassés vont quand même dans la bourse
+$('restart').onclick = () => { sfx.tap(); encaisse(); startLevel(G0.lv.n); };
+$('toLevels').onclick = () => { sfx.tap(); encaisse(); state = 'menu'; G0 = null; musicStop(); openLevels(); };
 // la question d'un bloc savoir
 function askQuestion(cx, cy){
   const g = G0, q = question(); state = 'quest';
@@ -1493,15 +1500,15 @@ async function showEnd(won){
     save.gems[n] = [...new Set([...prevG, ...gemsNow])]; const b = save.best[n];
     save.best[n] = { score:Math.max(score, b ? b.score : 0), stars:Math.max(stars, b ? b.stars : 0), time:Math.min(Math.floor(g.t), b ? b.time : 1e9) };
   }
-  const tk = g.tickets + newG.length * 2; save.tickets += tk; save.games++; persist();
+  const tk = g.tickets + newG.length * 2; save.tickets += tk; save.games++; save.bourse = bourse() + g.dinars; g.banked = true; persist();
   $('endBox').innerHTML = won
     ? `<h2>${n === 5 ? "🏆 Tu as vaincu le Scorpion d'Or !" : '🎉 Niveau réussi !'}</h2><div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
-       <div class="stats"><span>⏱️ ${Math.floor(g.t / 60)} min ${String(Math.floor(g.t % 60)).padStart(2, '0')}</span><span>🪙 ${g.dinars}/${g.dinarTotal}</span><span>🌼 ${gemsNow.length}/3</span><span>🦂 ${g.kills}</span><span>📚 ${g.okQ}/${g.okQ + g.koQ}</span></div>
+       <div class="stats"><span>⏱️ ${Math.floor(g.t / 60)} min ${String(Math.floor(g.t % 60)).padStart(2, '0')}</span><span>🪙 ${g.dinars}/${g.dinarTotal}</span><span>👛 Bourse : ${save.bourse}</span><span>🌼 ${gemsNow.length}/3</span><span>🦂 ${g.kills}</span><span>📚 ${g.okQ}/${g.okQ + g.koQ}</span></div>
        <div style="font-family:var(--display);font-size:40px;font-weight:800;color:var(--gold)">${score}</div>
        <p class="sub">${tk ? `Tu gagnes <b>${tk} tickets 🎟️</b> pour la boutique de Serpent Légendes !` : 'Réponds aux blocs savoir 📚 pour gagner des tickets 🎟️.'}</p>
        ${n === 5 ? `<p class="sub">Tous les jasmins dorés sont rentrés à Sidi Bou Saïd. Bravo, ${esc(player)} !</p>` : ''}
        <div class="row"><button class="big" id="eNext">${n !== 5 ? 'Monde suivant ▶' : 'Les mondes'}</button><button class="big ghost" id="eAgain">↻ Rejouer</button></div><div class="list" id="eRecs"></div>`
-    : `<h2>Plus de vies…</h2><p class="sub">Ce n'est pas grave : chaque essai te rend plus fort. Les lanternes 🏮 gardent ta place.</p><div class="stats"><span>🪙 ${g.dinars}</span><span>🌼 ${gemsNow.length}/3</span><span>📚 ${g.okQ}</span></div>
+    : `<h2>Plus de vies…</h2><p class="sub">Ce n'est pas grave : chaque essai te rend plus fort. Les lanternes 🏮 gardent ta place.</p><div class="stats"><span>🪙 +${g.dinars}</span><span>👛 Bourse : ${save.bourse}</span><span>🌼 ${gemsNow.length}/3</span><span>📚 ${g.okQ}</span></div>
        <div class="row"><button class="big" id="eAgain">↻ Réessayer</button><button class="big ghost" id="eNext">Les mondes</button></div>`;
   show('end');
   $('eAgain').onclick = () => { sfx.tap(); startLevel(n); };
