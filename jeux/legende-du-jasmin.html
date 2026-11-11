@@ -744,7 +744,9 @@ function die(){
 function respawn(){
   const g = G0, h = g.hero, c0 = g.check, c = c0 ? safeSpot(g.lv.G, Math.floor(c0.x / T)) : null;
   Object.assign(h, { x:c ? c.x : 3 * T, y:c ? c.y : GY * T, vx:0, vy:0, dead:false, inv:1.5, chechia:false, harissa:false, tea:0, ground:false });
-  g.ents.forEach(e => { if(e.t === 'boss' && e.alive){ e.st = 'wait'; e.timer = 0; e.x = e.home || e.x; } });
+  // le boss retourne à sa place ; si le combat a déjà commencé il repart tout seul (avant, il restait en attente pour toujours : la porte de l'arène ne le réveille qu'une fois)
+  g.ents.forEach(e => { if(e.t === 'boss' && e.alive){ e.x = e.home || e.x; e.vx = 0; if(g.bossOn){ e.st = 'intro'; e.timer = 1.3; } else { e.st = 'wait'; e.timer = 0; } } });
+  for(let i = g.ents.length - 1; i >= 0; i--) if(g.ents[i].t === 'figue') g.ents.splice(i, 1);   // plus de braises en l'air quand on repart
   if(g.bossOn){ const b = g.ents.find(e => e.t === 'boss'); if(b && b.alive){ h.x = b.ax0 + 3 * T; } }
   musicStart();
 }
