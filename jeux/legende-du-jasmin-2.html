@@ -1439,7 +1439,11 @@ function drawHUD(g){
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   const top = Math.max(10, 10), s = Math.min(1.2, Math.max(.8, CH / 600));
   ctx.save(); ctx.scale(s, s);
-  ctx.fillStyle = '#0b1e46bb'; rr(ctx, 10, top, 390, 46, 14); ctx.fill();
+  ctx.fillStyle = '#0b1e46bb'; rr(ctx, 10, top, 390, 70, 14); ctx.fill();
+  // deuxième ligne : qui joue, et dans quel monde
+  ctx.font = '700 15px "Baloo 2", sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#cfe0ff';
+  let who = `${player || ''} · Monde ${posOf(g.lv.n)} : ${WORLDS[g.lv.n - 1].name}`; while(who.length > 8 && ctx.measureText(who).width > 366) who = who.slice(0, -2).trimEnd() + '…';
+  ctx.fillText(who, 22, top + 58);
   ctx.font = '800 20px "Baloo 2", sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
   ctx.fillText(`❤️ ${g.lives}   🪙 ${bourse() + (g.banked ? 0 : g.dinars)}   🌼 ${g.gems.size}/3   ${g.hero.chechia ? '🎩' : ''}${g.hero.harissa ? '🌶️' : ''}${g.hero.tea > 0 ? '🍵' : ''}`, 22, top + 30);
   ctx.textAlign = 'right'; ctx.fillStyle = '#ffe066'; ctx.fillText(String(g.score + g.dinars * 10), 388, top + 30);

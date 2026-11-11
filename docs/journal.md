@@ -91,3 +91,4 @@ Une ligne par réalisation, la plus ancienne en premier. Ajouter une ligne à ch
 - **11/11** : Atelier du Jasmin : nouveau motif **dégradé** (de la couleur choisie vers le blanc, ou entre deux couleurs avec le bouton « 2 »).
 - **11/11** : Atelier du Jasmin : crayon noir et feutre (ferment les zones), 8 motifs de plus (arabesque, fleurs, étoiles, cœurs…), tampons (48 emojis, 3 tailles), annuler pour tout, feuilles blanches « Je dessine », 6 dessins pas à pas (chat, poisson, maison, fleur, bateau, papillon).
 - **11/11** : Jasmin : à la fin d'un monde, la boîte « Monde suivant » permet aussi de changer de tenue (et d'en acheter) et de changer de héros.
+- **11/11** : Jasmin : le bandeau du haut affiche aussi le prénom du joueur et le nom du monde.
