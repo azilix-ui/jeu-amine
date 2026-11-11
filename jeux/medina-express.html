@@ -105,7 +105,7 @@ h1,h2{font-family:var(--display);font-weight:800;margin:0;line-height:1}
       <div><p class="lab">Comment ?</p><div class="opts" id="modes">
         <button class="opt" data-m="doux"><span>🐢</span>Tranquille<small>lent, 3 cœurs</small></button>
         <button class="opt" data-m="normal"><span>🐆</span>Champion<small>de plus en plus vite</small></button></div></div>
-      <div><p class="lab" id="skLab">Ta tenue</p><div class="skins" id="skins"></div></div>
+      <div style="min-width:0"><p class="lab" id="skLab">Ta tenue</p><div class="skins" id="skins"></div></div>
       <button class="big" id="play">▶ Courir !</button>
       <div class="stats" id="mine"></div>
       <p class="help">Glisse le doigt : ← → pour changer de voie, ↑ pour sauter, ↓ pour glisser dessous. Au clavier : les flèches. Ramasse les pièces et les bonus : 🧲 aimant, 🛡️ bouclier, 🥿 super babouches, ✖️2, et le tapis volant 🪄.</p>
@@ -139,7 +139,6 @@ const fresh = () => ({ best:0, bestDoux:0, coins:0, games:0, dist:0, far:0, t:0,
 // les tenues : on les achète avec les pièces ramassées
 const SKINS = [
   { id:'classique', n:'Classique', ic:'👕', prix:0 },
-  { id:'film', n:'Essil en vrai', ic:'🎬', prix:0, only:'essil', film:'medina/corps-essil.webp' },
   { id:'jebba', n:'Jebba et chéchia', ic:'🕌', prix:150, torso:'#f7f3ea', arms:'#f7f3ea', thigh:'#f7f3ea', shin:'#f7f3ea', shoe:'#c9743a', pack:null, skirt:'#f7f3ea', hat:1, trim:'#c9a227' },
   { id:'foot', n:'Maillot de foot', ic:'⚽', prix:300, torso:'#e8333a', arms:'#e8333a', thigh:'#ffffff', shin:'#e8333a', shoe:'#1c2340', pack:null, trim:'#ffffff' },
   { id:'super', n:'Super-héros', ic:'🦸', prix:600, torso:'#1f6fd8', arms:'#1f6fd8', thigh:'#1f6fd8', shin:'#e8333a', shoe:'#e8333a', pack:null, cape:'#e8333a', trim:'#ffc928' },
@@ -162,7 +161,9 @@ function renderMenu(){
   document.querySelectorAll('#worlds .opt').forEach(b => b.classList.toggle('on', b.dataset.w === world)); document.querySelectorAll('#modes .opt').forEach(b => b.classList.toggle('on', b.dataset.m === (mode || 'normal')));
   $('mine').innerHTML = player ? `<div class="stat">${save.best}<small>mon record Champion</small></div><div class="stat">${save.bestDoux}<small>mon record Tranquille</small></div><div class="stat">🪙 ${save.coins}<small>mes pièces</small></div><div class="stat">${save.far} m<small>ma plus longue course</small></div>` : '';
   $('skLab').textContent = player ? `Ta tenue · tu as ${save.coins} 🪙` : 'Ta tenue';
-  $('skins').innerHTML = SKINS.filter(k => !k.only || (player || '').toLowerCase() === k.only).map(k => { const has = save.skins.includes(k.id) || k.prix === 0; return `<button class="opt ${save.skin === k.id ? 'on' : ''} ${has ? '' : 'lock'}" data-sk="${k.id}"><span>${k.ic}</span>${k.n}<small>${has ? (save.skin === k.id ? 'je la porte' : 'à moi') : '🔒 ' + k.prix + ' 🪙'}</small></button>`; }).join('');
+  if(!SKINS.some(k => k.id === save.skin)) save.skin = 'classique';
+  $('skins').innerHTML = SKINS.map(k => { const has = save.skins.includes(k.id) || k.prix === 0; return `<button class="opt ${save.skin === k.id ? 'on' : ''} ${has ? '' : 'lock'}" data-sk="${k.id}"><span>${k.ic}</span>${k.n}<small>${has ? (save.skin === k.id ? 'je la porte' : 'à moi') : '🔒 ' + k.prix + ' 🪙'}</small></button>`; }).join('');
+  { const on = $('skins').querySelector('.on'); if(on) $('skins').scrollLeft = Math.max(0, on.offsetLeft - 60); }
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.b === boardTab)); board($('board'), boardTab);
 }
 async function board(el, variant){
@@ -292,12 +293,17 @@ function setHead(){
   make('face', h.img); make('dos', h.img ? h.img.replace('.webp', '-dos.webp') : null);   // la tête vue de dos (images « -dos » faites le 11/11)
   applySkin();
 }
-let filmOn = false; const filmTex = {};
+let filmOn = false, filmK = 1; const filmTex = {};
+// planches disponibles : medina/corps-<personnage>[-<tenue>].webp (6 x 4 images : 0-11 la foulée, 12-19 le saut, 20-23 la glissade)
+const TENUES = ['classique', 'jebba', 'foot', 'super', 'astro', 'or'], CORPS = Object.fromEntries(['essil', 'salma', 'amine', 'anis', 'imen', 'nour', 'yasmine', 'fares'].map(n => [n, TENUES]));
+const TAILLE = { amine:.78, salma:.88, essil:.95, nour:.9, yasmine:.9, anis:1.06, imen:1.03, fares:1.02 };
 function applySkin(){
-  const h = headOf(player); let k = SKINS.find(x => x.id === save.skin) || SKINS[0]; if(k.only && (player || '').toLowerCase() !== k.only) k = SKINS[0]; const base = k.id === 'classique' || !!k.film;
-  filmOn = false; H.film.visible = false; H.body.visible = true;
-  if(k.film){ const use = t => { if(save.skin !== k.id) return; H.film.material.map = t; H.film.material.needsUpdate = true; filmOn = true; H.film.visible = true; H.body.visible = false; };
-    if(filmTex[k.film]) use(filmTex[k.film]); else new THREE.TextureLoader().load(k.film, t => { t.colorSpace = THREE.SRGBColorSpace; t.repeat.set(1 / 4, 1 / 3); filmTex[k.film] = t; use(t); }); }
+  const h = headOf(player), k = SKINS.find(x => x.id === save.skin) || SKINS[0], base = k.id === 'classique', who = player, sk = save.skin;
+  // le corps animé (planche tirée de vidéos) s'il existe pour ce personnage et cette tenue ; sinon le corps en blocs
+  const file = h.id && CORPS[h.id] && CORPS[h.id].includes(k.id) ? `medina/corps-${h.id}${base ? '' : '-' + k.id}.webp?v=2` : null;
+  filmOn = false; H.film.visible = false; H.body.visible = true; filmK = TAILLE[h.id] || 1;
+  if(file){ const use = t => { if(player !== who || save.skin !== sk) return; H.film.material.map = t; H.film.material.needsUpdate = true; filmOn = true; H.film.visible = true; H.body.visible = false; H.film.scale.set(1.6 * filmK, 2.62 * filmK, 1); };
+    if(filmTex[file]) use(filmTex[file]); else new THREE.TextureLoader().load(file, t => { t.colorSpace = THREE.SRGBColorSpace; t.repeat.set(1 / 6, 1 / 4); filmTex[file] = t; use(t); }); }
   const mat = c => k.glow ? (MATS['or' + c] || (MATS['or' + c] = new THREE.MeshLambertMaterial({ color:c, emissive:'#b97a00', emissiveIntensity:.45 }))) : M(c);
   H.torso.material = mat(base ? h.col : k.torso); H.arms.forEach(a => a.children[0].material = mat(base ? h.col : k.arms));
   H.legs.forEach(l => { l.th.material = mat(base ? '#2b3350' : k.thigh); l.sh.material = mat(base ? '#e8b48a' : k.shin); l.so.material = mat(base ? '#ffffff' : k.shoe); });
@@ -357,7 +363,7 @@ function act(a){
   if(state !== 'run' || G.dead) return;
   if(a === 'left' || a === 'right'){ const t = G.lane + (a === 'left' ? -1 : 1); if(t < 0 || t > 2){ sfx.bump(); return; }
     if(!(G.pw.tapis > 0) && objs.some(o => o.lane === t && (o.kind === 'long' || o.kind === 'full') && Math.abs(o.z) < o.half + .9)){ sfx.bump(); G.shake = .18; return; } G.lane = t; sfx.lane(); }
-  else if(a === 'up'){ if(G.pw.tapis > 0) return; if(G.y <= .01){ G.vy = G.pw.babouches > 0 ? CFG.jumpPlus : CFG.jump; G.y = .02; G.slide = 0; G.jumps++; sfx.jump(); } }
+  else if(a === 'up'){ if(G.pw.tapis > 0) return; if(G.y <= .01){ G.vy = G.jv = G.pw.babouches > 0 ? CFG.jumpPlus : CFG.jump; G.y = .02; G.slide = 0; G.jumps++; sfx.jump(); } }
   else if(a === 'down'){ if(G.pw.tapis > 0) return; if(G.y > .05) G.vy = -20; G.slide = CFG.slide; G.slides++; sfx.slide(); }
 }
 function hurt(o){
@@ -411,8 +417,10 @@ function tick(dt){
       else if(!G.dead && !fly && Math.abs(o.z) < o.half + .35 && Math.abs(LANE[o.lane] - G.x) < 1.15){ const hitIt = o.kind === 'low' ? low < .78 : o.kind === 'high' ? top > 1.6 : true; if(hitIt){ hurt(o); if(G.dead || !objs.includes(o)) continue; } } }
     if(o.z > 14 + o.half){ objs.splice(i, 1); give(o); } }
   warns.forEach((w, l) => { w.visible = !G.dead && Math.floor(G.t * 6) % 2 === 0 && objs.some(o => o.charge && o.lane === l && o.z < -20); });
-  if(filmOn){ const m = H.film.material, t = m.map, fly2 = G.pw.tapis > 0, sl = G.slide > 0 && !fly2, f = G.dead ? 0 : G.y > .05 && !fly2 ? 9 : Math.floor(G.run * .62) % 12; t.offset.set((f % 4) / 4, 1 - (Math.floor(f / 4) + 1) / 3);
-    m.rotation += ((G.dead ? 1.45 : sl ? 1.2 : 0) - m.rotation) * Math.min(1, dt * 14); H.film.position.y = sl || G.dead ? .25 : fly2 ? .35 : 0; H.film.position.x = sl || G.dead ? .9 : 0; H.film.scale.set(1.6, fly2 ? 2 : 2.62, 1); }
+  if(filmOn){ const t = H.film.material.map, fly2 = G.pw.tapis > 0; let f;
+    if(G.dead || fly2) f = 22; else if(G.slide > 0){ const q = 1 - G.slide / CFG.slide; f = [20, 21, 22, 22, 22, 23][Math.min(5, Math.floor(q * 6))]; }
+    else if(G.y > .02){ const q = G.jv ? (G.jv - G.vy) / (2 * G.jv) : .5; f = 12 + Math.max(0, Math.min(7, Math.floor(q * 8))); } else f = Math.floor(G.run * .62) % 12;
+    t.offset.set((f % 6) / 6, 1 - (Math.floor(f / 6) + 1) / 4); H.film.material.rotation = G.dead ? Math.min(1.4, G.deadT * 5) : 0; H.film.position.y = fly2 ? .5 : 0; }
   if(H.cape.visible) H.cape.rotation.x = .55 + Math.sin(G.t * 9) * .12 + (G.y > .05 ? .4 : 0);
   // la caméra
   const tall = cam.aspect < .8, sh = G.shake > 0 ? (G.shake -= dt, (Math.random() - .5) * .25) : 0;
@@ -435,8 +443,8 @@ const endSw = e => { if(sw && !sw.done && state === 'run'){ const x = e.clientX;
 canvas.addEventListener('pointerup', endSw); canvas.addEventListener('pointercancel', () => { sw = null; });
 function pause(){ if(state !== 'run' || G.dead) return; state = 'pause'; $('pause').classList.add('on'); }
 function resume(){ if(state !== 'pause') return; state = 'run'; $('pause').classList.remove('on'); last = performance.now(); }
-function toMenu(){ state = 'menu'; ['over', 'pause'].forEach(id => $(id).classList.remove('on')); $('hud').classList.remove('on'); $('menu').classList.add('on'); $('back').style.display = ''; objs.splice(0).forEach(give); hero.position.set(0, 0, 0); H.body.rotation.set(0, 0, 0); H.body.position.y = 0; hero.visible = true; H.tapis.visible = H.bulle.visible = false; warns.forEach(w => w.visible = false); showHead('face'); idleCam(); renderMenu(); }
-function idleCam(){ cam.position.set(1.7, 2.3, -4.6); cam.lookAt(0, 1.35, 0); }
+function toMenu(){ state = 'menu'; ['over', 'pause'].forEach(id => $(id).classList.remove('on')); $('hud').classList.remove('on'); $('menu').classList.add('on'); $('back').style.display = ''; objs.splice(0).forEach(give); hero.position.set(0, 0, 0); H.body.rotation.set(0, 0, 0); H.body.position.y = 0; hero.visible = true; H.tapis.visible = H.bulle.visible = false; warns.forEach(w => w.visible = false); H.film.material.rotation = 0; if(H.film.material.map) H.film.material.map.offset.set(0, .75); showHead('dos'); idleCam(); renderMenu(); }
+function idleCam(){ cam.position.set(2.2, 2.4, 5); cam.lookAt(0, 1.4, -2); }
 document.addEventListener('visibilitychange', () => { if(document.hidden) pause(); });
 $('hPause').onclick = () => { sfx.tap(); pause(); }; $('pGo').onclick = () => { sfx.tap(); resume(); }; $('pAgain').onclick = () => { sfx.tap(); start(); }; $('pMenu').onclick = () => { sfx.tap(); toMenu(); };
 $('oAgain').onclick = () => { sfx.tap(); start(); }; $('oMenu').onclick = () => { sfx.tap(); toMenu(); };
