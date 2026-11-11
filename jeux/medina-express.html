@@ -58,6 +58,8 @@ h1,h2{font-family:var(--display);font-weight:800;margin:0;line-height:1}
 .rowb img,.rowb .av{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#e6eefc;display:grid;place-items:center;font-size:14px}
 .rowb b{font-family:var(--display);color:var(--navy)}
 .none{color:var(--mist);font-size:14.5px;margin:6px 4px;font-weight:700}
+.skins{display:flex;gap:8px;overflow-x:auto;touch-action:pan-x;padding:2px 2px 8px;scrollbar-width:none}
+.skins .opt{flex:none;min-width:98px}.skins .opt.lock{background:#f1ece0;color:var(--mist)}
 .help{font-size:14px;color:var(--mist);font-weight:700;margin:0;line-height:1.35}
 /* en course */
 #hud{position:fixed;inset:0;pointer-events:none;display:none;padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left));z-index:3}
@@ -103,6 +105,7 @@ h1,h2{font-family:var(--display);font-weight:800;margin:0;line-height:1}
       <div><p class="lab">Comment ?</p><div class="opts" id="modes">
         <button class="opt" data-m="doux"><span>🐢</span>Tranquille<small>lent, 3 cœurs</small></button>
         <button class="opt" data-m="normal"><span>🐆</span>Champion<small>de plus en plus vite</small></button></div></div>
+      <div><p class="lab" id="skLab">Ta tenue</p><div class="skins" id="skins"></div></div>
       <button class="big" id="play">▶ Courir !</button>
       <div class="stats" id="mine"></div>
       <p class="help">Glisse le doigt : ← → pour changer de voie, ↑ pour sauter, ↓ pour glisser dessous. Au clavier : les flèches. Ramasse les pièces et les bonus : 🧲 aimant, 🛡️ bouclier, 🥿 super babouches, ✖️2, et le tapis volant 🪄.</p>
@@ -132,22 +135,34 @@ const rnd = (a, b) => a + Math.random() * (b - a), pick = a => a[Math.floor(Math
 /* ---------- le joueur, sa tête, sa sauvegarde ---------- */
 const PEOPLE = { essil:'#1f3c88', salma:'#1f6b44', amine:'#ff8c1a', anis:'#0f766e', imen:'#b4235a' };
 const HEADCROP = { essil:[.15, .05, .68], salma:[.125, .069, .75], amine:[.103, .009, .83], anis:[.048, -.018, .91], imen:[.021, -.057, .97], nour:[.075, -.02, .88], yasmine:[.127, -.01, .76], fares:[.107, -.057, .827] };
-const fresh = () => ({ best:0, bestDoux:0, coins:0, games:0, dist:0, far:0, t:0 });
+const fresh = () => ({ best:0, bestDoux:0, coins:0, games:0, dist:0, far:0, t:0, skin:'classique', skins:['classique'] });
+// les tenues : on les achète avec les pièces ramassées
+const SKINS = [
+  { id:'classique', n:'Classique', ic:'👕', prix:0 },
+  { id:'film', n:'Essil en vrai', ic:'🎬', prix:0, only:'essil', film:'medina/corps-essil.webp' },
+  { id:'jebba', n:'Jebba et chéchia', ic:'🕌', prix:150, torso:'#f7f3ea', arms:'#f7f3ea', thigh:'#f7f3ea', shin:'#f7f3ea', shoe:'#c9743a', pack:null, skirt:'#f7f3ea', hat:1, trim:'#c9a227' },
+  { id:'foot', n:'Maillot de foot', ic:'⚽', prix:300, torso:'#e8333a', arms:'#e8333a', thigh:'#ffffff', shin:'#e8333a', shoe:'#1c2340', pack:null, trim:'#ffffff' },
+  { id:'super', n:'Super-héros', ic:'🦸', prix:600, torso:'#1f6fd8', arms:'#1f6fd8', thigh:'#1f6fd8', shin:'#e8333a', shoe:'#e8333a', pack:null, cape:'#e8333a', trim:'#ffc928' },
+  { id:'astro', n:'Astronaute', ic:'🧑‍🚀', prix:1000, torso:'#f4f4f4', arms:'#f4f4f4', thigh:'#f4f4f4', shin:'#f4f4f4', shoe:'#9aa3ad', pack:'#c9ced6', trim:'#ff8c1a' },
+  { id:'or', n:'Tout en or', ic:'✨', prix:2000, torso:'#ffc928', arms:'#ffc928', thigh:'#e0a400', shin:'#ffc928', shoe:'#e0a400', pack:'#fff3a0', trim:'#fff3a0', glow:1 }
+];
 let player = null, save = fresh(), world = store.get('medina-monde', 'voyage'), mode = store.get('medina-mode', null), boardTab = 'normal';
 const skey = () => 'medina:' + player, tracked = new Set();
 function persist(){ save.t = Date.now(); if(player) store.set(skey(), save); }
 function headOf(name){ const k = (name || '').toLowerCase(); if(PEOPLE[k]) return { id:k, img:`avatars/${k}.webp`, col:PEOPLE[k] }; const mh = window.Famille && Famille.head && name ? Famille.head(name) : null; return mh ? { id:mh.id, img:mh.img, col:'#7a4fe0' } : { id:null, img:null, col:'#7a4fe0' }; }
 const avatarHTML = name => { const h = headOf(name); return h.img ? `<img src="${h.img}" alt="">` : `<span class="av">${name ? esc(name[0].toUpperCase()) : '🙂'}</span>`; };
 async function setPlayer(name){
-  player = name; save = Object.assign(fresh(), store.get(skey(), {}) || {}); if(!mode) mode = name.toLowerCase() === 'amine' ? 'doux' : 'normal'; renderMenu(); setHead();
+  player = name; save = Object.assign(fresh(), store.get(skey(), {}) || {}); if(!SKINS.some(k => k.id === save.skin)) save.skin = 'classique'; if(!mode) mode = name.toLowerCase() === 'amine' ? 'doux' : 'normal'; renderMenu(); setHead();
   if(window.Famille){ if(!tracked.has(name)){ tracked.add(name); Famille.track('medina', name, [skey()]); }
-    try{ const r = await Famille.load('medina', name), d = r && r[skey()]; if(d && player === name && (d.t || 0) > (save.t || 0) && (d.best || 0) >= (save.best || 0)){ save = Object.assign(fresh(), d); store.set(skey(), save); renderMenu(); } }catch(e){} }
+    try{ const r = await Famille.load('medina', name), d = r && r[skey()]; if(d && player === name && (d.t || 0) > (save.t || 0) && (d.best || 0) >= (save.best || 0)){ save = Object.assign(fresh(), d); store.set(skey(), save); renderMenu(); setHead(); } }catch(e){} }
 }
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui court ?', cancel:!!player, extra:[{ name:'Anis', color:'#0f766e', emoji:'🧔' }, { name:'Imen', color:'#b4235a', emoji:'👩' }], avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 function renderMenu(){
   $('who').innerHTML = player ? avatarHTML(player) + esc(player) : 'Qui joue ?';
   document.querySelectorAll('#worlds .opt').forEach(b => b.classList.toggle('on', b.dataset.w === world)); document.querySelectorAll('#modes .opt').forEach(b => b.classList.toggle('on', b.dataset.m === (mode || 'normal')));
-  $('mine').innerHTML = player ? `<div class="stat">${save.best}<small>mon record Champion</small></div><div class="stat">${save.bestDoux}<small>mon record Tranquille</small></div><div class="stat">🪙 ${save.coins}<small>pièces ramassées</small></div><div class="stat">${save.far} m<small>ma plus longue course</small></div>` : '';
+  $('mine').innerHTML = player ? `<div class="stat">${save.best}<small>mon record Champion</small></div><div class="stat">${save.bestDoux}<small>mon record Tranquille</small></div><div class="stat">🪙 ${save.coins}<small>mes pièces</small></div><div class="stat">${save.far} m<small>ma plus longue course</small></div>` : '';
+  $('skLab').textContent = player ? `Ta tenue · tu as ${save.coins} 🪙` : 'Ta tenue';
+  $('skins').innerHTML = SKINS.filter(k => !k.only || (player || '').toLowerCase() === k.only).map(k => { const has = save.skins.includes(k.id) || k.prix === 0; return `<button class="opt ${save.skin === k.id ? 'on' : ''} ${has ? '' : 'lock'}" data-sk="${k.id}"><span>${k.ic}</span>${k.n}<small>${has ? (save.skin === k.id ? 'je la porte' : 'à moi') : '🔒 ' + k.prix + ' 🪙'}</small></button>`; }).join('');
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.b === boardTab)); board($('board'), boardTab);
 }
 async function board(el, variant){
@@ -164,6 +179,7 @@ function tone(f, d = .12, type = 'triangle', vol = .12, slide = 0, when = 0){ if
 let nb = null; function noise(d, vol, freq){ if(!sndOn || !audio()) return; if(!nb){ nb = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const a = nb.getChannelData(0); for(let i = 0; i < a.length; i++) a[i] = Math.random() * 2 - 1; } const t = AC.currentTime, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = nb; f.type = 'bandpass'; f.frequency.value = freq; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d); s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t, Math.random() * .5, d + .02); }
 let coinN = 0, coinT = 0;
 const sfx = { tap(){ tone(620, .06, 'triangle', .08); }, coin(){ const n = performance.now(); coinN = n - coinT < 400 ? Math.min(coinN + 1, 8) : 0; coinT = n; tone(988 * Math.pow(1.06, coinN), .09, 'square', .05); tone(1319 * Math.pow(1.06, coinN), .12, 'square', .04, 1, .05); }, jump(){ tone(330, .18, 'sine', .1, 2); }, slide(){ noise(.25, .15, 1400); }, lane(){ noise(.06, .08, 2400); }, bump(){ tone(160, .1, 'square', .08); },
+  horn(){ tone(311, .5, 'square', .09); tone(392, .5, 'square', .08); tone(311, .35, 'square', .09, 1, .6); tone(392, .35, 'square', .08, 1, .6); },
   hit(){ tone(180, .35, 'sawtooth', .13, .5); noise(.3, .3, 300); }, power(){ [523, 659, 784, 1047].forEach((f, i) => tone(f, .14, 'triangle', .11, 1, i * .06)); }, shield(){ tone(880, .3, 'sine', .12, .5); noise(.2, .2, 3000); }, record(){ [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .3, 'triangle', .12, 1, i * .11)); }, gate(){ tone(392, .5, 'sine', .1); tone(587, .6, 'sine', .08, 1, .12); } };
 function setSnd(on){ sndOn = on; store.set('medina-son', on); $('snd').textContent = on ? '🔊' : '🔇'; }
 
@@ -237,6 +253,7 @@ const BUILD = {
   'tgm-full':g => { B(g, 2, 1.2, 1.4, '#a8a39a', 0, .6, 0); B(g, 1.6, .9, 1, '#bdb8ae', 0, 1.6, 0); C(g, .06, 1.2, '#5d6686', 0, 2.6, 0); const p = C(g, .5, .08, '#e8333a', 0, 3.1, .02); p.rotation.x = Math.PI / 2; B(g, .6, .14, .1, '#ffffff', 0, 3.1, .06); },
   'tgm-long':(g, len) => { B(g, 2, 2.5, len, '#f7f7f4', 0, 1.7, 0); B(g, 2.04, .5, len + .02, '#1f6fd8', 0, 1.1, 0); B(g, 1.9, .2, len - .4, '#dfe3ea', 0, 3.05, 0); B(g, 2.06, .7, len - 2, '#2b3350', 0, 2.25, 0);
     for(let z = -len / 2 + 1.6; z < len / 2 - 1; z += 2.4) B(g, 2.08, .74, .25, '#f7f7f4', 0, 2.25, z); B(g, 1.5, .9, .1, '#2b3350', 0, 2.2, len / 2 + .01); for(const s of [-1, 1]) S(g, .14, '#fff3a0', s * .65, 1.1, len / 2 + .02); for(const z of [-len / 2 + 2, len / 2 - 2]) B(g, 1.7, .5, 2, '#3a4055', 0, .3, z); },
+  'medina-charge':(g) => { B(g, 1.7, 1.1, 2.6, '#1f9a6b', 0, 1.05, -.9); B(g, 1.5, 1.3, 1.5, '#ffc928', 0, 1.15, 1.2); B(g, 1.3, .6, .08, '#2b3350', 0, 1.45, 1.96); for(const s of [-1, 1]){ S(g, .13, '#fff3a0', s * .5, .75, 1.97); const w = C(g, .4, .2, '#1c2340', s * .8, .4, -1.2); w.rotation.z = Math.PI / 2; } const w = C(g, .4, .2, '#1c2340', 0, .4, 1.5); w.rotation.z = Math.PI / 2; for(let i = 0; i < 5; i++) S(g, .3, pick(['#ff8c1a', '#e8333a', '#3f8f4a']), rnd(-.5, .5), 1.8, rnd(-1.8, -.2)); },
   coin:g => { const m = new THREE.Mesh(GC, MAT.coin); m.scale.set(.34, .08, .34); m.rotation.x = Math.PI / 2; g.add(m); },
   power:g => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ transparent:true })); sp.scale.set(1.25, 1.25, 1); g.add(sp); g.userData.sp = sp; }
 };
@@ -245,35 +262,57 @@ function give(o){ o.g.visible = false; pools[o.g.userData.k].push(o.g); }
 const POWERS = { aimant:['🧲', 'Aimant', 10], bouclier:['🛡️', 'Bouclier', 20], babouches:['🥿', 'Super babouches', 10], x2:['✖️2', 'Score doublé', 15], tapis:['🪄', 'Tapis volant', 8] };
 const ptex = {}; const powerTex = k => ptex[k] || (ptex[k] = tex(128, 128, (g) => { g.fillStyle = '#ffffff'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = '#1f6fd8'; g.stroke(); g.font = (k === 'x2' ? '800 56px' : '70px') + ' system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#1f6fd8'; g.fillText(k === 'x2' ? '×2' : POWERS[k][0], 64, 70); }));
 
+const warnTex = tex(128, 128, (g) => { g.fillStyle = '#e8333a'; g.beginPath(); g.moveTo(64, 8); g.lineTo(122, 112); g.lineTo(6, 112); g.closePath(); g.fill(); g.lineWidth = 8; g.strokeStyle = '#fff'; g.stroke(); g.fillStyle = '#fff'; g.font = '800 78px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', 64, 72); });
+const warns = LANE.map(x => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:warnTex, transparent:true, depthTest:false })); sp.scale.set(2.1, 2.1, 1); sp.position.set(x, 3.3, -12); sp.visible = false; scene.add(sp); return sp; });
 /* ---------- le coureur ---------- */
 const hero = new THREE.Group(); scene.add(hero);
 const H = {}; {
   H.body = new THREE.Group(); hero.add(H.body); H.torso = B(H.body, .62, .72, .36, '#1f3c88', 0, 1.12, 0); H.pack = B(H.body, .4, .44, .16, '#ffc928', 0, 1.15, .26);
-  H.legs = [-1, 1].map(s => { const p = new THREE.Group(); p.position.set(s * .17, .78, 0); H.body.add(p); B(p, .22, .5, .24, '#2b3350', 0, -.25, 0); const k = new THREE.Group(); k.position.y = -.5; p.add(k); B(k, .2, .3, .22, '#e8b48a', 0, -.13, 0); B(k, .24, .14, .36, '#ffffff', 0, -.3, -.06); return { p, k }; });
+  H.legs = [-1, 1].map(s => { const p = new THREE.Group(); p.position.set(s * .17, .78, 0); H.body.add(p); const th = B(p, .22, .5, .24, '#2b3350', 0, -.25, 0); const k = new THREE.Group(); k.position.y = -.5; p.add(k); const sh = B(k, .2, .3, .22, '#e8b48a', 0, -.13, 0), so = B(k, .24, .14, .36, '#ffffff', 0, -.3, -.06); return { p, k, th, sh, so }; });
   H.arms = [-1, 1].map(s => { const p = new THREE.Group(); p.position.set(s * .42, 1.42, 0); H.body.add(p); B(p, .17, .5, .19, '#1f3c88', 0, -.22, 0); S(p, .1, '#e8b48a', 0, -.52, 0); return p; });
+  H.cape = new THREE.Group(); H.cape.position.set(0, 1.46, .2); H.body.add(H.cape); H.capeM = B(H.cape, .74, 1.05, .05, '#e8333a', 0, -.5, .04); H.cape.visible = false;
+  H.skirt = B(H.body, .68, .62, .44, '#f7f3ea', 0, .62, 0); H.skirt.visible = false; H.trim = B(H.body, .64, .09, .38, '#ffc928', 0, .82, 0);
+  H.hat = new THREE.Group(); H.hat.position.set(0, 2.36, 0); H.body.add(H.hat); C(H.hat, .25, .26, '#c8242c', 0, .1, 0); C(H.hat, .03, .2, '#1c2340', .16, .12, .12); H.hat.visible = false;
+  H.film = new THREE.Sprite(new THREE.SpriteMaterial({ transparent:true, alphaTest:.05 })); H.film.center.set(.5, 0); H.film.scale.set(1.6, 2.62, 1); H.film.visible = false; hero.add(H.film);
   H.head = new THREE.Sprite(new THREE.SpriteMaterial({ transparent:true })); H.head.scale.set(1.02, 1.02, 1); H.head.position.set(0, 1.98, 0); H.body.add(H.head);
   H.shadow = new THREE.Mesh(new THREE.CircleGeometry(.55, 16), new THREE.MeshBasicMaterial({ color:0, transparent:true, opacity:.25, depthWrite:false })); H.shadow.rotation.x = -Math.PI / 2; H.shadow.position.y = .02; hero.add(H.shadow);
   H.bulle = new THREE.Mesh(GS, new THREE.MeshLambertMaterial({ color:'#7fd0ff', transparent:true, opacity:.28, depthWrite:false })); H.bulle.scale.setScalar(1.25); H.bulle.position.y = 1.2; H.bulle.visible = false; hero.add(H.bulle);
   H.tapis = new THREE.Mesh(GB, stripes('#b4235a', '#ffc928')); H.tapis.scale.set(1.5, .07, 2.2); H.tapis.position.y = .5; H.tapis.visible = false; hero.add(H.tapis);
 }
+const headTex = { face:null, dos:null }; let headView = 'face';
+function showHead(v){ headView = v; const t = headTex[v] || headTex.face; if(t && H.head.material.map !== t){ H.head.material.map = t; H.head.material.needsUpdate = true; } }
 function setHead(){
-  const h = headOf(player), c = document.createElement('canvas'); c.width = c.height = 160; const g = c.getContext('2d');
-  const draw = im => { g.clearRect(0, 0, 160, 160); g.save(); g.beginPath(); g.arc(80, 80, 74, 0, 7); g.clip(); g.fillStyle = '#f3e3c0'; g.fillRect(0, 0, 160, 160);
-    if(im){ const cr = HEADCROP[h.id] || [0, 0, 1], iw = im.naturalWidth; g.drawImage(im, iw * cr[0], im.naturalHeight * cr[1], iw * cr[2], iw * cr[2], 6, 6, 148, 148); } else { g.fillStyle = h.col; g.fillRect(0, 0, 160, 160); g.fillStyle = '#fff'; g.font = '800 90px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText((player || '?')[0].toUpperCase(), 80, 86); }
-    g.restore(); g.lineWidth = 7; g.strokeStyle = '#ffffff'; g.beginPath(); g.arc(80, 80, 74, 0, 7); g.stroke();
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; if(H.head.material.map) H.head.material.map.dispose(); H.head.material.map = t; H.head.material.needsUpdate = true; };
-  draw(null); if(h.img){ const im = new Image(); im.onload = () => { if(headOf(player).img === h.img) draw(im); }; im.src = h.img; }
-  const col = M(h.col); H.torso.material = col; H.arms.forEach(a => a.children[0].material = col);
+  const h = headOf(player), who = player;
+  const make = (key, src) => { const c = document.createElement('canvas'); c.width = c.height = 160; const g = c.getContext('2d');
+    const draw = im => { g.clearRect(0, 0, 160, 160); g.save(); g.beginPath(); g.arc(80, 80, 74, 0, 7); g.clip(); g.fillStyle = '#f3e3c0'; g.fillRect(0, 0, 160, 160);
+      if(im){ const cr = HEADCROP[h.id] || [0, 0, 1], iw = im.naturalWidth; g.drawImage(im, iw * cr[0], im.naturalHeight * cr[1], iw * cr[2], iw * cr[2], 6, 6, 148, 148); } else { g.fillStyle = h.col; g.fillRect(0, 0, 160, 160); if(key === 'face'){ g.fillStyle = '#fff'; g.font = '800 90px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText((player || '?')[0].toUpperCase(), 80, 86); } }
+      g.restore(); g.lineWidth = 7; g.strokeStyle = '#ffffff'; g.beginPath(); g.arc(80, 80, 74, 0, 7); g.stroke();
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; if(headTex[key]) headTex[key].dispose(); headTex[key] = t; showHead(headView); };
+    draw(null); if(src){ const im = new Image(); im.onload = () => { if(player === who) draw(im); }; im.src = src; } };
+  make('face', h.img); make('dos', h.img ? h.img.replace('.webp', '-dos.webp') : null);   // la tête vue de dos (images « -dos » faites le 11/11)
+  applySkin();
+}
+let filmOn = false; const filmTex = {};
+function applySkin(){
+  const h = headOf(player); let k = SKINS.find(x => x.id === save.skin) || SKINS[0]; if(k.only && (player || '').toLowerCase() !== k.only) k = SKINS[0]; const base = k.id === 'classique' || !!k.film;
+  filmOn = false; H.film.visible = false; H.body.visible = true;
+  if(k.film){ const use = t => { if(save.skin !== k.id) return; H.film.material.map = t; H.film.material.needsUpdate = true; filmOn = true; H.film.visible = true; H.body.visible = false; };
+    if(filmTex[k.film]) use(filmTex[k.film]); else new THREE.TextureLoader().load(k.film, t => { t.colorSpace = THREE.SRGBColorSpace; t.repeat.set(1 / 4, 1 / 3); filmTex[k.film] = t; use(t); }); }
+  const mat = c => k.glow ? (MATS['or' + c] || (MATS['or' + c] = new THREE.MeshLambertMaterial({ color:c, emissive:'#b97a00', emissiveIntensity:.45 }))) : M(c);
+  H.torso.material = mat(base ? h.col : k.torso); H.arms.forEach(a => a.children[0].material = mat(base ? h.col : k.arms));
+  H.legs.forEach(l => { l.th.material = mat(base ? '#2b3350' : k.thigh); l.sh.material = mat(base ? '#e8b48a' : k.shin); l.so.material = mat(base ? '#ffffff' : k.shoe); });
+  H.pack.visible = base || !!k.pack; H.pack.material = mat(base ? '#ffc928' : k.pack || '#ffc928'); H.cape.visible = !!k.cape; if(k.cape) H.capeM.material = mat(k.cape);
+  H.skirt.visible = !!k.skirt; if(k.skirt) H.skirt.material = mat(k.skirt); H.hat.visible = !!k.hat; H.trim.visible = !base; H.trim.material = mat(k.trim || '#ffc928');
 }
 
 /* =====================================================================
    LA PARTIE
    ===================================================================== */
-const CFG = { normal:{ v0:11.5, v1:27, k:2200, lives:1 }, doux:{ v0:8, v1:14.5, k:2600, lives:3 }, grav:27, jump:9.4, jumpPlus:12.6, slide:.72, rowMin:13, powerEvery:[16, 26] };
+const CFG = { normal:{ v0:15, v1:36, k:1100, lives:1 }, doux:{ v0:8, v1:14.5, k:2600, lives:3 }, grav:27, jump:9.4, jumpPlus:12.6, slide:.72, rowMin:13, powerEvery:[16, 26] };
 let G = null, state = 'menu', last = 0, slowT = 0;
 function reset(){
   objs.splice(0).forEach(give);
-  G = { mode:mode || 'normal', world, theme:world === 'tgm' ? 'tgm' : 'medina', spawnTheme:world === 'tgm' ? 'tgm' : 'medina', speed:0, dist:0, score:0, coins:0, lane:1, x:0, y:0, vy:0, slide:0, inv:0, lives:0, pw:{}, t:0, safe:1, block:[0, 0, 0], sinceRow:0, rowsToPower:14, run:0, nextGate:world === 'voyage' ? 420 : 1e9, jumps:0, slides:0, dead:false, flightCoins:0 };
+  G = { mode:mode || 'normal', world, theme:world === 'tgm' ? 'tgm' : 'medina', spawnTheme:world === 'tgm' ? 'tgm' : 'medina', speed:0, dist:0, score:0, coins:0, lane:1, x:0, y:0, vy:0, slide:0, inv:0, lives:0, pw:{}, t:0, safe:1, block:[0, 0, 0], sinceRow:0, rowsToPower:14, run:0, nextGate:world === 'voyage' ? 420 : 1e9, res:null, toCharge:5, gap:15, jumps:0, slides:0, dead:false, flightCoins:0 };
   G.lives = CFG[G.mode].lives; hero.position.set(0, 0, 0); H.body.rotation.set(0, 0, 0); H.body.position.y = 0;
   segs.forEach((g, i) => { g.position.z = 12 - i * SEG; buildSeg(g, G.theme, false); });
   scene.background.copy(SKY[G.theme]); scene.fog.color.copy(scene.background);
@@ -282,12 +321,15 @@ function reset(){
 }
 // une rangée : il y a toujours une voie « sûre », voisine de la précédente, jamais bouchée
 function row(z, easy){
-  const d = Math.min(1, G.dist / (G.mode === 'doux' ? 2600 : 1500)), th = G.gateAt && G.dist >= G.gateAt - 118 ? G.spawnTheme : G.theme, fly = G.pw.tapis > 0;
-  const free = [0, 1, 2].filter(l => Math.abs(l - G.safe) <= 1 && G.block[l] <= 0), s = free.length ? pick(free) : G.safe, prev = G.safe; G.safe = s;
-  for(let l = 0; l < 3; l++){ if(G.block[l] > 0){ G.block[l]--; continue; } if(fly || easy && Math.random() < .6) continue;
+  const d = Math.min(1, G.dist / (G.mode === 'doux' ? 2600 : 1200)), th = G.gateAt && G.dist >= G.gateAt - 118 ? G.spawnTheme : G.theme, fly = G.pw.tapis > 0;
+  // un train (ou un triporteur) qui fonce : on lui garde une voie vide assez longtemps avant et après, et on prévient
+  if(G.mode === 'normal' && !G.res && !easy && !fly && G.dist > 200 && --G.toCharge <= 0 && G.block.every(b => b <= 0)) G.res = { l:pick([0, 1, 2]), n:0, need:Math.ceil(120 / G.gap) + 1, sp:false, left:0 };
+  const res = G.res, free = [0, 1, 2].filter(l => Math.abs(l - G.safe) <= 1 && G.block[l] <= 0 && !(res && l === res.l)), s = free.length ? pick(free) : G.safe, prev = G.safe; G.safe = s;
+  if(res){ res.n++; if(!res.sp && res.n >= res.need){ res.sp = true; res.left = res.need + 2; const len = th === 'tgm' ? 16 : 4.6, o = spawn(th === 'tgm' ? 'tgm-long' : 'medina-charge', res.l, -126 - len / 2, 'long', len, 8 + G.speed * .5); o.charge = true; sfx.horn(); } else if(res.sp && --res.left <= 0){ G.res = null; G.toCharge = Math.round(rnd(6, 11) - d * 3); } }
+  for(let l = 0; l < 3; l++){ if(G.block[l] > 0){ G.block[l]--; continue; } if(res && l === res.l) continue; if(fly || easy && Math.random() < .6) continue;
     if(l === s){ if(Math.random() < d * .55 && !easy){ const k = Math.random() < .5 ? 'low' : 'high'; spawn(th + '-' + k, l, z, k); if(k === 'low') coinsArc(l, z); } continue; }
     if(Math.random() > .42 + d * .38) continue; const r = Math.random();
-    if(r < .22 + d * .1 && l !== prev && G.block.filter(b => b > 0).length < 1){ const len = th === 'tgm' ? 16 : 10; spawn(th + '-long', l, z - len / 2, 'long', len, th === 'tgm' && d > .35 && Math.random() < .45 ? 5 + d * 4 : 0); G.block[l] = th === 'tgm' ? 2 : 1; }
+    if(r < .22 + d * .1 && l !== prev && !res && G.block.filter(b => b > 0).length < 1){ const len = th === 'tgm' ? 16 : 10; spawn(th + '-long', l, z - len / 2, 'long', len, th === 'tgm' && d > .35 && Math.random() < .45 ? 5 + d * 4 : 0); G.block[l] = th === 'tgm' ? 2 : 1; }
     else if(r < .5) spawn(th + '-full', l, z, 'full'); else if(r < .76) spawn(th + '-low', l, z, 'low'); else spawn(th + '-high', l, z, 'high');
   }
   // des pièces dans la voie sûre, entre deux rangées ; de temps en temps un bonus
@@ -308,7 +350,7 @@ function hud(force){
   const act = Object.keys(G.pw).filter(k => G.pw[k] > 0), sig = act.map(k => k + Math.ceil(G.pw[k] * 4)).join(); if(force || sig !== hud.p){ hud.p = sig; $('pws').innerHTML = act.map(k => `<div class="pw"><span>${POWERS[k][0]}</span><i><b style="width:${Math.min(100, G.pw[k] / POWERS[k][2] * 100)}%"></b></i></div>`).join(''); }
 }
 function start(){
-  audio(); reset(); state = 'run'; ['menu', 'over', 'pause'].forEach(id => $(id).classList.remove('on')); $('hud').classList.add('on'); $('back').style.display = 'none'; last = performance.now();
+  audio(); reset(); showHead('dos'); state = 'run'; ['menu', 'over', 'pause'].forEach(id => $(id).classList.remove('on')); $('hud').classList.add('on'); $('back').style.display = 'none'; last = performance.now();
   if(!store.get('medina-tuto', 0) || G.mode === 'doux'){ const t = $('tuto'); t.innerHTML = 'Glisse ← → pour changer de voie · ↑ pour sauter · ↓ pour passer dessous'; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 5200); store.set('medina-tuto', 1); }
 }
 function act(a){
@@ -347,7 +389,7 @@ function tick(dt){
   for(const g of segs){ g.position.z += mv; if(g.position.z > 12 + SEG){ g.position.z -= NSEG * SEG; const gate = G.dist + 150 > G.nextGate; if(gate){ G.spawnTheme = G.spawnTheme === 'medina' ? 'tgm' : 'medina'; G.gateAt = G.dist - (g.position.z + SEG / 2 - 1); G.nextGate += 520; } buildSeg(g, G.spawnTheme, gate); } }
   if(G.gateAt && G.dist >= G.gateAt){ G.gateAt = 0; G.theme = G.spawnTheme; sfx.gate(); flash(G.theme === 'tgm' ? '🚋 Le TGM !' : '🕌 La médina !'); }
   scene.background.lerp(SKY[G.theme], Math.min(1, dt * 1.5)); scene.fog.color.copy(scene.background);
-  G.sinceRow += mv; const gap = Math.max(CFG.rowMin, G.speed * (G.mode === 'doux' ? 1.5 : 1.02)); if(G.sinceRow >= gap){ G.sinceRow = 0; row(-118); }
+  G.sinceRow += mv; const gap = G.gap = Math.max(CFG.rowMin, G.speed * (G.mode === 'doux' ? 1.5 : .95)); if(G.sinceRow >= gap){ G.sinceRow = 0; row(-118); }
   // le coureur
   const fly = G.pw.tapis > 0, tx = LANE[G.lane]; G.x += (tx - G.x) * Math.min(1, dt * 15);
   if(fly){ G.y += (3.3 - G.y) * Math.min(1, dt * 4); G.vy = 0; } else if(G.y > 0 || G.vy > 0){ G.vy -= CFG.grav * dt; G.y += G.vy * dt; if(G.y <= 0){ G.y = 0; G.vy = 0; } }
@@ -368,6 +410,10 @@ function tick(dt){
     else { o.g.position.z = o.z; if(o.kind === 'power'){ o.g.position.y = 1.2 + Math.sin(G.t * 4) * .15; if(Math.abs(o.z) < 1 && Math.abs(LANE[o.lane] - G.x) < 1.1 && !G.dead && G.y < 2.6){ G.pw[o.pk] = POWERS[o.pk][2]; sfx.power(); flash(POWERS[o.pk][0] + ' ' + POWERS[o.pk][1] + ' !'); objs.splice(i, 1); give(o); continue; } }
       else if(!G.dead && !fly && Math.abs(o.z) < o.half + .35 && Math.abs(LANE[o.lane] - G.x) < 1.15){ const hitIt = o.kind === 'low' ? low < .78 : o.kind === 'high' ? top > 1.6 : true; if(hitIt){ hurt(o); if(G.dead || !objs.includes(o)) continue; } } }
     if(o.z > 14 + o.half){ objs.splice(i, 1); give(o); } }
+  warns.forEach((w, l) => { w.visible = !G.dead && Math.floor(G.t * 6) % 2 === 0 && objs.some(o => o.charge && o.lane === l && o.z < -20); });
+  if(filmOn){ const m = H.film.material, t = m.map, fly2 = G.pw.tapis > 0, sl = G.slide > 0 && !fly2, f = G.dead ? 0 : G.y > .05 && !fly2 ? 9 : Math.floor(G.run * .62) % 12; t.offset.set((f % 4) / 4, 1 - (Math.floor(f / 4) + 1) / 3);
+    m.rotation += ((G.dead ? 1.45 : sl ? 1.2 : 0) - m.rotation) * Math.min(1, dt * 14); H.film.position.y = sl || G.dead ? .25 : fly2 ? .35 : 0; H.film.position.x = sl || G.dead ? .9 : 0; H.film.scale.set(1.6, fly2 ? 2 : 2.62, 1); }
+  if(H.cape.visible) H.cape.rotation.x = .55 + Math.sin(G.t * 9) * .12 + (G.y > .05 ? .4 : 0);
   // la caméra
   const tall = cam.aspect < .8, sh = G.shake > 0 ? (G.shake -= dt, (Math.random() - .5) * .25) : 0;
   cam.position.set(G.x * .55 + sh, (tall ? 4.6 : 3.7) + G.y * .55, tall ? 7.4 : 6.4); cam.lookAt(G.x * .7, 1.5 + G.y * .6, -9);
@@ -389,14 +435,17 @@ const endSw = e => { if(sw && !sw.done && state === 'run'){ const x = e.clientX;
 canvas.addEventListener('pointerup', endSw); canvas.addEventListener('pointercancel', () => { sw = null; });
 function pause(){ if(state !== 'run' || G.dead) return; state = 'pause'; $('pause').classList.add('on'); }
 function resume(){ if(state !== 'pause') return; state = 'run'; $('pause').classList.remove('on'); last = performance.now(); }
-function toMenu(){ state = 'menu'; ['over', 'pause'].forEach(id => $(id).classList.remove('on')); $('hud').classList.remove('on'); $('menu').classList.add('on'); $('back').style.display = ''; objs.splice(0).forEach(give); hero.position.set(0, 0, 0); H.body.rotation.set(0, 0, 0); H.body.position.y = 0; hero.visible = true; H.tapis.visible = H.bulle.visible = false; idleCam(); renderMenu(); }
-function idleCam(){ cam.position.set(2.6, 2.6, 5.2); cam.lookAt(0, 1.5, -3); }
+function toMenu(){ state = 'menu'; ['over', 'pause'].forEach(id => $(id).classList.remove('on')); $('hud').classList.remove('on'); $('menu').classList.add('on'); $('back').style.display = ''; objs.splice(0).forEach(give); hero.position.set(0, 0, 0); H.body.rotation.set(0, 0, 0); H.body.position.y = 0; hero.visible = true; H.tapis.visible = H.bulle.visible = false; warns.forEach(w => w.visible = false); showHead('face'); idleCam(); renderMenu(); }
+function idleCam(){ cam.position.set(1.7, 2.3, -4.6); cam.lookAt(0, 1.35, 0); }
 document.addEventListener('visibilitychange', () => { if(document.hidden) pause(); });
 $('hPause').onclick = () => { sfx.tap(); pause(); }; $('pGo').onclick = () => { sfx.tap(); resume(); }; $('pAgain').onclick = () => { sfx.tap(); start(); }; $('pMenu').onclick = () => { sfx.tap(); toMenu(); };
 $('oAgain').onclick = () => { sfx.tap(); start(); }; $('oMenu').onclick = () => { sfx.tap(); toMenu(); };
 $('worlds').onclick = e => { const b = e.target.closest('[data-w]'); if(!b) return; sfx.tap(); world = b.dataset.w; store.set('medina-monde', world); renderMenu(); segs.forEach(g => buildSeg(g, world === 'tgm' ? 'tgm' : 'medina', false)); scene.background.copy(SKY[world === 'tgm' ? 'tgm' : 'medina']); scene.fog.color.copy(scene.background); };
 $('modes').onclick = e => { const b = e.target.closest('[data-m]'); if(!b) return; sfx.tap(); mode = b.dataset.m; store.set('medina-mode', mode); boardTab = mode; renderMenu(); };
 document.querySelector('.tabs').onclick = e => { const b = e.target.closest('[data-b]'); if(!b) return; sfx.tap(); boardTab = b.dataset.b; renderMenu(); };
+$('skins').onclick = async e => { const b = e.target.closest('[data-sk]'); if(!b) return; if(!player && !(await choose())) return; const k = SKINS.find(x => x.id === b.dataset.sk);
+  if(!save.skins.includes(k.id) && k.prix > 0){ if(save.coins < k.prix){ sfx.bump(); $('skLab').textContent = `Il te manque ${k.prix - save.coins} 🪙 pour « ${k.n} » : cours encore !`; return; } save.coins -= k.prix; save.skins.push(k.id); sfx.power(); } else sfx.tap();
+  save.skin = k.id; persist(); applySkin(); renderMenu(); };
 $('who').onclick = async () => { sfx.tap(); await choose(); }; $('snd').onclick = () => { setSnd(!sndOn); sfx.tap(); };
 $('play').onclick = async () => { audio(); if(!player && !(await choose())) return; start(); };
 
@@ -404,7 +453,7 @@ $('play').onclick = async () => { audio(); if(!player && !(await choose())) retu
 setSnd(sndOn); if(window.Famille && Famille.loadHeads) Famille.loadHeads();
 segs.forEach((g, i) => { g.position.z = 12 - i * SEG; buildSeg(g, world === 'tgm' ? 'tgm' : 'medina', false); }); scene.background.copy(SKY[world === 'tgm' ? 'tgm' : 'medina']); scene.fog.color.copy(scene.background); idleCam(); setHead();
 const p0 = window.Famille ? Famille.player() : null; if(p0) setPlayer(p0); else renderMenu(); boardTab = mode || 'normal';
-window.__mx = { get G(){ return G; }, get state(){ return state; }, act, start, objs, LANE };
+window.__mx = { get save(){ return save; }, renderMenu, applySkin, get G(){ return G; }, get state(){ return state; }, act, start, objs, LANE };
 requestAnimationFrame(loop);
 </script>
 </body>
