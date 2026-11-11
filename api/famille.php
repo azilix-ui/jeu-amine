@@ -25,12 +25,12 @@
  */
 declare(strict_types=1);
 
-const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin'];
+const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'medina'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
-const READABLE = ['profil', 'atelier', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture', 'amine-nombres', 'ecuries'];
-const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'amine-nombres', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'atelier', 'ecuries'];
+const READABLE = ['profil', 'atelier', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture', 'amine-nombres', 'ecuries', 'medina'];
+const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'amine-nombres', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'atelier', 'ecuries', 'medina'];
 // Jeu (classements) lié à un cours : une remise à zéro peut aussi effacer ses records.
-const COURSE_GAME = ['serpent3d' => 'serpent3d', 'ludo3d' => 'ludo3d', 'grimpeglace' => 'grimpeglace', 'jasmin' => 'jasmin', 'amine-serpentin' => 'serpentin'];
+const COURSE_GAME = ['serpent3d' => 'serpent3d', 'ludo3d' => 'ludo3d', 'grimpeglace' => 'grimpeglace', 'jasmin' => 'jasmin', 'medina' => 'medina', 'amine-serpentin' => 'serpentin'];
 // Cours qui comptent comme « apprendre » (les jeux n'en font pas partie) : séries de jours et cartes secrètes.
 const LEARNING = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-ecriture', 'amine-nombres'];
 const MAX_DATA = 30000;
@@ -306,7 +306,7 @@ try {
         $variant = (string)($_POST['variant'] ?? '');
         $score = (int)($_POST['score'] ?? -1);
         if (!in_array($game, GAMES, true) || !preg_match('/^[a-z0-9\-]{1,40}$/', $variant)) fail(400, 'Jeu inconnu.');
-        if ($score < 0 || $score > (in_array($game, ['grimpeglace', 'jasmin'], true) ? 999999 : 5000)) fail(400, 'Score invalide.');
+        if ($score < 0 || $score > (in_array($game, ['grimpeglace', 'jasmin', 'medina'], true) ? 999999 : 5000)) fail(400, 'Score invalide.');
         touch_player($p);
         $st = db()->prepare('SELECT MAX(score) FROM scores WHERE game = ? AND variant = ? AND player = ?'); $st->execute([$game, $variant, $p]);
         $best = (int)$st->fetchColumn();

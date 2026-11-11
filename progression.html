@@ -339,6 +339,11 @@ function nombresCard(S){
   const N = { compte:'Compter les aliens', trouve:'Reconnaître un nombre', suite:'Avant et après', grand:'Plus grand, plus petit', donne:'Donner des étoiles' }, st = d.stars || {}, tot = Object.values(st).reduce((a, b) => a + (+b || 0), 0);
   return '<div class="subject"><h3>👽 Planète des Nombres</h3><div class="kpis">' + kpi(tot, 'étoiles (manches réussies)') + kpi('0 → ' + (d.max || 50), 'nombres travaillés') + kpi(d.rounds || 0, 'manches jouées') + '</div><dl class="units">' + Object.entries(N).map(([k, n]) => '<dt>' + n + '</dt><dd>' + (st[k] || 0) + ' ★</dd>').join('') + '</dl><p class="when">Une étoile = 4 bonnes réponses sur 5 du premier coup. Dernière activité : ' + ago(p.updated) + '</p></div>';
 }
+function medinaCard(S, player){
+  const p = prog(S, player, 'medina'), d = p && p.data ? p.data['medina:' + player] || Object.values(p.data)[0] : null;
+  if(!d) return '';
+  return '<div class="subject"><h3>🚋 Médina Express</h3><div class="kpis">' + kpi(d.best || 0, 'record Champion') + kpi(d.bestDoux || 0, 'record Tranquille') + kpi((d.far || 0) + ' m', 'plus longue course') + '</div><dl class="units"><dt>Courses</dt><dd>' + (d.games || 0) + '</dd><dt>Pièces ramassées</dt><dd>' + (d.coins || 0) + '</dd><dt>Distance en tout</dt><dd>' + (d.dist || 0) + ' m</dd></dl></div>';
+}
 function ecuriesCard(S, player){
   const p = prog(S, player, 'ecuries');
   const d = p && p.data ? p.data['ecuries:' + player] || Object.values(p.data)[0] : null;
@@ -354,7 +359,7 @@ function atelierCard(S, player){
   return '<div class="subject"><h3>🎨 Atelier du Jasmin</h3><div class="kpis">' + kpi(land + ' / 24', 'paysages finis') + kpi(anim + ' / 14', 'animaux finis') + kpi(cost + ' / 9', 'costumes finis') + '</div><dl class="units"><dt>Son serpent</dt><dd>' + (d.skin ? esc(d.skin.name || 'créé') : '—') + '</dd><dt>Façon de jouer</dt><dd>' + (d.mode === '3d' ? '3D' : d.mode === '2d' ? '2D' : '—') + '</dd></dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
 }
 /* ---------- Suivre un cours dans le temps, revenir en arrière, remettre à zéro ---------- */
-const CNAME = {'essil-deutsch':'🚆 Deutsch Express','essil-latin':'🏛️ Via Romana','salma-english':'🦉 English Garden','salma-meteo':'⛅ Weather Station','salma-verbes':'✍️ Atelier des Verbes','salma-geometrie':'📐 Atelier des Formes','salma-monnaie':"🪙 Marché d'Ollie",'salma-maths':'🌻 Jardin des Nombres','salma-cheval':'🐴 Le Grand Galop','amine-ecriture':'✏️ Ardoise magique','amine-nombres':'👽 Planète des Nombres','amine-halloween':'🍬 Cagnotte de bonbons','amine-tounsi':'🇹🇳 Nahki Tounsi','amine-serpentin':'🐍 Serpentin','serpent3d':'🐉 Serpent Légendes','ludo3d':'🎲 Ludo Légendes','grimpeglace':'❄️ Grimpe-Glace','jasmin':'🌼 La Légende du Jasmin','atelier':"🎨 L'Atelier du Jasmin",'ecuries':"🐴 Les Écuries d'Essil"};
+const CNAME = {'essil-deutsch':'🚆 Deutsch Express','essil-latin':'🏛️ Via Romana','salma-english':'🦉 English Garden','salma-meteo':'⛅ Weather Station','salma-verbes':'✍️ Atelier des Verbes','salma-geometrie':'📐 Atelier des Formes','salma-monnaie':"🪙 Marché d'Ollie",'salma-maths':'🌻 Jardin des Nombres','salma-cheval':'🐴 Le Grand Galop','amine-ecriture':'✏️ Ardoise magique','amine-nombres':'👽 Planète des Nombres','amine-halloween':'🍬 Cagnotte de bonbons','amine-tounsi':'🇹🇳 Nahki Tounsi','amine-serpentin':'🐍 Serpentin','serpent3d':'🐉 Serpent Légendes','ludo3d':'🎲 Ludo Légendes','grimpeglace':'❄️ Grimpe-Glace','jasmin':'🌼 La Légende du Jasmin','atelier':"🎨 L'Atelier du Jasmin",'ecuries':"🐴 Les Écuries d'Essil",'medina':'🚋 Médina Express'};
 const GAME_COURSES = ['serpent3d','ludo3d','grimpeglace','jasmin','amine-serpentin'];
 const UNIT = {'essil-deutsch':'XP','essil-latin':'XP','amine-halloween':'bonbons','salma-cheval':'chapitres'};
 // un résumé court de l'état d'un cours, pour le suivre dans le temps
@@ -501,9 +506,9 @@ function activiteHTML(S){
 
 /* --- 🎓 Cours et jeux : les cartes détaillées, un enfant à la fois --- */
 function enfantsHTML(S){
-  const cards = { Essil:() => courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + legendesCard(S, 'Essil') + ludoCard(S, 'Essil') + atelierCard(S, 'Essil') + ecuriesCard(S, 'Essil'),
-    Salma:() => salmaCard(S) + meteoCard(S) + verbesCard(S) + monnaieCard(S) + formesCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + ludoCard(S, 'Salma') + atelierCard(S, 'Salma') + ecuriesCard(S, 'Salma'),
-    Amine:() => serpentCard(S, 'Amine') + ecritureCard(S) + nombresCard(S) + legendesCard(S, 'Amine') + ludoCard(S, 'Amine') + atelierCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') };
+  const cards = { Essil:() => courseCard(S, 'Essil', 'essil-deutsch', 'Deutsch Express', '🚆') + courseCard(S, 'Essil', 'essil-latin', 'Via Romana', '🏛️') + serpentCard(S, 'Essil') + legendesCard(S, 'Essil') + ludoCard(S, 'Essil') + atelierCard(S, 'Essil') + medinaCard(S, 'Essil') + ecuriesCard(S, 'Essil'),
+    Salma:() => salmaCard(S) + meteoCard(S) + verbesCard(S) + monnaieCard(S) + formesCard(S) + mathsCard(S) + chevalCard(S) + serpentCard(S, 'Salma') + legendesCard(S, 'Salma') + ludoCard(S, 'Salma') + atelierCard(S, 'Salma') + medinaCard(S, 'Salma') + ecuriesCard(S, 'Salma'),
+    Amine:() => serpentCard(S, 'Amine') + ecritureCard(S) + nombresCard(S) + legendesCard(S, 'Amine') + ludoCard(S, 'Amine') + atelierCard(S, 'Amine') + medinaCard(S, 'Amine') + simpleCard(S, 'Amine', 'amine-halloween', 'Cagnotte de bonbons', '🍬', 'bonbons gagnés') + simpleCard(S, 'Amine', 'amine-tounsi', 'Nahki Tounsi', '🇹🇳', 'étoiles') };
   const sub = { Essil:'Allemand · Latin', Salma:'Anglais · Français · Maths · Exposé', Amine:'Jeux · Grande section' };
   if(!cards[kid]) kid = 'Salma';
   return '<div class="seg big" id="kidSeg">' + KIDS.map(k => '<button data-k="' + k + '" aria-pressed="' + (k === kid) + '"><img src="jeux/avatars/' + k.toLowerCase() + '.webp" alt="" width="34" height="34">' + k + '</button>').join('') + '</div>' +
@@ -586,7 +591,7 @@ function show(S){
 const PAGES = { '/':'Accueil', '/index.html':'Accueil', '/indexancien.html':'Ancienne accueil', '/progression.html':'Progression (parents)', '/essil/':'Espace Essil', '/salma/':'Espace Salma', '/amine/':'Espace Amine',
   '/essil/deutsch-express.html':'Deutsch Express', '/essil/via-romana.html':'Via Romana', '/salma/english-garden.html':'English Garden', '/salma/weather-station.html':'Weather Station', '/salma/atelier-des-verbes.html':'Atelier des Verbes', '/salma/atelier-des-formes.html':'Atelier des Formes', '/salma/marche-d-ollie.html':"Marché d'Ollie",
   '/salma/jardin-des-nombres.html':'Jardin des Nombres', '/salma/le-grand-galop.html':'Le Grand Galop', '/amine/ardoise-magique.html':'Ardoise magique', '/amine/planete-des-nombres.html':'Planète des Nombres', '/amine/la-nuit-d-amine.html':"La Nuit d'Amine", '/amine/la-nuit-d-amine-2.html':"La Nuit d'Amine 2",
-  '/amine/nahki-tounsi.html':'Nahki Tounsi', '/amine/serpentin.html':'Serpentin', '/jeux/serpent-legendes.html':'Serpent Légendes', '/jeux/ludo-legendes.html':'Ludo Légendes', '/jeux/grimpe-glace.html':'Grimpe-Glace', '/jeux/legende-du-jasmin.html':'La Légende du Jasmin', '/jeux/atelier-du-jasmin.html':"L'Atelier du Jasmin", '/essil/videos-geometrie.html':'Pas à pas · Géométrie', '/essil/videos-fractions.html':'Pas à pas · Les fractions', '/essil/les-ecuries.html':"Les Écuries d'Essil" };
+  '/amine/nahki-tounsi.html':'Nahki Tounsi', '/amine/serpentin.html':'Serpentin', '/jeux/serpent-legendes.html':'Serpent Légendes', '/jeux/ludo-legendes.html':'Ludo Légendes', '/jeux/grimpe-glace.html':'Grimpe-Glace', '/jeux/legende-du-jasmin.html':'La Légende du Jasmin', '/jeux/atelier-du-jasmin.html':"L'Atelier du Jasmin", '/essil/videos-geometrie.html':'Pas à pas · Géométrie', '/essil/videos-fractions.html':'Pas à pas · Les fractions', '/essil/les-ecuries.html':"Les Écuries d'Essil", '/jeux/medina-express.html':'Médina Express' };
 const pageName = p => PAGES[p] || PAGES[p.replace(/index\.html$/, '')] || p;
 const flag = cc => cc && /^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map(c => 127397 + c.charCodeAt(0))) : '🏳️';
 function device(ua, screen){

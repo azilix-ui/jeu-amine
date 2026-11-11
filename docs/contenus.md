@@ -43,7 +43,7 @@ Nahki Tounsi : écriture `3` = ع, `7` = ح, `kh` = خ, `q` = ق, `dh` = ض/ظ. 
 
 ## Pour toute la famille (dans `jeux/`)
 
-- **Serpent Légendes**, **Ludo Légendes**, **Grimpe-Glace** (tour de glace) et **La Légende du Jasmin** (plateforme 2.5D en Tunisie, blocs savoir) : voir `docs/jeux-3d.md`.
+- **Serpent Légendes**, **Ludo Légendes**, **Médina Express** (course infinie à 3 voies dans la médina et le long du TGM, records en ligne), **Grimpe-Glace** (tour de glace) et **La Légende du Jasmin** (plateforme 2.5D en Tunisie, blocs savoir) : voir `docs/jeux-3d.md`.
 - Les deux jeux proposent dans « Qui joue ? » les 3 enfants, puis Anis et Imen (avatars), ou un autre prénom (un ami invité).
 
 ## Pages communes
