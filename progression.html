@@ -136,6 +136,7 @@ h3.sub{margin:6px 0 0;font-family:var(--display)}
   </header>
   <section id="login" class="login" hidden></section>
   <section id="board" class="board" hidden></section>
+  <p class="lead" style="font-size:.9rem;margin-top:28px">Anciennes versions gardées en ligne : <a href="jeux/legende-du-jasmin.html">La Légende du Jasmin, première version (héros dessinés)</a>. Les progrès sont les mêmes dans les deux.</p>
 </main>
 <script>
 'use strict';
@@ -591,7 +592,7 @@ function show(S){
 const PAGES = { '/':'Accueil', '/index.html':'Accueil', '/indexancien.html':'Ancienne accueil', '/progression.html':'Progression (parents)', '/essil/':'Espace Essil', '/salma/':'Espace Salma', '/amine/':'Espace Amine',
   '/essil/deutsch-express.html':'Deutsch Express', '/essil/via-romana.html':'Via Romana', '/salma/english-garden.html':'English Garden', '/salma/weather-station.html':'Weather Station', '/salma/atelier-des-verbes.html':'Atelier des Verbes', '/salma/atelier-des-formes.html':'Atelier des Formes', '/salma/marche-d-ollie.html':"Marché d'Ollie",
   '/salma/jardin-des-nombres.html':'Jardin des Nombres', '/salma/le-grand-galop.html':'Le Grand Galop', '/amine/ardoise-magique.html':'Ardoise magique', '/amine/planete-des-nombres.html':'Planète des Nombres', '/amine/la-nuit-d-amine.html':"La Nuit d'Amine", '/amine/la-nuit-d-amine-2.html':"La Nuit d'Amine 2",
-  '/amine/nahki-tounsi.html':'Nahki Tounsi', '/amine/serpentin.html':'Serpentin', '/jeux/serpent-legendes.html':'Serpent Légendes', '/jeux/ludo-legendes.html':'Ludo Légendes', '/jeux/grimpe-glace.html':'Grimpe-Glace', '/jeux/legende-du-jasmin.html':'La Légende du Jasmin', '/jeux/legende-du-jasmin-2.html':'La Légende du Jasmin 2', '/jeux/atelier-du-jasmin.html':"L'Atelier du Jasmin", '/essil/videos-geometrie.html':'Pas à pas · Géométrie', '/essil/videos-fractions.html':'Pas à pas · Les fractions', '/essil/les-ecuries.html':"Les Écuries d'Essil", '/jeux/les-ecuries.html':'Les Écuries', '/essil/les-ecuries.html':'Les Écuries d\'Essil', '/jeux/medina-express.html':'Médina Express' };
+  '/amine/nahki-tounsi.html':'Nahki Tounsi', '/amine/serpentin.html':'Serpentin', '/jeux/serpent-legendes.html':'Serpent Légendes', '/jeux/ludo-legendes.html':'Ludo Légendes', '/jeux/grimpe-glace.html':'Grimpe-Glace', '/jeux/legende-du-jasmin.html':'La Légende du Jasmin (ancienne version)', '/jeux/legende-du-jasmin-2.html':'La Légende du Jasmin', '/jeux/atelier-du-jasmin.html':"L'Atelier du Jasmin", '/essil/videos-geometrie.html':'Pas à pas · Géométrie', '/essil/videos-fractions.html':'Pas à pas · Les fractions', '/essil/les-ecuries.html':"Les Écuries d'Essil", '/jeux/les-ecuries.html':'Les Écuries', '/essil/les-ecuries.html':'Les Écuries d\'Essil', '/jeux/medina-express.html':'Médina Express' };
 const pageName = p => PAGES[p] || PAGES[p.replace(/index\.html$/, '')] || p;
 const flag = cc => cc && /^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map(c => 127397 + c.charCodeAt(0))) : '🏳️';
 function device(ua, screen){
