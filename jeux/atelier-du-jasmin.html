@@ -149,7 +149,7 @@ body.m3d #cv{display:none}
 @media (orientation:portrait){
   .work{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
   .tools{width:auto;flex-direction:row;align-items:center;overflow-x:auto;touch-action:pan-x;padding:8px}
-  .pal,.pats{grid-template-columns:none;grid-auto-flow:column;grid-template-rows:repeat(2,44px)}
+  .pal,.pats{grid-template-columns:none;grid-auto-flow:column;grid-template-rows:repeat(3,44px)}
   .pats{border-top:0;border-left:2px dashed #cfd8ee;padding:0 0 0 8px}
   .meter{display:none}
 }
@@ -189,6 +189,13 @@ body.m3d #shcv{display:none}
 .box .row{justify-content:center}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:22px;font-weight:800;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center}
 #toast.on{opacity:1}
+#lesson{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:rgba(255,253,246,.96);border-radius:22px;padding:6px 8px;box-shadow:var(--shadow);max-width:calc(100% - 20px);z-index:5;font-weight:700;color:var(--blue-deep)}
+#lesson[hidden]{display:none}#lesTxt{font-size:17px;line-height:1.2;text-align:center}#lesTxt b{color:#e8438f;margin-right:4px}#lesNext{background:#35b44a;color:#fff}
+#tray{position:fixed;inset:0;background:rgba(20,30,70,.35);z-index:65;display:grid;place-items:center;padding:14px}#tray[hidden]{display:none}
+#trayIn{background:#fffdf6;border-radius:26px;padding:14px;box-shadow:var(--shadow);max-width:min(560px,100%);max-height:86vh;overflow:auto}
+#trayIn h3{margin:0 0 10px;text-align:center;color:var(--blue-deep)}.tg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.tg.em{grid-template-columns:repeat(auto-fill,minmax(54px,1fr))}
+.tb{border-radius:16px;background:#fff;box-shadow:0 3px 0 rgba(20,40,90,.25),inset 0 0 0 1px rgba(20,40,90,.15);padding:6px;display:grid;justify-items:center;gap:4px;font-size:30px;min-height:54px}.tb canvas{width:64px;height:64px;border-radius:12px}.tb small{font-size:12px;font-weight:700;color:var(--blue-deep)}
+.tz{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
 #toast.haut{bottom:auto;top:84px}
 #load{position:absolute;inset:0;display:none;place-items:center;font-family:"Baloo 2";font-size:26px;color:var(--blue-deep)}
 #load.on{display:grid}
@@ -215,6 +222,8 @@ body.m3d #shcv{display:none}
     <button class="big c1" data-go="pick:p"><span aria-hidden="true">🏞️</span><div><b>Les paysages</b><small>24 lieux de Tunisie à colorier</small></div></button>
     <button class="big c6" data-go="pick:a"><span aria-hidden="true">🐴</span><div><b>Les animaux</b><small>Chat, chien, cheval… les amis de la ferme</small></div></button>
     <button class="big c2" data-go="pick:c"><span aria-hidden="true">👘</span><div><b>Les costumes</b><small>Habille Nour, Yasmine et Farès</small></div></button>
+    <button class="big c5" data-go="pick:l"><span aria-hidden="true">✏️</span><div><b>Je dessine</b><small>Une feuille blanche, des crayons : à toi de jouer</small></div></button>
+    <button class="big c4" data-go="pick:d"><span aria-hidden="true">🪄</span><div><b>Dessin pas à pas</b><small>Apprends à dessiner un chat, une maison…</small></div></button>
     <button class="big c3" data-go="snake"><span aria-hidden="true">🐍</span><div><b>Mon serpent</b><small>Crée ton skin pour Serpent Légendes</small></div></button>
     <button class="big c4" data-go="gallery"><span aria-hidden="true">🖼️</span><div><b>Ma galerie</b><small id="galCount">Tes dessins</small></div></button>
     <button class="big c5" data-go="show"><span aria-hidden="true">🎭</span><div><b>Le spectacle</b><small>Tes dessins prennent vie</small></div></button>
@@ -238,6 +247,7 @@ body.m3d #shcv{display:none}
     <div id="stage"><canvas id="cv" width="1024" height="768"></canvas><div id="load">Je prépare ton dessin… 🎨</div>
       <div class="zt" id="zt"><button class="zb" id="zIn" aria-label="Agrandir le dessin">➕</button><button class="zb" id="zOut" aria-label="Réduire le dessin">➖</button><button class="zb" id="zFit" aria-label="Voir tout le dessin">🔲</button><button class="zb" id="mBtn" aria-label="Voir le modèle en couleur">🌈</button></div>
       <div id="zLvl"></div>
+      <div id="lesson" hidden><button class="zb" id="lesPrev" aria-label="Étape d'avant">⬅</button><span id="lesTxt"></span><button class="zb" id="lesNext" aria-label="Étape suivante">➜</button></div>
       <button id="pip" hidden aria-label="Voir le modèle en grand"><img id="pipImg" alt="Le modèle en couleur"></button></div>
     <div class="tools"><div class="pal" id="pal"></div><div class="pats" id="pats"></div><div class="meter" aria-hidden="true"><i id="meter"></i></div></div>
   </div>
@@ -293,6 +303,7 @@ body.m3d #shcv{display:none}
 <div id="toast"></div>
 
 <script src="../famille.js"></script>
+<div id="tray" hidden><div id="trayIn"></div></div>
 <script type="module">
 'use strict';
 const $ = id => document.getElementById(id);
@@ -312,7 +323,58 @@ const COST = [
   { who:'Nour', img:'avatars/mascotte-nour.webp', items:[['c-nour-1','Jebba de fête'],['c-nour-2','Pêcheur de Djerba'],['c-nour-3','Prince du désert']] },
   { who:'Yasmine', img:'avatars/mascotte-yasmine.webp', items:[['c-yasmine-1','Farmla et chéchia'],['c-yasmine-2','Melia berbère'],['c-yasmine-3','Caftan de fête']] },
   { who:'Farès', img:'avatars/mascotte-fares.webp', items:[['c-fares-1','Jebba brodée'],['c-fares-2','Cavalier du désert'],['c-fares-3','Farmla et sarouel']] }];
-const NAME = Object.fromEntries(LAND.concat(ANIM, ...COST.map(c => c.items.map(i => [i[0], c.who + ' · ' + i[1]]))));
+/* Feuilles blanches (« l- ») et dessins pas à pas (« d- ») : pas d'image, une feuille 1024 × 768 où l'on dessine au crayon. */
+const FREE = [1, 2, 3, 4, 5, 6].map(i => ['l-' + i, 'Ma feuille ' + i]);
+const ring = (cx, cy, d, r, n) => [...Array(n)].map((_, i) => ['c', Math.round(cx + d * Math.cos(i * 6.2832 / n - 1.5708)), Math.round(cy + d * Math.sin(i * 6.2832 / n - 1.5708)), r]);
+const waves = (x, y, w, n) => [...Array(n)].map((_, i) => ['q', x + i * w, y, x + i * w + w / 2, y + (i & 1 ? 50 : -50), x + (i + 1) * w, y]);
+/* une étape = une phrase + des traits modèles : c cercle, e ellipse (+ angle), l ligne brisée, q courbe, a arc */
+const LESSONS = {
+  'd-chat':{ name:'Un chat', ico:'🐱', steps:[
+    ['Une grosse tête ronde', [['c', 512, 300, 140]]],
+    ['Deux oreilles pointues', [['l', 400, 215, 410, 105, 482, 165], ['l', 624, 215, 614, 105, 542, 165]]],
+    ['Les yeux, le nez et la bouche', [['c', 460, 280, 18], ['c', 564, 280, 18], ['l', 498, 328, 526, 328, 512, 346, 498, 328], ['q', 512, 346, 492, 380, 468, 360], ['q', 512, 346, 532, 380, 556, 360]]],
+    ['Les moustaches', [['l', 440, 328, 335, 308], ['l', 440, 346, 335, 362], ['l', 584, 328, 689, 308], ['l', 584, 346, 689, 362]]],
+    ['Le corps', [['e', 512, 575, 170, 140]]],
+    ['La queue', [['q', 678, 610, 840, 600, 800, 460]]] ] },
+  'd-poisson':{ name:'Un poisson', ico:'🐟', steps:[
+    ['Un corps tout rond', [['e', 480, 384, 220, 130]]],
+    ['La queue en triangle', [['l', 695, 384, 850, 265, 850, 505, 695, 384]]],
+    ['L\'œil et le sourire', [['c', 350, 350, 22], ['q', 275, 420, 300, 445, 335, 425]]],
+    ['Les nageoires', [['q', 420, 260, 500, 160, 580, 272], ['q', 430, 506, 500, 590, 570, 502]]],
+    ['Les écailles', [['a', 400, 384, 62, -1.1, 1.1], ['a', 480, 384, 62, -1.1, 1.1], ['a', 560, 384, 62, -1.1, 1.1]]],
+    ['Des bulles', [['c', 200, 250, 18], ['c', 160, 190, 12], ['c', 215, 150, 9]]] ] },
+  'd-maison':{ name:'Une maison', ico:'🏠', steps:[
+    ['Les murs : un grand carré', [['l', 312, 330, 712, 330, 712, 640, 312, 640, 312, 330]]],
+    ['Le toit : un triangle', [['l', 272, 330, 512, 140, 752, 330, 272, 330]]],
+    ['La porte', [['l', 470, 640, 470, 480, 554, 480, 554, 640], ['c', 538, 565, 6]]],
+    ['Deux fenêtres', [['l', 350, 400, 430, 400, 430, 480, 350, 480, 350, 400], ['l', 594, 400, 674, 400, 674, 480, 594, 480, 594, 400], ['l', 390, 400, 390, 480], ['l', 350, 440, 430, 440], ['l', 634, 400, 634, 480], ['l', 594, 440, 674, 440]]],
+    ['La cheminée et le soleil', [['l', 620, 226, 620, 160, 670, 160, 670, 266], ['c', 870, 140, 52]]],
+    ['Le sol', [['l', 50, 640, 312, 640], ['l', 712, 640, 974, 640]]] ] },
+  'd-fleur':{ name:'Une fleur', ico:'🌸', steps:[
+    ['Le cœur de la fleur', [['c', 512, 250, 50]]],
+    ['Les pétales, tout autour', ring(512, 250, 100, 52, 6)],
+    ['La tige', [['q', 512, 404, 480, 560, 512, 700]]],
+    ['Deux feuilles', [['q', 500, 560, 400, 480, 340, 540], ['q', 340, 540, 420, 600, 500, 560], ['q', 506, 630, 610, 550, 670, 610], ['q', 670, 610, 590, 670, 506, 630]]],
+    ['L\'herbe et le soleil', [['l', 180, 700, 844, 700], ['c', 870, 130, 55]]] ] },
+  'd-bateau':{ name:'Un bateau', ico:'⛵', steps:[
+    ['La coque', [['l', 250, 500, 774, 500, 690, 610, 330, 610, 250, 500]]],
+    ['Le mât, bien droit', [['l', 512, 500, 512, 140]]],
+    ['La grande voile', [['l', 512, 170, 720, 470, 512, 470]]],
+    ['La petite voile', [['l', 512, 220, 350, 470, 512, 470]]],
+    ['Le drapeau', [['l', 512, 140, 585, 162, 512, 190]]],
+    ['Les vagues et le soleil', waves(110, 670, 160, 5).concat([['c', 880, 130, 50]])] ] },
+  'd-papillon':{ name:'Un papillon', ico:'🦋', steps:[
+    ['Le corps, tout fin', [['e', 512, 410, 26, 150]]],
+    ['La tête et les antennes', [['c', 512, 228, 36], ['q', 500, 194, 460, 120, 420, 132], ['q', 524, 194, 564, 120, 604, 132]]],
+    ['Les grandes ailes du haut', [['e', 368, 310, 130, 108, -.3], ['e', 656, 310, 130, 108, .3]]],
+    ['Les petites ailes du bas', [['e', 400, 510, 100, 88, .3], ['e', 624, 510, 100, 88, -.3]]],
+    ['Des ronds pour décorer', [['c', 368, 310, 42], ['c', 656, 310, 42], ['c', 400, 510, 28], ['c', 624, 510, 28]]] ] }
+};
+const DRAW = Object.keys(LESSONS).map(id => [id, LESSONS[id].name]);
+const blank = id => id[0] === 'l' || id[0] === 'd';
+const NAME = Object.fromEntries(LAND.concat(ANIM, FREE, DRAW.map(d => [d[0], 'Je dessine : ' + d[1].toLowerCase()]), ...COST.map(c => c.items.map(i => [i[0], c.who + ' · ' + i[1]]))));
+const PATX = [['b','Arabesque'],['f','Fleurs'],['s','Étoiles'],['h','Cœurs'],['k','Losanges'],['c','Damier'],['v','Chevrons'],['e','Écailles']];
+const STAMPS = '⭐ 🌟 ✨ 🌙 ☀️ ☁️ 🌈 ❤️ 💖 🌸 🌺 🌼 🌷 🌹 🍀 🌴 🌵 🦋 🐝 🐞 🐱 🐶 🐴 🐪 🐦 🐟 🐢 🦩 🎈 🎀 👑 💎 🍉 🍓 🍊 🍋 🧁 🍭 ⚽ 🚗 ⛵ 🏠 🕌 🪁 😀 😍 😎 🥳'.split(' ');
 const COLORS = ['#e8333a','#ff7a1a','#ffc928','#fff0a0','#8fd14f','#2f9e44','#1fb8a6','#5cc8f5','#1f6fd8','#27348b','#8a4fd8','#d264c8','#ff8fb8','#ffd9c2','#e0a878','#a8683c','#6b4226','#ffffff','#9aa3ad','#2b2b33'];
 const PATS = [['u','⬤','Uni'],['r','〰️','Rayures'],['p','🔵','Pois'],['z','💠','Zellige'],['a','🌈','Arc-en-ciel'],['g','🧽','Gomme'],['d','','Dégradé']];
 
@@ -335,12 +397,16 @@ function saveArt(){
 }
 /* Les zones coloriées (sans les vignettes, trop lourdes) partent aussi sur le serveur de la famille :
    les coloriages suivent l'enfant d'une tablette à l'autre et reviennent si la tablette a été vidée. */
-function saveTraits(){ const items = {}; Object.keys(ART.items).forEach(id => { const it = ART.items[id]; if(it.f && it.f.length) items[id] = [it.t || 0, it.f]; }); return store.set(fkey(), { rst:ART.rst || 0, items }); }
+function saveTraits(){ const items = {}; Object.keys(ART.items).forEach(id => { const it = ART.items[id]; const s = it.s && it.s.length ? it.s : 0, k = it.k && it.k.length ? it.k : 0; if((it.f && it.f.length) || s || k) items[id] = s || k ? [it.t || 0, it.f || [], s, k] : [it.t || 0, it.f]; });
+  // le serveur refuse au-delà de 400 Ko : on garde alors les dessins les plus légers
+  let ids = Object.keys(items), size = id => JSON.stringify(items[id]).length, tot = ids.reduce((n, id) => n + size(id), 0);
+  while(tot > 340000 && ids.length){ ids.sort((a, b) => size(b) - size(a)); tot -= size(ids[0]); delete items[ids.shift()]; }
+  return store.set(fkey(), { rst:ART.rst || 0, items }); }
 function mergeTraits(d){
   if(!d || !d.items || (d.rst || 0) < (ART.rst || 0)) return 0;
   let n = 0;
-  Object.keys(d.items).forEach(id => { const v = d.items[id], it = ART.items[id]; if(!NAME[id] || !Array.isArray(v) || !Array.isArray(v[1]) || !v[1].length) return;
-    if(!it || !it.f || (v[0] || 0) > (it.t || 0)){ ART.items[id] = { f:v[1], t:v[0] || 0 }; n++; } });
+  Object.keys(d.items).forEach(id => { const v = d.items[id], it = ART.items[id]; if(!NAME[id] || !Array.isArray(v) || !Array.isArray(v[1])) return; const s = Array.isArray(v[2]) && v[2].length ? v[2] : null, k = Array.isArray(v[3]) && v[3].length ? v[3] : null; if(!v[1].length && !s && !k) return;
+    if(!it || !it.f || (v[0] || 0) > (it.t || 0)){ const o = ART.items[id] = { f:v[1], t:v[0] || 0 }; if(s) o.s = s; if(k) o.k = k; n++; } });
   if(n) saveArt();
   return n;
 }
@@ -422,16 +488,24 @@ function tint(pat, c, x, y){
     case 'p': { const dx = (x % 30) - 15, dy = ((y + ((x / 30) & 1) * 15) % 30) - 15; return dx * dx + dy * dy < 46 ? light(c, .72) : c; }
     case 'z': return (Math.floor((x + y) / 22) + Math.floor((x - y + 4096) / 22)) & 1 ? light(c, .55) : c;
     case 'a': return hsl(((x + y * .6) / 420) % 1, .85, .62);
+    case 'c': return ((x / 26 | 0) + (y / 26 | 0)) & 1 ? light(c, .6) : c;
+    case 'v': return (y + Math.abs((x % 48) - 24)) % 28 < 14 ? light(c, .55) : c;
+    case 'e': { const xx = (x + ((y / 22 | 0) & 1) * 22) % 44 - 22, yy = y % 22, d = xx * xx + yy * yy; return d < 484 && d > 340 ? light(c, .7) : c; }
+    case 'k': { const m = Math.abs(x % 40 - 20) + Math.abs(y % 40 - 20); return m < 6 ? light(c, .85) : m > 12 && m < 16 ? light(c, .55) : c; }
+    case 'b': { const k = .1122, y1 = y % 56 - 28, y2 = (y + 28) % 56 - 28, s1 = 12 * Math.sin(x * k), s2 = 12 * Math.sin((x + 28) * k);
+      if(Math.abs(y1 - s1) < 3.2 || Math.abs(y1 + s1) < 3.2 || Math.abs(y2 - s2) < 3.2 || Math.abs(y2 + s2) < 3.2) return light(c, .72);
+      const ex = (x + 14) % 28 - 14, ey = (y % 28) - 14; return ex * ex + ey * ey < 14 ? light(c, .85) : c; }
+    case 'f': case 's': case 'h': { const cx = (x % 52) - 26, cy = ((y + ((x / 52 | 0) & 1) * 26) % 52) - 26, r = Math.hypot(cx, cy);
+      if(pat === 'h'){ const u = cx / 13, v = -cy / 13 + .2, q = u * u + v * v - 1; return q * q * q - u * u * v * v * v < 0 ? light(c, .8) : c; }
+      const th = Math.atan2(cx, -cy);
+      if(pat === 's') return r < 6 + 12 * Math.pow(Math.abs(Math.cos(2.5 * th)), 5) ? light(c, .82) : c;
+      return r < 5 ? [255, 214, 70] : r < 8 + 10 * Math.abs(Math.cos(2.5 * th)) ? light(c, .78) : c; }
     default: return c;
   }
 }
-async function loadArt(id){
-  const img = await loadImg(`atelier/${id}.webp?v=2`), W = img.naturalWidth, H = img.naturalHeight, N = W * H, isChar = id[0] === 'c';
-  const lc = mk(W, H), lx = lc.getContext('2d', { willReadFrequently:true }); lx.drawImage(img, 0, 0);
-  const src = lx.getImageData(0, 0, W, H), sd = src.data;
-  const wall = new Uint8Array(N); for(let i = 0; i < N; i++) wall[i] = sd[i * 4] < 150 ? 1 : 0;
-  // zones : composantes connexes de ce qui n'est pas un trait
-  const lab = new Int32Array(N), stack = new Int32Array(N), regs = [null];
+// zones : composantes connexes de ce qui n'est pas un trait (refait après chaque coup de crayon)
+function segment(a){
+  const { W, H, wall, isChar } = a, N = W * H, lab = new Int32Array(N), stack = new Int32Array(N), regs = [null];
   for(let s = 0; s < N; s++){
     if(wall[s] || lab[s]) continue;
     const id2 = regs.length; let sp = 0, n = 0, x0 = W, y0 = H, x1 = 0, y1 = 0, edge = false; stack[sp++] = s; lab[s] = id2;
@@ -453,21 +527,90 @@ async function loadArt(id){
     for(let y = 1; y < H - 1; y++) for(let x = 1, i = y * W + 1; x < W - 1; x++, i++){ if(labD[i]) continue; const v = labD[i - 1] || labD[i + 1] || labD[i - W] || labD[i + W]; if(v) nx[i] = v; }
     labD = nx;
   }
+  a.lab = lab; a.labD = labD; a.regs = regs; a.big = regs.filter(r => r && !r.out && r.n >= 120).length; a.gen++;
+}
+/* ----- le crayon : un trait = [couleur, épaisseur, [x, y, x, y…]] ; il ferme les zones comme les traits du dessin ----- */
+function strokePath(x, st){ const p = st[2]; x.lineCap = x.lineJoin = 'round'; x.lineWidth = st[1]; x.strokeStyle = x.fillStyle = st[0]; x.beginPath();
+  if(p.length < 4){ x.arc(p[0], p[1], st[1] / 2, 0, 7); x.fill(); return; } x.moveTo(p[0], p[1]); for(let i = 2; i < p.length; i += 2) x.lineTo(p[i], p[i + 1]); x.stroke(); }
+function inkWall(a, st){
+  const p = st[2], w = st[1] + 2; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for(let i = 0; i < p.length; i += 2){ if(p[i] < x0) x0 = p[i]; if(p[i] > x1) x1 = p[i]; if(p[i + 1] < y0) y0 = p[i + 1]; if(p[i + 1] > y1) y1 = p[i + 1]; }
+  x0 = Math.max(0, Math.floor(x0 - w)); y0 = Math.max(0, Math.floor(y0 - w)); x1 = Math.min(a.W - 1, Math.ceil(x1 + w)); y1 = Math.min(a.H - 1, Math.ceil(y1 + w));
+  const bw = x1 - x0 + 1, bh = y1 - y0 + 1; if(bw <= 0 || bh <= 0) return;
+  if(!a.scx) a.scx = mk(a.W, a.H).getContext('2d', { willReadFrequently:true });
+  a.scx.clearRect(0, 0, a.W, a.H); strokePath(a.scx, ['#000', st[1], p]);
+  const d = a.scx.getImageData(x0, y0, bw, bh).data; for(let yy = 0; yy < bh; yy++) for(let xx = 0; xx < bw; xx++) if(d[(yy * bw + xx) * 4 + 3] > 110) a.wall[(y0 + yy) * a.W + x0 + xx] = 1;
+}
+function rebuildInk(a){ a.wall = a.wall0.slice(); a.lctx.putImageData(a.line0, 0, 0); a.strokes.forEach(st => { strokePath(a.lctx, st); inkWall(a, st); }); }
+/* ----- les tampons : [x, y, emoji, taille] ----- */
+function drawStamp(x, k){ x.font = k[3] + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(k[2], k[0], k[1]); }
+function rebuildStamps(a){ a.kx.clearRect(0, 0, a.W, a.H); a.stamps.forEach(k => drawStamp(a.kx, k)); }
+const seeds = a => { const f = []; a.fills.forEach((v, L) => { const r = a.regs[L]; f.push([r.sx, r.sy, v.c, v.p || 'u']); }); return f; };
+function setFills(a, f){ a.fills.clear(); (f || []).forEach(([x, y, c, p]) => { const L = a.lab[y * a.W + x]; if(L && !a.regs[L].out) a.fills.set(L, { c, p }); }); }
+function repaint(a){ a.gen++; a.cd.data.fill(0); a.fills.forEach((v, L) => paintRegion(a, L, v.c, v.p)); compose(a); }
+// après un coup de crayon : les zones changent, chaque nouvelle zone garde la couleur de celle dont elle vient
+function resegment(a){
+  const old = a.lab, of = a.fills; segment(a); const nf = new Map();
+  if(of.size) for(let L = 1; L < a.regs.length; L++){ const r = a.regs[L]; if(r.out) continue; const o = old[r.sy * a.W + r.sx]; if(o && of.has(o)) nf.set(L, of.get(o)); }
+  a.fills = nf; repaint(a);
+}
+const hasWork = a => !!a && (a.fills.size > 0 || a.strokes.length > 0 || a.stamps.length > 0);
+const snap = a => ({ f:seeds(a), ns:a.strokes.length, nk:a.stamps.length });
+function restore(a, h){
+  if(a.strokes.length !== h.ns){ a.strokes.length = h.ns; rebuildInk(a); segment(a); }
+  if(a.stamps.length !== h.nk){ a.stamps.length = h.nk; rebuildStamps(a); }
+  setFills(a, h.f); repaint(a);
+}
+async function loadArt(id){
+  const free = blank(id); let W = 1024, H = 768, sd;
+  if(free){ sd = new Uint8ClampedArray(W * H * 4).fill(255); }
+  else { const img = await loadImg(`atelier/${id}.webp?v=2`); W = img.naturalWidth; H = img.naturalHeight;
+    const lc = mk(W, H), lx = lc.getContext('2d', { willReadFrequently:true }); lx.drawImage(img, 0, 0); sd = lx.getImageData(0, 0, W, H).data; }
+  const N = W * H, isChar = id[0] === 'c';
+  const wall0 = new Uint8Array(N); for(let i = 0; i < N; i++) wall0[i] = sd[i * 4] < 150 ? 1 : 0;
   // calque des traits (noir, transparent ailleurs) et fond blanc (découpé autour des personnages)
-  const lineCv = mk(W, H), ld = new ImageData(W, H), baseCv = mk(W, H), bd = new ImageData(W, H);
-  for(let i = 0; i < N; i++){ const j = i * 4; ld.data[j] = 28; ld.data[j + 1] = 30; ld.data[j + 2] = 44; ld.data[j + 3] = 255 - sd[j];
-    bd.data[j] = bd.data[j + 1] = bd.data[j + 2] = 255; bd.data[j + 3] = lab[i] && regs[lab[i]].out ? 0 : 255; }
-  lineCv.getContext('2d').putImageData(ld, 0, 0); baseCv.getContext('2d').putImageData(bd, 0, 0);
-  const colorCv = mk(W, H), cx = colorCv.getContext('2d'), cd = cx.createImageData(W, H), out = mk(W, H), ox = out.getContext('2d');
-  const big = regs.filter(r => r && !r.out && r.n >= 120).length;
-  const art = { id, W, H, isChar, lab, labD, regs, lineCv, baseCv, colorCv, cx, cd, out, ox, fills:new Map(), hist:[], big, anims:0 };
-  const saved = ART.items[id]; if(saved && saved.f) saved.f.forEach(([x, y, c, p]) => { const L = lab[y * W + x]; if(L && !regs[L].out){ art.fills.set(L, { c, p }); paintRegion(art, L, c, p); } });
+  const lineCv = mk(W, H), lctx = lineCv.getContext('2d'), line0 = new ImageData(W, H), baseCv = mk(W, H), bd = new ImageData(W, H);
+  for(let i = 0; i < N; i++){ const j = i * 4; line0.data[j] = 28; line0.data[j + 1] = 30; line0.data[j + 2] = 44; line0.data[j + 3] = 255 - sd[j]; }
+  const colorCv = mk(W, H), cx = colorCv.getContext('2d'), cd = cx.createImageData(W, H), out = mk(W, H), ox = out.getContext('2d'), stampCv = mk(W, H), kx = stampCv.getContext('2d');
+  const saved = ART.items[id] || {};
+  const art = { id, W, H, isChar, wall0, wall:null, lineCv, lctx, line0, baseCv, colorCv, cx, cd, out, ox, stampCv, kx, fills:new Map(), hist:[], anims:0, gen:0,
+    strokes:(saved.s || []).map(st => [st[0], st[1], st[2].slice()]), stamps:(saved.k || []).map(k => k.slice()), lesson:LESSONS[id] || null, step:0 };
+  rebuildInk(art); segment(art); rebuildStamps(art);
+  for(let i = 0; i < N; i++){ const j = i * 4; bd.data[j] = bd.data[j + 1] = bd.data[j + 2] = 255; bd.data[j + 3] = art.lab[i] && art.regs[art.lab[i]].out ? 0 : 255; }
+  baseCv.getContext('2d').putImageData(bd, 0, 0);
+  if(art.lesson && art.strokes.length) art.step = art.lesson.steps.length;
+  setFills(art, saved.f); art.fills.forEach((v, L) => paintRegion(art, L, v.c, v.p));
   compose(art); return art;
 }
 function compose(a, rect){
   if(rect) a.cx.putImageData(a.cd, 0, 0, rect[0], rect[1], rect[2], rect[3]); else a.cx.putImageData(a.cd, 0, 0);
-  a.ox.clearRect(0, 0, a.W, a.H); a.ox.drawImage(a.baseCv, 0, 0); a.ox.drawImage(a.colorCv, 0, 0); a.ox.drawImage(a.lineCv, 0, 0);
+  redraw(a);
+}
+function redraw(a){
+  a.ox.clearRect(0, 0, a.W, a.H); a.ox.drawImage(a.baseCv, 0, 0); a.ox.drawImage(a.colorCv, 0, 0); a.ox.drawImage(a.lineCv, 0, 0); a.ox.drawImage(a.stampCv, 0, 0);
+  if(a.lesson && !a.noGuide) drawGuide(a.ox, a.lesson, a.step);
   if(a.onDraw) a.onDraw();
+}
+/* ----- dessin pas à pas : le modèle de l'étape en pointillés bleus, les étapes d'avant en très clair ----- */
+function gpath(x, g){ x.beginPath();
+  if(g[0] === 'c') x.arc(g[1], g[2], g[3], 0, 6.2832);
+  else if(g[0] === 'e') x.ellipse(g[1], g[2], g[3], g[4], g[5] || 0, 0, 6.2832);
+  else if(g[0] === 'a') x.arc(g[1], g[2], g[3], g[4], g[5]);
+  else if(g[0] === 'q'){ x.moveTo(g[1], g[2]); x.quadraticCurveTo(g[3], g[4], g[5], g[6]); }
+  else { x.moveTo(g[1], g[2]); for(let i = 3; i < g.length; i += 2) x.lineTo(g[i], g[i + 1]); }
+  x.stroke(); }
+function drawGuide(x, les, step){
+  if(step >= les.steps.length) return;   // dessin fini : plus de modèle
+  x.save(); x.lineCap = x.lineJoin = 'round';
+  les.steps.forEach((s, i) => { if(i > step) return; if(i < step){ x.setLineDash([]); x.lineWidth = 4; x.strokeStyle = 'rgba(40,130,255,.16)'; } else { x.setLineDash([16, 12]); x.lineWidth = 7; x.strokeStyle = 'rgba(30,120,255,.8)'; } s[1].forEach(g => gpath(x, g)); });
+  x.restore();
+}
+const blankTh = {};
+function blankThumb(id){
+  if(blankTh[id]) return blankTh[id]; const c = mk(260, 195), x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 260, 195);
+  if(LESSONS[id]){ x.scale(260 / 1024, 260 / 1024); x.lineWidth = 12; x.lineCap = x.lineJoin = 'round'; x.strokeStyle = '#1c2340'; LESSONS[id].steps.forEach(s => s[1].forEach(g => gpath(x, g))); }
+  else { x.font = '70px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.globalAlpha = .5; x.fillText('✏️', 130, 100); }
+  return blankTh[id] = c.toDataURL('image/png');
 }
 function bbox(a, L){ const r = a.regs[L]; const x0 = Math.max(0, r.x0 - 3), y0 = Math.max(0, r.y0 - 3), x1 = Math.min(a.W - 1, r.x1 + 3), y1 = Math.min(a.H - 1, r.y1 + 3); return [x0, y0, x1, y1]; }
 // remplit une zone (c = couleur ou null pour gommer) ; r2 = rayon² depuis (px, py) pour l'animation
@@ -486,10 +629,10 @@ function paintRegion(a, L, c, p, px, py, r2){
 }
 function fillAnim(a, L, c, p, px, py){
   const [x0, y0, x1, y1] = bbox(a, L), far = Math.max(Math.hypot(px - x0, py - y0), Math.hypot(px - x1, py - y0), Math.hypot(px - x0, py - y1), Math.hypot(px - x1, py - y1));
-  const t0 = performance.now(), dur = Math.min(420, 160 + far * .5); a.anims++;
+  const t0 = performance.now(), dur = Math.min(420, 160 + far * .5), gen = a.gen; a.anims++;
   (function step(){
     const k = Math.min(1, (performance.now() - t0) / dur), r = far * (1 - Math.pow(1 - k, 2)) + 4;
-    const cur2 = a.fills.get(L); if(!cur2 || cur2.c !== c || cur2.p !== p){ a.anims--; return; }   // zone repeinte entre-temps
+    const cur2 = a.fills.get(L); if(a.gen !== gen || !cur2 || cur2.c !== c || cur2.p !== p){ a.anims--; return; }   // zone repeinte entre-temps
     compose(a, paintRegion(a, L, c, p, px, py, k >= 1 ? undefined : r * r));
     if(k < 1) requestAnimationFrame(step); else a.anims--;
   })();
@@ -503,51 +646,96 @@ function pickRegion(a, x, y){
   return best;
 }
 function persist(a, withThumb){
-  const f = []; a.fills.forEach((v, L) => { const r = a.regs[L]; f.push([r.sx, r.sy, v.c, v.p || 'u']); });
-  const it = ART.items[a.id] = ART.items[a.id] || {}; it.f = f; it.t = Date.now();
+  const it = ART.items[a.id] = ART.items[a.id] || {}; it.f = seeds(a); it.t = Date.now();
+  if(a.strokes.length) it.s = a.strokes; else delete it.s;
+  if(a.stamps.length) it.k = a.stamps; else delete it.k;
   if(withThumb || !it.th) it.th = thumb(a);
-  if(!f.length) delete ART.items[a.id];
+  if(!hasWork(a)) delete ART.items[a.id];
   saveArt();
 }
-function thumb(a){ const s = 260 / Math.max(a.W, a.H), c = mk(Math.round(a.W * s), Math.round(a.H * s)), x = c.getContext('2d'); x.fillStyle = '#fffdf6'; x.fillRect(0, 0, c.width, c.height); x.drawImage(a.out, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', .72); }
+function thumb(a){ const s = 260 / Math.max(a.W, a.H), c = mk(Math.round(a.W * s), Math.round(a.H * s)), x = c.getContext('2d'); x.fillStyle = '#fffdf6'; x.fillRect(0, 0, c.width, c.height); if(a.lesson){ a.noGuide = true; redraw(a); } x.drawImage(a.out, 0, 0, c.width, c.height); if(a.lesson){ a.noGuide = false; redraw(a); } return c.toDataURL('image/jpeg', .72); }
 const coverage = a => { let n = 0; a.fills.forEach((v, L) => { if(a.regs[L].n >= 120) n++; }); return a.big ? n / a.big : 0; };
 
 /* =====================================================================
    Écran de coloriage
    ===================================================================== */
+let tool = 'fill', stamp = '⭐', stampSize = 90;   // outil : fill (colorier), pen (crayon noir), felt (feutre de couleur), stamp (tampon)
 let color2 = '#ffffff', pick2 = false;   // dégradé : la 2e couleur (blanc au départ), et « je choisis la 2e couleur »
 let art = null, color = COLORS[8], pat = 'u', pickKind = 'p', saveT = null;
 const cv = $('cv'), cvx = cv.getContext('2d');
 function buildPalette(){
   $('pal').innerHTML = COLORS.map((c, i) => `<button class="sw" data-c="${c}" style="background:${c}" aria-label="Couleur ${i + 1}"></button>`).join('');
-  $('pats').innerHTML = PATS.map(p => `<button class="sw" data-p="${p[0]}" aria-label="${p[2]}" title="${p[2]}">${p[1]}</button>`).join('') + '<button class="sw c2" id="c2" aria-label="Deuxième couleur du dégradé" title="Deuxième couleur du dégradé"><i></i></button>';
-  $('c2').onclick = e => { e.stopPropagation(); pat = 'd'; pick2 = !pick2; sfx.tap(); if(pick2){ toast('Touche la deuxième couleur du dégradé 🎨'); $('toast').classList.add('haut'); } markTools(); };
-  $('pal').onclick = e => { const b = e.target.closest('[data-c]'); if(!b) return; if(pick2){ color2 = b.dataset.c; pick2 = false; sfx.fill(COLORS.indexOf(color2)); markTools(); return; } color = b.dataset.c; if(pat === 'g') pat = 'u'; sfx.fill(COLORS.indexOf(color)); markTools(); };
-  $('pats').onclick = e => { const b = e.target.closest('[data-p]'); if(!b) return; pat = b.dataset.p; pick2 = false; sfx.tap(); markTools(); };
+  $('pats').innerHTML = PATS.map(p => `<button class="sw" data-p="${p[0]}" aria-label="${p[2]}" title="${p[2]}">${p[1]}</button>`).join('') + '<button class="sw c2" id="c2" aria-label="Deuxième couleur du dégradé" title="Deuxième couleur du dégradé"><i></i></button>'
+    + '<button class="sw" data-x="more" aria-label="Plus de motifs" title="Plus de motifs">🧵</button><button class="sw" data-t="pen" aria-label="Crayon noir" title="Crayon noir">✏️</button><button class="sw" data-t="felt" aria-label="Feutre de couleur" title="Feutre de couleur">🖍️</button><button class="sw" data-x="stamp" aria-label="Tampons" title="Tampons">😀</button>';
+  $('c2').onclick = e => { e.stopPropagation(); pat = 'd'; tool = 'fill'; pick2 = !pick2; sfx.tap(); if(pick2){ toast('Touche la deuxième couleur du dégradé 🎨'); $('toast').classList.add('haut'); } markTools(); };
+  $('pal').onclick = e => { const b = e.target.closest('[data-c]'); if(!b) return; if(pick2){ color2 = b.dataset.c; pick2 = false; sfx.fill(COLORS.indexOf(color2)); markTools(); return; } color = b.dataset.c; if(pat === 'g') pat = 'u'; if(tool !== 'felt') tool = 'fill'; sfx.fill(COLORS.indexOf(color)); markTools(); };
+  $('pats').onclick = e => { const t = e.target.closest('[data-t]'), x = e.target.closest('[data-x]');
+    if(t){ if(S.mode === '3d'){ toast('Le crayon marche en 2D : change avec le bouton 🧊 3D du menu.'); sfx.nope(); return; } tool = tool === t.dataset.t ? 'fill' : t.dataset.t; pick2 = false; sfx.tap(); markTools(); return; }
+    if(x){ sfx.tap(); openTray(x.dataset.x); return; }
+    const b = e.target.closest('[data-p]'); if(!b) return; pat = b.dataset.p; tool = 'fill'; pick2 = false; sfx.tap(); markTools(); };
   markTools();
 }
-function markTools(){ document.querySelectorAll('#pal .sw').forEach(b => b.classList.toggle('on', b.dataset.c === color && pat !== 'g' && pat !== 'a')); document.querySelectorAll('#pats .sw').forEach(b => b.classList.toggle('on', b.dataset.p === pat));
+function markTools(){ document.querySelectorAll('#pal .sw').forEach(b => b.classList.toggle('on', b.dataset.c === color && pat !== 'g' && pat !== 'a')); document.querySelectorAll('#pats .sw').forEach(b => b.classList.toggle('on', b.dataset.p ? tool === 'fill' && b.dataset.p === pat : b.dataset.t ? tool === b.dataset.t : b.dataset.x === 'stamp' ? tool === 'stamp' : b.dataset.x === 'more' ? tool === 'fill' && PATX.some(q => q[0] === pat) : false));
+  const sb = document.querySelector('#pats [data-x="stamp"]'); if(sb) sb.textContent = tool === 'stamp' ? stamp : '😀';
+  document.querySelectorAll('#pal .sw').forEach(b => { if(tool === 'pen' || tool === 'stamp') b.classList.remove('on'); });
   const g = document.querySelector('#pats [data-p="d"]'), c2 = $('c2'); if(g) g.style.background = `linear-gradient(${color},${color2})`; if(c2){ c2.firstChild.style.background = color2; c2.classList.toggle('pick', pick2); c2.classList.toggle('dim', pat !== 'd'); } }
+function openTray(kind){
+  const t = $('tray'), g = $('trayIn');
+  if(kind === 'more'){
+    g.innerHTML = '<h3>Les motifs</h3><div class="tg">' + PATX.map(q => `<button class="tb" data-p="${q[0]}" aria-label="${q[1]}"><canvas width="64" height="64"></canvas><small>${q[1]}</small></button>`).join('') + '</div>';
+    const base = rgb(color); g.querySelectorAll('canvas').forEach((c, i) => { const x = c.getContext('2d'), im = x.createImageData(64, 64); for(let y = 0; y < 64; y++) for(let xx = 0; xx < 64; xx++){ const v = tint(PATX[i][0], base, xx + 200, y + 200), j = (y * 64 + xx) * 4; im.data[j] = v[0]; im.data[j + 1] = v[1]; im.data[j + 2] = v[2]; im.data[j + 3] = 255; } x.putImageData(im, 0, 0); });
+  } else {
+    g.innerHTML = '<h3>Les tampons</h3><div class="tz">' + [[56, 'Petit'], [90, 'Moyen'], [150, 'Grand']].map(z => `<button class="chip ${stampSize === z[0] ? 'on' : ''}" data-z="${z[0]}">${z[1]}</button>`).join('') + '</div><div class="tg em">' + STAMPS.map(e => `<button class="tb" data-e="${e}">${e}</button>`).join('') + '</div>';
+  }
+  t.hidden = false;
+}
+$('tray').onclick = e => {
+  const z = e.target.closest('[data-z]'); if(z){ stampSize = +z.dataset.z; sfx.tap(); $('trayIn').querySelectorAll('[data-z]').forEach(b => b.classList.toggle('on', b === z)); return; }
+  const p = e.target.closest('[data-p]'), em = e.target.closest('[data-e]');
+  if(p){ pat = p.dataset.p; tool = 'fill'; pick2 = false; } else if(em){ stamp = em.dataset.e; tool = 'stamp'; pick2 = false; } else if(e.target.closest('#trayIn')) return;
+  sfx.tap(); $('tray').hidden = true; markTools();
+};
+function lessonBar(){
+  const b = $('lesson'); if(!art || !art.lesson){ b.hidden = true; return; } const n = art.lesson.steps.length, end = art.step >= n;
+  b.hidden = false; $('lesTxt').innerHTML = end ? '<b>Bravo !</b> Maintenant, colorie ton dessin 🎨' : `<b>${art.step + 1} / ${n}</b> ${art.lesson.steps[art.step][0]}`;
+  $('lesPrev').disabled = art.step <= 0; $('lesNext').disabled = end; $('lesNext').textContent = art.step === n - 1 ? '✔' : '➜';
+}
+function lessonGo(d){ if(!art || !art.lesson) return; const n = art.lesson.steps.length; art.step = Math.max(0, Math.min(n, art.step + d)); sfx.tap(); if(art.step >= n){ tool = 'fill'; celebrate(); } else tool = 'pen'; markTools(); redraw(art); lessonBar(); }
+$('lesPrev').onclick = () => lessonGo(-1); $('lesNext').onclick = () => lessonGo(1);
 async function openArt(id){
+  if(blank(id) && S.mode === '3d'){ S.mode = '2d'; save(); await applyMode('2d'); toast('Pour dessiner, on passe en 2D ✏️'); }
   go('paint'); $('pTitle').textContent = NAME[id] || ''; $('pip').hidden = true; $('load').classList.add('on'); cv.style.visibility = 'hidden'; art = null; if(T) T.setBoard(null);
   await new Promise(r => setTimeout(r, 30));
   let a; try{ a = await loadArt(id); }catch(e){ toast('Ce dessin ne se charge pas. Vérifie la connexion.'); go('pick:' + pickKind); return; }
   if(cur !== 'paint') return;
   art = a; cv.width = a.W; cv.height = a.H; a.onDraw = () => { if(S.mode === '3d'){ if(T) T.touchBoard(); } else { cvx.clearRect(0, 0, a.W, a.H); cvx.drawImage(a.out, 0, 0); } };
   a.onDraw(); if(S.mode === '3d' && T) T.setBoard(a);
-  $('load').classList.remove('on'); cv.style.visibility = ''; meter(); zReset(); showModel(); say('colorie', true);
+  $('load').classList.remove('on'); cv.style.visibility = ''; tool = blank(id) && !(a.lesson && a.step >= a.lesson.steps.length) ? 'pen' : tool === 'stamp' ? 'stamp' : 'fill'; markTools(); lessonBar(); meter(); zReset(); showModel(); if(!blank(id)) say('colorie', true);
 }
 function meter(){ const k = art ? coverage(art) : 0; $('meter').style.width = Math.round(k * 100) + '%'; $('done').classList.toggle('wow', k >= .9); $('undo').disabled = !art || !art.hist.length; }
 function tapArt(x, y){
-  if(!art) return; const L = pickRegion(art, x, y); if(!L){ sfx.nope(); return; }
+  if(!art) return;
+  if(tool === 'stamp'){ x = Math.round(x); y = Math.round(y); if(x < 0 || y < 0 || x >= art.W || y >= art.H) return; pushHist(); const k = [x, y, stamp, stampSize]; art.stamps.push(k); drawStamp(art.kx, k); redraw(art); sfx.fill(3); meter(); later(); return; }
+  if(tool === 'pen' || tool === 'felt') return;
+  const L = pickRegion(art, x, y); if(!L){ sfx.nope(); return; }
   const prev = art.fills.get(L) || null, c = pat === 'g' ? null : color, p = pat === 'g' ? 'u' : pat === 'd' ? 'd' + color2 : pat;
   if(prev && prev.c === c && prev.p === p) return;
   if(!prev && !c) return;
-  art.hist.push([L, prev]); if(art.hist.length > 60) art.hist.shift();
+  pushHist();
   if(c){ art.fills.set(L, { c, p }); fillAnim(art, L, c, p, x, y); sfx.fill(COLORS.indexOf(c) + (p === 'a' ? 3 : 0)); }
   else { art.fills.delete(L); compose(art, paintRegion(art, L, null)); sfx.undo(); }
-  meter(); clearTimeout(saveT); saveT = setTimeout(() => art && persist(art, false), 900);
+  meter(); later();
 }
+function pushHist(h){ art.hist.push(h || snap(art)); if(art.hist.length > 40) art.hist.shift(); }
+function later(){ clearTimeout(saveT); saveT = setTimeout(() => art && persist(art, false), 900); }
+/* le crayon : un doigt qui glisse trace un trait (deux doigts : on déplace et on agrandit toujours) */
+let pen = null;
+const toArt = e => { const r = cv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * art.W), Math.round((e.clientY - r.top) / r.height * art.H)]; };
+function penStart(e){ const [x, y] = toArt(e); pen = { id:e.pointerId, h:snap(art), st:[tool === 'pen' ? '#1c1e2c' : color, tool === 'pen' ? 7 : 11, [x, y]] }; strokePath(art.lctx, pen.st); redraw(art); }
+function penMove(e){ const p = pen.st[2], n = p.length, [x, y] = toArt(e); if(Math.hypot(x - p[n - 2], y - p[n - 1]) < 4) return;
+  const c = art.lctx; c.lineCap = c.lineJoin = 'round'; c.lineWidth = pen.st[1]; c.strokeStyle = pen.st[0]; c.beginPath(); c.moveTo(p[n - 2], p[n - 1]); c.lineTo(x, y); c.stroke(); p.push(x, y); redraw(art); }
+function penEnd(ok){ const p = pen; pen = null; if(!art) return; if(!ok){ rebuildInk(art); redraw(art); return; }
+  pushHist(p.h); art.strokes.push(p.st); inkWall(art, p.st); resegment(art); meter(); later(); }
 /* ----- la loupe : ➕ ➖, pincer avec deux doigts ou molette ; quand le dessin est agrandi, on le déplace en glissant ----- */
 const stage = $('stage'), Z = { z:1, x:0, y:0 }, ZMAX = 6, ZP = new Map(); let zMoved = 0, zPinch = null, zLvlT = null;
 function zApply(show){
@@ -564,14 +752,16 @@ function zAt(z2, cx, cy){ const r = stage.getBoundingClientRect(), px = (cx === 
 function zReset(){ Z.z = 1; Z.x = Z.y = 0; zApply(); }
 function zoomBtn(f){ sfx.tap(); if(S.mode === '3d'){ if(T) T.zoomBy(f); return; } if(f) zAt(Z.z * f); else { zReset(); zLabel(1); } }
 $('zIn').onclick = () => zoomBtn(1.6); $('zOut').onclick = () => zoomBtn(1 / 1.6); $('zFit').onclick = () => zoomBtn(0);
-['zt', 'pip'].forEach(id => ['pointerdown', 'pointerup', 'pointermove', 'wheel'].forEach(ev => $(id).addEventListener(ev, e => e.stopPropagation())));
+['zt', 'pip', 'lesson'].forEach(id => ['pointerdown', 'pointerup', 'pointermove', 'wheel'].forEach(ev => $(id).addEventListener(ev, e => e.stopPropagation())));
 stage.addEventListener('pointerdown', e => { if(S.mode === '3d' || !art) return; e.preventDefault(); audio(); try{ stage.setPointerCapture(e.pointerId); }catch(_){}
   ZP.set(e.pointerId, { x:e.clientX, y:e.clientY, onCv:e.target === cv }); zMoved = ZP.size > 1 ? 99 : 0;
+  if(pen && ZP.size > 1) penEnd(false); else if(ZP.size === 1 && e.target === cv && (tool === 'pen' || tool === 'felt')) penStart(e);
   if(ZP.size === 2){ const [a, b] = [...ZP.values()]; zPinch = { d:Math.hypot(a.x - b.x, a.y - b.y) || 1, z:Z.z, mx:(a.x + b.x) / 2, my:(a.y + b.y) / 2 }; } });
-stage.addEventListener('pointermove', e => { const p = ZP.get(e.pointerId); if(!p || S.mode === '3d') return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+stage.addEventListener('pointermove', e => { const p = ZP.get(e.pointerId); if(!p || S.mode === '3d') return; if(pen && pen.id === e.pointerId){ penMove(e); return; } const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
   if(ZP.size === 1){ zMoved += Math.abs(dx) + Math.abs(dy); if(zMoved > 12 && Z.z > 1.001){ Z.x += dx; Z.y += dy; zApply(); } }
   else if(ZP.size === 2 && zPinch){ const [a, b] = [...ZP.values()], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; Z.x += mx - zPinch.mx; Z.y += my - zPinch.my; zPinch.mx = mx; zPinch.my = my; zAt(zPinch.z * Math.hypot(a.x - b.x, a.y - b.y) / zPinch.d, mx, my); } });
 const zUp = e => { const p = ZP.get(e.pointerId); if(!p) return; ZP.delete(e.pointerId); if(ZP.size < 2) zPinch = null;
+  if(pen && pen.id === e.pointerId){ penEnd(true); return; }
   if(S.mode !== '3d' && art && e.type === 'pointerup' && zMoved <= 12 && p.onCv){ const r = cv.getBoundingClientRect(); tapArt((e.clientX - r.left) / r.width * art.W, (e.clientY - r.top) / r.height * art.H); } };
 stage.addEventListener('pointerup', zUp); stage.addEventListener('pointercancel', zUp);
 stage.addEventListener('wheel', e => { if(S.mode === '3d' || !art) return; e.preventDefault(); zAt(Z.z * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY); }, { passive:false });
@@ -581,7 +771,8 @@ addEventListener('resize', () => zApply());
 let modelOn = store.get('atelier-modele', false);
 function showModel(){
   const pip = $('pip'); $('mBtn').classList.toggle('on', modelOn && !!art);
-  if(!modelOn || !art){ pip.hidden = true; return; }
+  $('mBtn').hidden = !!art && blank(art.id);
+  if(!modelOn || !art || blank(art.id)){ pip.hidden = true; return; }
   pip.classList.toggle('tall', art.isChar); $('pipImg').onerror = () => { pip.hidden = true; $('mBtn').classList.remove('on'); toast('Ce dessin n\'a pas encore de modèle.'); };
   $('pipImg').src = `atelier/m-${art.id}.webp?v=1`; pip.hidden = false;
 }
@@ -605,7 +796,7 @@ function drawCard(){
 }
 function cardLabels(){ $('cardPos').textContent = CARD.pos === 'bas' ? '⬇️ Texte en bas' : '⬆️ Texte en haut'; $('cardSign').textContent = CARD.sign ? '✍️ Signé : oui' : '✍️ Signé : non'; $('cardSign').classList.toggle('on', CARD.sign); }
 async function openCard(){
-  if(!art) return; if(!art.fills.size){ toast('Colorie d\'abord un peu ton dessin 🙂'); sfx.nope(); return; }
+  if(!art) return; if(!hasWork(art)){ toast('Colorie d\'abord un peu ton dessin 🙂'); sfx.nope(); return; }
   persist(art, true); $('bravo').classList.remove('on'); try{ await document.fonts.load('800 60px "Baloo 2"'); }catch(e){}
   cardLabels(); drawCard(); $('card').classList.add('on'); say('envoyer', true);
 }
@@ -632,7 +823,7 @@ const pzArea = $('pzArea'), pzBoard = $('pzBoard'); window.__pz = PZ;   // pour 
 function pzGrid(n, tall){ const g = n === 8 ? [4, 2] : n === 16 ? [4, 4] : [8, 4]; return tall ? [g[1], g[0]] : g; }
 function pzAskOpen(){
   if(!art) return; sfx.tap();
-  const mine = art.fills.size > 0; if(!mine) PZ.src = 'model'; else if(PZ.src !== 'model') PZ.src = 'mine';
+  const mine = hasWork(art); if(!mine) PZ.src = 'model'; else if(PZ.src !== 'model') PZ.src = 'mine';
   $('pzSrc').innerHTML = mine ? `<button class="chip ${PZ.src === 'mine' ? 'on' : ''}" data-s="mine">🖍️ Mon coloriage</button><button class="chip ${PZ.src === 'model' ? 'on' : ''}" data-s="model">🌈 Le modèle en couleur</button>` : '<small style="color:var(--mist);font-size:16px">Avec le modèle en couleur 🌈 (colorie ton dessin pour en faire ton puzzle !)</small>';
   const best = (S.puz && S.puz[art.id]) || 0;
   document.querySelectorAll('#pzLv button').forEach(b => { b.querySelector('i').textContent = best >= +b.dataset.n ? '⭐ réussi' : ''; });
@@ -646,7 +837,7 @@ $('pzLv').onclick = e => { const b = e.target.closest('[data-n]'); if(!b) return
 // l'image du puzzle, à la taille du dessin au trait
 async function pzPicture(){
   const c = mk(art.W, art.H), x = c.getContext('2d'); x.fillStyle = '#fffdf6'; x.fillRect(0, 0, art.W, art.H);
-  if(PZ.src === 'mine' && art.fills.size){ x.fillStyle = '#ffffff'; x.fillRect(0, 0, art.W, art.H); x.drawImage(art.out, 0, 0); return c; }
+  if(PZ.src === 'mine' && hasWork(art)){ x.fillStyle = '#ffffff'; x.fillRect(0, 0, art.W, art.H); x.drawImage(art.out, 0, 0); return c; }
   try{ const m = await loadImg(`atelier/m-${art.id}.webp?v=1`); x.imageSmoothingQuality = 'high'; x.drawImage(m, 0, 0, art.W, art.H); }catch(e){ x.drawImage(art.out, 0, 0); }
   return c;
 }
@@ -745,12 +936,12 @@ $('pzBack').onclick = () => { sfx.tap(); pzClose(); };
 $('pzGhost').onclick = () => { sfx.tap(); PZ.ghost = !PZ.ghost; $('pzGhost').classList.toggle('on', PZ.ghost); pzDrawBoard(); };
 $('pzMix').onclick = () => { sfx.tap(); pzMixAll(); };
 addEventListener('resize', () => { if($('puz').classList.contains('on')) pzLayout(false); });
-$('undo').onclick = () => { if(!art || !art.hist.length) return; const [L, prev] = art.hist.pop(); if(prev){ art.fills.set(L, prev); compose(art, paintRegion(art, L, prev.c, prev.p)); } else { art.fills.delete(L); compose(art, paintRegion(art, L, null)); } sfx.undo(); meter(); persist(art, false); };
+$('undo').onclick = () => { if(!art || !art.hist.length) return; restore(art, art.hist.pop()); sfx.undo(); meter(); persist(art, false); };
 let wipeArm = 0;
-$('wipe').onclick = () => { if(!art || !art.fills.size) return; if(Date.now() - wipeArm > 2500){ wipeArm = Date.now(); toast('Touche encore 🧽 pour tout effacer'); sfx.tap(); return; } wipeArm = 0; art.fills.clear(); art.hist = []; art.cd.data.fill(0); compose(art); sfx.undo(); meter(); persist(art, true); };
-$('pBack').onclick = () => { if(art && art.fills.size) persist(art, true); sfx.tap(); go(backTo === 'gallery' ? 'gallery' : 'pick:' + pickKind); };
+$('wipe').onclick = () => { if(!art || !hasWork(art)) return; if(Date.now() - wipeArm > 2500){ wipeArm = Date.now(); toast('Touche encore 🧽 pour tout effacer'); sfx.tap(); return; } wipeArm = 0; art.hist = []; restore(art, { f:[], ns:0, nk:0 }); if(art.lesson){ art.step = 0; tool = 'pen'; markTools(); lessonBar(); redraw(art); } sfx.undo(); meter(); persist(art, true); };
+$('pBack').onclick = () => { if(hasWork(art)) persist(art, true); sfx.tap(); go(backTo === 'gallery' ? 'gallery' : 'pick:' + pickKind); };
 $('done').onclick = () => {
-  if(!art) return; if(!art.fills.size){ toast('Colorie d\'abord un peu ton dessin 🙂'); sfx.nope(); return; }
+  if(!art) return; if(!hasWork(art)){ toast('Colorie d\'abord un peu ton dessin 🙂'); sfx.nope(); return; }
   persist(art, true); S.done[art.id] = Date.now(); save();
   celebrate(); say(Math.random() < .5 ? 'bravo' : 'galerie'); if(T) T.cheer();
   $('bTitle').textContent = ['Bravo !', 'Magnifique !', 'Quel artiste !', 'Superbe !'][Math.floor(Math.random() * 4)]; $('bImg').src = ART.items[art.id].th; $('bImg').hidden = false;
@@ -768,12 +959,12 @@ let toastT = null; function toast(m){ const t = $('toast'); t.classList.remove('
    Choix d'un dessin, galerie
    ===================================================================== */
 let backTo = 'pick';
-function card(id, label, tall){ const it = ART.items[id]; return `<button class="card ${tall ? 'tall' : ''}" data-id="${id}"><img src="${it && it.th ? it.th : `atelier/${id}.webp?v=2`}" alt="" loading="lazy">${S.done[id] ? '<span class="ok" aria-label="fini">✔</span>' : ''}<b>${label}</b></button>`; }
+function card(id, label, tall){ const it = ART.items[id]; return `<button class="card ${tall ? 'tall' : ''}" data-id="${id}"><img src="${it && it.th ? it.th : blank(id) ? blankThumb(id) : `atelier/${id}.webp?v=2`}" alt="" loading="lazy">${S.done[id] ? '<span class="ok" aria-label="fini">✔</span>' : ''}<b>${label}</b></button>`; }
 function renderPick(kind){
-  pickKind = kind; $('pickTitle').textContent = kind === 'p' ? 'Choisis un paysage' : kind === 'a' ? 'Choisis un animal' : 'Choisis un ami et sa tenue';
-  $('pickGrid').innerHTML = kind !== 'c' ? (kind === 'a' ? ANIM : LAND).map(l => card(l[0], l[1])).join('')
+  pickKind = kind; $('pickTitle').textContent = kind === 'p' ? 'Choisis un paysage' : kind === 'a' ? 'Choisis un animal' : kind === 'l' ? 'Choisis une feuille' : kind === 'd' ? 'Que veux-tu dessiner ?' : 'Choisis un ami et sa tenue';
+  $('pickGrid').innerHTML = kind !== 'c' ? (kind === 'a' ? ANIM : kind === 'l' ? FREE : kind === 'd' ? DRAW.map(d => [d[0], LESSONS[d[0]].ico + ' ' + d[1]]) : LAND).map(l => card(l[0], l[1])).join('')
     : COST.map(c => `<div class="sect"><img src="${c.img}" alt="">${c.who}</div>` + c.items.map(i => card(i[0], i[1], true)).join('')).join('');
-  say(kind === 'p' ? 'paysage' : kind === 'a' ? 'animaux' : 'costume', true);
+  if(kind !== 'l' && kind !== 'd') say(kind === 'p' ? 'paysage' : kind === 'a' ? 'animaux' : 'costume', true);
 }
 function renderGallery(){
   const ids = Object.keys(ART.items).filter(id => NAME[id] && (ART.items[id].th || ART.items[id].f)).sort((a, b) => (ART.items[b].t || 0) - (ART.items[a].t || 0));
@@ -1043,8 +1234,8 @@ document.addEventListener('click', async e => {
   if(e.target.closest('.who')){ sfx.tap(); choose(); return; }
   if(e.target.closest('#mode2')){ sfx.tap(); S.mode = S.mode === '3d' ? '2d' : '3d'; save(); await applyMode(S.mode); go('menu'); }
 });
-addEventListener('pagehide', () => { if(art && art.fills.size) persist(art, true); });
-document.addEventListener('visibilitychange', () => { if(document.hidden && art && art.fills.size) persist(art, true); });
+addEventListener('pagehide', () => { if(hasWork(art)) persist(art, true); });
+document.addEventListener('visibilitychange', () => { if(document.hidden && hasWork(art)) persist(art, true); });
 addEventListener('resize', () => { if(T) T.resize(); });
 document.addEventListener('contextmenu', e => e.preventDefault());
 
