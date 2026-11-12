@@ -140,6 +140,11 @@ const fresh = () => ({ best:0, bestDoux:0, coins:0, games:0, dist:0, far:0, t:0,
 const SKINS = [
   { id:'classique', n:'Classique', ic:'👕', prix:0 },
   { id:'jebba', n:'Jebba et chéchia', ic:'🕌', prix:150, torso:'#f7f3ea', arms:'#f7f3ea', thigh:'#f7f3ea', shin:'#f7f3ea', shoe:'#c9743a', pack:null, skirt:'#f7f3ea', hat:1, trim:'#c9a227' },
+  // 12/11 : quatre tenues créées avec ComfyUI en local (FLUX.2 klein retouche toute la planche : la tenue change, les 24 poses restent)
+  { id:'pyjama', n:'Pyjama', ic:'🌙', prix:100, torso:'#cfe6ff', arms:'#cfe6ff', thigh:'#cfe6ff', shin:'#cfe6ff', shoe:'#8a5a2b', pack:null, trim:'#7fb2e8' },
+  { id:'tablier', n:"Tablier d'école", ic:'🎒', prix:200, torso:'#2f55b8', arms:'#2f55b8', thigh:'#2a3140', shin:'#2a3140', shoe:'#f4f4f4', pack:null, trim:'#ffffff' },
+  { id:'plage', n:'Tenue de plage', ic:'🩴', prix:400, torso:'#ffffff', arms:'#ffffff', thigh:'#12c8b4', shin:'#e0aa84', shoe:'#3a2c22', pack:null, trim:'#2f6fd6' },
+  { id:'fete', n:'Tenue de fête', ic:'🎉', prix:800, torso:'#c2185b', arms:'#c2185b', thigh:'#c2185b', shin:'#c2185b', shoe:'#e3b23c', pack:null, skirt:'#c2185b', trim:'#e3b23c' },
   { id:'foot', n:'Maillot de foot', ic:'⚽', prix:300, torso:'#e8333a', arms:'#e8333a', thigh:'#ffffff', shin:'#e8333a', shoe:'#1c2340', pack:null, trim:'#ffffff' },
   { id:'super', n:'Super-héros', ic:'🦸', prix:600, torso:'#1f6fd8', arms:'#1f6fd8', thigh:'#1f6fd8', shin:'#e8333a', shoe:'#e8333a', pack:null, cape:'#e8333a', trim:'#ffc928' },
   { id:'astro', n:'Astronaute', ic:'🧑‍🚀', prix:1000, torso:'#f4f4f4', arms:'#f4f4f4', thigh:'#f4f4f4', shin:'#f4f4f4', shoe:'#9aa3ad', pack:'#c9ced6', trim:'#ff8c1a' },
@@ -296,7 +301,7 @@ function setHead(){
 }
 let filmOn = false, filmK = 1; const filmTex = {};
 // planches disponibles : medina/corps-<personnage>[-<tenue>].webp (6 x 4 images : 0-11 la foulée, 12-19 le saut, 20-23 la glissade)
-const TENUES = ['classique', 'jebba', 'foot', 'super', 'astro', 'or'], CORPS = Object.fromEntries(['essil', 'salma', 'amine', 'anis', 'imen', 'nour', 'yasmine', 'fares'].map(n => [n, TENUES]));
+const TENUES = ['classique', 'jebba', 'pyjama', 'tablier', 'plage', 'fete', 'foot', 'super', 'astro', 'or'], CORPS = Object.fromEntries(['essil', 'salma', 'amine', 'anis', 'imen', 'nour', 'yasmine', 'fares'].map(n => [n, TENUES]));
 const TAILLE = { amine:.78, salma:.88, essil:.95, nour:.9, yasmine:.9, anis:1.06, imen:1.03, fares:1.02 };
 function applySkin(){
   const h = headOf(player), k = SKINS.find(x => x.id === save.skin) || SKINS[0], base = k.id === 'classique', who = player, sk = save.skin;
