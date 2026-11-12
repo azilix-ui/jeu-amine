@@ -138,6 +138,16 @@ const sfx = {
   tune(){ [293, 311, 370, 392, 440, 392, 370, 311].forEach((f, i) => tone(f * 2, .2, 'triangle', .07, i * .2)); }
 };
 
+/* ---------- la voix (12/11) : le jeu lit à voix haute ses messages, le nom des lieux et des personnages, pour Amine qui ne lit pas encore.
+   Voix française du navigateur (gratuite, aucun fichier). Le bouton 🔊 coupe les bruitages et la voix. ---------- */
+let frVoice = null;
+function pickVoice(){ try{ const v = speechSynthesis.getVoices().filter(v => /^fr/i.test(v.lang)); frVoice = v.find(v => /Denise|Hortense|Julie|Amélie|Amelie|Céline|Google français/i.test(v.name)) || v.find(v => /fr-FR/i.test(v.lang)) || v[0] || null; }catch(e){} }
+if('speechSynthesis' in window){ pickVoice(); try{ speechSynthesis.addEventListener('voiceschanged', pickVoice); }catch(e){} }
+function say(t){ if(muted || !('speechSynthesis' in window) || !t) return;
+  const txt = String(t).replace(/<[^>]+>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{2BFF}\u{FE0F}\u{200D}]/gu, ' ').replace(/\s+/g, ' ').trim(); if(!txt) return;
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'fr-FR'; if(frVoice) u.voice = frVoice; u.rate = .96; u.pitch = 1.05; speechSynthesis.speak(u); }catch(e){} }
+function hush(){ try{ speechSynthesis.cancel(); }catch(e){} }
+
 /* =====================================================================
    PERSONNAGES : la famille et les mascottes (têtes = avatars du site, corps dessinés)
    k = taille ; skin = peau ; o = tenue de départ ; pal = couleurs de la tenue de ville
@@ -531,10 +541,10 @@ function bar(){
 $('bottom').onclick = e => { const b = e.target.closest('.hd'); if(!b || !place) return; const id = b.dataset.c, c = S.chars[id]; const F = PLACES[place].floors[0];
   dropHeld(id, true); c.p = place; c.pose = ''; c.x = Math.round((-panX + view.clientWidth / 2) / scale + (Math.random() * 120 - 60)); c.x = Math.max(F[0], Math.min(F[1], c.x)); c.y = F[2];
   Object.values(S.items).forEach(it => { if(it.h === id) it.p = place; });
-  drawChar(id); pulse(id, 'pop'); sfx.hop(); bar(); save(); check(); };
+  drawChar(id); pulse(id, 'pop'); sfx.hop(); say(CH[id].n + ' arrive !'); bar(); save(); check(); };
 function pulse(id, cls){ const e = ents.get(id); if(!e) return; e.el.classList.remove(cls); void e.el.offsetWidth; e.el.classList.add(cls); setTimeout(() => e.el.classList.remove(cls), 1100); }
 function fx(x, y, emo, dx){ if(calm()) return; const s = document.createElement('span'); s.className = 'fxp'; s.textContent = emo; s.style.left = (x - 15) + 'px'; s.style.top = (y - 30) + 'px'; s.style.setProperty('--dx', (dx == null ? Math.random() * 40 - 20 : dx) + 'px'); stage.appendChild(s); setTimeout(() => s.remove(), 1500); }
-let toastT = 0; function toast(t, ms = 2400){ const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), ms); }
+let toastT = 0; function toast(t, ms = 2400){ say(t); const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), ms); }
 function stars(){ $('stars').textContent = '⭐ ' + Object.keys(S ? S.disc : {}).filter(k => DISC.some(d => d[0] === k)).length; }
 function found(id){ if(S.disc[id]) return; const d = DISC.find(d => d[0] === id); if(!d) return; S.disc[id] = 1; stars(); save(); sfx.star(); toast(`⭐ Découverte : ${d[2]} ${d[1]}`, 3200); }
 
@@ -624,12 +634,12 @@ function tapFixed(f){
   else { (n === 'on' ? sfx.on : sfx.off)(); if(T.glow && n === 'on') found('lampe'); }
   save();
 }
-function tapItem(id){ const T = IT(id), it = S.items[id], t = typeOf(id); pulse(id, 'hop');
+function tapItem(id){ const T = IT(id), it = S.items[id], t = typeOf(id); pulse(id, 'hop'); if(!T.pet && t !== 'darbouka') say(T.n);
   if(t === 'darbouka'){ sfx.drum(0); setTimeout(() => sfx.drum(1), 170); setTimeout(() => sfx.drum(1), 300); fx(it.x, it.y - 60, '🥁'); found('darbouka'); }
   else if(T.pet){ cry(id); fx(it.h ? S.chars[it.h].x : it.x, (it.h ? S.chars[it.h].y - 120 : it.y - 50), '💛'); found(T.d || 'chat'); if(T.alt){ it.s = it.s === 'b' ? '' : 'b'; drawItem(id); save(); } }
   else if(T.toy){ sfx.hop(); } else sfx.tap(); }
 function tapChar(id){ const c = S.chars[id]; pulse(id, 'hop'); sfx.hop();
-  if(c.acc.length){ takeOff(id, c.acc[c.acc.length - 1]); drawChar(id); save(); } else fx(c.x, c.y - 230 * CH[id].k, pick(['👋', '😄', '🎉', '💛'])); }
+  if(c.acc.length){ takeOff(id, c.acc[c.acc.length - 1]); drawChar(id); save(); } else say(pick(['Coucou, c\'est ', 'Salut ! Moi, c\'est ', 'Bonjour ! Je suis ']) + CH[id].n), fx(c.x, c.y - 230 * CH[id].k, pick(['👋', '😄', '🎉', '💛'])); }
 const pick = a => a[Math.floor(Math.random() * a.length)];
 function cry(id){ const t = typeOf(id); if(t === 'chatR' || t === 'chat') sfx.meow(); else if(t === 'chevre'){ tone(330, .3, 'sawtooth', .06, 0, 300); tone(340, .25, 'sawtooth', .05, .12, 290); } else if(['cigogne', 'mouette'].includes(t)) sfx.bird(); else if(t === 'grenouille') tone(140, .18, 'square', .06, 0, 220); else sfx.hop(); }
 
@@ -717,19 +727,19 @@ function mapSVG(){ const house = (x, y, w, h, dome) => `<rect x="${x}" y="${y}" 
 function go(pid){
   saveNow();
   if(pid === 'map'){ place = null; stage.innerHTML = `<div id="map">${mapSVG()}${MAP.map(m => `<button class="pl${m[5] ? '' : ' soon'}" data-p="${m[0]}" style="left:${m[1]}%;top:${m[2]}%"><span style="font-size:64px;line-height:1">${m[4]}</span><span class="sign">${m[3]}${m[5] ? '' : ' 🚧'}</span></button>`).join('')}</div>`;
-    $('title').innerHTML = `Ma Houma<small>le quartier du Jasmin · choisis un lieu</small>`; bar(); panX = 0; fit(); return; }
-  place = pid; S.seen[pid] = 1; if(Object.keys(PLACES).every(k => S.seen[k])) setTimeout(() => found('voyage'), 800); $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
+    $('title').innerHTML = `Ma Houma<small>le quartier du Jasmin · choisis un lieu</small>`; bar(); panX = 0; fit(); if(player) say('Le quartier du Jasmin. Choisis un lieu.'); return; }
+  say(PLACES[pid].n + ', ' + PLACES[pid].sub); place = pid; S.seen[pid] = 1; if(Object.keys(PLACES).every(k => S.seen[k])) setTimeout(() => found('voyage'), 800); $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
 }
 stage.addEventListener('click', e => { const b = e.target.closest('.pl'); if(!b) return; sfx.tap(); if(PLACES[b.dataset.p]) go(b.dataset.p); else toast('Ce lieu est encore en travaux 🚧 Il arrive bientôt !'); });
 $('bMap').onclick = () => { sfx.tap(); go('map'); };
 $('who').onclick = () => { sfx.tap(); choose(); };
-$('bSnd').onclick = () => { muted = !muted; store.set('houma-muet', muted); $('bSnd').textContent = muted ? '🔇' : '🔊'; if(!muted) sfx.tap(); };
+$('bSnd').onclick = () => { muted = !muted; if(muted) hush(); store.set('houma-muet', muted); $('bSnd').textContent = muted ? '🔇' : '🔊'; if(!muted) sfx.tap(); };
 $('bSnd').textContent = muted ? '🔇' : '🔊';
 function panel(html){ $('panel').innerHTML = html; $('veil').classList.add('on'); const b = $('panel').querySelector('button'); if(b) b.focus(); }
 function closePanel(){ $('veil').classList.remove('on'); }
 $('veil').addEventListener('click', e => { if(e.target.id === 'veil' || e.target.closest('[data-close]')) closePanel(); });
 addEventListener('keydown', e => { if(e.key === 'Escape') closePanel(); });
-$('bDisc').onclick = () => { sfx.tap(); const n = DISC.filter(d => S.disc[d[0]]).length;
+$('bDisc').onclick = () => { sfx.tap(); const n = DISC.filter(d => S.disc[d[0]]).length; say(`Tu as trouvé ${n} découverte${n > 1 ? 's' : ''} sur ${DISC.length}. Il n'y a rien à gagner ni à perdre : joue comme tu veux.`);
   panel(`<h2>Mes découvertes ⭐ ${n} / ${DISC.length}</h2><p>Il n'y a rien à gagner ni à perdre : joue comme tu veux. Les étoiles apparaissent quand tu trouves une nouvelle idée.</p>
     <div class="grid">${DISC.map(d => `<div class="dk${S.disc[d[0]] ? '' : ' no'}"><b>${d[1]}</b>${S.disc[d[0]] ? d[2] : '?'}</div>`).join('')}</div><button class="pill" data-close>Continuer</button>`); };
 $('bMenu').onclick = () => { sfx.tap();
