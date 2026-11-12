@@ -111,6 +111,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 </defs></svg>
 <script src="../famille.js"></script>
 <script src="houma/corps.js"></script>
+<script src="houma/assis.js"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -158,16 +159,22 @@ const OUTFITS = {
 };
 const metaOf = (id, o) => (CORPS[id] && (CORPS[id][o] || CORPS[id].ville)) || [115, 255, .5, .01, .5, .25, .85, .5];
 function sizeOf(id, o){ const M = metaOf(id, o), h = HK * CH[id].k; return { w:h * M[0] / M[1], h, M }; }
+/* Les vraies poses assises (en tailleur), faites avec ComfyUI sur le PC du papa : jeux/houma/s-<id>[-<tenue>].webp, repères dans assis.js.
+   ASSIS[id][tenue] = [largeur, hauteur, hauteur / debout, tête x, tête largeur, cou y]. S'il n'y en a pas pour une tenue, on garde le personnage debout coupé aux hanches. */
+const ASSIS = window.HOUMA_ASSIS || {};
+function seatOf(id, o){ const A = ASSIS[id] && ASSIS[id][o]; if(!A) return null; const st = sizeOf(id, o), headSt = st.M[4] * st.w, h0 = st.h * A[2], k = Math.max(.85, Math.min(1.2, headSt / (A[4] * h0 * A[0] / A[1])));   // même taille de tête assis et debout
+  const h = h0 * k; return { w:h * A[0] / A[1], h, A }; }
 function doll(C, st){
   const o = OUTFITS[st.o] ? st.o : 'ville', { w, h, M } = sizeOf(C.id, o), a = st.acc || [];
-  const sit = st.pose === 'sit' || st.pose === 'bath', sleep = st.pose === 'sleep';
-  const cx = M[2] * w, top = M[3] * h, hw = M[4] * w, eye = top + (M[5] * h - top) * .56, u = hw / 80;   // u : l'unité des chapeaux, d'après la largeur de la tête
+  const sit = st.pose === 'sit' || st.pose === 'bath', sleep = st.pose === 'sleep', Z = sit && st.a ? seatOf(C.id, o) : null;
+  const cx = Z ? Z.A[3] * Z.w : M[2] * w, top = Z ? 0 : M[3] * h, hw = Z ? Z.A[4] * Z.w : M[4] * w, eye = Z ? Z.A[5] * Z.h * .58 : top + (M[5] * h - top) * .56, u = hw / 80;   // u : l'unité des chapeaux, d'après la largeur de la tête
   const hat = (a.includes('chechia') ? `<g transform="translate(${cx} ${top}) scale(${u})"><path d="M-30 14q30-34 60 0v12h-60z" fill="#b3151f" stroke="#6d0c14" stroke-width="2"/><path d="M24 2q12 6 9 28" fill="none" stroke="#222" stroke-width="3.5" stroke-linecap="round"/></g>` : '') +
     (a.includes('paille') ? `<g transform="translate(${cx} ${top}) scale(${u})"><ellipse cx="0" cy="18" rx="64" ry="11" fill="#f1d28a" stroke="#c9a65a" stroke-width="2.5"/><path d="M-30 18q30-42 60 0z" fill="#f1d28a" stroke="#c9a65a" stroke-width="2.5"/><path d="M-28 12h56" stroke="#d83a3a" stroke-width="6"/></g>` : '') +
     (a.includes('lunettes') ? `<g transform="translate(${cx} ${eye}) scale(${u})"><rect x="-27" y="-9" width="24" height="17" rx="8" fill="#15151c"/><rect x="3" y="-9" width="24" height="17" rx="8" fill="#15151c"/><path d="M-4 -3h8M-27 -3h-8M27 -3h8" stroke="#15151c" stroke-width="3"/></g>` : '') +
     (a.includes('machmoum') ? `<g transform="translate(${cx + hw * .5} ${eye + 4 * u}) scale(${u * .8})"><path d="M0 22V2" stroke="#2e9e4f" stroke-width="4"/>${[[-8, -4], [8, -4], [0, -12], [-5, 6], [5, 6]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="#fff" stroke="#e6e0c8" stroke-width="1.2"/>`).join('')}</g>` : '');
-  const clip = sit ? `clip-path:inset(0 0 ${((1 - C.hip) * 100).toFixed(1)}% 0);` : '';
-  return `<div class="body" style="background-image:url(houma/c-${C.id}${o === 'ville' ? '' : '-' + o}.webp);background-position:${sleep ? '100%' : '0'} 0;${clip}"></div>${sit || sleep ? '' : `<i class="shade"></i>`}${hat ? `<svg viewBox="0 0 ${w.toFixed(1)} ${h.toFixed(1)}" style="position:absolute;inset:0">${hat}</svg>` : ''}`;
+  const clip = sit ? `clip-path:inset(0 0 ${((1 - C.hip) * 100).toFixed(1)}% 0);` : '', suf = o === 'ville' ? '' : '-' + o;
+  const body = Z ? `<div class="body" style="background-image:url(houma/s-${C.id}${suf}.webp);background-size:100% 100%"></div>` : `<div class="body" style="background-image:url(houma/c-${C.id}${suf}.webp);background-position:${sleep ? '100%' : '0'} 0;${clip}"></div>`;
+  return `${body}${sit || sleep ? '' : `<i class="shade"></i>`}${hat ? `<svg viewBox="0 0 ${(Z ? Z.w : w).toFixed(1)} ${(Z ? Z.h : h).toFixed(1)}" style="position:absolute;inset:0">${hat}</svg>` : ''}`;
 }
 
 /* =====================================================================
@@ -480,7 +487,7 @@ function fixedOf(id){ const f = PLACES[place].fixed.find(f => f[0] === id); retu
 const allFixed = () => PLACES[place].fixed.map(f => ({ id:f[0], T:FIXED[f[1]], type:f[1], x:f[2], y:f[3] }));
 function hidden(it){ if(it.h) return false; return allFixed().some(f => f.T.inside && fxState(f.id) !== 'o' && it.x >= f.x + f.T.inside[0] && it.x <= f.x + f.T.inside[1] && it.y >= f.y + f.T.inside[2] && it.y <= f.y + f.T.inside[3]); }
 function handOf(cid){ const c = S.chars[cid], { w, h, M } = sizeOf(cid, c.o), C = CH[cid]; if(c.pose === 'sleep') return { x:c.x + h * .12, y:c.y - 26 };
-  const hx = c.x + (Math.min(.9, M[6]) - .5) * w; return c.pose === 'sit' || c.pose === 'bath' ? { x:hx, y:c.y - h * .08 } : { x:hx, y:c.y - h * (1 - C.hip) + h * .02 }; }
+  const hx = c.x + (Math.min(.9, M[6]) - .5) * w; return c.pose === 'sit' || c.pose === 'bath' ? { x:hx, y:c.y - h * (c.a && seatOf(cid, c.o) ? .16 : .08) } : { x:hx, y:c.y - h * (1 - C.hip) + h * .02 }; }
 function box(el, x, y, w, h, z){ el.style.left = (x - w / 2) + 'px'; el.style.top = (y - h) + 'px'; el.style.width = w + 'px'; el.style.height = h + 'px'; el.style.zIndex = z; }
 function mk(cls, id){ const el = document.createElement('div'); el.className = 'e ' + cls; el.dataset.id = id; stage.appendChild(el); return el; }
 
@@ -499,11 +506,12 @@ function drawItem(id){
   box(e.el, x, y, w, h, z);
 }
 function drawChar(id){
-  const e = ents.get(id), c = S.chars[id], C = CH[id]; if(!e) return; const { w, h } = sizeOf(id, c.o), sit = c.pose === 'sit' || c.pose === 'bath';
+  const e = ents.get(id), c = S.chars[id], C = CH[id]; if(!e) return; const { w, h } = sizeOf(id, c.o), sit = c.pose === 'sit' || c.pose === 'bath', Z = sit && c.a ? seatOf(id, c.o) : null;
   e.el.classList.toggle('hide', c.p !== place); e.el.classList.toggle('sleep', c.pose === 'sleep');
   e.el.innerHTML = doll(C, c);
-  const y = sit ? c.y + (1 - C.hip) * h : c.pose === 'sleep' ? c.y + h / 2 - 10 : c.y;   // assis : la ligne des hanches se pose sur le siège
-  box(e.el, c.x, y, w, h, c.pose === 'bath' && !c.a ? 60 : sit ? 1500 + Math.round(c.y / 2) : 5000 + Math.round(c.y));   // dans la mer : derrière la vague
+  const z = c.pose === 'bath' && !c.a ? 60 : sit ? 1500 + Math.round(c.y / 2) : 5000 + Math.round(c.y);   // dans la mer : derrière la vague
+  if(Z) box(e.el, c.x, c.y + Z.h * .06 + (c.pose === 'bath' ? 46 : 0), Z.w, Z.h, z);   // assis en tailleur : posé sur le siège
+  else box(e.el, c.x, sit ? c.y + (1 - C.hip) * h : c.pose === 'sleep' ? c.y + h / 2 - 10 : c.y, w, h, z);   // sinon : la ligne des hanches sur le siège
   Object.entries(S.items).forEach(([iid, it]) => { if(it.h === id) drawItem(iid); });
 }
 function render(){

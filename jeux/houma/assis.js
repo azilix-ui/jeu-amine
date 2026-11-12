@@ -1,0 +1,2 @@
+/* Fabriqué par docs/houma/build_assis.py : [largeur, hauteur, hauteur par rapport au personnage debout, tête x, tête largeur, cou y] */
+window.HOUMA_ASSIS = {"amine":{"ville":[224,409,0.73,0.488,0.688,0.384]},"anis":{"ville":[223,325,0.58,0.465,0.354,0.28]},"essil":{"ville":[205,316,0.564,0.498,0.463,0.241]},"fares":{"ville":[240,339,0.605,0.479,0.421,0.319]},"imen":{"ville":[232,314,0.561,0.494,0.405,0.197]},"nour":{"ville":[242,371,0.662,0.494,0.545,0.361]},"salma":{"ville":[193,346,0.618,0.454,0.699,0.367]},"yasmine":{"ville":[242,354,0.632,0.511,0.5,0.37]}};
