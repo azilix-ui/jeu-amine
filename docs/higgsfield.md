@@ -106,3 +106,11 @@ Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet
 - **Ce que ça fait bien** : faire bouger un personnage ou une créature existants (s'asseoir, courir, nager), changer une tenue en gardant le visage, créer un objet isolé sur fond uni. Demander un fond uni vert (bleu ou magenta si l'objet est vert) pour détourer.
 - **Recettes** : graphes décrits dans le journal du 12/11 ; scripts `docs/houma/entree_comfy.py`, `build_assis.py`, `build_tenues.py`, `detoure.py`, `docs/jasmin2-corps/objets_comfy.py`, `bande_comfy.py`.
 - **Règle** : gratuit, donc pas de prix à annoncer ; mais tout **téléchargement de modèle** se demande au papa (nom, source, taille).
+
+## ElevenLabs Sound Effects (depuis le 12/11) : les bruitages
+
+- Compte ElevenLabs du papa, **formule Starter** (~6 $/mois, 30 000 crédits, usage commercial, pas de mention obligatoire). Il se connecte lui-même dans le navigateur intégré ; Claude n'entre jamais le mot de passe.
+- Claude génère dans `elevenlabs.io/app/sound-effects` (modèle v3, durée auto, ambiances : boucle activée + 15 s), puis télécharge les 4 variantes en MP3 depuis l'onglet **Historique** (un fichier par variante, nommé `<20 premiers caractères du prompt>_#<n>-….mp3`, dans `Téléchargements` du PC ; copie dans `Téléchargements\sons-11labs\`).
+- Liste des sons et prompts : `docs/sons/sons.json`. Préparation : `python3 docs/sons/prepare.py <dossier des mp3>` → `jeux/sons/<jeu>-<nom>.mp3` (mono, niveau égalisé, silences coupés, longueur plafonnée) + `jeux/sons/variantes/` + `choix.json`.
+- Choix de variante : automatique (la plus proche d'une durée idéale), à corriger à l'oreille par le papa sur `jeux/sons/ecoute.html` (« pièce 3 » → mettre 3 dans `docs/sons/choix.json` et relancer).
+- 1re session (12-13/11) : 34 sons × 4 variantes = 136 fichiers.

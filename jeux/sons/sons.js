@@ -1,18 +1,21 @@
-/* Bruitages enregistrés (ElevenLabs, plan gratuit — mention « elevenlabs.io » dans les jeux).
+/* Bruitages enregistrés (ElevenLabs, formule Starter du papa : usage libre, sans mention obligatoire).
    Sons.charger('jasmin', ['saut', ...]) précharge jeux/sons/jasmin-saut.mp3 ...
    Sons.jouer(AC, dest, 'saut') joue le son s'il est prêt et renvoie true ; sinon false (le jeu garde son bip de secours).
    Sons.boucle(AC, dest, 'souk', vol) lance une ambiance en boucle ; Sons.stop() l'arrête. */
 window.Sons = (function(){
   const raw = {}, buf = {}, base = (document.currentScript && document.currentScript.src || '').replace(/sons\.js.*$/, '');
-  let amb = null, ambNom = '', AClast = null;
+  let amb = null, ambNom = '', AClast = null, OFF = null;
+  try{ OFF = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100); }catch(e){}   // décode dès le chargement, sans attendre le premier toucher
   function charger(prefixe, noms){
     noms.forEach(n => fetch(`${base}${prefixe}-${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : null)
-      .then(a => { if(a){ raw[n] = a; if(AClast) decode(AClast, n); } }).catch(() => {}));
+      .then(a => { if(a){ raw[n] = a; if(OFF || AClast) decode(OFF || AClast, n); } }).catch(() => {}));
   }
   function decode(AC, n){
     if(buf[n] || !raw[n] || raw[n].enCours) return;
     raw[n].enCours = 1;
-    AC.decodeAudioData(raw[n].slice(0)).then(b => { buf[n] = b; if(ambNom === n && !amb && ambArgs) boucle(...ambArgs); }).catch(() => {});
+    const ok = b => { buf[n] = b; if(ambNom === n && !amb && ambArgs) boucle(...ambArgs); };
+    const ko = () => { raw[n].enCours = 0; if(AC === OFF && AClast) decode(AClast, n); };
+    try{ const p = AC.decodeAudioData(raw[n].slice(0), ok, ko); if(p && p.catch) p.catch(() => {}); }catch(e){ ko(); }   // forme à rappels : marche aussi sur les vieux iPad
   }
   function prep(AC){ if(!AC || AClast === AC) return; AClast = AC; Object.keys(raw).forEach(n => decode(AC, n)); }
   function jouer(AC, dest, n, vol = 1, vitesse = 1){

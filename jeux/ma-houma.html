@@ -112,6 +112,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 <script src="../famille.js"></script>
 <script src="houma/corps.js"></script>
 <script src="houma/assis.js"></script>
+<script src="sons/sons.js"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -137,6 +138,16 @@ const sfx = {
   star(){ [660, 880, 990, 1320].forEach((f, i) => tone(f, .16, 'triangle', .12, i * .09)); }, on(){ tone(880, .06, 'sine', .09); }, off(){ tone(440, .06, 'sine', .09); },
   tune(){ [293, 311, 370, 392, 440, 392, 370, 311].forEach((f, i) => tone(f * 2, .2, 'triangle', .07, i * .2)); }
 };
+// Bruitages enregistrés (jeux/sons/houma-*.mp3) : joués à la place des bips quand ils sont prêts
+const SONS_H = { pick:'prendre', drop:'poser', open:'porte-ouvre', close:'porte-ferme', water:'eau', munch:'croque', sip:'gorgee', meow:'miaou', bird:'oiseau', wear:'habit', star:'etoile' };
+if(window.Sons){
+  Sons.charger('houma', [...Object.values(SONS_H), 'doum', 'tek', 'amb-souk', 'amb-plage', 'amb-cafe', 'amb-ecole', 'amb-dar']);
+  const enr = (nom, vol = .7) => { const A = ac(); return !!(A && Sons.jouer(A, A.destination, nom, vol)); };
+  Object.keys(SONS_H).forEach(k => { const f = sfx[k]; sfx[k] = (...a) => { if(!enr(SONS_H[k])) f(...a); }; });
+  const d = sfx.drum; sfx.drum = k => { if(!enr(k ? 'tek' : 'doum', .9)) d(k); };
+}
+function ambiance(pid){ if(!window.Sons) return; if(!pid || muted){ Sons.stop(); return; } const A = ac(); Sons.boucle(A, A && A.destination, 'amb-' + pid, .28); }
+
 
 /* ---------- la voix (12/11) : le jeu lit à voix haute ses messages, le nom des lieux et des personnages, pour Amine qui ne lit pas encore.
    Voix française du navigateur (gratuite, aucun fichier). Le bouton 🔊 coupe les bruitages et la voix. ---------- */
@@ -735,14 +746,14 @@ function mapSVG(){ const house = (x, y, w, h, dome) => `<rect x="${x}" y="${y}" 
     ${[[470, 318], [800, 250], [1140, 322], [640, 548]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="22" fill="#d6338a"/><circle cx="${p[0] + 22}" cy="${p[1] + 12}" r="16" fill="#e04a9a"/>`).join('')}</svg>`; }
 function go(pid){
   saveNow();
-  if(pid === 'map'){ place = null; stage.innerHTML = `<div id="map">${mapSVG()}${MAP.map(m => `<button class="pl${m[5] ? '' : ' soon'}" data-p="${m[0]}" style="left:${m[1]}%;top:${m[2]}%"><span style="font-size:64px;line-height:1">${m[4]}</span><span class="sign">${m[3]}${m[5] ? '' : ' 🚧'}</span></button>`).join('')}</div>`;
+  if(pid === 'map'){ place = null; ambiance(null); stage.innerHTML = `<div id="map">${mapSVG()}${MAP.map(m => `<button class="pl${m[5] ? '' : ' soon'}" data-p="${m[0]}" style="left:${m[1]}%;top:${m[2]}%"><span style="font-size:64px;line-height:1">${m[4]}</span><span class="sign">${m[3]}${m[5] ? '' : ' 🚧'}</span></button>`).join('')}</div>`;
     $('title').innerHTML = `Ma Houma<small>le quartier du Jasmin · choisis un lieu</small>`; bar(); panX = 0; fit(); if(player) say('Le quartier du Jasmin. Choisis un lieu.'); return; }
-  voix('lieu-' + pid) || say(PLACES[pid].n + ', ' + PLACES[pid].sub); place = pid; S.seen[pid] = 1; if(Object.keys(PLACES).every(k => S.seen[k])) setTimeout(() => found('voyage'), 800); $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
+  voix('lieu-' + pid) || say(PLACES[pid].n + ', ' + PLACES[pid].sub); place = pid; ambiance(pid); S.seen[pid] = 1; if(Object.keys(PLACES).every(k => S.seen[k])) setTimeout(() => found('voyage'), 800); $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
 }
 stage.addEventListener('click', e => { const b = e.target.closest('.pl'); if(!b) return; sfx.tap(); if(PLACES[b.dataset.p]) go(b.dataset.p); else toast('Ce lieu est encore en travaux 🚧 Il arrive bientôt !'); });
 $('bMap').onclick = () => { sfx.tap(); go('map'); };
 $('who').onclick = () => { sfx.tap(); choose(); };
-$('bSnd').onclick = () => { muted = !muted; if(muted) hush(); store.set('houma-muet', muted); $('bSnd').textContent = muted ? '🔇' : '🔊'; if(!muted) sfx.tap(); };
+$('bSnd').onclick = () => { muted = !muted; if(muted){ hush(); ambiance(null); } else if(place) ambiance(place); store.set('houma-muet', muted); $('bSnd').textContent = muted ? '🔇' : '🔊'; if(!muted) sfx.tap(); };
 $('bSnd').textContent = muted ? '🔇' : '🔊';
 function panel(html){ $('panel').innerHTML = html; $('veil').classList.add('on'); const b = $('panel').querySelector('button'); if(b) b.focus(); }
 function closePanel(){ $('veil').classList.remove('on'); }
