@@ -147,6 +147,15 @@ function say(t){ if(muted || !('speechSynthesis' in window) || !t) return;
   const txt = String(t).replace(/<[^>]+>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{2BFF}\u{FE0F}\u{200D}]/gu, ' ').replace(/\s+/g, ' ').trim(); if(!txt) return;
   try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'fr-FR'; if(frVoice) u.voice = frVoice; u.rate = .96; u.pitch = 1.05; speechSynthesis.speak(u); }catch(e){} }
 function hush(){ try{ speechSynthesis.cancel(); }catch(e){} }
+/* ---------- les vraies voix de la famille (12/11, demandé par le papa) : chacun peut enregistrer son prénom, et le nom des lieux, avec le micro.
+   Même service que Nahki Tounsi (amine/voix/api.php : sons gardés hors du site, enregistrement protégé par le mot de passe parent, écoute libre).
+   Clés « houma:<id> ». S'il y a un enregistrement, on le joue ; sinon la voix du navigateur lit le texte. ---------- */
+const VAPI = '../amine/voix/api.php'; let VOIX = {}, vSetup = false, vPass = '', vAudio = null;
+async function loadVoix(){ try{ const r = await fetch(`${VAPI}?action=list&t=${Date.now()}`, { cache:'no-store' }).then(r => r.json()); VOIX = r.voix || {}; vSetup = !!r.setup; }catch(e){} }
+const vUrl = k => `${VAPI}?action=play&k=${encodeURIComponent('houma:' + k)}&v=${VOIX['houma:' + k]}`;
+function voix(k, force){ if(!VOIX['houma:' + k] || (muted && !force)) return false; try{ hush(); if(vAudio) vAudio.pause(); vAudio = new Audio(vUrl(k)); vAudio.play().catch(() => {}); return true; }catch(e){ return false; } }
+async function vPost(action, fields, file){ const fd = new FormData(); fd.append('action', action); fd.append('pass', vPass); Object.entries(fields || {}).forEach(([k, v]) => fd.append(k, v)); if(file) fd.append('audio', file, 'voix');
+  const r = await fetch(VAPI, { method:'POST', body:fd }); const j = await r.json().catch(() => ({})); if(!r.ok) throw new Error(j.error || 'Erreur ' + r.status); return j; }
 
 /* =====================================================================
    PERSONNAGES : la famille et les mascottes (têtes = avatars du site, corps dessinés)
@@ -541,7 +550,7 @@ function bar(){
 $('bottom').onclick = e => { const b = e.target.closest('.hd'); if(!b || !place) return; const id = b.dataset.c, c = S.chars[id]; const F = PLACES[place].floors[0];
   dropHeld(id, true); c.p = place; c.pose = ''; c.x = Math.round((-panX + view.clientWidth / 2) / scale + (Math.random() * 120 - 60)); c.x = Math.max(F[0], Math.min(F[1], c.x)); c.y = F[2];
   Object.values(S.items).forEach(it => { if(it.h === id) it.p = place; });
-  drawChar(id); pulse(id, 'pop'); sfx.hop(); say(CH[id].n + ' arrive !'); bar(); save(); check(); };
+  drawChar(id); pulse(id, 'pop'); sfx.hop(); voix(id) || say(CH[id].n + ' arrive !'); bar(); save(); check(); };
 function pulse(id, cls){ const e = ents.get(id); if(!e) return; e.el.classList.remove(cls); void e.el.offsetWidth; e.el.classList.add(cls); setTimeout(() => e.el.classList.remove(cls), 1100); }
 function fx(x, y, emo, dx){ if(calm()) return; const s = document.createElement('span'); s.className = 'fxp'; s.textContent = emo; s.style.left = (x - 15) + 'px'; s.style.top = (y - 30) + 'px'; s.style.setProperty('--dx', (dx == null ? Math.random() * 40 - 20 : dx) + 'px'); stage.appendChild(s); setTimeout(() => s.remove(), 1500); }
 let toastT = 0; function toast(t, ms = 2400){ say(t); const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), ms); }
@@ -639,7 +648,7 @@ function tapItem(id){ const T = IT(id), it = S.items[id], t = typeOf(id); pulse(
   else if(T.pet){ cry(id); fx(it.h ? S.chars[it.h].x : it.x, (it.h ? S.chars[it.h].y - 120 : it.y - 50), '💛'); found(T.d || 'chat'); if(T.alt){ it.s = it.s === 'b' ? '' : 'b'; drawItem(id); save(); } }
   else if(T.toy){ sfx.hop(); } else sfx.tap(); }
 function tapChar(id){ const c = S.chars[id]; pulse(id, 'hop'); sfx.hop();
-  if(c.acc.length){ takeOff(id, c.acc[c.acc.length - 1]); drawChar(id); save(); } else say(pick(['Coucou, c\'est ', 'Salut ! Moi, c\'est ', 'Bonjour ! Je suis ']) + CH[id].n), fx(c.x, c.y - 230 * CH[id].k, pick(['👋', '😄', '🎉', '💛'])); }
+  if(c.acc.length){ takeOff(id, c.acc[c.acc.length - 1]); drawChar(id); save(); } else voix(id) || say(pick(['Coucou, c\'est ', 'Salut ! Moi, c\'est ', 'Bonjour ! Je suis ']) + CH[id].n), fx(c.x, c.y - 230 * CH[id].k, pick(['👋', '😄', '🎉', '💛'])); }
 const pick = a => a[Math.floor(Math.random() * a.length)];
 function cry(id){ const t = typeOf(id); if(t === 'chatR' || t === 'chat') sfx.meow(); else if(t === 'chevre'){ tone(330, .3, 'sawtooth', .06, 0, 300); tone(340, .25, 'sawtooth', .05, .12, 290); } else if(['cigogne', 'mouette'].includes(t)) sfx.bird(); else if(t === 'grenouille') tone(140, .18, 'square', .06, 0, 220); else sfx.hop(); }
 
@@ -728,7 +737,7 @@ function go(pid){
   saveNow();
   if(pid === 'map'){ place = null; stage.innerHTML = `<div id="map">${mapSVG()}${MAP.map(m => `<button class="pl${m[5] ? '' : ' soon'}" data-p="${m[0]}" style="left:${m[1]}%;top:${m[2]}%"><span style="font-size:64px;line-height:1">${m[4]}</span><span class="sign">${m[3]}${m[5] ? '' : ' 🚧'}</span></button>`).join('')}</div>`;
     $('title').innerHTML = `Ma Houma<small>le quartier du Jasmin · choisis un lieu</small>`; bar(); panX = 0; fit(); if(player) say('Le quartier du Jasmin. Choisis un lieu.'); return; }
-  say(PLACES[pid].n + ', ' + PLACES[pid].sub); place = pid; S.seen[pid] = 1; if(Object.keys(PLACES).every(k => S.seen[k])) setTimeout(() => found('voyage'), 800); $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
+  voix('lieu-' + pid) || say(PLACES[pid].n + ', ' + PLACES[pid].sub); place = pid; S.seen[pid] = 1; if(Object.keys(PLACES).every(k => S.seen[k])) setTimeout(() => found('voyage'), 800); $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
 }
 stage.addEventListener('click', e => { const b = e.target.closest('.pl'); if(!b) return; sfx.tap(); if(PLACES[b.dataset.p]) go(b.dataset.p); else toast('Ce lieu est encore en travaux 🚧 Il arrive bientôt !'); });
 $('bMap').onclick = () => { sfx.tap(); go('map'); };
@@ -744,13 +753,43 @@ $('bDisc').onclick = () => { sfx.tap(); const n = DISC.filter(d => S.disc[d[0]])
     <div class="grid">${DISC.map(d => `<div class="dk${S.disc[d[0]] ? '' : ' no'}"><b>${d[1]}</b>${S.disc[d[0]] ? d[2] : '?'}</div>`).join('')}</div><button class="pill" data-close>Continuer</button>`); };
 $('bMenu').onclick = () => { sfx.tap();
   panel(`<h2>Réglages</h2><p>Monde de <b>${esc(player || '')}</b>. Tout est enregistré tout seul.</p>
-    <button class="pill ghost" id="mTidy">🧹 Tout ranger dans ce lieu</button><br><button class="pill red" id="mReset">🗑️ Recommencer mon monde</button><br><button class="pill" data-close>Retour</button>`);
+    <button class="pill ghost" id="mTidy">🧹 Tout ranger dans ce lieu</button><br><button class="pill ghost" id="mVoix">🎙️ Les voix de la famille</button><br><button class="pill red" id="mReset">🗑️ Recommencer mon monde</button><br><button class="pill" data-close>Retour</button>`);
+  $('mVoix').onclick = () => voixPanel();
   $('mTidy').onclick = () => { if(!place){ closePanel(); return; } Object.keys(S.items).forEach(id => { if(HOME[id].p === place){ const h = HOME[id]; Object.assign(S.items[id], { p:h.p, x:h.x, y:h.y, h:'', s:'' }); } }); save(); render(); closePanel(); toast('Tout est rangé 🧹'); };
   $('mReset').onclick = () => panel(`<h2>Recommencer ?</h2><p>Ton monde reviendra comme au début : les personnages, les objets et les tenues. Tes découvertes ⭐ restent.</p><button class="pill red" id="mYes">Oui, recommencer</button><button class="pill ghost" data-close>Non</button>`) || ($('mYes').onclick = () => { const disc = S.disc, seen = S.seen; S = fresh(); S.disc = disc; S.seen = seen; save(); closePanel(); go(place || 'map'); toast('Ton monde est comme neuf ✨'); });
 };
 
+/* ---------- le studio des voix (pour les parents) ---------- */
+const VLIST = () => [...CHARS.map(C => [C.id, C.n, AV + C.img + '.webp']), ...Object.entries(PLACES).map(([k, P]) => ['lieu-' + k, P.n, null, P.ic])];
+let vRec = null;
+async function voixPanel(msg){
+  await loadVoix();
+  if(vSetup){ panel(`<h2>🎙️ Les voix de la famille</h2><p>Le mot de passe parent n'existe pas encore. Créez-le d'abord dans « Nahki Tounsi » (espace d'Amine, bouton des parents), puis revenez ici.</p><button class="pill" data-close>Retour</button>`); return; }
+  if(!vPass){ panel(`<h2>🎙️ Les voix de la famille</h2><p>Ici, chacun enregistre son prénom avec sa vraie voix : le jeu le dira quand le personnage arrive. Réservé aux parents.</p>
+      <p><input id="vP" type="password" autocomplete="current-password" placeholder="Mot de passe parent" aria-label="Mot de passe parent" style="font:inherit;font-size:20px;padding:10px 14px;border-radius:14px;border:3px solid var(--blue);width:min(100%,320px)"></p>
+      <p id="vMsg" style="color:var(--red);min-height:1.4em">${msg || ''}</p><button class="pill" id="vOk">Entrer</button><button class="pill ghost" data-close>Retour</button>`);
+    const go2 = async () => { vPass = $('vP').value; try{ await vPost('login'); voixPanel(); }catch(e){ vPass = ''; voixPanel(e.message); } };
+    $('vOk').onclick = go2; $('vP').onkeydown = e => { if(e.key === 'Enter') go2(); }; $('vP').focus(); return; }
+  panel(`<h2>🎙️ Les voix de la famille</h2><p>Touchez ⏺, dites le prénom (ou une petite phrase, 3 secondes au plus), c'est enregistré tout seul. ▶ pour écouter, 🗑 pour revenir à la voix du jeu.</p>
+    <div id="vRows" style="display:grid;gap:8px;text-align:left;margin:10px 0">${VLIST().map(([k, n, img, ic]) => { const has = !!VOIX['houma:' + k];
+      return `<div data-k="${k}" style="display:flex;align-items:center;gap:10px;background:#eef4fb;border-radius:16px;padding:6px 10px">${img ? `<img src="${img}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover">` : `<span style="font-size:32px;width:44px;text-align:center">${ic}</span>`}<b style="flex:1;font-size:18px">${n}</b>
+        <button class="tb" data-a="rec" aria-label="Enregistrer ${n}" style="background:var(--red);color:#fff">⏺</button><button class="tb" data-a="play" aria-label="Écouter ${n}" style="background:var(--blue);color:#fff" ${has ? '' : 'disabled'}>▶</button><button class="tb" data-a="del" aria-label="Effacer ${n}" style="background:#c3cfdf" ${has ? '' : 'disabled'}>🗑</button></div>`; }).join('')}</div>
+    <p id="vMsg" style="min-height:1.4em;font-weight:800">${msg || ''}</p><button class="pill" data-close>Terminé</button>`);
+  $('vRows').onclick = async e => { const b = e.target.closest('[data-a]'); if(!b || b.disabled) return; const k = b.closest('[data-k]').dataset.k, m = $('vMsg');
+    if(b.dataset.a === 'play'){ voix(k, true); return; }
+    if(b.dataset.a === 'del'){ try{ await vPost('delete', { k:'houma:' + k }); voixPanel('Effacé : le jeu reprend sa voix.'); }catch(err){ m.textContent = err.message; } return; }
+    if(vRec){ vRec.stop(); return; }
+    try{ if(!navigator.mediaDevices || !window.MediaRecorder) throw new Error("Ce navigateur ne permet pas d'enregistrer.");
+      const mic = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } }), chunks = [], r = new MediaRecorder(mic); vRec = r; hush();
+      r.ondataavailable = ev => { if(ev.data.size) chunks.push(ev.data); };
+      r.onstop = async () => { vRec = null; mic.getTracks().forEach(t => t.stop()); m.textContent = "J'enregistre…";
+        try{ await vPost('save', { k:'houma:' + k }, new Blob(chunks, { type:r.mimeType || 'audio/webm' })); await voixPanel('Enregistré ✔ Touchez ▶ pour écouter.'); voix(k, true); }catch(err){ m.textContent = err.message; } };
+      b.textContent = '⏹'; m.textContent = '🔴 Parlez maintenant…'; r.start(); setTimeout(() => { if(vRec === r) r.stop(); }, 3000);
+    }catch(err){ vRec = null; m.textContent = err.name === 'NotAllowedError' ? "Le micro n'est pas autorisé : acceptez la demande du navigateur." : err.message; } };
+}
+
 /* ---------- démarrage ---------- */
-fit();
+fit(); loadVoix();
 (async () => { const p = window.Famille && Famille.player(); if(p) await setPlayer(p); else { S = fresh(); go('map'); await choose(); } window.__houma = { get S(){ return S; }, get place(){ return place; }, go, PLACES, CHARS, DISC, save:saveNow, hit, land }; })();
 </script>
 </body>
