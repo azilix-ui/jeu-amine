@@ -95,3 +95,14 @@ Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet
 - Schémas à légender (filet, selle) : demander « no text, no labels », puis regarder l'image de près et vérifier chaque partie ; pour une selle anglaise, écrire « absolutely no horn » (sinon un pommeau western apparaît). Les numéros sont posés par nous (positions en %).
 - Mascottes des invités (références) : Nour `29f9748f-b058-4efa-ac06-bffd967ba649`, Yasmine `f2eeda05-aedf-48d3-ad5d-999b40f59a3e`, Farès `bee2dfe5-42b3-46f9-a241-4ce1e94f010e`.
 - Personnage animé à incruster (fond vert) : demander « perfectly flat solid pure green chroma key background, no shadow » pour l'image, puis en vidéo « runs in place… stays exactly centered… static locked camera… background stays flat green ». Le découpage du vert se fait bien (vert − max(rouge, bleu)).
+
+
+## ComfyUI en local (depuis le 12/11) : la solution gratuite quand il n'y a plus de crédits
+
+- **Où** : PC du papa (« laptopimen »), Comfy Desktop, RTX 5060 Laptop 8 Go, 32 Go de RAM. ComfyUI doit être ouvert, ainsi que l'application Claude.
+- **Comment Claude s'en sert** : navigateur intégré de l'application Claude sur `http://127.0.0.1:8188` (`/prompt` pour lancer, `/queue`, `/history`, `/object_info`) ; fichiers par le dossier connecté `C:\Users\azili\AppData\Local\Comfy-Desktop\ComfyUI-Shared` (`input`, `output` ; les gros lots passent en zip). Une image de `output` se recharge avec `nom.png [output]`. Le shell du PC ne joint pas ComfyUI (seul le navigateur intégré le peut).
+- **Modèles installés** : Wan 2.2 image vers vidéo 14B (haut et bas bruit) + accélérateurs lightx2v 4 étapes, VAE wan 2.1, encodeur umt5 ; Wan 2.2 5B ; **FLUX.2 klein 4B** (`flux-2-klein-4b-fp8`, `qwen_3_4b`, `flux2-vae`, 12,5 Go, téléchargés le 12/11 avec l'accord du papa par le gestionnaire de ComfyUI : `POST /v2/manager/queue/install_model` puis `/v2/manager/queue/start`).
+- **Vitesses mesurées** : vidéo Wan 480 × 832, 33 images, 4 étapes : environ 75 s ; image FLUX.2 klein (texte ou retouche, 4 étapes) : 4 à 10 s.
+- **Ce que ça fait bien** : faire bouger un personnage ou une créature existants (s'asseoir, courir, nager), changer une tenue en gardant le visage, créer un objet isolé sur fond uni. Demander un fond uni vert (bleu ou magenta si l'objet est vert) pour détourer.
+- **Recettes** : graphes décrits dans le journal du 12/11 ; scripts `docs/houma/entree_comfy.py`, `build_assis.py`, `build_tenues.py`, `detoure.py`, `docs/jasmin2-corps/objets_comfy.py`, `bande_comfy.py`.
+- **Règle** : gratuit, donc pas de prix à annoncer ; mais tout **téléchargement de modèle** se demande au papa (nom, source, taille).

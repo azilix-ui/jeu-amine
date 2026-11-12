@@ -155,7 +155,9 @@ const CH = Object.fromEntries(CHARS.map(c => [c.id, c]));
 const CORPS = window.HOUMA_CORPS || {}, gold = '#e3b23c', HK = 286;
 const OUTFITS = {
   ville:{ n:'ses habits de tous les jours', col:'#2f6fd6' }, jebba:{ n:'sa jebba', trad:1, col:'#fbf8ee' }, foot:{ n:'sa tenue de foot', col:'#c8102e' },
-  astro:{ n:"sa tenue d'astronaute", col:'#e9edf2' }, super:{ n:'sa tenue de super-héros', col:'#5b2a9a' }, or:{ n:'sa tenue en or', col:'#e3b23c' }
+  astro:{ n:"sa tenue d'astronaute", col:'#e9edf2' }, super:{ n:'sa tenue de super-héros', col:'#5b2a9a' }, or:{ n:'sa tenue en or', col:'#e3b23c' },
+  // 12/11 : quatre tenues créées avec ComfyUI sur le PC du papa (FLUX.2 klein : on retouche la tenue, le visage reste)
+  pyjama:{ n:'son pyjama', col:'#bfe0ff' }, tablier:{ n:"son tablier d'école", col:'#2f55b8' }, fete:{ n:'sa tenue de fête', trad:1, col:'#c2185b' }, plage:{ n:'sa tenue de plage', col:'#12c8b4' }
 };
 const metaOf = (id, o) => (CORPS[id] && (CORPS[id][o] || CORPS[id].ville)) || [115, 255, .5, .01, .5, .25, .85, .5];
 function sizeOf(id, o){ const M = metaOf(id, o), h = HK * CH[id].k; return { w:h * M[0] / M[1], h, M }; }
@@ -202,8 +204,8 @@ const ITEMS = {
   machmoum:{ n:'un machmoum de jasmin', z:42, acc:1, s:() => svg(`<path d="M50 96V52" stroke="#2e9e4f" stroke-width="7" stroke-linecap="round"/>${[[32, 40], [68, 40], [50, 22], [38, 60], [62, 60], [50, 44]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="14" fill="#fff" stroke="#e2dcc4" stroke-width="3"/>`).join('')}<path d="M40 84h20" stroke="#c8102e" stroke-width="5"/>`) }
 };
 // les vêtements de l'armoire : un cintre par tenue (ils reviennent tout seuls à leur place)
-Object.keys(OUTFITS).forEach(o => { const col = OUTFITS[o].col, extra = { jebba:`<path d="M50 42v40" stroke="${gold}" stroke-width="4"/>`, foot:`<text x="50" y="76" text-anchor="middle" font-size="26" font-weight="800" fill="#fff" font-family="sans-serif">10</text>`, astro:`<rect x="38" y="52" width="24" height="16" rx="3" fill="#7fa3c4"/><path d="M28 42v50M72 42v50" stroke="#f08a24" stroke-width="3"/>`, super:`<path d="M50 48l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="#ffd84d"/>`, or:`<path d="M34 52l8 8M58 50l10 10M40 76l8 8" stroke="#fff6c8" stroke-width="4" stroke-linecap="round"/>`, ville:'' }[o];
-  ITEMS['v-' + o] = { n:OUTFITS[o].n, z:46, wear:o, home:1, s:() => svg(`<path d="M50 14q-8 0-8 8M50 22 20 40h60z" fill="none" stroke="#7a5a3a" stroke-width="4" stroke-linecap="round"/><path d="M24 40h52l8 20-12 6v26H28V66l-12-6z" fill="${col}" stroke="#0004" stroke-width="3" stroke-linejoin="round"/>${extra}`) }; });
+Object.keys(OUTFITS).forEach(o => { const col = OUTFITS[o].col, extra = { jebba:`<path d="M50 42v40" stroke="${gold}" stroke-width="4"/>`, foot:`<text x="50" y="76" text-anchor="middle" font-size="26" font-weight="800" fill="#fff" font-family="sans-serif">10</text>`, astro:`<rect x="38" y="52" width="24" height="16" rx="3" fill="#7fa3c4"/><path d="M28 42v50M72 42v50" stroke="#f08a24" stroke-width="3"/>`, super:`<path d="M50 48l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="#ffd84d"/>`, or:`<path d="M34 52l8 8M58 50l10 10M40 76l8 8" stroke="#fff6c8" stroke-width="4" stroke-linecap="round"/>`, ville:'', pyjama:`<path d="M36 42v50M48 42v50M60 42v50" stroke="#7fb2e8" stroke-width="3"/>`, tablier:`<path d="M40 42l10 8 10-8" fill="#fff"/><circle cx="50" cy="62" r="3" fill="#fff"/><circle cx="50" cy="76" r="3" fill="#fff"/>`, fete:`<path d="M50 42v48M30 70h40" stroke="${gold}" stroke-width="4"/>`, plage:`<path d="M26 50h48M26 60h48" stroke="#fff" stroke-width="4"/>` }[o] || '';
+  ITEMS['v-' + o] = { n:OUTFITS[o].n, z:40, wear:o, home:1, s:() => svg(`<path d="M50 14q-8 0-8 8M50 22 20 40h60z" fill="none" stroke="#7a5a3a" stroke-width="4" stroke-linecap="round"/><path d="M24 40h52l8 20-12 6v26H28V66l-12-6z" fill="${col}" stroke="#0004" stroke-width="3" stroke-linejoin="round"/>${extra}`) }; });
 
 /* =====================================================================
    MEUBLES fixes. Position = milieu du bas (x, y). tap = états qui alternent ; surf = où poser ; inside = intérieur caché quand c'est fermé ;
@@ -285,8 +287,8 @@ const PLACES = {
       ['livre', 'livre', 1108, 430], ['darbouka', 'darbouka', 960, F0], ['chat', 'chatR', 545, F0], ['arrosoir', 'arrosoir', 656, F1], ['ballon', 'ballon', 758, F1],
       ['doudou', 'doudou', 392, F1 - 34], ['chechia', 'chechia', 96, F1 - 250], ['paille', 'paille', 152, F1 - 250], ['lunettes', 'lunettes', 1040, 154], ['sac', 'sac', 232, F1],
       ['savon', 'savon', 930, 154], ['lotion', 'lotion', 966, 154], ['canard', 'canard', 1002, 154], ['fouta', 'fouta', 1120, F1],
-      ['v-jebba', 'v-jebba', 84, F1 - 138], ['v-foot', 'v-foot', 122, F1 - 138], ['v-astro', 'v-astro', 160, F1 - 138],
-      ['v-super', 'v-super', 84, F1 - 34], ['v-or', 'v-or', 122, F1 - 34], ['v-ville', 'v-ville', 160, F1 - 34]],
+      ['v-jebba', 'v-jebba', 70, F1 - 138], ['v-fete', 'v-fete', 96, F1 - 138], ['v-tablier', 'v-tablier', 122, F1 - 138], ['v-foot', 'v-foot', 148, F1 - 138], ['v-astro', 'v-astro', 174, F1 - 138],
+      ['v-super', 'v-super', 70, F1 - 34], ['v-or', 'v-or', 96, F1 - 34], ['v-pyjama', 'v-pyjama', 122, F1 - 34], ['v-plage', 'v-plage', 148, F1 - 34], ['v-ville', 'v-ville', 174, F1 - 34]],
     start:{ anis:[965, F0], imen:[1085, F0], essil:[806, F1], salma:[812, F0], amine:[250, F1], nour:[745, F0], yasmine:[1185, F0], fares:[420, F0] } }
 };
 /* =====================================================================
@@ -295,11 +297,11 @@ const PLACES = {
    spr = [image, nombre de cases, largeur, hauteur d'une case] ; fly = reste où on le lâche (il vole ou il nage).
    ===================================================================== */
 Object.assign(ITEMS, {
-  chatR:{ n:'le chat', z:88, pet:1, d:'chat', spr:['chat', 12, 170, 130] }, chevre:{ n:'la chèvre', z:130, pet:1, d:'chevre', spr:['chevre', 1, 204, 130] },
+  chatR:{ n:'le chat', z:88, pet:1, d:'chat', spr:['chat', 12, 170, 130] }, chevre:{ n:'la chèvre', z:130, pet:1, d:'chevre', spr:['chevre-anim', 12, 153, 130] },
   cigogne:{ n:'la cigogne', z:128, pet:1, fly:1, d:'cigogne', spr:['cigogne', 12, 153, 150] }, mouette:{ n:'la mouette', z:100, pet:1, fly:1, d:'mouette', spr:['mouette', 12, 119, 140] },
   crabe:{ n:'le crabe', z:86, pet:1, d:'crabe', spr:['crabe', 12, 189, 110] }, grenouille:{ n:'la grenouille', z:68, pet:1, d:'grenouille', spr:['grenouille', 12, 115, 120] },
-  herisson:{ n:'le hérisson', z:84, pet:1, d:'herisson', spr:['herisson', 1, 145, 120], alt:['herisson-boule', 1, 116, 110] },
-  poisson:{ n:'le poisson', z:88, pet:1, fly:1, d:'poulpe', spr:['poisson', 1, 174, 120] }, poulpe:{ n:'le poulpe', z:96, pet:1, fly:1, d:'poulpe', spr:['poulpe', 1, 153, 130] },
+  herisson:{ n:'le hérisson', z:84, pet:1, d:'herisson', spr:['herisson-anim', 12, 152, 120], alt:['herisson-boule', 1, 116, 110] },
+  poisson:{ n:'le poisson', z:88, pet:1, fly:1, d:'poulpe', spr:['poisson-anim', 12, 176, 120] }, poulpe:{ n:'le poulpe', z:96, pet:1, fly:1, d:'poulpe', spr:['poulpe-anim', 12, 154, 130] },
   scorpion:{ n:'le scorpion', z:88, pet:1, d:'scorpion', spr:['scorpion', 12, 165, 120] },
   jus:{ n:'une citronnade', e:'🍹', z:44, food:1, drink:1 }, glace:{ n:'une glace', e:'🍦', z:46, food:1, d:'glace' }, pomme:{ n:'une pomme', e:'🍎', z:38, food:1 }, carotte:{ n:'une carotte', e:'🥕', z:40, food:1 }, raisin:{ n:'du raisin', e:'🍇', z:40, food:1 },
   dattes:{ n:'des dattes', z:42, food:1, s:() => svg(`<path d="M50 8v26M50 34 28 60M50 34l22 26M50 34v40" stroke="#b98552" stroke-width="5" stroke-linecap="round"/>${[[28, 64], [72, 64], [50, 78], [38, 82], [62, 82], [50, 56]].map(p => `<ellipse cx="${p[0]}" cy="${p[1]}" rx="9" ry="13" fill="#7a3e12" stroke="#4d240a" stroke-width="2"/>`).join('')}`) },
@@ -411,7 +413,7 @@ const MAP = [['dar', 24, 66, 'Dar Yasmine', '🏠', 1], ['cafe', 52, 50, 'Le caf
 const DISC = [['the', '🫖', 'Servir le thé'], ['boire', '🥤', 'Boire un verre'], ['manger', '😋', 'Bon appétit'], ['piment', '🌶️', 'Ça pique !'], ['couscous', '🍲', 'Cuire le couscous'], ['frigo', '🧊', 'Ouvrir le frigo'],
   ['dodo', '😴', 'Au lit'], ['bain', '🛁', 'Prendre un bain'], ['jasmin', '🌼', 'Faire fleurir le jasmin'], ['machmoum', '💐', 'Porter un machmoum'], ['citron', '🍋', 'Cueillir un citron'],
   ['fontaine', '⛲', 'La fontaine'], ['radio', '🎶', 'Mettre la musique'], ['darbouka', '🥁', 'Jouer de la darbouka'], ['chat', '🐈', 'Caresser le chat'], ['oiseau', '🐤', 'Faire chanter le canari'],
-  ['trad', '✨', 'Tenue de fête'], ['chechia', '🧢', 'Porter la chéchia'], ['lampe', '💡', 'Allumer la lumière'], ['veillee', '🛋️', 'La veillée au salon'], ['super', '🦸', 'Super-héros'], ['astro', '🚀', 'Astronaute'],
+  ['trad', '✨', 'Tenue de fête'], ['chechia', '🧢', 'Porter la chéchia'], ['lampe', '💡', 'Allumer la lumière'], ['veillee', '🛋️', 'La veillée au salon'], ['super', '🦸', 'Super-héros'], ['astro', '🚀', 'Astronaute'], ['pyjama', '🌙', 'En pyjama'], ['tablier', '🧑‍🎓', "En tablier d'école"], ['plagiste', '🩴', 'En tenue de plage'],
   ['eleve', '🎒', 'En classe'], ['tableau', '🧑‍🏫', 'Écrire au tableau'], ['cloche', '🔔', 'Sonner la cloche'], ['drapeau', '🇹🇳', 'Le drapeau'], ['herisson', '🦔', 'Le hérisson en boule'], ['grenouille', '🐸', 'La grenouille'], ['cigogne', '🕊️', 'La cigogne'],
   ['chevre', '🐐', 'Caresser la chèvre'], ['scorpion', '🦂', 'Le scorpion de la jarre'], ['baignade', '🏊', 'Se baigner'], ['sieste', '⛱️', 'La sieste'], ['chateau', '🏰', 'Le château de sable'], ['glace', '🍦', 'Manger une glace'],
   ['barque', '⛵', 'En barque'], ['crabe', '🦀', 'Le crabe'], ['mouette', '🐦', 'La mouette'], ['poulpe', '🐙', 'Les amis de la mer'], ['dattes', '🌴', 'Cueillir des dattes'], ['cerfvolant', '🪁', 'Le cerf-volant'], ['voyage', '🗺️', 'Visiter tout le quartier']];
@@ -580,7 +582,7 @@ const heldBy = cid => Object.keys(S.items).find(id => S.items[id].h === cid);
 function goHome(id){ const h = HOME[id], it = S.items[id]; if(!h.p){ it.p = ''; it.h = ''; } else { it.p = h.p; it.x = h.x; it.y = h.y; it.h = ''; it.s = ''; } drawItem(id); if(it.p === place) pulse(id, 'pop'); }
 const RULES = [
   // sur un personnage
-  { on:'char', when:(T) => T.wear, apply:(id, T, cid) => { const c = S.chars[cid]; c.o = T.wear; goHome(id); drawChar(cid); pulse(cid, 'hop'); sfx.wear(); fx(c.x, c.y - 200 * CH[cid].k, '✨'); toast(`${CH[cid].n} met ${OUTFITS[T.wear].n}`); if(OUTFITS[T.wear].trad) found('trad'); if(T.wear === 'super') found('super'); if(T.wear === 'astro') found('astro'); } },
+  { on:'char', when:(T) => T.wear, apply:(id, T, cid) => { const c = S.chars[cid]; c.o = T.wear; goHome(id); drawChar(cid); pulse(cid, 'hop'); sfx.wear(); fx(c.x, c.y - 200 * CH[cid].k, '✨'); toast(`${CH[cid].n} met ${OUTFITS[T.wear].n}`); if(OUTFITS[T.wear].trad) found('trad'); if(T.wear === 'super') found('super'); if(T.wear === 'astro') found('astro'); if(T.wear === 'pyjama') found('pyjama'); if(T.wear === 'tablier') found('tablier'); if(T.wear === 'plage') found('plagiste'); } },
   { on:'char', when:(T) => T.acc, apply:(id, T, cid) => { const c = S.chars[cid], t = typeOf(id); if(c.acc.includes(t)) return false; if(['chechia', 'paille'].includes(t)) c.acc.filter(a => ['chechia', 'paille'].includes(a)).forEach(a => takeOff(cid, a)); c.acc.push(t); S.items[id].p = ''; S.items[id].h = ''; drawItem(id); drawChar(cid); pulse(cid, 'hop'); sfx.wear(); if(t === 'chechia') found('chechia'); if(t === 'machmoum') found('machmoum'); } },
   { on:'char', when:(T, it) => T.food && !(typeOf(it.id) === 'verre'), apply:(id, T, cid) => { const c = S.chars[cid]; pulse(cid, 'munch'); sfx.munch(); fx(c.x, c.y - 210 * CH[cid].k, T.hot ? '🥵' : T.drink ? '😊' : '😋'); S.items[id].p = ''; S.items[id].h = ''; drawItem(id); setTimeout(() => { if(HOME[id].p){ goHome(id); save(); } }, 5000); found(T.hot ? 'piment' : 'manger'); if(T.d) found(T.d); if(T.hot) toast(`Ouh là, ça pique ! ${CH[cid].n} a besoin d'eau 💧`); } },
   { on:'char', when:(T, it) => typeOf(it.id) === 'verre' && it.s === 'the', apply:(id, T, cid) => { const c = S.chars[cid]; S.items[id].s = ''; give(id, cid); pulse(cid, 'munch'); sfx.sip(); fx(c.x, c.y - 210 * CH[cid].k, '😌'); found('boire'); } },

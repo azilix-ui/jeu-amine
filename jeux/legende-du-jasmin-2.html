@@ -1129,6 +1129,8 @@ function drawTiles(g, t){
 const BETE = { scorp:{ f:'scorpion', cols:12, rows:1, h:36, dy:2 }, crabe:{ f:'crabe', cols:12, rows:1, h:32, dy:2 }, mouette:{ f:'mouette', cols:12, rows:1, h:52, dy:16 }, chat:{ f:'chat', cols:12, rows:1, h:40, dy:2 }, grenouille:{ f:'grenouille', cols:12, rows:1, h:34, dy:2 }, cigogne:{ f:'cigogne', cols:12, rows:1, h:72, dy:26 }, faucon:{ f:'faucon', cols:12, rows:1, h:60, dy:20 }, chauve:{ f:'chauve-souris', cols:12, rows:1, h:40, dy:10 },
   herisson:{ f:'herisson', cols:1, rows:1, h:30, dy:2 }, boule:{ f:'herisson-boule', cols:1, rows:1, h:26, dy:0 }, cactus:{ f:'cactus', cols:1, rows:1, h:52, dy:2 }, poisson:{ f:'poisson', cols:1, rows:1, h:30, dy:0 },   // une seule image : c'est le code qui les fait bouger
   ivrogne:{ f:'ivrogne', cols:2, rows:1, h:60, dy:2 }, chevre:{ f:'chevre', cols:1, rows:1, h:38, dy:2 }, poulpe:{ f:'poulpe', cols:1, rows:1, h:38, dy:8 },
+  // 12/11 : animées « pour de vrai » avec ComfyUI en local (Wan 2.2) à partir de l'image fixe ; si la bande manque, l'image fixe et le mouvement du code restent
+  chevreA:{ f:'chevre-anim', cols:12, rows:1, h:43, dy:2 }, herissonA:{ f:'herisson-anim', cols:12, rows:1, h:30, dy:2 }, poissonA:{ f:'poisson-anim', cols:12, rows:1, h:31, dy:4 }, poulpeA:{ f:'poulpe-anim', cols:12, rows:1, h:39, dy:8 },
   boss:{ f:'scorpion-or', cols:12, rows:3, h:150, dy:1 } };
 for(const k in BETE){ const b = BETE[k], im = new Image(); im.onload = () => { b.im = im; b.cw = im.naturalWidth / b.cols; b.ch = im.naturalHeight / b.rows; }; im.src = `jasmin2/${b.f}.webp?v=1`; }
 /* Objets « en vrai » (12/11) : images faites avec ComfyUI sur le PC du papa (FLUX.2 klein, gratuit), jeux/jasmin2/obj-<nom>.webp.
@@ -1224,6 +1226,7 @@ function drawEnt(e, g, t){
         if(OBJ.boulet.im){ obj('boulet', 0, 0, 28); break; }
         const gr = ctx.createRadialGradient(-4, -5, 2, 0, 0, 14); gr.addColorStop(0, '#7a8088'); gr.addColorStop(1, '#23262c'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill();
         ctx.fillStyle = '#3a3e46'; ctx.fillRect(-2, -13, 4, 5); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(-5, -5, 3, 0, 7); ctx.fill(); break; }
+      if(g.lv.n === 19 && BETE.chevreA.im){ ctx.scale(e.dir, 1); bete('chevreA', Math.floor(t * 16 + e.x * .02)); break; }
       if(g.lv.n === 19 && BETE.chevre.im){ ctx.scale(e.dir, 1); const q = t * 13 + e.x * .05; ctx.translate(0, -Math.abs(Math.sin(q)) * 4); ctx.rotate(Math.sin(q) * .09); bete('chevre', 0); break; }   // une chèvre de Dougga : elle galope
       if(g.lv.n === 17){ ctx.scale(e.dir, 1); if(BETE.grenouille.im){ bete('grenouille', Math.floor(t * 12 + e.x * .05)); break; } const hop = Math.abs(Math.sin(t * 6 + e.x * .01)) * 5; ctx.translate(0, -hop);   // une grenouille du marais
         ctx.fillStyle = '#4a9a3a'; ctx.beginPath(); ctx.ellipse(0, -9, 13, 9, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#3a7a2a'; ctx.beginPath(); ctx.ellipse(-10, -3, 7, 4, .4, 0, 7); ctx.ellipse(8, -3, 6, 4, -.4, 0, 7); ctx.fill();
@@ -1243,12 +1246,15 @@ function drawEnt(e, g, t){
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(8, -12, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(9, -12, 1.5, 0, 7); ctx.fill(); break; }
     case 'hog': { if(BETE.herisson.im && BETE.boule.im){   // le hérisson en vrai : il se dandine ; en boule, l'image tourne
         if(e.ball){ const b = BETE.boule, w = b.h * b.cw / b.ch; ctx.translate(0, -b.h / 2); ctx.rotate(e.spin || 0); ctx.drawImage(b.im, -w / 2, -b.h / 2, w, b.h); break; }
+        if(BETE.herissonA.im){ ctx.scale(e.dir, 1); bete('herissonA', Math.floor(t * 13 + e.x * .02)); break; }
         ctx.scale(e.dir, 1); ctx.translate(0, -Math.abs(Math.sin(t * 9 + e.x * .05)) * 1.6); ctx.rotate(Math.sin(t * 9 + e.x * .05) * .05); bete('herisson', 0); break; }
       if(e.ball){ ctx.translate(0, -11); ctx.rotate(e.spin || 0); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0, n = e.spikes === undefined ? 8 : e.spikes; k < n; k++){ const a = k * Math.PI * 2 / n; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8); ctx.lineTo(Math.cos(a) * 14, Math.sin(a) * 14); ctx.stroke(); } break; }
       ctx.scale(e.dir, 1); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.ellipse(-2, -11, 14, 11, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 2; for(let k = 0, n = e.spikes === undefined ? 7 : e.spikes; k < n; k++){ const a = Math.PI + k * .4; ctx.beginPath(); ctx.moveTo(-2 + Math.cos(a) * 10, -11 + Math.sin(a) * 9); ctx.lineTo(-2 + Math.cos(a) * 17, -11 + Math.sin(a) * 15); ctx.stroke(); }
       ctx.fillStyle = '#e8c8a0'; ctx.beginPath(); ctx.ellipse(10, -8, 7, 6, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(16, -9, 2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(10, -11, 1.5, 0, 7); ctx.fill(); break; }
-    case 'bird': if(g.lv.n === 20 && BETE.poulpe.im){ const q = Math.sin(t * 5 + e.x * .05) * .1; ctx.scale(1 - q, 1 + q); bete('poulpe', 0); break; }   // un poulpe de Kerkennah : il se gonfle et se dégonfle
-      if(g.lv.n === 10){ ctx.scale(e.dir, 1); if(BETE.poisson.im){   // le poisson en vrai : dessiné par tranches, la queue ondule
+    case 'bird': if(g.lv.n === 20 && BETE.poulpeA.im){ bete('poulpeA', Math.floor(t * 9 + e.x * .02)); break; }
+      if(g.lv.n === 20 && BETE.poulpe.im){ const q = Math.sin(t * 5 + e.x * .05) * .1; ctx.scale(1 - q, 1 + q); bete('poulpe', 0); break; }   // un poulpe de Kerkennah : il se gonfle et se dégonfle
+      if(g.lv.n === 10){ ctx.scale(e.dir, 1); if(BETE.poissonA.im){ bete('poissonA', Math.floor(t * 11 + e.x * .02)); break; }
+        if(BETE.poisson.im){   // le poisson en vrai : dessiné par tranches, la queue ondule
           const b = BETE.poisson, w = b.h * b.cw / b.ch, N = 8, sw2 = b.cw / N; for(let k = 0; k < N; k++){ const amp = (1 - k / (N - 1)) * 3.2, oy = Math.sin(t * 9 + e.x * .05 - k * .7) * amp; ctx.drawImage(b.im, k * sw2, 0, sw2 + .5, b.ch, -w / 2 + k * w / N, -12 - b.h / 2 + oy, w / N + .6, b.h); } break; }
         const sw = Math.sin(t * 10) * .4; ctx.fillStyle = '#ff8a2a';   // un poisson
         ctx.beginPath(); ctx.ellipse(0, -12, 14, 9, 0, 0, 7); ctx.fill(); ctx.save(); ctx.translate(-12, -12); ctx.rotate(sw); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-10, -8); ctx.lineTo(-10, 8); ctx.fill(); ctx.restore();

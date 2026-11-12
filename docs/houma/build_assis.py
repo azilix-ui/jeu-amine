@@ -4,6 +4,7 @@ enlève le fond vert, recadre et écrit jeux/houma/s-<id>[-<tenue>].webp + jeux/
 Usage : python3 docs/houma/build_assis.py <dossier des images>"""
 import sys, os, re, json, glob
 from PIL import Image
+sys.path.insert(0, os.path.dirname(__file__)); from detoure import cut
 src = sys.argv[1]; meta = {}
 if os.path.exists('jeux/houma/assis.js'):
     meta = json.loads(open('jeux/houma/assis.js', encoding='utf-8').read().split('=', 1)[1].rstrip(';\n'))
@@ -12,14 +13,7 @@ for f in glob.glob(src + '/*_assis_*.png'):
     m = re.match(r'(.+)_assis_(\d+)_\.png', os.path.basename(f)); best[m.group(1)] = min(best.get(m.group(1), f), f)   # la première des 3 dernières images : les yeux y sont ouverts
 for key, f in sorted(best.items()):
     i, _, t = key.partition('_')
-    im = Image.open(f).convert('RGB'); w, h = im.size; px = im.load()
-    out = Image.new('RGBA', (w, h)); o = out.load()
-    for y in range(h):
-        for x in range(w):
-            r, g, b = px[x, y]; k = g - max(r, b)                      # à quel point c'est vert
-            a = 255 if k < 24 else 0 if k > 70 else int(255 * (70 - k) / 46)
-            if a and k > 0: g = max(r, b) + min(k, 6)                  # retire le reflet vert sur les bords
-            o[x, y] = (r, g, b, a)
+    out = cut(f)
     al = out.getchannel('A').point(lambda v: 255 if v > 60 else 0); box = al.getbbox()
     out = out.crop(box); al = al.crop(box); W, H = out.size; m = al.load()
     rows = []
