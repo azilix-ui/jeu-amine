@@ -2,22 +2,22 @@
 Prend les 33 images « anim_<nom>_000NN_.png » (fond vert 832 x 480), cherche la boucle la plus propre (deux images presque identiques
 à 10-24 images d'écart), en tire 12 images, les détoure, les recadre ensemble et écrit une bande de 12 cases : jeux/jasmin2/<nom>-anim.webp.
 Affiche le rapport « hauteur de case / hauteur de la créature » pour régler la taille dans BETE.
-Usage : python3 docs/jasmin2-corps/bande_comfy.py <dossier> <nom>:<hauteur de case> ..."""
+Usage : python3 docs/jasmin2-corps/bande_comfy.py <dossier> <nom>:<hauteur de case>[:<fond green|blue>[:<début>]] ..."""
 import sys, os
 from PIL import Image, ImageChops, ImageStat
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'houma')); from detoure import cut
 src = sys.argv[1]
 for arg in sys.argv[2:]:
-    name, ch = arg.split(':'); ch = int(ch)
+    name, ch, *opt = arg.split(':'); ch = int(ch); bg = opt[0] if opt else 'green'; i0 = int(opt[1]) if len(opt) > 1 else 2   # options : fond, première image possible de la boucle
     files = [f'{src}/anim_{name}_{k:05d}_.png' for k in range(1, 34)]
     small = [Image.open(f).convert('RGB').resize((208, 120)) for f in files]
     best = None
-    for i in range(2, 20):
+    for i in range(i0, 21):
         for j in range(i + 10, min(33, i + 25)):
             d = sum(ImageStat.Stat(ImageChops.difference(small[i], small[j])).mean)
             if best is None or d < best[0]: best = (d, i, j)
     _, i, j = best; idx = [i + round(k * (j - i) / 12) for k in range(12)]
-    fr = [cut(files[k]) for k in idx]
+    fr = [cut(files[k], bg) for k in idx]
     boxes = [f.getchannel('A').point(lambda v: 255 if v > 60 else 0).getbbox() for f in fr]
     box = (min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes))
     k = ch / (box[3] - box[1]); cw = round((box[2] - box[0]) * k)
