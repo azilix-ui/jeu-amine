@@ -128,3 +128,15 @@ Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de co
 - **Tant que la protection n'est pas activée** (ou sans compte administrateur), tout le monde entre comme avant. Une panne de la porte (exception) laisse entrer, pour ne jamais enfermer la famille dehors.
 - **Secours** : un fichier vide `famille-data/acces-ouvert` (gestionnaire de fichiers hPanel) ouvre le site à tous. Mot de passe administrateur oublié : supprimer `famille-data/acces-admin.json`, puis recréer le compte (mot de passe parent). Trop d'essais : 8 par 15 min et par adresse.
 - Test en local : `php -S` avec un routeur qui imite les règles `.htaccess` (voir le journal du 13/11).
+
+
+## Temps d'écran, défi du jour, joueurs (14/11)
+
+- `api/famille.php` : tables `reglages` (k, v JSON ; `ecran` = {Essil:{on, semaine, weekend, nuit, matin}, …}) et `ecran` (player, jour « AAAA-MM-JJ » heure de Paris, sec).
+  - `GET ?action=ecran&player=P` → {libre, jour, limite (s, + 600 si le défi du jour est réussi), bonus, utilise, nuit, matin, weekend} ; `{libre:true}` pour un joueur qui n'est pas un enfant.
+  - `POST action=ecran player sec` (60 s au plus par envoi, envoyé chaque minute de page visible par `famille.js`).
+  - `POST action=reglages pass data={ecran:{…}, ecran_plus:{Amine:15}}` (Progression › Réglages) ; `POST action=ecran_plus pass player min` (« Un parent débloque 15 minutes » sur l'écran de pause).
+  - `POST action=joueur_fusion pass player vers` (scores, historique, progrès et visites passent au bon prénom ; un cours déjà commencé par le bon prénom garde ses progrès) ; `POST action=joueur_supprime pass player`.
+  - `summary` renvoie aussi `ecran` et `aujourdhui`.
+- Cours ajoutés : `defi` (défi du jour) et `amine-lecture` (Je lis !), dans `COURSES`, `READABLE` et `LEARNING`.
+- `api/mur.php` : le mur de la famille (voir `docs/contenus.md`), gardé par la porte comme les autres API.
