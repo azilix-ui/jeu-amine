@@ -4,7 +4,7 @@
    R3 répond false quand il n'a pas d'image : le dessin du Jasmin 2 prend alors le relais (les autres mondes restent comme avant). */
 window.R3 = (() => {
   // les mondes qui ont leurs images (fond, maisons, sol, plateformes, eau, pics) ; les objets (coffres, dinars, lanterne…) sont communs : ceux de Sidi Bou Saïd (m1)
-  const MONDES = { 1:'m1' };
+  const MONDES = Object.fromEntries(Array.from({ length:24 }, (_, i) => [i + 1, 'm' + (i + 1)]));   // les 24 mondes ont leurs images (13/11)
   const COMMUNS = ['coffre_piece', 'coffre_livre', 'coffre_lampe', 'coffre_vide', 'brique', 'jasmin_or', 'lanterne', 'jarre', 'ressort', 'panneau', 'chechia', 'harissa', 'the', 'piece', 'barque', 'flamant', 'train', 'tapis'];
   const PROPRES = ['maisons', 'oursins'], TEX = ['mur', 'dessus', 'bois_bleu', 'mer'], cache = {};
   function charge(n){

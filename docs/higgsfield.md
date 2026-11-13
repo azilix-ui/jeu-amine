@@ -121,3 +121,7 @@ Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet
 - Choix de variante : automatique (la plus proche d'une durée idéale), à corriger à l'oreille par le papa sur `jeux/sons/ecoute.html` (« pièce 3 » → mettre 3 dans `docs/sons/choix.json` et relancer).
 - 1re session (12-13/11) : 34 sons × 4 variantes = 136 fichiers.
 - 2e session (13/11, nuit) : 24 ambiances du Jasmin (`jasmin-amb-1` à `24`, boucle + 15 s, prompts dans `docs/sons/sons.json`) ; 2 à 5 variantes selon les mondes.
+### 13/11 (après-midi) : Jasmin 3 et Ma Houma
+- Les aides ComfyUI sont maintenant écrites dans `docs/comfy/aides.js` (à recoller dans l'onglet 127.0.0.1:8188 si la page est rechargée) : `__t2i`, `__edit`, `__assis` (Wan 2.2), `__fpb`, `__q`.
+- Jasmin 3 : 7 images par monde × 23 (fond 1792×768, décor du milieu 1536×640 détouré, 4 textures 768, pics détourés). Fond bleu pour le décor des mondes 2, 4, 10, 15, 17, 18, 19, 21, 23 et pour les pics des mondes 2, 14, 15, 16, 17, 19, 23.
+- Ma Houma : 32 tenues debout + 32 yeux fermés + 32 vidéos assises (Wan) + 160 gestes ; Imen en sport refaite en violet (le vert clair partait au détourage). 62 décorations, dont 20 arabesques et graffitis.

@@ -8,7 +8,7 @@ from PIL import Image, ImageOps
 ICI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(ICI, '..', 'houma')); from detoure import cut
 exec(open(os.path.join(ICI, 'catalogue.py'), encoding='utf-8').read())
-BLEU = {'monstera', 'dino', 'palmier', 'citronnier_pot', 'jasmin_pot', 'tortue', 'lapin', 'toilettes', 'couscoussier', 'darbouka_d', 'cactus_pot', 'bambou', 'olivier', 'arrosoir', 'cabane_arbre'}   # les 4 derniers refaits sur fond bleu (le vert mangeait le blanc)
+BLEU = {'monstera', 'dino', 'palmier', 'citronnier_pot', 'jasmin_pot', 'tortue', 'lapin', 'toilettes', 'couscoussier', 'darbouka_d', 'cactus_pot', 'bambou', 'olivier', 'arrosoir', 'cabane_arbre', 'ara_fleurs', 'graf_dino'}   # les 4 derniers refaits sur fond bleu (le vert mangeait le blanc)
 src = sys.argv[1]; out = os.path.join(ICI, '..', '..', 'jeux', 'maison'); os.makedirs(out + '/tex', exist_ok=True)
 dims, manque = {}, []
 for id_, nom, cat, h, ou, fmt, p in C:
