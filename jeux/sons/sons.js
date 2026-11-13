@@ -7,9 +7,10 @@ window.Sons = (function(){
   let amb = null, ambNom = '', AClast = null, OFF = null;
   try{ OFF = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100); }catch(e){}   // décode dès le chargement, sans attendre le premier toucher
   function charger(prefixe, noms){
-    noms.forEach(n => fetch(`${base}${prefixe}-${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : null)
+    noms.filter(n => !raw[n] && !charger.en[n]).forEach(n => (charger.en[n] = 1) && fetch(`${base}${prefixe}-${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : null)
       .then(a => { if(a){ raw[n] = a; if(OFF || AClast) decode(OFF || AClast, n); } }).catch(() => {}));
   }
+  charger.en = {};
   function decode(AC, n){
     if(buf[n] || !raw[n] || raw[n].enCours) return;
     raw[n].enCours = 1;

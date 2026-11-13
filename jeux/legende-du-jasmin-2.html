@@ -108,7 +108,7 @@ body.menu .back{display:inline-flex}
   <div class="cross"><button class="pbtn" id="bL" aria-label="Gauche">◀</button><button class="pbtn" id="bR" aria-label="Droite">▶</button></div>
   <div class="ab"><button class="pbtn b" id="bB" aria-label="Tirer ou courir">B</button><button class="pbtn a" id="bA" aria-label="Sauter">A</button></div>
 </div>
-<div id="hudbtns"><button class="round" id="pauseBtn" aria-label="Pause">⏸</button></div>
+<div id="hudbtns"><button class="round" id="sonBtn" aria-label="Réglages du son">⚙️</button><button class="round" id="pauseBtn" aria-label="Pause">⏸</button></div>
 <div id="rotate"><div style="font-size:64px">📱↻</div>Tourne la tablette pour jouer !</div>
 <a class="back" href="../index.html">← Famille</a>
 
@@ -136,6 +136,13 @@ body.menu .back{display:inline-flex}
   <button class="big" id="resume">▶ Reprendre</button>
   <div class="row"><button class="big ghost" id="restart">↻ Recommencer le niveau</button><button class="big ghost" id="toLevels">Les mondes</button></div>
 </div></div>
+<div class="screen" id="jopts"><div class="box">
+  <h2>⚙️ Le son</h2>
+  <div class="opt"><span>🔊 Bruitages <small>(saut, pièces, chute…)</small></span><button id="jSound"></button></div>
+  <div class="opt"><span>🎵 Musique</span><button id="jMusic"></button></div>
+  <div class="opt"><span>🌿 Ambiance du monde <small>(vagues, vent, souk…)</small></span><button id="jAmb"></button></div>
+  <button class="big" id="jResume">▶ Reprendre</button>
+</div></div>
 <div class="screen" id="end"><div class="box" id="endBox"></div></div>
 <div class="screen" id="recs"><div class="box">
   <h2>🏆 Records de la famille</h2>
@@ -147,6 +154,7 @@ body.menu .back{display:inline-flex}
   <h2>⚙️ Réglages</h2>
   <div class="opt"><span>🔊 Bruitages</span><button id="oSound"></button></div>
   <div class="opt"><span>🎵 Musique</span><button id="oMusic"></button></div>
+  <div class="opt"><span>🌿 Ambiance des mondes</span><button id="oAmb"></button></div>
   <div class="opt"><span>❓ Blocs savoir (questions)</span><button id="oQuiz"></button></div>
   <div class="opt"><span>🎮 Taille des boutons tactiles</span><span style="display:flex;gap:6px"><button data-bs="0.85">Petits</button><button data-bs="1">Moyens</button><button data-bs="1.2">Grands</button></span></div>
   <div class="opt"><span>⛶ Plein écran</span><button id="oFull">Activer</button></div>
@@ -616,7 +624,7 @@ function question(){ const k = (player || '').toLowerCase(); if(!Q[k] && k !== '
    ===================================================================== */
 const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
-const prefs = Object.assign({ sound:true, music:true, quiz:true, bs:1 }, store.get('jasmin-prefs', {}));
+const prefs = Object.assign({ sound:true, music:true, amb:true, quiz:true, bs:1 }, store.get('jasmin-prefs', {}));
 const fresh = () => ({ unlocked:1, best:{}, gems:{}, tickets:0, answers:{ ok:0, ko:0 }, games:0, t:0 });
 let player = null, save = fresh(), avatarImg = null, avatarProf = null, avatarSigh = null;   // avatarSigh : la tête qui soupire   // avatarProf : la tête de profil, quand le héros marche
 const skey = () => 'jasmin:' + player;
@@ -681,8 +689,11 @@ function musicTick(){
     MUS.next += spb; MUS.step++;
   }
 }
-function musicStart(){ if(!prefs.music || !audio() || MUS.on) return; genMelody(); MUS.on = true; MUS.next = AC.currentTime + .05; MUS.timer = setInterval(musicTick, 25); }
-function musicStop(){ MUS.on = false; clearInterval(MUS.timer); }
+// L'ambiance de chaque monde (13/11) : jeux/sons/jasmin-amb-<monde>.mp3, ElevenLabs, 15 s en boucle ; chargée seulement quand on entre dans le monde
+function ambStart(){ if(!prefs.amb || !window.Sons || !G0 || !audio()) return; const k = 'amb-' + G0.lv.n; Sons.charger('jasmin', [k]); Sons.boucle(AC, master, k, .5); }
+function ambStop(){ if(window.Sons) Sons.stop(); }
+function musicStart(){ ambStart(); if(!prefs.music || !audio() || MUS.on) return; genMelody(); MUS.on = true; MUS.next = AC.currentTime + .05; MUS.timer = setInterval(musicTick, 25); }
+function musicStop(){ MUS.on = false; clearInterval(MUS.timer); ambStop(); }
 
 /* =====================================================================
    Entrées
@@ -1551,6 +1562,8 @@ function pauseGame(){ if(state !== 'play') return; state = 'pause'; show('pause'
 function resume(){ if(state !== 'pause') return; state = 'play'; show(null); last = performance.now(); musicStart(); }
 document.addEventListener('visibilitychange', () => { if(document.hidden) pauseGame(); });
 $('pauseBtn').onclick = () => { sfx.tap(); pauseGame(); };
+$('sonBtn').onclick = () => { sfx.tap(); pauseGame(); if(state === 'pause'){ renderOpts(); show('jopts'); } };
+$('jResume').onclick = () => { sfx.tap(); resume(); };
 $('resume').onclick = () => { sfx.tap(); resume(); };
 const encaisse = () => { if(G0 && G0.dinars){ save.bourse = bourse() + G0.dinars; G0.dinars = 0; persist(); } };   // on quitte ou on recommence : les dinars déjà ramassés vont quand même dans la bourse
 $('restart').onclick = () => { sfx.tap(); encaisse(); startLevel(G0.lv.n); };
@@ -1613,8 +1626,8 @@ document.querySelectorAll('#recTabs button').forEach(b => b.onclick = () => { sf
 $('openRecs').onclick = () => { audio(); sfx.tap(); show('recs'); loadRecs(1); };
 $('recBack').onclick = () => { sfx.tap(); show('menu'); };
 // réglages
-function renderOpts(){ [['oSound', 'sound'], ['oMusic', 'music'], ['oQuiz', 'quiz']].forEach(([id, k]) => { $(id).textContent = prefs[k] ? 'Oui' : 'Non'; $(id).setAttribute('aria-pressed', prefs[k]); }); document.querySelectorAll('[data-bs]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.bs === prefs.bs)); resize(); }
-[['oSound', 'sound'], ['oMusic', 'music'], ['oQuiz', 'quiz']].forEach(([id, k]) => $(id).onclick = () => { prefs[k] = !prefs[k]; store.set('jasmin-prefs', prefs); renderOpts(); audio(); sfx.tap(); if(k === 'music' && !prefs.music) musicStop(); });
+function renderOpts(){ [['oSound', 'sound'], ['oMusic', 'music'], ['oQuiz', 'quiz'], ['jSound', 'sound'], ['jMusic', 'music'], ['jAmb', 'amb'], ['oAmb', 'amb']].filter(([id]) => $(id)).forEach(([id, k]) => { $(id).textContent = prefs[k] ? 'Oui' : 'Non'; $(id).setAttribute('aria-pressed', prefs[k]); }); document.querySelectorAll('[data-bs]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.bs === prefs.bs)); resize(); }
+[['oSound', 'sound'], ['oMusic', 'music'], ['oQuiz', 'quiz'], ['jSound', 'sound'], ['jMusic', 'music'], ['jAmb', 'amb'], ['oAmb', 'amb']].forEach(([id, k]) => $(id).onclick = () => { prefs[k] = !prefs[k]; store.set('jasmin-prefs', prefs); renderOpts(); audio(); sfx.tap(); if(k === 'music' && !prefs.music){ MUS.on = false; clearInterval(MUS.timer); } if(k === 'amb' && !prefs.amb) ambStop(); });
 document.querySelectorAll('[data-bs]').forEach(b => b.onclick = () => { prefs.bs = +b.dataset.bs; store.set('jasmin-prefs', prefs); renderOpts(); sfx.tap(); });
 $('oFull').onclick = () => { const d = document.documentElement; try{ if(document.fullscreenElement) document.exitFullscreen(); else (d.requestFullscreen || d.webkitRequestFullscreen).call(d); }catch(e){} };
 $('openOpts').onclick = () => { audio(); sfx.tap(); renderOpts(); show('opts'); };

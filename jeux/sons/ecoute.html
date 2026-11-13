@@ -28,6 +28,8 @@
 const NOMS = { saut:'saut', atterrir:'atterrissage', piece:'pièce', gemme:'gemme', brique:'brique cassée', bonus:'bonus', ecrase:'ennemi écrasé', aie:'aïe', feu:'boule de feu', ressort:'ressort', lampe:'lampe magique', boss:'boss', portail:'portail', plouf:'plouf', chute:'chute lourde', victoire:'victoire',
   prendre:'prendre', poser:'poser', 'porte-ouvre':'ouvrir', 'porte-ferme':'fermer', eau:'eau', croque:'croque', gorgee:'gorgée', doum:'darbouka doum', tek:'darbouka tek', miaou:'miaou', oiseau:'oiseau', habit:'habit', etoile:'étoile',
   'amb-souk':'ambiance souk', 'amb-plage':'ambiance plage', 'amb-cafe':'ambiance café', 'amb-ecole':'ambiance école', 'amb-dar':'ambiance maison' };
+const MONDES = ['Sidi Bou Saïd', "L'Oasis de Tozeur", 'Les Dunes du Sahara', "Les Montagnes d'Aïn Draham", 'Le Palais du Scorpion d’Or', 'La Médina de Tunis', 'Les Ruines de Carthage', "L'Île de Djerba", 'Les Maisons de Matmata', 'La Côte de Tabarka', "L'Amphithéâtre d'El Jem", 'Le Chott el-Jérid', 'Le Lézard Rouge', 'Kairouan', "L'Aqueduc de Zaghouan", 'Le Ksar Ouled Soltane', "Le Lac d'Ichkeul", 'Le Canyon de Tamerza', 'Les Ruines de Dougga', 'Les Îles Kerkennah', 'Le Cap Bon', 'Le Vieux Port de Bizerte', "Testour l'Andalouse", 'Le Ribat de Monastir'];
+MONDES.forEach((m, i) => { NOMS['amb-' + (i + 1)] = 'ambiance ' + (i + 1) + ' : ' + m; });
 let a = null;
 fetch('choix.json?' + Date.now()).then(r => r.json()).then(C => {
   const L = document.getElementById('liste'); let jeu = '';
