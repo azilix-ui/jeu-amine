@@ -234,7 +234,9 @@ const OUTFITS = {
   ville:{ n:'ses habits de tous les jours', col:'#2f6fd6' }, jebba:{ n:'sa jebba', trad:1, col:'#fbf8ee' }, foot:{ n:'sa tenue de foot', col:'#c8102e' },
   astro:{ n:"sa tenue d'astronaute", col:'#e9edf2' }, super:{ n:'sa tenue de super-héros', col:'#5b2a9a' }, or:{ n:'sa tenue en or', col:'#e3b23c' },
   // 12/11 : quatre tenues créées avec ComfyUI sur le PC du papa (FLUX.2 klein : on retouche la tenue, le visage reste)
-  pyjama:{ n:'son pyjama', col:'#bfe0ff' }, tablier:{ n:"son tablier d'école", col:'#2f55b8' }, fete:{ n:'sa tenue de fête', trad:1, col:'#c2185b' }, plage:{ n:'sa tenue de plage', col:'#12c8b4' }
+  pyjama:{ n:'son pyjama', col:'#bfe0ff' }, tablier:{ n:"son tablier d'école", col:'#2f55b8' }, fete:{ n:'sa tenue de fête', trad:1, col:'#c2185b' }, plage:{ n:'sa tenue de plage', col:'#12c8b4' },
+  // 13/11 : quatre de plus (ComfyUI) : robe pour les filles, costume pour les garçons dans « chic »
+  sport:{ n:'sa tenue de sport', col:'#1e88e5' }, sortie:{ n:'sa tenue de sortie', col:'#8fb8e8' }, chic:{ n:'sa tenue chic', col:'#f2a7c3' }, hiver:{ n:"sa tenue d'hiver", col:'#c62828' }
 };
 const metaOf = (id, o) => (CORPS[id] && (CORPS[id][o] || CORPS[id].ville)) || [115, 255, .5, .01, .5, .25, .85, .5];
 function sizeOf(id, o){ const M = metaOf(id, o), h = HK * CH[id].k; return { w:h * M[0] / M[1], h, M }; }
@@ -364,8 +366,8 @@ const PLACES = {
       ['livre', 'livre', 1108, 430], ['darbouka', 'darbouka', 960, F0], ['chat', 'chatR', 545, F0], ['arrosoir', 'arrosoir', 656, F1], ['ballon', 'ballon', 758, F1],
       ['doudou', 'doudou', 392, F1 - 34], ['chechia', 'chechia', 96, F1 - 250], ['paille', 'paille', 152, F1 - 250], ['lunettes', 'lunettes', 1040, 154], ['sac', 'sac', 232, F1],
       ['savon', 'savon', 930, 154], ['lotion', 'lotion', 966, 154], ['canard', 'canard', 1002, 154], ['fouta', 'fouta', 1120, F1],
-      ['v-jebba', 'v-jebba', 70, F1 - 138], ['v-fete', 'v-fete', 96, F1 - 138], ['v-tablier', 'v-tablier', 122, F1 - 138], ['v-foot', 'v-foot', 148, F1 - 138], ['v-astro', 'v-astro', 174, F1 - 138],
-      ['v-super', 'v-super', 70, F1 - 34], ['v-or', 'v-or', 96, F1 - 34], ['v-pyjama', 'v-pyjama', 122, F1 - 34], ['v-plage', 'v-plage', 148, F1 - 34], ['v-ville', 'v-ville', 174, F1 - 34]],
+      ['v-jebba', 'v-jebba', 66, F1 - 138], ['v-fete', 'v-fete', 84, F1 - 138], ['v-tablier', 'v-tablier', 102, F1 - 138], ['v-foot', 'v-foot', 120, F1 - 138], ['v-astro', 'v-astro', 138, F1 - 138], ['v-sport', 'v-sport', 156, F1 - 138], ['v-sortie', 'v-sortie', 174, F1 - 138],
+      ['v-super', 'v-super', 66, F1 - 34], ['v-or', 'v-or', 84, F1 - 34], ['v-pyjama', 'v-pyjama', 102, F1 - 34], ['v-plage', 'v-plage', 120, F1 - 34], ['v-ville', 'v-ville', 138, F1 - 34], ['v-chic', 'v-chic', 156, F1 - 34], ['v-hiver', 'v-hiver', 174, F1 - 34]],
     start:{ anis:[965, F0], imen:[1085, F0], essil:[806, F1], salma:[812, F0], amine:[250, F1], nour:[745, F0], yasmine:[1185, F0], fares:[420, F0] } }
 };
 /* =====================================================================
