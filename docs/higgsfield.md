@@ -120,3 +120,4 @@ Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet
 - Liste des sons et prompts : `docs/sons/sons.json`. Préparation : `python3 docs/sons/prepare.py <dossier des mp3>` → `jeux/sons/<jeu>-<nom>.mp3` (mono, niveau égalisé, silences coupés, longueur plafonnée) + `jeux/sons/variantes/` + `choix.json`.
 - Choix de variante : automatique (la plus proche d'une durée idéale), à corriger à l'oreille par le papa sur `jeux/sons/ecoute.html` (« pièce 3 » → mettre 3 dans `docs/sons/choix.json` et relancer).
 - 1re session (12-13/11) : 34 sons × 4 variantes = 136 fichiers.
+- 2e session (13/11, nuit) : 24 ambiances du Jasmin (`jasmin-amb-1` à `24`, boucle + 15 s, prompts dans `docs/sons/sons.json`) ; 2 à 5 variantes selon les mondes.
