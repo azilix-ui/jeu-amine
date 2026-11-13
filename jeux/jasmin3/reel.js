@@ -21,12 +21,20 @@ window.R3 = (() => {
   const haut = (R, k, h) => { const im = R.im[k]; return im ? h * im.naturalWidth / im.naturalHeight : 0; };   // largeur pour une hauteur donnée
 
   // le fond : la photo du village (lointain, 0,15) puis la rangée de maisons (0,45), posées derrière le sol
+  // Les bandes du fond sont préparées une seule fois par monde à la taille de l'écran (photo + son reflet en miroir, flou déjà appliqué) :
+  // sur PC, le flou recalculé à chaque image et la photo redimensionnée à chaque image faisaient sauter le décor (13/11).
+  function bande(R, k, h, filtre, alpha){ const im = R.im[k]; if(!im) return null; const S = SC * DPR, cle = k + '@' + S.toFixed(3); let b = R.bd && R.bd[k];
+    if(b && b.cle === cle) return b;
+    const w = h * im.naturalWidth / im.naturalHeight, W = Math.max(1, Math.round(w * S)), H = Math.max(1, Math.round(h * S)), c = document.createElement('canvas'); c.width = W * 2; c.height = H;
+    const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; if(filtre) x.filter = filtre; x.globalAlpha = alpha || 1;
+    x.drawImage(im, 0, 0, W, H); x.save(); x.translate(W * 2, 0); x.scale(-1, 1); x.drawImage(im, 0, 0, W, H); x.restore();
+    (R.bd = R.bd || {})[k] = b = { c, cle, w: W * 2 / S, h: H / S }; return b; }
   function fond(g){ const R = de(g); if(!R || !R.im.fond) return false;
-    const im = R.im.fond, h = VHL * 1.04, w = h * im.naturalWidth / im.naturalHeight, sc = g.camX * .15;
-    for(let k = Math.floor(sc / w); k * w - sc < VW; k++){ const x = k * w - sc; if(k % 2){ ctx.save(); ctx.translate(x + w, -8); ctx.scale(-1, 1); ctx.drawImage(im, 0, 0, w, h); ctx.restore(); } else ctx.drawImage(im, x, -8, w, h); }
-    const m = R.im.maisons; if(m){ const mh = 112, mw = mh * m.naturalWidth / m.naturalHeight, p = g.camX * .45, y = GY * T + 10 - mh;
-      ctx.filter = 'blur(.7px) saturate(.8) brightness(1.04)'; ctx.globalAlpha = .9; for(let k = Math.floor(p / mw); k * mw - p < VW; k++){ const x = k * mw - p; if(k % 2){ ctx.save(); ctx.translate(x + mw, y); ctx.scale(-1, 1); ctx.drawImage(m, 0, 0, mw, mh); ctx.restore(); } else ctx.drawImage(m, x, y, mw, mh); } ctx.globalAlpha = 1; ctx.filter = 'none';
-      const gr = ctx.createLinearGradient(0, y - 20, 0, y + mh); gr.addColorStop(0, 'rgba(230,242,255,0)'); gr.addColorStop(1, 'rgba(230,242,255,.35)'); ctx.fillStyle = gr; ctx.fillRect(0, y - 20, VW + 2, mh + 20); }   // un voile de lointain
+    const f = bande(R, 'fond', VHL * 1.04); if(!f) return false;
+    const sc = g.camX * .15; for(let k = Math.floor(sc / f.w); k * f.w - sc < VW; k++) ctx.drawImage(f.c, k * f.w - sc, -8, f.w, f.h);
+    const m = bande(R, 'maisons', 112, 'blur(.7px) saturate(.8) brightness(1.04)', .9); if(m){ const p = g.camX * .45, y = GY * T + 10 - m.h;
+      for(let k = Math.floor(p / m.w); k * m.w - p < VW; k++) ctx.drawImage(m.c, k * m.w - p, y, m.w, m.h);
+      const gr = ctx.createLinearGradient(0, y - 20, 0, y + m.h); gr.addColorStop(0, 'rgba(230,242,255,0)'); gr.addColorStop(1, 'rgba(230,242,255,.35)'); ctx.fillStyle = gr; ctx.fillRect(0, y - 20, VW + 2, m.h + 20); }   // un voile de lointain
     return true; }
 
   // une case du décor

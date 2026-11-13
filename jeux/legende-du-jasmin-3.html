@@ -1443,7 +1443,7 @@ function render(t){
   const sx = g.shake > 0 ? (Math.random() - .5) * g.shake : 0, sy = g.shake > 0 ? (Math.random() - .5) * g.shake : 0;
   ctx.setTransform(SC * DPR, 0, 0, SC * DPR, sx * DPR, sy * DPR);
   drawBackground(g);
-  ctx.translate(-g.camX, 0);
+  ctx.translate(-Math.round(g.camX * SC * DPR) / (SC * DPR), 0);   // Jasmin 3 : la caméra tombe pile sur un pixel de l'écran, le sol en photo ne scintille plus en défilant
   drawTiles(g, t);
   const BACK = ['mover', 'door', 'lamp', 'sign', 'spring', 'deco', 'warp'];
   g.ents.forEach(e => { if(BACK.includes(e.t)) drawEnt(e, g, t); });
@@ -1511,10 +1511,20 @@ function updateFx(dt){ const g = G0; if(!g) return;
   (g.bumps || []).forEach(b => b.t -= dt); g.bumps = (g.bumps || []).filter(b => b.t > 0);
   g.shake = Math.max(0, g.shake - dt * 25); const h = g.hero; h.squash += (0 - h.squash) * Math.min(1, dt * 12); }
 let last = performance.now(), acc = 0;
+// la position de chaque chose au pas d'avant (héros, créatures, plateformes, caméra), pour dessiner entre deux pas
+function bougeurs(g){ return [g.hero].concat(g.ents || [], g.shots || []); }
+function avant(g){ g._cx = g.camX; for(const o of bougeurs(g)) if(o){ o._px = o.x; o._py = o.y; } }
+function entre(g, a){ const vu = [];
+  const m = (o, k, kp) => { const v = o[k], p = o[kp]; if(typeof v !== 'number' || typeof p !== 'number' || Math.abs(v - p) > 160) return; vu.push([o, k, v]); o[k] = p + (v - p) * a; };   // un saut de plus de 160 (passage secret, retour au drapeau) n'est pas adouci
+  m(g, 'camX', '_cx'); for(const o of bougeurs(g)) if(o){ m(o, 'x', '_px'); m(o, 'y', '_py'); }
+  return () => { for(const [o, k, v] of vu) o[k] = v; }; }
 function frame(now){
   const dt = Math.min(.1, (now - last) / 1000); last = now; const t = now / 1000;
-  if(state === 'play' && G0){ acc += dt; while(acc >= STEP){ step(STEP); acc -= STEP; } updateFx(dt); }
-  render(t); requestAnimationFrame(frame);
+  if(state === 'play' && G0){ acc += dt; while(acc >= STEP){ avant(G0); step(STEP); acc -= STEP; } updateFx(dt); }
+  // Jasmin 3 (13/11) : le jeu avance par pas de 1/120 s. Sur un écran de PC (60, 75, 144 Hz…), une image recevait tantôt 1 pas, tantôt 2 ou 0 :
+  // le héros et le décor avançaient par à-coups (l'iPad à 120 Hz tombait juste). On dessine donc chaque image entre le pas d'avant et le suivant.
+  const mix = state === 'play' && G0 ? entre(G0, acc / STEP) : null;
+  render(t); if(mix) mix(); requestAnimationFrame(frame);
 }
 
 /* =====================================================================
