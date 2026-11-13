@@ -816,7 +816,8 @@ function newLevel(n, fromCheck){
     if(e.t === 'coin' && !e.secret) g.dinarTotal++;
     if(e.t === 'stone'){ o.w = 56; o.h = 52; o.hy = o.y; o.st = 'up'; o.timer = 0; }
     if(e.t === 'mover'){ o.x0 = o.x - T / 2; o.y0 = o.y - T; o.px = o.x0; o.py = o.y0; }
-    if(e.t === 'scorp'){ o.w = 30; o.h = 20; o.sp = n === 19 ? 78 : n === 24 ? 70 : 45; }   // à Monastir ce sont des boulets qui roulent   // à Dougga ce sont des chèvres : elles chargent if(e.t === 'hog'){ o.w = 28; o.h = 24; o.sp = 35; o.ball = false; o.spikes = 7; }
+    if(e.t === 'scorp'){ o.w = 30; o.h = 20; o.sp = n === 19 ? 78 : n === 24 ? 70 : 45; }   // à Monastir ce sont des boulets qui roulent ; à Dougga ce sont des chèvres : elles chargent
+    if(e.t === 'hog'){ o.w = 28; o.h = 24; o.sp = 35; o.ball = false; o.spikes = 7; }   // le hérisson (corrigé le 13/11 à la demande du papa : la ligne était tombée dans le commentaire)
     if(e.t === 'bird'){ o.w = 30; o.h = 22; o.bx = o.x; o.by = o.y - 10; } if(e.t === 'cactus'){ o.w = 26; o.h = 44; o.cd = 2; if(e.kind === 'ivrogne'){ o.w = 30; o.h = 54; o.cd = 2.6; o.throwT = 0; } }
     if(e.t === 'boss'){ o.w = 120; o.h = 70; o.hp = 3; o.st = 'wait'; o.timer = 0; o.dir = -1; o.inv = 0; }
     g.ents.push(o);
