@@ -74,6 +74,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .porte{position:absolute;top:400px;width:78px;height:140px;z-index:9000;display:grid;place-items:center;align-content:center;gap:2px;background:#ffffffd9;border:4px solid var(--blue);font-size:38px;line-height:1;color:var(--blue);pointer-events:auto}
 .porte.g{left:0;border-radius:0 40px 40px 0;border-left:0}.porte.d{right:0;border-radius:40px 0 0 40px;border-right:0}.porte b{font-size:24px}.porte:active{background:var(--sun)}
 .e.f .dimg{width:100%;height:100%;display:block;pointer-events:none;filter:drop-shadow(0 7px 5px #0003)}
+.e.f .dimg.peint{filter:none;mix-blend-mode:multiply;opacity:.93}   /* les arabesques et graffitis prennent le grain du mur */
 .e.f.sel .dimg{filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 9px #ffc93c) drop-shadow(0 7px 5px #0003)}
 .e.f .dimg.on-lumiere,.e.f .dimg.on-feu{filter:brightness(1.12) drop-shadow(0 0 14px #ffd84d) drop-shadow(0 0 30px #ffb84d88)}
 .cord{position:absolute;left:50%;bottom:100%;width:3px;margin-left:-1.5px;background:#4a4a4a}
@@ -97,6 +98,13 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .kit{background:#eef4fb;border-radius:16px;padding:6px 4px;display:grid;justify-items:center;gap:2px;font-size:13px;font-weight:800;line-height:1.1}.kit img{width:84px;height:84px;object-fit:contain}.kit:active{background:var(--sun)}
 .swg{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;margin:6px 0 12px}.sw{height:66px;border-radius:14px;border:4px solid #fff;box-shadow:0 0 0 2px #c3cfdf}.sw.on{box-shadow:0 0 0 5px var(--sun)}
 .tb[hidden]{display:none}
+#mpeint{position:absolute;left:0;top:0;width:1280px;height:520px}
+body.peinture #bPeint{background:var(--sun)}
+#pbar{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:20;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;max-width:calc(100% - 16px);gap:4px;background:#fffffff2;padding:6px;border-radius:18px;box-shadow:0 4px 0 #0003;border:3px solid var(--sun)}
+#pbar button{min-width:46px;height:46px;font-size:22px;border-radius:12px;background:#eef4fb;display:grid;place-items:center;padding:0 6px}#pbar button.on{background:var(--sun)}
+#pbar .pc{background:var(--c);border:3px solid #fff;box-shadow:0 0 0 1px #9aa}#pbar .pc.on{box-shadow:0 0 0 4px var(--blue)}#pbar .sep{width:6px}#pbar .fini{font-size:17px;font-weight:800;background:var(--blue);color:#fff}
+@media (max-height:520px){#pbar button{min-width:38px;height:38px;font-size:18px}}
+.kit .tenue{width:84px;height:96px;background-size:200% 100%;background-position:0 0;background-repeat:no-repeat}.kit.on{box-shadow:0 0 0 4px var(--sun)}
 @media (max-width:640px){body.inroom #bDisc,body.inroom #bSnd,body.inroom #bMap{display:none}}
 /* la carte */
 #map{position:absolute;inset:0}
@@ -130,6 +138,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
   <button class="tb" id="bRooms" aria-label="Les pièces de la maison" hidden>🏠</button>
   <button class="tb deco" id="bDeco" aria-label="Décorer : ajouter des meubles et des objets" hidden>🛋️</button>
   <button class="tb deco" id="bMur" aria-label="Changer les murs et le sol" hidden>🎨</button>
+  <button class="tb deco" id="bPeint" aria-label="Peindre et taguer sur le mur" hidden>🖌️</button>
   <div id="title">Ma Houma<small>le quartier du Jasmin</small></div>
   <button class="tb" id="bDisc" aria-label="Mes découvertes"><span id="stars">⭐ 0</span></button>
   <button class="tb" id="bSnd" aria-label="Le son">🔊</button>
@@ -498,7 +507,7 @@ function fresh(){
 }
 // complète une sauvegarde (nouvelle, ancienne ou abîmée) avec tout ce qui manque : rien ne plante si un champ a disparu
 function fill(s){
-  s = s && typeof s === 'object' ? s : {}; s.v = 1; ['chars', 'items', 'fx', 'disc', 'seen', 'deco', 'mur', 'mi'].forEach(k => { if(!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {}; });
+  s = s && typeof s === 'object' ? s : {}; s.v = 1; ['chars', 'items', 'fx', 'disc', 'seen', 'deco', 'mur', 'mi', 'peint'].forEach(k => { if(!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {}; });
   Object.entries(PLACES).forEach(([pid, P]) => {
     Object.entries(P.start || {}).forEach(([id, [x, y]]) => { const c = s.chars[id]; if(!c || !PLACES[c.p] || !isFinite(c.x) || !isFinite(c.y)) s.chars[id] = { p:pid, x, y, pose:'', o:'ville', acc:[] }; });
     P.items.forEach(([id, type, x, y]) => { const it = s.items[id]; if(!it || !isFinite(it.x) || !isFinite(it.y) || (it.p && !PLACES[it.p])) s.items[id] = { p:pid, x, y, s:'', h:'' }; });
@@ -506,6 +515,7 @@ function fill(s){
   SPAWN.forEach(id => { if(!s.items[id]) s.items[id] = { p:'', x:0, y:0, s:'', h:'' }; });
   Object.values(s.chars).forEach(c => { if(!OUTFITS[c.o]) c.o = 'ville'; if(!Array.isArray(c.acc)) c.acc = []; c.x = Math.max(0, Math.min(W, c.x)); c.y = Math.max(0, Math.min(H, c.y)); });
   Object.entries(s.items).forEach(([id, it]) => { if(it.h && !s.chars[it.h]) it.h = ''; if(!typeOf(id)) delete s.items[id]; });
+  Object.keys(s.peint).forEach(k => { if(!Array.isArray(s.peint[k])) delete s.peint[k]; else s.peint[k] = s.peint[k].filter(t => Array.isArray(t) && t.length >= 5 && t.slice(2).every(Number.isFinite)); });
   Object.entries(s.deco).forEach(([u, d]) => { if(!d || !KAT[d.t] || !PLACES[d.p] || !isFinite(d.x) || !isFinite(d.y)) delete s.deco[u]; else { d.k = Math.max(.35, Math.min(3, +d.k || 1)); d.r = +d.r || 0; d.z = +d.z || 0; if(d.on && !s.deco[d.on]) d.on = ''; } });
   return s;
 }
@@ -593,7 +603,7 @@ function render(){
     ents.set(f.id, e); drawFixed(f); });
   Object.keys(S.items).forEach(id => { ents.set(id, { id, kind:'i', el:mk('i', id) }); drawItem(id); });
   CHARS.forEach(C => { ents.set(C.id, { id:C.id, kind:'c', el:mk('c', C.id) }); drawChar(C.id); });
-  if(isRoom(place)){ Object.entries(S.deco).forEach(([u, d]) => { if(d.p === place && d.s === 'on') animDeco(u); }); drawSel(); }
+  if(isRoom(place)){ Object.entries(S.deco).forEach(([u, d]) => { if(d.p === place && d.s === 'on') animDeco(u); }); drawSel(); dessinePeint(place); }
   bar(); fit();
 }
 function bar(){
@@ -742,6 +752,7 @@ function check(){ if(!place) return;
 /* ---------- le doigt ---------- */
 let D = null;   // geste en cours
 view.addEventListener('pointerdown', e => {
+  if(peinture && !e.target.closest('#pbar')){ if(peintDown(pt(e))){ D = { peint:1, pid:e.pointerId }; e.preventDefault(); return; } }
   touches.set(e.pointerId, { x:e.clientX, y:e.clientY }); closeBubble();
   if(touches.size === 2 && isRoom(place)){ const u = D && D.ent && D.ent.kind === 'f' && S.deco[D.id] ? D.id : sel; if(u && S.deco[u]){ if(D && D.ent){ D.ent.el.classList.remove('drag'); if(D.moved) refreshDeco(D.id); } D = { pinch:1, pid:-1 }; startPinch(u); return; } }
   if(D) return; const el = place ? e.target.closest('.e') : null, p = pt(e);
@@ -752,6 +763,7 @@ view.addEventListener('pointerdown', e => {
   try{ view.setPointerCapture(e.pointerId); }catch(_){}
 });
 view.addEventListener('pointermove', e => {
+  if(D && D.peint){ peintMove(pt(e)); return; }
   if(touches.has(e.pointerId)) touches.set(e.pointerId, { x:e.clientX, y:e.clientY });
   if(pinch){ movePinch(); return; }
   if(!D) return;
@@ -767,6 +779,7 @@ view.addEventListener('pointermove', e => {
   if(D.hot !== hid){ if(D.hot && ents.get(D.hot)) ents.get(D.hot).el.classList.remove('hot'); if(hid) ents.get(hid).el.classList.add('hot'); D.hot = hid; }
 });
 function endDrag(e){
+  if(D && D.peint){ D = null; peintUp(); return; }
   touches.delete(e.pointerId);
   if(pinch || (D && D.pinch)){ if(touches.size < 2){ endPinch(); if(!touches.size) D = null; } return; }
   if(!D) return; const d = D; D = null; if(d.pan){ if(Math.abs(e.clientX - d.sx) < 9 && sel && !e.target.closest('#selbar')) unselect(); return; } if(e.pointerId !== d.pid){ D = d; return; }
@@ -795,7 +808,7 @@ function mapSVG(){ const house = (x, y, w, h, dome) => `<rect x="${x}" y="${y}" 
     ${[[470, 318], [800, 250], [1140, 322], [640, 548]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="22" fill="#d6338a"/><circle cx="${p[0] + 22}" cy="${p[1] + 12}" r="16" fill="#e04a9a"/>`).join('')}</svg>`; }
 function go(pid){
   saveNow();
-  ['bRooms', 'bDeco', 'bMur'].forEach(b => { $(b).hidden = !isRoom(pid); }); document.body.classList.toggle('inroom', isRoom(pid));
+  ['bRooms', 'bDeco', 'bMur', 'bPeint'].forEach(b => { $(b).hidden = !isRoom(pid); }); if(peinture) modePeinture(false); document.body.classList.toggle('inroom', isRoom(pid));
   if(pid === 'map'){ place = null; ambiance(null); unselect(); stage.innerHTML = `<div id="map">${mapSVG()}${MAP.map(m => `<button class="pl${m[5] ? '' : ' soon'}" data-p="${m[0]}" style="left:${m[1]}%;top:${m[2]}%"><span style="font-size:64px;line-height:1">${m[4]}</span><span class="sign">${m[3]}${m[5] ? '' : ' 🚧'}</span></button>`).join('')}</div>`;
     $('title').innerHTML = `Ma Houma<small>le quartier du Jasmin · choisis un lieu</small>`; bar(); panX = 0; fit(); if(player) say('Le quartier du Jasmin. Choisis un lieu.'); return; }
   unselect(); closeBubble(); if(isRoom(pid)) seedRoom(pid);
@@ -806,6 +819,7 @@ $('bMap').onclick = () => { sfx.tap(); go('map'); };
 $('who').onclick = () => { sfx.tap(); choose(); };
 $('bDeco').onclick = () => { sfx.tap(); catalogue(); };
 $('bMur').onclick = () => { sfx.tap(); mursSols(); };
+$('bPeint').onclick = () => { sfx.tap(); modePeinture(!peinture); };
 $('bRooms').onclick = () => { sfx.tap(); panel(`<h2>🏡 Ma maison</h2><p>Où veux-tu aller ?</p><div class="grid">${ROOMS.map(r => `<button class="dk" data-go="${r[0]}"><b>${r[2]}</b>${r[1]}</button>`).join('')}</div><button class="pill ghost" id="rMap">🗺️ La carte du quartier</button><button class="pill ghost" data-close>Rester ici</button>`); $('rMap').onclick = () => { closePanel(); go('map'); }; $('panel').querySelector('.grid').onclick = e => { const b = e.target.closest('[data-go]'); if(b){ closePanel(); go(b.dataset.go); } }; };
 $('bSnd').onclick = () => { muted = !muted; if(muted){ hush(); ambiance(null); } else if(place) ambiance(place); store.set('houma-muet', muted); $('bSnd').textContent = muted ? '🔇' : '🔊'; if(!muted) sfx.tap(); };
 $('bSnd').textContent = muted ? '🔇' : '🔊';
@@ -886,7 +900,70 @@ const KAT_L = [
  ['fenetre', 'la fenêtre bleue', 'mur', 210, 'mur'], ['porte_bleue', 'la porte bleue', 'mur', 330, 'mur'], ['tableau_mer', 'le tableau de la mer', 'mur', 120, 'mur'], ['tableau_fleurs', 'le tableau de fleurs', 'mur', 120, 'mur'],
  ['horloge', "l'horloge", 'mur', 80, 'mur'], ['miroir', 'le miroir', 'mur', 150, 'mur'], ['etagere', "l'étagère", 'mur', 90, 'mur'], ['assiettes', 'les assiettes de Nabeul', 'mur', 90, 'mur'],
  ['poster_planetes', 'le poster des planètes', 'mur', 130, 'mur'], ['guirlande', 'la guirlande lumineuse', 'mur', 60, 'mur'], ['lustre', 'le lustre', 'mur', 150, 'plafond'], ['suspension', 'la lampe suspendue', 'mur', 120, 'plafond'],
- ['cage', 'la cage à oiseau', 'mur', 150, 'plafond']];
+ ['cage', 'la cage à oiseau', 'mur', 150, 'plafond'],
+ // 13/11 : 42 décorations de plus, et les arabesques et graffitis (catégorie « peint » : posés sur le mur comme de la peinture)
+ ["fauteuil_oeuf", "le fauteuil suspendu", 'salon', 230, 'sol'],
+ ["coussins_sol", "les coussins", 'salon', 70, 'sol'],
+ ["lanterne_sol", "la grande lanterne", 'salon', 130, 'sol'],
+ ["vase_nabeul", "le vase de Nabeul", 'salon', 140, 'sol'],
+ ["echecs", "les échecs", 'salon', 90, 'sol'],
+ ["cactus_pot", "le petit cactus", 'salon', 60, 'sol'],
+ ["tabouna", "le four à pain", 'cuisine', 130, 'sol'],
+ ["jarres_huile", "les jarres d'huile", 'cuisine', 110, 'sol'],
+ ["couscous", "le couscous", 'cuisine', 50, 'sol'],
+ ["gateau", "le gâteau d'anniversaire", 'cuisine', 70, 'sol'],
+ ["theiere", "le plateau à thé", 'cuisine', 50, 'sol'],
+ ["panier_pain", "le pain", 'cuisine', 45, 'sol'],
+ ["lit_cabane", "le lit cabane", 'chambre', 240, 'sol'],
+ ["ordinateur", "l'ordinateur", 'chambre', 170, 'sol'],
+ ["poupee", "la poupée", 'chambre', 70, 'sol'],
+ ["maison_poupee", "la maison de poupée", 'chambre', 150, 'sol'],
+ ["chateau", "le château fort", 'chambre', 120, 'sol'],
+ ["cubes", "la tour de cubes", 'chambre', 100, 'sol'],
+ ["veilleuse", "la veilleuse lune", 'chambre', 60, 'sol'],
+ ["boite_musique", "la boîte à musique", 'chambre', 60, 'sol'],
+ ["etagere_livres", "les livres", 'chambre', 120, 'sol'],
+ ["bougies", "les bougies", 'bain', 50, 'sol'],
+ ["bambou", "le bambou", 'bain', 200, 'sol'],
+ ["porte_serviette", "le porte-serviettes", 'bain', 150, 'sol'],
+ ["tente", "la tente de camping", 'jardin', 140, 'sol'],
+ ["cabane_arbre", "la cabane dans l’arbre", 'jardin', 340, 'sol'],
+ ["mangeoire", "la mangeoire", 'jardin', 170, 'sol'],
+ ["chat", "le chat", 'jardin', 60, 'sol'],
+ ["poules", "les poules", 'jardin', 70, 'sol'],
+ ["ane", "l'âne", 'jardin', 170, 'sol'],
+ ["olivier", "l'olivier", 'jardin', 260, 'sol'],
+ ["geraniums", "les géraniums", 'jardin', 70, 'sol'],
+ ["brouette", "la brouette", 'jardin', 90, 'sol'],
+ ["arrosoir", "l'arrosoir", 'jardin', 50, 'sol'],
+ ["panier_basket", "le panier de basket", 'jardin', 330, 'sol'],
+ ["but_foot", "le but de foot", 'jardin', 150, 'sol'],
+ ["mouton", "le mouton", 'jardin', 100, 'sol'],
+ ["velo_adulte", "le grand vélo", 'jardin', 140, 'sol'],
+ ["bonhomme_sable", "le château de sable", 'jardin', 70, 'sol'],
+ ["cheval", "le cheval", 'jardin', 230, 'sol'],
+ ["chameau", "le chameau", 'jardin', 270, 'sol'],
+ ["piano_jouet", "le petit piano", 'chambre', 60, 'sol'],
+ ["ara_rosace", "la rosace", 'peint', 160, 'mur'],
+ ["ara_frise", "la frise", 'peint', 90, 'mur'],
+ ["ara_etoile", "l'étoile", 'peint', 150, 'mur'],
+ ["ara_arc", "l'arc andalou", 'peint', 260, 'mur'],
+ ["ara_mandala", "le mandala", 'peint', 160, 'mur'],
+ ["ara_moucharabieh", "le moucharabieh", 'peint', 220, 'mur'],
+ ["ara_fleurs", "le jasmin grimpant", 'peint', 240, 'mur'],
+ ["ara_oiseaux", "les oiseaux", 'peint', 130, 'mur'],
+ ["graf_soleil", "le soleil", 'peint', 160, 'mur'],
+ ["graf_arcenciel", "l'arc-en-ciel", 'peint', 130, 'mur'],
+ ["graf_fusee", "la fusée", 'peint', 160, 'mur'],
+ ["graf_coeur", "le cœur", 'peint', 130, 'mur'],
+ ["graf_chat", "le chat tagué", 'peint', 140, 'mur'],
+ ["graf_chameau", "le chameau tagué", 'peint', 150, 'mur'],
+ ["graf_etoiles", "les étoiles", 'peint', 110, 'mur'],
+ ["graf_vagues", "les vagues", 'peint', 120, 'mur'],
+ ["graf_fleur", "la fleur", 'peint', 150, 'mur'],
+ ["graf_lune", "la lune", 'peint', 150, 'mur'],
+ ["graf_dino", "le dino tagué", 'peint', 150, 'mur'],
+ ["graf_couronne", "la couronne", 'peint', 120, 'mur']];
 const KAT = Object.fromEntries(KAT_L.filter(k => DIMS[k[0]]).map(([id, n, cat, h, ou]) => [id, { id, n, cat, h, ou }]));
 /* Ce que sait faire chaque meuble. Les repères sont en fractions de l'image (x de gauche à droite, y de haut en bas) :
    seats = où s'assoient les hanches, bed = où se couche le personnage, bath = le bain, surf = [x1, x2, y] un dessus où poser des objets,
@@ -901,7 +978,15 @@ const MB = {
   lampadaire:{ act:'lumiere', glow:[.5, .12, .9] }, lustre:{ act:'lumiere', glow:[.5, .55, 1.2] }, suspension:{ act:'lumiere', glow:[.5, .8, 1.1] }, guirlande:{ act:'lumiere', glow:[.5, .5, 2.2] }, cheminee:{ act:'feu', glow:[.5, .7, 1] },
   tele:{ act:'tele', surf:[.04, .96, .72] }, radio:{ act:'radio' }, piano:{ act:'piano' }, guitare:{ act:'guitare' }, darbouka_d:{ act:'darbouka' }, lavabo:{ act:'eau' }, douche:{ act:'eau' }, fontaine:{ act:'eau' }, toilettes:{ act:'chasse' },
   frigo:{ act:'frigo' }, aquarium:{ act:'bulles' }, chien:{ act:'chien' }, lapin:{ act:'lapin' }, tortue:{ act:'animal' }, cage:{ act:'oiseau' }, horloge:{ act:'tictac' }, fusee:{ act:'fusee' },
-  ballons:{ act:'ballons' }, robot:{ act:'robot' }, dino:{ act:'dino' }, ours:{ act:'calin' }, canard:{ act:'coin' }, train:{ act:'train' }, globe:{ act:'globe' }, barbecue:{ act:'grille' }, tajine:{ act:'cuisine' }, couscoussier:{ act:'cuisine' }
+  ballons:{ act:'ballons' }, robot:{ act:'robot' }, dino:{ act:'dino' }, ours:{ act:'calin' }, canard:{ act:'coin' }, train:{ act:'train' }, globe:{ act:'globe' }, barbecue:{ act:'grille' }, tajine:{ act:'cuisine' }, couscoussier:{ act:'cuisine' },
+  armoire:{ act:'habits' }, commode:{ surf:[.05, .95, .04], act:'habits' },
+  fauteuil_oeuf:{ seats:[[.5, .58]], act:'balance' }, coussins_sol:{ seats:[[.25, .45], [.5, .45], [.75, .45]] }, lanterne_sol:{ act:'lumiere', glow:[.5, .55, .9] }, echecs:{ act:'echecs' },
+  tabouna:{ act:'feu', glow:[.5, .55, .7] }, gateau:{ act:'gateau' }, theiere:{ act:'the' }, couscous:{ act:'cuisine' }, panier_pain:{ act:'cuisine' },
+  lit_cabane:{ bed:[[.5, .62]] }, ordinateur:{ act:'ordi' }, poupee:{ act:'calin' }, maison_poupee:{ act:'jouets' }, chateau:{ act:'jouets' }, cubes:{ act:'cubes' },
+  veilleuse:{ act:'lumiere', glow:[.5, .5, 1.6] }, boite_musique:{ act:'musique' }, etagere_livres:{ surf:[.05, .95, .05], act:'livre' }, bougies:{ act:'lumiere', glow:[.5, .3, 1.4] },
+  tente:{ seats:[[.5, .7]] }, mangeoire:{ act:'oiseau' }, chat:{ act:'miaou' }, poules:{ act:'poule' }, ane:{ seats:[[.45, .4]], act:'ane' }, mouton:{ act:'mouton' },
+  cheval:{ seats:[[.45, .36]], act:'cheval' }, chameau:{ seats:[[.5, .3]], act:'chameau' }, velo_adulte:{ seats:[[.45, .3]] }, panier_basket:{ act:'basket' }, but_foot:{ act:'foot' },
+  piano_jouet:{ act:'piano' }, arrosoir:{ act:'eau' }, geraniums:{ act:'animal' }, cabane_arbre:{ seats:[[.5, .45]] }
 };
 const ROOMS = [['m-salon', 'Le salon', '🛋️'], ['m-cuisine', 'La cuisine', '🍳'], ['m-chambre', 'La chambre', '🛏️'], ['m-bain', 'La salle de bain', '🛁'], ['m-jardin', 'Le jardin', '🌳']];
 const isRoom = pid => !!pid && pid.startsWith('m-');
@@ -926,7 +1011,8 @@ function roomBg(pid){
   const M = S.mur[pid] || {}, i = ROOMS.findIndex(r => r[0] === pid), prev = ROOMS[(i + ROOMS.length - 1) % ROOMS.length], next = ROOMS[(i + 1) % ROOMS.length], jardin = pid === 'm-jardin';
   const wall = M.m === 'ciel' || (!M.m && jardin) ? `<div class="mwall ciel"><svg viewBox="0 0 1280 520" preserveAspectRatio="none"><circle cx="1120" cy="90" r="46" fill="#ffd84d"/><path d="M150 140q30-26 60 0 24-18 44 0zM640 90q34-30 68 0 26-20 50 0z" fill="#fff" opacity=".9"/><rect y="380" width="1280" height="140" fill="#fdfdf8"/><rect y="372" width="1280" height="14" fill="#1d6fb8"/>${[180, 520, 860, 1180].map(x => `<path d="M${x} 380v-150" stroke="#8a5a2b" stroke-width="10"/><circle cx="${x}" cy="215" r="42" fill="#2e9e4f"/><circle cx="${x + 30}" cy="236" r="30" fill="#3fb560"/>`).join('')}</svg></div>`
     : `<div class="mwall" style="${texCss(M.m || 'm_chaux')}"></div><div class="mshade"></div>`;
-  return `<div class="bg room">${wall}<div class="mplinthe"${jardin ? ' style="display:none"' : ''}></div><div class="mfloor"><div style="${texCss(M.s || 's_parquet', 1)}"></div></div>
+  const toile = `<canvas id="mpeint" width="1280" height="520"></canvas>`;
+  return `<div class="bg room">${wall}${toile}<div class="mplinthe"${jardin ? ' style="display:none"' : ''}></div><div class="mfloor"><div style="${texCss(M.s || 's_parquet', 1)}"></div></div>
     <button class="porte g" data-go="${prev[0]}" aria-label="Aller dans ${prev[1]}"><b>◀</b><span>${prev[2]}</span></button><button class="porte d" data-go="${next[0]}" aria-label="Aller dans ${next[1]}"><span>${next[2]}</span><b>▶</b></button></div>`;
 }
 
@@ -939,7 +1025,7 @@ function decoDef(uid){
   const d = S.deco[uid], K = KAT[d.t], dm = DIMS[d.t], B = MB[d.t] || {}, h = K.h * d.k, w = h * dm[0] / dm[1];
   const fx = v => (d.f ? .5 - v : v - .5) * w, fy = v => -(1 - v) * h, pts = L => L && L.map(a => [fx(a[0]), fy(a[1])]);
   const T = { deco:1, uid, t:d.t, K, B, w, h, seats:pts(B.seats), bed:pts(B.bed), bath:pts(B.bath), zz:() => decoZ(uid),
-    draw:s => `${K.ou === 'plafond' ? `<i class="cord" style="height:${Math.max(0, d.y - h)}px"></i>` : ''}<img class="dimg${s === 'on' && B.act ? ' on-' + B.act : ''}" src="${decoRoot}${d.t}.webp" alt="" draggable="false" style="transform:${d.f ? 'scaleX(-1) ' : ''}rotate(${d.r || 0}deg)">${s === 'on' && B.act === 'tele' ? '<i class="tvon"></i>' : ''}` };
+    draw:s => `${K.ou === 'plafond' ? `<i class="cord" style="height:${Math.max(0, d.y - h)}px"></i>` : ''}<img class="dimg${K.cat === 'peint' ? ' peint' : ''}${s === 'on' && B.act ? ' on-' + B.act : ''}" src="${decoRoot}${d.t}.webp" alt="" draggable="false" style="transform:${d.f ? 'scaleX(-1) ' : ''}rotate(${d.r || 0}deg)">${s === 'on' && B.act === 'tele' ? '<i class="tvon"></i>' : ''}` };
   if(B.surf){ const a = fx(B.surf[0]), b = fx(B.surf[1]); T.surf = [[Math.min(a, b), Math.max(a, b), fy(B.surf[2])]]; }
   if(B.glow) T.glow = [fx(B.glow[0]), fy(B.glow[1]), B.glow[2] * Math.min(w, h)];
   if(B.act === 'lumiere' || B.act === 'feu' || B.act === 'tele' || B.act === 'balance' || B.act === 'bascule' || B.act === 'eau' || B.act === 'radio' || B.act === 'bulles') T.tap = ['', 'on'];
@@ -989,6 +1075,22 @@ function tapDeco(uid){
   else if(a === 'train'){ [0, 1].forEach(i => tone(880, .25, 'triangle', .08, i * .35)); at('🚂'); }
   else if(a === 'globe'){ sfx.hop(); at(pick(['🇹🇳', '🌍', '🗺️'])); }
   else if(a === 'grille' || a === 'cuisine'){ noise(.5, .05, 1500); at('🍢'); found('cuisinier'); }
+  else if(a === 'habits'){ gardeRobe(); return; }
+  else if(a === 'gateau'){ [523, 523, 587, 523, 698, 659].forEach((q, i) => tone(q, .28, 'triangle', .1, i * .3)); at('🎂'); setTimeout(() => at('🎉'), 900); found('anniversaire'); }
+  else if(a === 'the'){ sfx.sip ? sfx.sip() : sfx.water(); at('🍵'); }
+  else if(a === 'echecs'){ sfx.tap(); at('♟️'); }
+  else if(a === 'ordi'){ [880, 660, 990].forEach((q, i) => tone(q, .07, 'square', .04, i * .08)); at(pick(['💻', '🎮', '🦖', '🚀'])); }
+  else if(a === 'cubes'){ noise(.4, .08, 900); at('🧱'); }
+  else if(a === 'musique'){ [784, 659, 523, 659, 784, 1046].forEach((q, i) => tone(q, .4, 'sine', .07, i * .25)); at('🎶'); }
+  else if(a === 'livre'){ sfx.tap(); at(pick(['📖', '📚', '🧚', '🐉'])); }
+  else if(a === 'miaou'){ sfx.meow(); at('🐱'); }
+  else if(a === 'poule'){ [900, 700, 900].forEach((q, i) => tone(q, .09, 'square', .05, i * .12)); at('🥚'); }
+  else if(a === 'ane'){ tone(500, .35, 'sawtooth', .06, 0, 300); tone(300, .45, 'sawtooth', .06, .4, 500); at('🫏'); }
+  else if(a === 'mouton'){ tone(420, .5, 'sawtooth', .05, 0, 380); at('🐑'); }
+  else if(a === 'cheval'){ [0, 1, 2, 3].forEach(i => tone(220, .05, 'square', .06, i * .15)); at('🐴'); found('cavalier'); }
+  else if(a === 'chameau'){ tone(160, .5, 'sawtooth', .07, 0, 120); at('🐪'); found('cavalier'); }
+  else if(a === 'basket'){ sfx.hop(); at('🏀'); setTimeout(() => at('🎉'), 500); }
+  else if(a === 'foot'){ sfx.hop(); at('⚽'); setTimeout(() => at('🥅'), 400); }
   else if(a === 'jouets'){ sfx.star(); at(pick(['🧸', '🪀', '🧩', '🚗', '🪁'])); }
   else if(a === 'saute' || a === 'glisse'){ const cid = Object.keys(S.chars).find(k => (S.chars[k].a || '').startsWith(uid + ':')); if(cid) (a === 'glisse' ? glisse : saute)(cid, uid); else { sfx.hop(); toast('Pose quelqu’un dessus !'); } }
   else sfx.tap();
@@ -1073,7 +1175,7 @@ function movePinch(){ const p = [...touches.values()]; if(!pinch || p.length < 2
 function endPinch(){ if(!pinch) return; const uid = pinch.uid; pinch = null; found('pincer'); save(); refreshDeco(uid); }
 
 /* ---------- le catalogue ---------- */
-const CATS = [['salon', '🛋️ Salon'], ['cuisine', '🍳 Cuisine'], ['chambre', '🧸 Chambre'], ['bain', '🛁 Bain'], ['jardin', '🌳 Jardin'], ['mur', '🖼️ Murs']];
+const CATS = [['salon', '🛋️ Salon'], ['cuisine', '🍳 Cuisine'], ['chambre', '🧸 Chambre'], ['bain', '🛁 Bain'], ['jardin', '🌳 Jardin'], ['mur', '🖼️ Murs'], ['peint', '🎨 Arabesques et graffitis']];
 let catOn = 'salon';
 function catalogue(cat){
   if(cat) catOn = cat; else { const r = (place || '').slice(2); catOn = CATS.some(c => c[0] === r) ? r : catOn; }
@@ -1091,6 +1193,61 @@ function mursSols(){
     <p><b>Le sol</b></p><div class="swg">${SOLS.map(([v, n]) => sw(v, n, 's')).join('')}</div><button class="pill" data-close>C'est beau !</button>`);
   $('panel').onclick = e => { const b = e.target.closest('.sw'); if(!b) return; M[b.dataset.k] = b.dataset.v; sfx.wear(); found('peintre'); save(); render(); mursSols(); };
 }
+
+
+/* ---------- la garde-robe (13/11) : toucher l'armoire ou la commode de la maison pour habiller quelqu'un ---------- */
+function habiller(cid, o){ const c = S.chars[cid]; c.o = o; drawChar(cid); pulse(cid, 'hop'); sfx.wear(); fx(c.x, c.y - sizeOf(cid, o).h - 10, '✨'); toast(`${CH[cid].n} met ${OUTFITS[o].n}`); found('habits');
+  if(OUTFITS[o].trad) found('trad'); if(o === 'super') found('super'); if(o === 'astro') found('astro'); if(o === 'pyjama') found('pyjama'); if(o === 'tablier') found('tablier'); if(o === 'plage') found('plagiste'); save(); }
+function gardeRobe(cid){
+  const ici = Object.keys(S.chars).filter(k => S.chars[k].p === place);
+  if(!ici.length){ toast('Invite quelqu’un dans la pièce (en bas), puis touche l’armoire'); sfx.tap(); return; }
+  if(!cid || !ici.includes(cid)) cid = ici.length === 1 ? ici[0] : null;
+  if(!cid){ panel(`<h2>👗 La garde-robe</h2><p>Qui s'habille ?</p><div class="grid">${ici.map(k => `<button class="dk" data-c="${k}"><img src="avatars/${CH[k].img}.webp" alt="" style="width:64px;height:64px;border-radius:50%">${CH[k].n}</button>`).join('')}</div><button class="pill ghost" data-close>Fermer</button>`);
+    $('panel').querySelector('.grid').onclick = e => { const b = e.target.closest('[data-c]'); if(b){ sfx.tap(); gardeRobe(b.dataset.c); } }; return; }
+  const c = S.chars[cid];
+  panel(`<h2>👗 ${CH[cid].n} s'habille</h2><p>Touche une tenue.</p><div class="kgrid">${Object.keys(OUTFITS).map(o => `<button class="kit${c.o === o ? ' on' : ''}" data-o="${o}" aria-label="${esc(OUTFITS[o].n)}"><span class="tenue" style="background-image:url(houma/c-${cid}${o === 'ville' ? '' : '-' + o}.webp)"></span><span>${esc(OUTFITS[o].n.replace(/^(sa |son |ses )/, ''))}</span></button>`).join('')}</div>
+    ${ici.length > 1 ? '<button class="pill ghost" id="gAutre">Quelqu’un d’autre</button>' : ''}<button class="pill" data-close>C'est bon</button>`);
+  $('panel').querySelector('.kgrid').onclick = e => { const b = e.target.closest('[data-o]'); if(!b) return; habiller(cid, b.dataset.o); gardeRobe(cid); };
+  if($('gAutre')) $('gAutre').onclick = () => { sfx.tap(); gardeRobe('?'); }; }
+
+/* ---------- peindre sur les murs (13/11) : pinceau, bombe de graffiti, gomme ---------- */
+// S.peint[pièce] = [[outil, couleur, épaisseur, x0, y0, x1, y1, …], …] (entiers) ; dessiné sur une toile posée sur le mur, sous les meubles
+const PCOULEURS = ['#1d1d1f', '#ffffff', '#e53935', '#ff9800', '#ffd600', '#43a047', '#1e88e5', '#8e24aa', '#ec407a', '#00bcd4', '#795548', '#c9a227'];
+let peinture = null;   // { outil:'p'|'b'|'g', c, w } pendant le mode peinture
+const hash = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };   // hasard qui redonne toujours les mêmes gouttes
+function peintTotal(){ return Object.values(S.peint || {}).reduce((n, L) => n + L.reduce((m, t) => m + t.length, 0), 0); }
+function dessinePeint(pid){ const cv = $('mpeint'); if(!cv) return; const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); (S.peint[pid] || []).forEach(t => trait(g, t)); }
+function trait(g, t){ const [o, c, w] = t, P = t.slice(3); if(P.length < 2) return;
+  g.save(); g.lineCap = g.lineJoin = 'round'; g.strokeStyle = g.fillStyle = c; g.lineWidth = w;
+  if(o === 'b'){ g.globalAlpha = .55; g.shadowColor = c; g.shadowBlur = w * .9; }   // la bombe : un trait doux et des petites gouttes
+  g.beginPath(); g.moveTo(P[0], P[1]); for(let i = 2; i < P.length; i += 2) g.lineTo(P[i], P[i + 1]); if(P.length === 2) g.lineTo(P[0] + .1, P[1]); g.stroke();
+  if(o === 'b'){ g.shadowBlur = 0; g.globalAlpha = .8; for(let i = 0; i < P.length; i += 2){ for(let k = 0; k < 3; k++){ const r = hash(P[i] * 7 + P[i + 1] * 13 + k), a = r * 6.283, d = w * (.7 + hash(i + k * 31) * .9); g.beginPath(); g.arc(P[i] + Math.cos(a) * d, P[i + 1] + Math.sin(a) * d, 1 + r * 1.6, 0, 7); g.fill(); } } }
+  g.restore(); }
+function modePeinture(on){
+  peinture = on ? { outil:'b', c:PCOULEURS[2], w:14 } : null; document.body.classList.toggle('peinture', !!on); unselect(); closeBubble();
+  let b = $('pbar'); if(b) b.remove(); if(!on){ save(); return; }
+  b = document.createElement('div'); b.id = 'pbar'; view.appendChild(b); b.addEventListener('pointerdown', e => e.stopPropagation());
+  const draw = () => { b.innerHTML = `${[['b', '💨', 'Bombe de graffiti'], ['p', '🖌️', 'Pinceau'], ['g', '🧽', 'Gomme']].map(([k, ic, n]) => `<button data-o="${k}" class="${peinture.outil === k ? 'on' : ''}" aria-label="${n}">${ic}</button>`).join('')}
+    <span class="sep"></span>${PCOULEURS.map(c => `<button data-c="${c}" class="pc${peinture.c === c ? ' on' : ''}" style="--c:${c}" aria-label="Couleur"></button>`).join('')}<span class="sep"></span>
+    ${[[6, '•'], [14, '●'], [28, '⬤']].map(([w, ic]) => `<button data-w="${w}" class="${peinture.w === w ? 'on' : ''}" aria-label="Épaisseur">${ic}</button>`).join('')}<span class="sep"></span>
+    <button data-a="annule" aria-label="Annuler">↩️</button><button data-a="efface" aria-label="Tout effacer">🗑️</button><button data-a="fini" class="fini" aria-label="Fini">✔️ Fini</button>`; };
+  draw(); b.onclick = e => { const t = e.target.closest('button'); if(!t) return; sfx.tap();
+    if(t.dataset.o) peinture.outil = t.dataset.o; if(t.dataset.c){ peinture.c = t.dataset.c; if(peinture.outil === 'g') peinture.outil = 'b'; } if(t.dataset.w) peinture.w = +t.dataset.w;
+    if(t.dataset.a === 'annule'){ (S.peint[place] || []).pop(); dessinePeint(place); save(); }
+    if(t.dataset.a === 'efface'){ if((S.peint[place] || []).length && confirm('Effacer tous les dessins de ce mur ?')){ S.peint[place] = []; dessinePeint(place); save(); } }
+    if(t.dataset.a === 'fini'){ modePeinture(false); return; } draw(); };
+  toast('Dessine sur le mur avec ton doigt ! 🎨'); }
+// le doigt sur le mur pendant le mode peinture
+let enTrait = null;
+function peintDown(p){ if(!peinture || p.y > WALL_Y + 4) return false; const L = S.peint[place] = S.peint[place] || [];
+  if(peinture.outil === 'g'){ gomme(p); enTrait = { gomme:1 }; return true; }
+  if(peintTotal() > 12000){ toast('Le mur est plein de dessins ! Gomme un peu ou efface 🗑️'); return true; }
+  enTrait = [peinture.outil, peinture.c, peinture.w, Math.round(p.x), Math.round(p.y)]; L.push(enTrait); found('graffeur'); dessinePeint(place); return true; }
+function peintMove(p){ if(!enTrait) return; if(enTrait.gomme){ gomme(p); return; } const n = enTrait.length, x = Math.round(p.x), y = Math.round(Math.min(WALL_Y, p.y));
+  if(Math.hypot(x - enTrait[n - 2], y - enTrait[n - 1]) < 5) return; enTrait.push(x, y); const cv = $('mpeint'); if(cv) trait(cv.getContext('2d'), [enTrait[0], enTrait[1], enTrait[2], enTrait[n - 2], enTrait[n - 1], x, y]); }
+function peintUp(){ if(!enTrait) return; enTrait = null; dessinePeint(place); save(); }
+function gomme(p){ const L = S.peint[place] || [], r = 22; const i = L.findIndex(t => { for(let k = 3; k < t.length; k += 2) if(Math.hypot(t[k] - p.x, t[k + 1] - p.y) < r + t[2] / 2) return true; return false; });
+  if(i >= 0){ L.splice(i, 1); dessinePeint(place); sfx.tap(); } }
 
 /* ---------- les gestes des personnages ---------- */
 const GESTES = [['salut', '👋', 'Coucou'], ['danse', '💃', 'Danser'], ['saut', '🦘', 'Sauter'], ['bravo', '👏', 'Bravo'], ['dodo', '😴', 'Dormir'], ['bisou', '😘', 'Un bisou']];
@@ -1125,7 +1282,7 @@ function gesteBody(cid){ const g = geste[cid]; if(!g || !(g.k in GFR)) return nu
 /* ---------- les découvertes de la maison ---------- */
 DISC.push(['meuble', '🛋️', 'Meubler sa maison'], ['decoratrice', '🏡', '20 objets dans la maison'], ['peintre', '🎨', 'Changer les murs'], ['pincer', '🤏', 'Agrandir avec deux doigts'], ['miroir', '🪞', 'Retourner un meuble'],
   ['poser', '🍽️', 'Poser sur une table'], ['demenage', '🚪', "Changer de pièce"], ['tele', '📺', 'Regarder la télé'], ['piano', '🎹', 'Faire de la musique'], ['fusee', '🚀', 'Décoller en fusée'],
-  ['trampoline', '🤸', 'Le trampoline'], ['toboggan', '🛝', 'Le toboggan'], ['balance', '🎠', 'Se balancer'], ['chien', '🐶', 'Le chien'], ['cuisinier', '🍢', 'Faire la cuisine'], ['geste', '👋', 'Faire un geste'], ['danse', '💃', 'Danser']);
+  ['trampoline', '🤸', 'Le trampoline'], ['graffeur', '🎨', 'Peindre sur le mur'], ['habits', '👗', "S'habiller à la garde-robe"], ['anniversaire', '🎂', 'Fêter un anniversaire'], ['cavalier', '🐴', 'Monter à cheval ou à chameau'], ['toboggan', '🛝', 'Le toboggan'], ['balance', '🎠', 'Se balancer'], ['chien', '🐶', 'Le chien'], ['cuisinier', '🍢', 'Faire la cuisine'], ['geste', '👋', 'Faire un geste'], ['danse', '💃', 'Danser']);
 
 /* ---------- démarrage ---------- */
 fit(); loadVoix();

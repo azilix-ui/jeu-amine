@@ -3,14 +3,16 @@
    Le jeu (legende-du-jasmin-3.html = le Jasmin 2 + 3 crochets) demande à R3 de dessiner le fond, chaque case et chaque objet ;
    R3 répond false quand il n'a pas d'image : le dessin du Jasmin 2 prend alors le relais (les autres mondes restent comme avant). */
 window.R3 = (() => {
-  const MONDES = { 1:'m1' };   // monde → dossier ; on ajoute les mondes au fur et à mesure
-  const OBJETS = ['coffre_piece', 'coffre_livre', 'coffre_lampe', 'coffre_vide', 'brique', 'jasmin_or', 'lanterne', 'jarre', 'ressort', 'panneau', 'oursins', 'chechia', 'harissa', 'the', 'maisons', 'piece'];
-  const TEX = ['mur', 'dessus', 'bois_bleu', 'mer'], cache = {};
+  // les mondes qui ont leurs images (fond, maisons, sol, plateformes, eau, pics) ; les objets (coffres, dinars, lanterne…) sont communs : ceux de Sidi Bou Saïd (m1)
+  const MONDES = { 1:'m1' };
+  const COMMUNS = ['coffre_piece', 'coffre_livre', 'coffre_lampe', 'coffre_vide', 'brique', 'jasmin_or', 'lanterne', 'jarre', 'ressort', 'panneau', 'chechia', 'harissa', 'the', 'piece', 'barque', 'flamant', 'train', 'tapis'];
+  const PROPRES = ['maisons', 'oursins'], TEX = ['mur', 'dessus', 'bois_bleu', 'mer'], cache = {};
   function charge(n){
     if(cache[n]) return cache[n];
     const d = MONDES[n], R = cache[n] = { im:{}, pat:{} };
     const L = (k, f) => { const im = new Image(); im.onload = () => { R.im[k] = im; }; im.src = f; };
-    OBJETS.forEach(k => L(k, `jasmin3/${d}/${k}.webp`)); TEX.forEach(k => L('t_' + k, `jasmin3/${d}/t_${k}.webp`)); L('fond', `jasmin3/${d}/fond.webp`); L('porte', 'maison/porte_bleue.webp');
+    COMMUNS.forEach(k => L(k, `jasmin3/m1/${k}.webp`)); PROPRES.forEach(k => L(k, `jasmin3/${d}/${k}.webp`));
+    TEX.forEach(k => L('t_' + k, `jasmin3/${d}/t_${k}.webp`)); L('fond', `jasmin3/${d}/fond.webp`); L('porte', 'maison/porte_bleue.webp');
     return R; }
   const de = g => g && MONDES[g.lv.n] ? charge(g.lv.n) : null;
   function motif(R, k, taille, dx = 0){ const im = R.im['t_' + k]; if(!im) return null; let p = R.pat[k]; if(!p) p = R.pat[k] = ctx.createPattern(im, 'repeat');
@@ -66,6 +68,17 @@ window.R3 = (() => {
         img(R, 'jarre', -w / 2, -h, w, h);
         if(e.near){ ctx.fillStyle = '#fff'; ctx.font = '800 22px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⬇', 0, -74 + Math.sin(t * 6) * 4); ctx.font = '800 12px "Baloo 2", sans-serif'; ctx.fillText('ne bouge plus…', 0, -100); }
         return true; }
+      case 'mover': {   // ce qui bouge : la barque de Kerkennah, le flamant d'Ichkeul, le train du Lézard Rouge, le tapis volant de la médina, et les plateformes
+        const x = e.px - e.x, y = e.py - e.y, w = e.w * T;
+        if(e.kind === 'boat' && R.im.barque){ const bob = Math.sin(t * 2.2 + e.x0) * 1.5, bw = w + 34, bh = bw * R.im.barque.naturalHeight / R.im.barque.naturalWidth; img(R, 'barque', x - 14, y - bh * .32 + bob, bw, bh); return true; }
+        if(e.kind === 'flamingo' && R.im.flamant){ const fh = 96, fw = haut(R, 'flamant', fh); ctx.save(); ctx.translate(x + w / 2, y); ctx.scale(-1, 1); img(R, 'flamant', -fw / 2, -fh * .42, fw, fh); ctx.restore(); return true; }   // on marche sur son dos
+        if(e.kind === 'train' && R.im.train){ const r0 = e.x0 - e.x - T, r1 = e.x0 - e.x + (e.dist + e.w + 1) * T; ctx.fillStyle = '#4a3220'; ctx.fillRect(r0, y + 40, r1 - r0, 6); for(let k = r0; k < r1; k += 18) ctx.fillRect(k, y + 36, 8, 4);
+          const th = 62, tw = Math.max(w + 40, th * R.im.train.naturalWidth / R.im.train.naturalHeight); img(R, 'train', x + w / 2 - tw / 2, y + 44 - th, tw, th); return true; }
+        if(e.kind === 'pont' || e.kind === 'aiguille') return false;   // le pont de Bizerte et l'horloge de Testour gardent leur mécanique dessinée
+        if(g.lv.n === 6 && R.im.tapis){ const th = 30, tw = w + 24; ctx.save(); ctx.translate(0, Math.sin(t * 4 + e.x0) * 2.5); img(R, 'tapis', x - 12, y - 6, tw, th); ctx.restore(); return true; }
+        const p = motif(R, 'bois_bleu', 64); if(!p) return false;
+        ctx.fillStyle = p; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + DX, y + DY); ctx.lineTo(x + w + DX, y + DY); ctx.lineTo(x + w, y); ctx.fill(); ctx.fillRect(x, y, w, 14);
+        ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.fillRect(x, y, w, 1.5); ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x, y + 14, w, 3); return true; }
       case 'power': { const k = e.kind === 'chechia' ? 'chechia' : e.kind === 'harissa' ? 'harissa' : 'the'; if(!R.im[k]) return false; const h = 30, w = haut(R, k, h); img(R, k, -w / 2, -h - 2 + Math.sin(t * 3) * 2, w, h); return true; }
     }
     return false; }

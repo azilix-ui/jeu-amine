@@ -34,7 +34,7 @@ const COURSE_GAME = ['serpent3d' => 'serpent3d', 'ludo3d' => 'ludo3d', 'grimpegl
 // Cours qui comptent comme « apprendre » (les jeux n'en font pas partie) : séries de jours et cartes secrètes.
 const LEARNING = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-ecriture', 'amine-nombres'];
 const MAX_DATA = 30000;
-const BIG = ['atelier-art' => 400000];   // les coloriages de l'Atelier (zones et couleurs, sans les vignettes) : plus gros, et sans historique
+const BIG = ['atelier-art' => 400000, 'houma' => 200000];   // houma : avec les dessins sur les murs de Ma maison (13/11)   // les coloriages de l'Atelier (zones et couleurs, sans les vignettes) : plus gros, et sans historique
 const MAX_WRITES = 240;        // écritures par adresse…
 const WRITE_WINDOW = 600;      // …toutes les 10 minutes
 const MAX_FAILS = 8;

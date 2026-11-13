@@ -3,14 +3,14 @@ Entrée : un dossier de PNG ComfyUI <nom>_00001_.png. Sortie : jeux/jasmin3/m<n>
   - objets (fond vert détouré, recadré, hauteur 160 px max) : coffres, brique, jasmin d'or, lanterne, jarre, ressort, panneau, oursins, chéchia, harissa, thé, pièce, maisons (bande du plan du milieu, 420 px de haut)
   - t_<texture> : textures rendues raccordables par miroir (256 px)
   - fond.webp : la photo du monde (hauteur 640)
-Usage : python3 docs/jasmin3/build.py <dossier> <monde>   (ex. … m1png 1)"""
+Usage : python3 docs/jasmin3/build.py <dossier> <monde> [maisons,oursins si fond bleu]"""
 import sys, os, glob
 from PIL import Image, ImageOps
 ICI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(ICI, '..', 'houma')); from detoure import cut
 src, n = sys.argv[1], sys.argv[2]; out = os.path.join(ICI, '..', '..', 'jeux', 'jasmin3', 'm' + n); os.makedirs(out, exist_ok=True)
-BLEU = {'the'}   # ce qui est vert (le thé à la menthe) est fait sur fond bleu
-H = {'maisons': 420, 'lanterne': 240, 'panneau': 160, 'oursins': 120}
+BLEU = {'the'} | set(sys.argv[3].split(',') if len(sys.argv) > 3 else [])   # ce qui est vert (le thé, les palmiers…) est fait sur fond bleu ; 3e argument : « maisons,oursins » pour ce monde
+H = {'maisons': 420, 'lanterne': 240, 'panneau': 160, 'oursins': 120, 'barque': 140, 'train': 160, 'flamant': 220, 'tapis': 90}
 for f in sorted(glob.glob(f'{src}/*_00001_.png')):
     k = os.path.basename(f).split('_00001_')[0]
     if k == 'fond_loin':
