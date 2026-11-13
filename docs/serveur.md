@@ -103,3 +103,24 @@ Demandé par le papa : un soir, c'est lui qui a parcouru le cours d'anglais de S
 ## Les coloriages de l'Atelier sur le serveur (11/11)
 
 Cours **`atelier-art`** (dans `COURSES` et `READABLE`) : clé `atelier-traits:<Prénom>` = `{ rst, items:{ <dessin>:[date, [[x, y, couleur, motif], …]] } }`. Taille limite à part (`BIG` dans `api/famille.php` : 400 000 octets au lieu de `MAX_DATA` = 30 000), **pas d'historique** et absent du résumé de Progression (trop lourd). Au-delà de 64 Ko, l'envoi « en partant » (`sendBeacon`) est refusé par le navigateur : `famille.js` retombe sur l'envoi normal, et l'envoi toutes les 15 s fait le reste.
+
+
+## La porte du site (accès réservé, 13/11/2026)
+
+Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de confiance et aux invités. Dossier `acces/` :
+
+| Fichier | Rôle |
+|---|---|
+| `acces/garde.php` | la bibliothèque (fonctions `ga_*`) : base `famille-data/acces.sqlite` (tables `reglages`, `ips`, `appareils`, `invitations`, `sessions`, `refus`, `echecs`), compte `famille-data/acces-admin.json` (identifiant + empreinte du mot de passe), `ga_peut_entrer()`, `ga_garde_api()` |
+| `acces/porte.php` | toutes les pages `.html`, les dossiers et `photos/` y passent (règles `mod_rewrite` dans `.htaccess`) : page servie si l'appareil est de confiance, sinon redirection vers `/acces/?suite=…` (photos : 403) |
+| `acces/index.php` | la page « accès réservé » (avatars de la famille, connexion administrateur) ; la première fois : création du compte administrateur, avec le **mot de passe parent** comme preuve |
+| `acces/invitation.php?c=…` | un lien d'invitation : page de bienvenue + bouton « Entrer » (c'est le bouton qui donne l'accès, pas l'aperçu automatique de WhatsApp) |
+| `acces/admin.php` | l'administration (Anis) : activer / mettre en pause, adresses IP de la maison, invitations (durée du lien 1 h à 30 j, durée de l'accès 1 j à 1 an, 1 / 3 / 5 / illimité appareils), appareils de confiance (renommer, retirer), visites refusées (60 j), mot de passe |
+| `acces/porte.css` | le style commun de ces pages |
+
+- **Appareil de confiance** = cookie `mf_appareil` (jeton aléatoire ; la base garde son empreinte SHA-256), `HttpOnly`, `Secure`, `SameSite=Lax`. Viennent de : la maison (IP enregistrée → carte valable un an, gardée ensuite hors de la maison), la connexion d'Anis (un an), une invitation (durée choisie). Session administrateur : cookie `mf_admin`, 12 h, `SameSite=Strict` ; actions en `POST` JSON avec l'en-tête `X-Garde: 1`.
+- **Adresse IP** : `REMOTE_ADDR` ; `X-Forwarded-For` (adresse la plus à droite) seulement si la connexion vient d'une adresse privée (relais). En IPv6, même bloc /64 = même maison. Le détail brut est affiché dans « Secours et détails techniques » de l'administration.
+- **API** (`api/famille.php`, `api/ludo.php`, `amine/voix/api.php`) : `ga_garde_api()` répond 401 aux appareils inconnus. Les images, sons, scripts et vidéos des jeux restent publics (seules les pages et les photos de famille sont gardées).
+- **Tant que la protection n'est pas activée** (ou sans compte administrateur), tout le monde entre comme avant. Une panne de la porte (exception) laisse entrer, pour ne jamais enfermer la famille dehors.
+- **Secours** : un fichier vide `famille-data/acces-ouvert` (gestionnaire de fichiers hPanel) ouvre le site à tous. Mot de passe administrateur oublié : supprimer `famille-data/acces-admin.json`, puis recréer le compte (mot de passe parent). Trop d'essais : 8 par 15 min et par adresse.
+- Test en local : `php -S` avec un routeur qui imite les règles `.htaccess` (voir le journal du 13/11).

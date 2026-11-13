@@ -13,6 +13,7 @@
  * POST action=delete pass k        -> efface le son d'un mot
  */
 declare(strict_types=1);
+require __DIR__ . '/../../acces/garde.php'; ga_garde_api();   // la porte du site : appareils de confiance seulement (quand la protection est activée)
 
 const MAX_BYTES = 3 * 1024 * 1024;   // 3 Mo par son, largement assez pour un mot
 const MAX_ITEMS = 400;

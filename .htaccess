@@ -3,6 +3,21 @@
   Require all denied
 </FilesMatch>
 
+# La porte du site (acces/, 13/11/2026) : chaque page .html, chaque dossier et les photos de famille passent par acces/porte.php,
+# qui laisse entrer les appareils de confiance (maison, Anis, invités) quand la protection est activée. Les images des jeux restent libres.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^$ acces/porte.php [L]
+  RewriteCond %{REQUEST_URI} !^/acces/
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule \.html$ acces/porte.php [L]
+  RewriteCond %{REQUEST_URI} !^/acces/
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule /$ acces/porte.php [L]
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^photos/ acces/porte.php [L]
+</IfModule>
+
 # Les jeux d'Amine ont déménagé dans /amine/ : les anciens liens continuent de marcher.
 Redirect 301 /la-nuit-d-amine.html /amine/la-nuit-d-amine.html
 Redirect 301 /la-nuit-d-amine-2.html /amine/la-nuit-d-amine-2.html

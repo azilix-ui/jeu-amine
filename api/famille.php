@@ -24,6 +24,7 @@
  *   (un envoi de progrès qui ne connaît pas la dernière remise à zéro est refusé : champ rst)
  */
 declare(strict_types=1);
+require __DIR__ . '/../acces/garde.php'; ga_garde_api();   // la porte du site : appareils de confiance seulement (quand la protection est activée)
 
 const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'medina'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).

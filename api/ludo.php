@@ -21,6 +21,7 @@
  * Base à part (ludo.sqlite, hors du site public) pour ne pas gêner les autres jeux.
  */
 declare(strict_types=1);
+require __DIR__ . '/../acces/garde.php'; ga_garde_api();   // la porte du site : appareils de confiance seulement (quand la protection est activée)
 
 const MAX_STATE = 24000;
 const MAX_WRITES = 1500;       // envois par adresse (toute la maison partage souvent la même)…
