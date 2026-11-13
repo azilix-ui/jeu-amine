@@ -1,2 +1,2 @@
 // mis à jour par docs/outils/version.sh avant chaque commit
-window.SITE_VERSION = { v:'3.151', date:'13/11/2026' };
+window.SITE_VERSION = { v:'3.152', date:'13/11/2026' };

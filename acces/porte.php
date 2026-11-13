@@ -30,3 +30,6 @@ header($ext === 'html' ? 'Cache-Control: private, no-cache, must-revalidate' : '
 if (ga_active()) header('X-Robots-Tag: noindex, nofollow');
 header('Content-Length: ' . filesize($fichier));
 readfile($fichier);
+// après la page : la sauvegarde de la semaine si elle est due (le visiteur n'attend pas)
+if (function_exists('litespeed_finish_request')) litespeed_finish_request(); elseif (function_exists('fastcgi_finish_request')) fastcgi_finish_request(); else return;
+ga_sauvegarde_si_due();

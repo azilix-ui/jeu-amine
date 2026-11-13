@@ -4,6 +4,8 @@
  * GET : la page. POST (fetch, en-tête X-Garde) : les actions, réponses en JSON.
  *   etat · activer(on) · ip_ajoute(ip?, nom) · ip_supprime(id) · appareil_renomme(id, nom) · appareil_revoque(id)
  *   invitation_cree(nom, lien, duree, usages) · invitation_supprime(id) · mdp(ancien, nouveau) · sortir
+ *   sauvegarde (en faire une maintenant) · alertes(email, email_on, ntfy_on) · alerte_essai · ntfy_nouveau
+ *   GET ?telecharger=sauvegarde-AAAA-MM-JJ.zip : télécharge une sauvegarde
  *   demande_accepte(id, duree) · demande_ignore(id) : les appareils inconnus qui ont frappé à la porte (cookie mf_demande)
  */
 declare(strict_types=1);
@@ -12,10 +14,36 @@ header('Cache-Control: no-store');
 header('X-Robots-Tag: noindex, nofollow');
 header('X-Frame-Options: DENY');
 
+function ga_etat_admin(): array {
+    $admin = ga_admin_fiche(); $db = ga_db(); $t = time();
+        $moi = ga_appareil(); $ip = ga_ip();
+        $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ? 'https' : 'http';
+        $base = $schema . '://' . ($_SERVER['HTTP_HOST'] ?? 'www.missaoui-family.com');
+        $invs = $db->query('SELECT i.*, (SELECT COUNT(*) FROM appareils a WHERE a.invitation = i.id AND a.revoque = 0 AND a.expire > ' . $t . ') AS actifs FROM invitations i WHERE i.revoque = 0 ORDER BY i.cree DESC LIMIT 60')->fetchAll();
+        foreach ($invs as &$v) { $v['lien'] = $base . '/acces/invitation.php?c=' . $v['code']; unset($v['code']); } unset($v);
+        return [
+            'actif' => ga_reglage('actif') === '1', 'secours' => is_file(ga_donnees() . '/acces-ouvert'), 'admin' => $admin['id'],
+            'ip' => $ip, 'ip_maison' => ga_ip_maison($ip), 'moi' => $moi ? (int)$moi['id'] : 0,
+            'brut' => ['remote' => (string)($_SERVER['REMOTE_ADDR'] ?? ''), 'xff' => (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''), 'cf' => (string)($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''), 'real' => (string)($_SERVER['HTTP_X_REAL_IP'] ?? '')],
+            'ips' => $db->query('SELECT id, ip, nom, cree FROM ips ORDER BY cree')->fetchAll(),
+            'appareils' => $db->query('SELECT id, nom, via, invitation, cree, expire, vu, ip, ua FROM appareils WHERE revoque = 0 AND expire > ' . $t . ' ORDER BY vu DESC')->fetchAll(),
+            'invitations' => $invs,
+            'sauvegardes' => ga_liste_sauvegardes(), 'zip' => class_exists('ZipArchive'),
+            'alertes' => ['email' => (string)ga_reglage('alerte_email'), 'email_on' => ga_reglage('alerte_email_on') !== '0', 'ntfy' => ga_canal_ntfy(), 'ntfy_on' => ga_reglage('alerte_ntfy_on') !== '0'],
+            'demandes' => $db->query("SELECT id, nom, statut, duree, cree, vu, ip, ua, page, pages FROM demandes WHERE statut IN ('vu', 'attente', 'accepte') AND vu > " . ($t - 30 * 86400) . " ORDER BY (statut = 'attente') DESC, vu DESC LIMIT 60")->fetchAll(),
+            'refus' => $db->query('SELECT ts, ip, page, ua FROM refus ORDER BY ts DESC LIMIT 80')->fetchAll(),
+        ];
+}
 function rep(int $code, array $d): void { http_response_code($code); header('Content-Type: application/json; charset=utf-8'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; }
 $admin = ga_admin_fiche();
 if (empty($admin['hash'])) { header('Location: /acces/', true, 303); exit; }
 
+if (isset($_GET['telecharger'])) {   // une sauvegarde, pour Anis seulement
+    $n = basename((string)$_GET['telecharger']); $f = ga_dossier_sauvegardes() . '/' . $n;
+    if (!ga_admin() || !preg_match('/^sauvegarde-\d{4}-\d{2}-\d{2}\.zip$/', $n) || !is_file($f)) { http_response_code(404); exit('Sauvegarde introuvable.'); }
+    header('Content-Type: application/zip'); header('Content-Disposition: attachment; filename="famille-missaoui-' . $n . '"'); header('Content-Length: ' . filesize($f));
+    readfile($f); exit;
+}
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if (($_SERVER['HTTP_X_GARDE'] ?? '') !== '1') rep(400, ['error' => 'Requête refusée.']);
     if (!ga_admin()) rep(401, ['error' => 'Ta connexion a expiré : reconnecte-toi.']);
@@ -36,6 +64,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $db->prepare('UPDATE appareils SET nom = ? WHERE id = ?')->execute([$nom ?: 'Appareil', $id]);
         } elseif ($a === 'appareil_revoque') {
             $db->prepare('UPDATE appareils SET revoque = 1 WHERE id = ?')->execute([$id]);
+        } elseif ($a === 'sauvegarde') {
+            if (!ga_sauvegarde()) rep(500, ['error' => "La sauvegarde n'a pas pu être faite."]);
+        } elseif ($a === 'alertes') {
+            $m = trim((string)($in['email'] ?? ''));
+            if ($m !== '' && !filter_var($m, FILTER_VALIDATE_EMAIL)) rep(400, ['error' => "Cette adresse e-mail n'est pas valable."]);
+            ga_reglage('alerte_email', $m); ga_reglage('alerte_email_on', !empty($in['email_on']) ? '1' : '0'); ga_reglage('alerte_ntfy_on', !empty($in['ntfy_on']) ? '1' : '0');
+        } elseif ($a === 'alerte_essai') {
+            $r = ga_alerte('🛎️ Essai : quelqu\'un frappe à la porte', "Ceci est un essai depuis l'administration du site. Les vraies alertes arrivent quand un appareil inconnu écrit son prénom et frappe à la porte.", true);
+            $e0 = ga_etat_admin(); $e0['essai'] = $r; rep(200, $e0);
+        } elseif ($a === 'ntfy_nouveau') {
+            ga_reglage('alerte_ntfy', 'missaoui-' . bin2hex(random_bytes(8)));
         } elseif ($a === 'demande_accepte') {
             $duree = max(86400, min(GA_ANNEE, (int)($in['duree'] ?? GA_ANNEE)));
             $db->prepare("UPDATE demandes SET statut = 'accepte', duree = ? WHERE id = ? AND statut IN ('vu', 'attente', 'ignore')")->execute([$duree, $id]);
@@ -59,21 +98,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             ga_cookie(GA_COOKIE_ADMIN, '', 1, 'Strict'); rep(200, ['ok' => true]);
         } elseif ($a !== 'etat') rep(400, ['error' => 'Action inconnue.']);
 
-        $moi = ga_appareil(); $ip = ga_ip();
-        $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ? 'https' : 'http';
-        $base = $schema . '://' . ($_SERVER['HTTP_HOST'] ?? 'www.missaoui-family.com');
-        $invs = $db->query('SELECT i.*, (SELECT COUNT(*) FROM appareils a WHERE a.invitation = i.id AND a.revoque = 0 AND a.expire > ' . $t . ') AS actifs FROM invitations i WHERE i.revoque = 0 ORDER BY i.cree DESC LIMIT 60')->fetchAll();
-        foreach ($invs as &$v) { $v['lien'] = $base . '/acces/invitation.php?c=' . $v['code']; unset($v['code']); } unset($v);
-        rep(200, [
-            'actif' => ga_reglage('actif') === '1', 'secours' => is_file(ga_donnees() . '/acces-ouvert'), 'admin' => $admin['id'],
-            'ip' => $ip, 'ip_maison' => ga_ip_maison($ip), 'moi' => $moi ? (int)$moi['id'] : 0,
-            'brut' => ['remote' => (string)($_SERVER['REMOTE_ADDR'] ?? ''), 'xff' => (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''), 'cf' => (string)($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''), 'real' => (string)($_SERVER['HTTP_X_REAL_IP'] ?? '')],
-            'ips' => $db->query('SELECT id, ip, nom, cree FROM ips ORDER BY cree')->fetchAll(),
-            'appareils' => $db->query('SELECT id, nom, via, invitation, cree, expire, vu, ip, ua FROM appareils WHERE revoque = 0 AND expire > ' . $t . ' ORDER BY vu DESC')->fetchAll(),
-            'invitations' => $invs,
-            'demandes' => $db->query("SELECT id, nom, statut, duree, cree, vu, ip, ua, page, pages FROM demandes WHERE statut IN ('vu', 'attente', 'accepte') AND vu > " . ($t - 30 * 86400) . " ORDER BY (statut = 'attente') DESC, vu DESC LIMIT 60")->fetchAll(),
-            'refus' => $db->query('SELECT ts, ip, page, ua FROM refus ORDER BY ts DESC LIMIT 80')->fetchAll(),
-        ]);
+        rep(200, ga_etat_admin());
     } catch (Throwable $e) { error_log('admin acces : ' . $e->getMessage()); rep(500, ['error' => "Le serveur n'a pas pu enregistrer."]); }
 }
 if (!ga_admin()) { header('Location: /acces/?admin=1', true, 303); exit; }
@@ -175,6 +200,23 @@ details summary{cursor:pointer;font-weight:800;color:var(--soft)}
   </section>
 
   <section class="carte">
+    <h2>🔔 Être prévenu</h2>
+    <p>Quand un appareil inconnu écrit son prénom et frappe à la porte, tu reçois une alerte (10 par heure au plus).</p>
+    <label>Ton adresse e-mail<input id="alMail" type="email" placeholder="ton.adresse@exemple.com" autocomplete="email"></label>
+    <label style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="alMailOn" style="min-height:0;width:24px;height:24px"> Alerte par e-mail</label>
+    <label style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="alNtfyOn" style="min-height:0;width:24px;height:24px"> Notification sur le téléphone (appli ntfy)</label>
+    <div class="conseil" style="background:#eef1f6;color:var(--ink)"><b>Pour la notification :</b> installe l'appli gratuite <b>ntfy</b> (App Store ou Play Store), touche « + » (S'abonner), et écris ce nom de canal secret :<br><b id="alNtfy" style="font-family:monospace;font-size:17px;user-select:all"></b> <button class="petit" type="button" id="alCopie">Copier</button><br><small>Garde ce nom pour toi : quelqu'un qui le connaît verrait aussi les alertes. <button class="petit" type="button" id="alNouveau" style="min-height:32px;font-size:13px">Changer de canal</button></small></div>
+    <div class="lienbox"><button class="petit vert" type="button" id="alOk">Enregistrer</button><button class="petit" type="button" id="alEssai">Envoyer une alerte d'essai</button></div>
+  </section>
+
+  <section class="carte">
+    <h2>💾 Les sauvegardes</h2>
+    <p>Chaque semaine, le site garde tout seul une copie des progrès des enfants, des scores, des voix de Nahki et des accès (les 8 dernières semaines). Télécharge-en une de temps en temps sur ton PC ou sur OneDrive : c'est ta copie de secours si le serveur avait un problème.</p>
+    <div class="liste" id="sauv"></div>
+    <button class="petit vert" type="button" id="sauvOk" style="align-self:flex-start">💾 Faire une sauvegarde maintenant</button>
+  </section>
+
+  <section class="carte">
     <h2>🔒 Mon mot de passe</h2>
     <p>Identifiant : <b id="adminId"></b></p>
     <div class="grille">
@@ -230,6 +272,9 @@ function dessine(){
   $('dems').innerHTML = E.demandes.length ? E.demandes.map(d => `<div class="ligne"><span class="q"><b>${d.nom ? esc(d.nom) : esc(nomApp(d.ua))}${d.statut === 'attente' ? '<span class="badge moi">attend ta réponse</span>' : ''}${d.statut === 'accepte' ? '<span class="badge">accepté</span>' : ''}</b>
       <small>${d.nom ? esc(nomApp(d.ua)) + ' · ' : ''}${esc(d.ip)} · vu le ${quand(d.vu)} · ${d.pages} page(s)${d.page ? ' · ' + esc(d.page) : ''}</small></span>
       ${d.statut === 'accepte' ? '<small style="color:var(--soft)">Il entrera à sa prochaine page.</small>' : `<select data-dur="${d.id}" aria-label="Durée de l'accès">${optD}</select><button class="petit vert" data-ok="${d.id}">Faire confiance</button><button class="petit" data-non="${d.id}">Ignorer</button>`}</div>`).join('') : '<p class="vide">Personne n\'a frappé à la porte pour l\'instant.</p>';
+  const al = E.alertes; if(document.activeElement !== $('alMail')) $('alMail').value = al.email; $('alMailOn').checked = al.email_on; $('alNtfyOn').checked = al.ntfy_on; $('alNtfy').textContent = al.ntfy;
+  const ko = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' Mo' : Math.max(1, Math.round(n / 1024)) + ' ko';
+  $('sauv').innerHTML = !E.zip ? '<p class="vide">Le serveur ne sait pas faire de fichiers zip : préviens Claude.</p>' : E.sauvegardes.length ? E.sauvegardes.map(v => `<div class="ligne"><span class="q"><b>${jour(v.date)}</b><small>${ko(v.taille)}</small></span><a class="petit vert" href="/acces/admin.php?telecharger=${encodeURIComponent(v.nom)}">⬇️ Télécharger</a></div>`).join('') : '<p class="vide">Pas encore de sauvegarde : la première se fera toute seule à la prochaine visite du site, ou maintenant avec le bouton.</p>';
   $('apps').innerHTML = E.appareils.length ? E.appareils.map(a => `<div class="ligne"><span class="q"><b>${esc(a.nom)}${a.id === E.moi ? '<span class="badge moi">cet appareil</span>' : ''}<span class="badge">${a.via === 'maison' ? 'maison' : a.via === 'admin' ? 'toi' : a.via === 'accepte' ? 'accepté par toi' : 'invité'}</span></b>
       <small>Vu le ${quand(a.vu)} · ${esc(a.ip)} · accès jusqu'au ${jour(a.expire)}</small></span>
       <button class="petit" data-ren="${a.id}" data-nom="${esc(a.nom)}">Renommer</button>${a.id === E.moi ? '' : `<button class="petit rouge" data-appdel="${a.id}">Retirer</button>`}</div>`).join('') : '<p class="vide">Aucun appareil pour l\'instant.</p>';
@@ -247,6 +292,11 @@ $('invCree').onclick = async () => {
   await charge('invitation_cree', { nom:$('invNom').value, lien:+$('invLien').value, duree:+$('invDuree').value, usages:+$('invUsages').value });
   $('invNom').value = ''; const l = E.invitations[0]; if(l) { try { await navigator.clipboard.writeText(l.lien); toast('Lien créé et copié 💌'); } catch(e){ toast('Lien créé 💌'); } }
 };
+$('alOk').onclick = async () => { await charge('alertes', { email:$('alMail').value.trim(), email_on:$('alMailOn').checked, ntfy_on:$('alNtfyOn').checked }); toast('Alertes enregistrées 🔔'); };
+$('alEssai').onclick = async () => { const r = await api('alerte_essai'); E = r; dessine(); const e = r.essai || {}; toast(['e-mail ' + (e.email === null ? 'non réglé' : e.email ? 'envoyé' : 'pas parti'), 'ntfy ' + (e.ntfy === null ? 'éteint' : e.ntfy ? 'envoyé' : 'pas parti')].join(' · ')); };
+$('alCopie').onclick = async () => { try { await navigator.clipboard.writeText(E.alertes.ntfy); toast('Nom du canal copié'); } catch(e){} };
+$('alNouveau').onclick = async () => { if(confirm('Changer de canal ? Il faudra te réabonner dans l\'appli ntfy avec le nouveau nom.')) await charge('ntfy_nouveau'); };
+$('sauvOk').onclick = async () => { $('sauvOk').disabled = true; $('sauvOk').textContent = '💾 Sauvegarde en cours…'; try { await charge('sauvegarde'); toast('Sauvegarde faite 💾'); } finally { $('sauvOk').disabled = false; $('sauvOk').textContent = '💾 Faire une sauvegarde maintenant'; } };
 $('mdpOk').onclick = async () => { await charge('mdp', { ancien:$('mdpA').value, nouveau:$('mdpN').value }); $('mdpA').value = $('mdpN').value = ''; toast('Mot de passe changé'); };
 $('sortir').onclick = async () => { await api('sortir'); location.href = '/acces/?sortie=1'; };
 document.addEventListener('click', async e => {

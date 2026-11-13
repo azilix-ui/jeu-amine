@@ -15,6 +15,7 @@
  * Toutes les fonctions commencent par ga_ : ce fichier est inclus dans les API, qui ont leurs propres fonctions.
  */
 declare(strict_types=1);
+date_default_timezone_set('Europe/Paris');
 
 const GA_ANNEE = 365 * 86400;
 const GA_ADMIN_DUREE = 12 * 3600;     // une connexion administrateur dure 12 heures
@@ -177,10 +178,11 @@ function ga_note_demande(string $page, ?string $nom = null): ?array {
             if (random_int(1, 30) === 1) $db->prepare("DELETE FROM demandes WHERE vu < ? AND statut IN ('vu', 'ignore', 'fait')")->execute([$t - 30 * 86400]);
             $d = ga_demande();
         }
-        $statut = $d['statut'];
-        if ($nom !== null) { $nom = mb_substr(trim(preg_replace('/\s+/u', ' ', $nom)), 0, 40); if ($statut === 'vu' || $statut === 'ignore') $statut = 'attente'; }
+        $statut = $d['statut']; $alerte = false;
+        if ($nom !== null) { $nom = mb_substr(trim(preg_replace('/\s+/u', ' ', $nom)), 0, 40); if ($statut === 'vu' || $statut === 'ignore') { $statut = 'attente'; $alerte = true; } }
         $db->prepare('UPDATE demandes SET vu = ?, ip = ?, ua = ?, page = COALESCE(?, page), pages = pages + ?, nom = COALESCE(?, nom), statut = ? WHERE id = ?')
            ->execute([$t, ga_ip(), $ua, $page === '' ? null : mb_substr($page, 0, 200), $page === '' ? 0 : 1, $nom ?: null, $statut, $d['id']]);
+        if ($alerte) ga_alerte("🛎️ $nom frappe à la porte", "$nom demande l'accès au site de la famille depuis cet appareil : " . ga_nom_appareil($ua) . ' (adresse ' . ga_ip() . ").\nOuvre l'administration et touche « Faire confiance » si tu le reconnais.");
         return ga_demande();
     } catch (Throwable $e) { error_log('demande : ' . $e->getMessage()); return null; }
 }
@@ -202,3 +204,87 @@ function ga_note_echec(): void {
     usleep(600000);
 }
 function ga_h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+
+/* ---------- Sauvegardes (13/11) ----------
+   Une fois par semaine (à la première page ouverte après 7 jours), une copie de famille-data (bases SQLite copiées proprement
+   avec VACUUM INTO, réglages) et de nahki-voix (mot de passe parent, voix) dans famille-data/sauvegardes/sauvegarde-AAAA-MM-JJ.zip.
+   Les 8 dernières sont gardées. Anis les télécharge depuis l'administration. */
+const GA_SAUVEGARDES_GARDEES = 8;
+function ga_dossier_sauvegardes(): string { $d = ga_donnees() . '/sauvegardes'; if (!is_dir($d)) @mkdir($d, 0750, true); return $d; }
+function ga_liste_sauvegardes(): array {
+    $l = glob(ga_dossier_sauvegardes() . '/sauvegarde-*.zip') ?: []; rsort($l);
+    return array_map(fn($f) => ['nom' => basename($f), 'taille' => filesize($f), 'date' => filemtime($f)], $l);
+}
+function ga_sauvegarde(): ?string {
+    if (!class_exists('ZipArchive')) return null;
+    @set_time_limit(120);
+    $dos = ga_dossier_sauvegardes(); $tmp = $dos . '/tmp-' . bin2hex(random_bytes(4)); @mkdir($tmp, 0750);
+    $nom = 'sauvegarde-' . date('Y-m-d') . '.zip'; $zipf = $dos . '/' . $nom . '.part';
+    $z = new ZipArchive(); if ($z->open($zipf, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) return null;
+    $data = ga_donnees();
+    foreach (glob($data . '/*') ?: [] as $f) {
+        $b = basename($f);
+        if (is_dir($f) || preg_match('/(-wal|-shm|-journal|\.tmp|\.part)$/', $b)) continue;
+        if (substr($b, -7) === '.sqlite') {   // copie cohérente de la base, même pendant qu'on joue
+            $copie = $tmp . '/' . $b;
+            try { $p = new PDO('sqlite:' . $f); $p->exec('VACUUM INTO ' . $p->quote($copie)); $p = null; $z->addFile($copie, 'famille-data/' . $b); }
+            catch (Throwable $e) { $z->addFile($f, 'famille-data/' . $b); }
+        } else $z->addFile($f, 'famille-data/' . $b);
+    }
+    $voix = dirname(ga_racine()) . '/nahki-voix';
+    if (is_dir($voix)) {
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($voix, FilesystemIterator::SKIP_DOTS));
+        foreach ($it as $f) if ($f->isFile()) $z->addFile($f->getPathname(), 'nahki-voix/' . substr($f->getPathname(), strlen($voix) + 1));
+    }
+    $z->setArchiveComment('Famille Missaoui · sauvegarde du ' . date('d/m/Y H:i'));
+    $ok = $z->close();
+    foreach (glob($tmp . '/*') ?: [] as $f) @unlink($f); @rmdir($tmp);
+    if (!$ok) { @unlink($zipf); return null; }
+    rename($zipf, $dos . '/' . $nom);
+    foreach (array_slice(ga_liste_sauvegardes(), GA_SAUVEGARDES_GARDEES) as $v) @unlink($dos . '/' . $v['nom']);
+    ga_reglage('sauvegarde_derniere', (string)time());
+    return $nom;
+}
+// Appelée après chaque page servie : lance la sauvegarde de la semaine si elle est due (une seule à la fois).
+function ga_sauvegarde_si_due(): void {
+    try {
+        if ((int)(ga_reglage('sauvegarde_derniere') ?? 0) > time() - 7 * 86400) return;
+        $verrou = fopen(ga_dossier_sauvegardes() . '/.verrou', 'c'); if (!$verrou || !flock($verrou, LOCK_EX | LOCK_NB)) return;
+        if ((int)(ga_reglage('sauvegarde_derniere') ?? 0) > time() - 7 * 86400) return;
+        ga_reglage('sauvegarde_derniere', (string)time());   // même en cas d'échec, on ne réessaie pas à chaque page
+        ga_sauvegarde();
+        flock($verrou, LOCK_UN);
+    } catch (Throwable $e) { error_log('sauvegarde : ' . $e->getMessage()); }
+}
+
+/* ---------- Alertes (13/11) : quelqu'un frappe à la porte ----------
+   Par e-mail (adresse réglée par Anis dans l'administration, jamais écrite dans le code : le dépôt GitHub est public)
+   et par l'appli ntfy (canal secret tiré au hasard). 10 alertes par heure au plus. */
+function ga_canal_ntfy(): string {
+    $c = ga_reglage('alerte_ntfy');
+    if (!$c) $c = ga_reglage('alerte_ntfy', 'missaoui-' . bin2hex(random_bytes(8)));
+    return $c;
+}
+function ga_alerte(string $titre, string $texte, bool $essai = false): array {
+    $res = ['email' => null, 'ntfy' => null];
+    try {
+        if (!$essai) {
+            $t = time(); $l = array_values(array_filter(json_decode(ga_reglage('alertes_recentes') ?? '[]', true) ?: [], fn($x) => $x > $t - 3600));
+            if (count($l) >= 10) return $res;
+            $l[] = $t; ga_reglage('alertes_recentes', json_encode($l));
+        }
+        $lien = 'https://www.missaoui-family.com/acces/admin.php';
+        $mail = ga_reglage('alerte_email');
+        if ($mail && filter_var($mail, FILTER_VALIDATE_EMAIL) && ga_reglage('alerte_email_on') !== '0') {
+            $res['email'] = @mail($mail, '=?UTF-8?B?' . base64_encode($titre) . '?=', $texte . "\n\nOuvrir l'administration : $lien\n\n— Le site de la famille Missaoui",
+                "From: Famille Missaoui <noreply@missaoui-family.com>\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit");
+        }
+        if (ga_reglage('alerte_ntfy_on') !== '0') {
+            $ctx = stream_context_create(['http' => ['method' => 'POST', 'timeout' => 5, 'ignore_errors' => true,
+                'header' => "Title: =?UTF-8?B?" . base64_encode($titre) . "?=\r\nClick: $lien\r\nTags: bellhop_bell\r\nContent-Type: text/plain; charset=utf-8", 'content' => $texte]]);
+            $r = @file_get_contents('https://ntfy.sh/' . ga_canal_ntfy(), false, $ctx);
+            $res['ntfy'] = $r !== false;
+        }
+    } catch (Throwable $e) { error_log('alerte : ' . $e->getMessage()); }
+    return $res;
+}
