@@ -13,6 +13,12 @@ out = 'jeux/houma/gestes.js'; meta = {}
 if os.path.exists(out):
     try: meta = json.loads(open(out, encoding='utf-8').read().split('=', 1)[1].strip().rstrip(';'))
     except Exception: meta = {}
+def propre(im):   # enlève les petits morceaux détachés (une chaussure en trop, une tache) : on garde les grands morceaux
+    import numpy as np; from scipy import ndimage
+    a = np.array(im); m = a[:, :, 3] > 60; lab, n = ndimage.label(m)
+    if n > 1:
+        sz = ndimage.sum(m, lab, range(1, n + 1)); keep = np.isin(lab, [i + 1 for i, v in enumerate(sz) if v >= sz.max() * .04]); a[:, :, 3] = np.where(keep | (a[:, :, 3] <= 60) & ndimage.binary_dilation(keep, iterations=3), a[:, :, 3], 0)
+    return Image.fromarray(a)
 def box(im):
     a = im.getchannel('A').point(lambda v: 255 if v > 60 else 0); bb = a.getbbox(); return a, bb
 def debout(i, t):
@@ -28,7 +34,7 @@ for f in sorted(glob.glob(f'{gdir}/*_salut_00001_.png')):
     ft = sa.crop((sb[0], sb[3] - max(4, (sb[3] - sb[1]) // 12), sb[2], sb[3])).getbbox(); xc = (sb[0] + (ft[0] + ft[2]) / 2) / H0
     ims = []
     for x in fr:   # le cadrage est gardé par ComfyUI : on place chaque geste dans le même repère que l'image debout (le saut reste en l'air)
-        im = cut(x); a, bb = box(im); n = im.height; ims.append((im, [v / n for v in bb], n))
+        im = propre(cut(x)); a, bb = box(im); n = im.height; ims.append((im, [v / n for v in bb], n))
     L = max(xc - bb[0] for im, bb, n in ims); R = max(bb[2] - xc for im, bb, n in ims); T = min(bb[1] for im, bb, n in ims); B = max([yg] + [bb[3] for im, bb, n in ims])
     ch = 330; k0 = ch / (B - T); cw = round((L + R) * k0)
     sheet = Image.new('RGBA', (cw * 5, ch))
