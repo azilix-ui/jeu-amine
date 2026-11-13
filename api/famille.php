@@ -28,12 +28,12 @@ require __DIR__ . '/../acces/garde.php'; ga_garde_api();   // la porte du site :
 
 const GAMES   = ['serpentin', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'medina'];
 // Cours dont les progrès peuvent être relus par le jeu lui-même (collection de skins sur plusieurs appareils).
-const READABLE = ['profil', 'atelier', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture', 'amine-nombres', 'ecuries', 'medina', 'atelier-art', 'houma'];
-const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'amine-nombres', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'atelier', 'ecuries', 'medina', 'atelier-art', 'houma'];
+const READABLE = ['profil', 'atelier', 'serpent3d', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'ludo3d', 'grimpeglace', 'jasmin', 'amine-ecriture', 'amine-nombres', 'ecuries', 'medina', 'atelier-art', 'houma', 'defi'];
+const COURSES = ['profil', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-serpentin', 'amine-ecriture', 'amine-nombres', 'serpent3d', 'ludo3d', 'grimpeglace', 'jasmin', 'atelier', 'ecuries', 'medina', 'atelier-art', 'houma', 'defi'];
 // Jeu (classements) lié à un cours : une remise à zéro peut aussi effacer ses records.
 const COURSE_GAME = ['serpent3d' => 'serpent3d', 'ludo3d' => 'ludo3d', 'grimpeglace' => 'grimpeglace', 'jasmin' => 'jasmin', 'medina' => 'medina', 'amine-serpentin' => 'serpentin'];
 // Cours qui comptent comme « apprendre » (les jeux n'en font pas partie) : séries de jours et cartes secrètes.
-const LEARNING = ['essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-ecriture', 'amine-nombres'];
+const LEARNING = ['defi', 'essil-deutsch', 'essil-latin', 'salma-english', 'salma-maths', 'salma-cheval', 'salma-verbes', 'salma-geometrie', 'salma-symetrie', 'salma-monnaie', 'salma-meteo', 'amine-halloween', 'amine-tounsi', 'amine-ecriture', 'amine-nombres'];
 const MAX_DATA = 30000;
 const BIG = ['atelier-art' => 400000, 'houma' => 200000];   // houma : avec les dessins sur les murs de Ma maison (13/11)   // les coloriages de l'Atelier (zones et couleurs, sans les vignettes) : plus gros, et sans historique
 const MAX_WRITES = 240;        // écritures par adresse…
@@ -94,6 +94,8 @@ function db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS visits (id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, ip TEXT NOT NULL, cc TEXT, page TEXT NOT NULL, player TEXT, ua TEXT, app INTEGER, screen TEXT, ref TEXT)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS visits_ts ON visits (ts)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS geo (ip TEXT PRIMARY KEY, cc TEXT, country TEXT, region TEXT, city TEXT, isp TEXT, ts INTEGER)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS reglages (k TEXT PRIMARY KEY, v TEXT)');                                              // réglages des parents (temps d'écran…)
+    $pdo->exec('CREATE TABLE IF NOT EXISTS ecran (player TEXT NOT NULL COLLATE NOCASE, jour TEXT NOT NULL, sec INTEGER NOT NULL, PRIMARY KEY (player, jour))');   // temps de jeu par jour
     return $pdo;
 }
 function now(): string { return gmdate('Y-m-d\TH:i:s\Z'); }
@@ -165,6 +167,29 @@ function check_pass(): void {
         $fails[] = $t; write_json($failsFile, $fails); usleep(500000);
         fail(403, 'Mot de passe incorrect.');
     }
+}
+
+
+/* ---------- Temps d'écran (13/11) ----------
+   Réglages des parents dans reglages.ecran : {Essil:{on, semaine, weekend, nuit, matin}, …} (minutes ; heures « HH:MM »).
+   Seuls les jeux comptent (famille.js envoie le temps passé sur une page de jeu) ; les cours restent libres.
+   Un défi du jour réussi (cours « defi ») donne 10 minutes de plus ce jour-là. */
+const ENFANTS = ['Essil', 'Salma', 'Amine'];
+const ECRAN_DEFAUT = ['on' => true, 'semaine' => 45, 'weekend' => 90, 'nuit' => '20:30', 'matin' => '07:00'];
+const DEFI_BONUS = 600;
+function reglage_get(string $k, $defaut) { $s = db()->prepare('SELECT v FROM reglages WHERE k = ?'); $s->execute([$k]); $v = $s->fetchColumn(); if ($v === false) return $defaut; $j = json_decode((string)$v, true); return $j === null ? $defaut : $j; }
+function reglage_set(string $k, $v): void { db()->prepare('INSERT INTO reglages (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v')->execute([$k, json_encode($v, JSON_UNESCAPED_UNICODE)]); }
+function jour_paris(): string { return (new DateTime('now', new DateTimeZone('Europe/Paris')))->format('Y-m-d'); }
+function ecran_regles(): array { $r = reglage_get('ecran', []); $o = []; foreach (ENFANTS as $e) $o[$e] = array_merge(ECRAN_DEFAUT, is_array($r[$e] ?? null) ? $r[$e] : []); return $o; }
+function ecran_etat(string $p): array {
+    $p = mb_strtoupper(mb_substr($p, 0, 1)) . mb_substr($p, 1);
+    if (!in_array($p, ENFANTS, true)) return ['libre' => true];
+    $r = ecran_regles()[$p]; $j = jour_paris();
+    $s = db()->prepare('SELECT sec FROM ecran WHERE player = ? AND jour = ?'); $s->execute([$p, $j]); $u = (int)$s->fetchColumn();
+    $d = db()->prepare("SELECT data FROM progress WHERE player = ? AND course = 'defi'"); $d->execute([$p]); $dd = json_decode((string)$d->fetchColumn(), true);
+    $bonus = !empty($dd['jours'][$j]['ok']) ? DEFI_BONUS : 0;
+    $we = in_array((int)(new DateTime('now', new DateTimeZone('Europe/Paris')))->format('N'), [6, 7], true);
+    return ['libre' => empty($r['on']), 'jour' => $j, 'limite' => (int)($we ? $r['weekend'] : $r['semaine']) * 60 + $bonus, 'bonus' => $bonus, 'utilise' => $u, 'nuit' => $r['nuit'], 'matin' => $r['matin'], 'weekend' => $we];
 }
 
 $action = (string)($_REQUEST['action'] ?? '');
@@ -264,6 +289,10 @@ try {
                 'polyglotte' => ['v' => $poly, 'goal' => 24], 'hydre' => ['v' => $thisWeek, 'goal' => 3, 'done' => $together]]]);
     }
 
+    // temps d'écran : les règles du jour pour un enfant (lu par famille.js sur les pages de jeu)
+    if ($method === 'GET' && $action === 'ecran') {
+        out(200, ecran_etat((string)($_GET['player'] ?? '')));
+    }
     if ($method !== 'POST') fail(405, 'Action inconnue.');
 
     if ($action === 'visit') {
@@ -392,6 +421,52 @@ try {
         out(200, ['ok' => true, 'scores' => $scores]);
     }
 
+    // temps d'écran : une page de jeu ajoute le temps passé (60 s au plus par envoi)
+    if ($method === 'POST' && $action === 'ecran') {
+        $p = clean_player($_POST['player'] ?? ''); $sec = max(0, min(60, (int)($_POST['sec'] ?? 0)));
+        if (in_array($p, ENFANTS, true) && $sec > 0) db()->prepare('INSERT INTO ecran (player, jour, sec) VALUES (?, ?, ?) ON CONFLICT(player, jour) DO UPDATE SET sec = sec + excluded.sec')->execute([$p, jour_paris(), $sec]);
+        out(200, ecran_etat($p));
+    }
+    // réglages des parents (temps d'écran) : écrire
+    if ($action === 'reglages') {
+        check_pass();
+        $in = json_decode((string)($_POST['data'] ?? ''), true); if (!is_array($in)) fail(400, 'Réglages illisibles.');
+        $e = []; foreach (ENFANTS as $k) { $x = $in['ecran'][$k] ?? []; $hh = fn($v, $d) => preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string)$v) ? (string)$v : $d;
+            $e[$k] = ['on' => !empty($x['on']), 'semaine' => max(5, min(600, (int)($x['semaine'] ?? 45))), 'weekend' => max(5, min(600, (int)($x['weekend'] ?? 90))), 'nuit' => $hh($x['nuit'] ?? '', '20:30'), 'matin' => $hh($x['matin'] ?? '', '07:00')]; }
+        reglage_set('ecran', $e);
+        if (isset($in['ecran_plus']) && is_array($in['ecran_plus'])) {   // « 15 minutes de plus aujourd'hui » : on retire du temps déjà joué
+            foreach ($in['ecran_plus'] as $k => $m) if (in_array($k, ENFANTS, true)) db()->prepare('UPDATE ecran SET sec = MAX(0, sec - ?) WHERE player = ? AND jour = ?')->execute([max(0, min(240, (int)$m)) * 60, $k, jour_paris()]);
+        }
+        out(200, ['ok' => true, 'ecran' => ecran_regles(), 'aujourdhui' => array_combine(ENFANTS, array_map('ecran_etat', ENFANTS))]);
+    }
+    // « Un parent débloque » depuis l'écran de pause : du temps de jeu en plus aujourd'hui (mot de passe parent)
+    if ($action === 'ecran_plus') {
+        check_pass();
+        $p = clean_player($_POST['player'] ?? ''); $m = max(5, min(120, (int)($_POST['min'] ?? 15)));
+        if (in_array($p, ENFANTS, true)) db()->prepare('UPDATE ecran SET sec = MAX(0, sec - ?) WHERE player = ? AND jour = ?')->execute([$m * 60, $p, jour_paris()]);
+        $e = ecran_etat($p); $e['nuit_levee'] = true; out(200, $e);
+    }
+    // joueurs : fusionner un faux prénom dans le bon (« Aniss » → « Anis »), ou le supprimer
+    if ($action === 'joueur_fusion' || $action === 'joueur_supprime') {
+        check_pass();
+        $de = clean_player($_POST['player'] ?? ''); $pdo = db(); $pdo->beginTransaction();
+        if ($action === 'joueur_fusion') {
+            $vers = clean_player($_POST['vers'] ?? ''); if (mb_strtolower($vers) === mb_strtolower($de)) fail(400, 'Choisis un autre joueur.');
+            $n = now(); $pdo->prepare('INSERT INTO players (name, created, last_seen) VALUES (?, ?, ?) ON CONFLICT(name) DO NOTHING')->execute([$vers, $n, $n]);
+            $pdo->prepare('UPDATE scores SET player = ? WHERE player = ?')->execute([$vers, $de]);
+            $pdo->prepare('UPDATE history SET player = ? WHERE player = ?')->execute([$vers, $de]);
+            $pdo->prepare('UPDATE OR IGNORE progress SET player = ? WHERE player = ?')->execute([$vers, $de]);   // un cours déjà commencé par le bon prénom garde ses progrès
+            $pdo->prepare('UPDATE visits SET player = ? WHERE player = ?')->execute([$vers, $de]);
+        } else {
+            $pdo->prepare('DELETE FROM scores WHERE player = ?')->execute([$de]);
+            $pdo->prepare('DELETE FROM history WHERE player = ?')->execute([$de]);
+            $pdo->prepare('UPDATE visits SET player = NULL WHERE player = ?')->execute([$de]);
+        }
+        foreach (['progress', 'resets', 'ecran', 'players'] as $t) $pdo->prepare("DELETE FROM $t WHERE " . ($t === 'players' ? 'name' : 'player') . ' = ?')->execute([$de]);
+        $pdo->commit();
+        out(200, ['ok' => true]);
+    }
+
     if ($action === 'summary') {
         check_pass();
         $pdo = db();
@@ -406,7 +481,7 @@ try {
         foreach ($progress as &$r) $r['data'] = json_decode($r['data'], true); unset($r);
         foreach ($history as &$r) { $r['data'] = json_decode($r['data'], true); $r['id'] = (int)$r['id']; } unset($r);
         $resets = $pdo->query('SELECT player, course, ts FROM resets')->fetchAll(PDO::FETCH_ASSOC);
-        out(200, ['players' => $players, 'progress' => $progress, 'history' => $history, 'best' => $best, 'recent' => $recent, 'resets' => $resets]);
+        out(200, ['players' => $players, 'progress' => $progress, 'history' => $history, 'best' => $best, 'recent' => $recent, 'resets' => $resets, 'ecran' => ecran_regles(), 'aujourdhui' => array_combine(ENFANTS, array_map('ecran_etat', ENFANTS))]);
     }
 
     fail(400, 'Action inconnue.');

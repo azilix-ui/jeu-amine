@@ -60,6 +60,16 @@ th{color:var(--soft);font-size:13px;text-transform:uppercase;letter-spacing:.05e
 td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
 .panel{background:var(--surface);border:2px solid var(--line);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px}
 .panel h2{font-family:var(--display);font-size:26px;margin:0}
+.reg{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.regk{border:2px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.regk h3{margin:0;font-family:var(--display);font-size:22px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.regk label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:700;font-size:15px}
+.regk input[type=number],.regk input[type=time]{font:inherit;font-size:17px;width:130px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);min-height:44px}
+.regk input[type=checkbox]{width:24px;height:24px}
+.jauge{height:12px;border-radius:6px;background:var(--line);overflow:hidden}.jauge i{display:block;height:100%;background:#2e9e6e}.jauge i.plein{background:#d7263d}
+.go2{font:inherit;font-weight:800;border:0;border-radius:14px;padding:10px 16px;background:#2e9e6e;color:#fff;cursor:pointer;min-height:44px}
+.jlist{display:flex;flex-direction:column;gap:6px}.jrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 10px;border-radius:12px;background:var(--bg)}.jrow b{flex:1 1 140px}
+.jrow select{font:inherit;padding:6px 8px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);min-height:40px}
 .mrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .mrow label{font-weight:700;display:inline-flex;gap:8px;align-items:center}
 .danger{font:inherit;font-weight:800;border:0;border-radius:14px;padding:10px 16px;background:#d7263d;color:#fff;cursor:pointer;min-height:44px}
@@ -378,7 +388,7 @@ function atelierCard(S, player){
   return '<div class="subject"><h3>🎨 Atelier du Jasmin</h3><div class="kpis">' + kpi(land + ' / 24', 'paysages finis') + kpi(anim + ' / 14', 'animaux finis') + kpi(cost + ' / 9', 'costumes finis') + '</div><dl class="units"><dt>Son serpent</dt><dd>' + (d.skin ? esc(d.skin.name || 'créé') : '—') + '</dd><dt>Façon de jouer</dt><dd>' + (d.mode === '3d' ? '3D' : d.mode === '2d' ? '2D' : '—') + '</dd></dl><p class="when">Dernière activité : ' + ago(p.updated) + '</p></div>';
 }
 /* ---------- Suivre un cours dans le temps, revenir en arrière, remettre à zéro ---------- */
-const CNAME = {'essil-deutsch':'🚆 Deutsch Express','essil-latin':'🏛️ Via Romana','salma-english':'🦉 English Garden','salma-meteo':'⛅ Weather Station','salma-verbes':'✍️ Atelier des Verbes','salma-geometrie':'📐 Atelier des Formes','salma-symetrie':'🪞 Miroir Magique','houma':'🏘️ Ma Houma','salma-monnaie':"🪙 Marché d'Ollie",'salma-maths':'🌻 Jardin des Nombres','salma-cheval':'🐴 Le Grand Galop','amine-ecriture':'✏️ Ardoise magique','amine-nombres':'👽 Planète des Nombres','amine-halloween':'🍬 Cagnotte de bonbons','amine-tounsi':'🇹🇳 Nahki Tounsi','amine-serpentin':'🐍 Serpentin','serpent3d':'🐉 Serpent Légendes','ludo3d':'🎲 Ludo Légendes','grimpeglace':'❄️ Grimpe-Glace','jasmin':'🌼 La Légende du Jasmin','atelier':"🎨 L'Atelier du Jasmin",'ecuries':"🐴 Les Écuries d'Essil",'medina':'🚋 Médina Express'};
+const CNAME = {'essil-deutsch':'🚆 Deutsch Express','essil-latin':'🏛️ Via Romana','salma-english':'🦉 English Garden','salma-meteo':'⛅ Weather Station','salma-verbes':'✍️ Atelier des Verbes','salma-geometrie':'📐 Atelier des Formes','salma-symetrie':'🪞 Miroir Magique','houma':'🏘️ Ma Houma','salma-monnaie':"🪙 Marché d'Ollie",'salma-maths':'🌻 Jardin des Nombres','salma-cheval':'🐴 Le Grand Galop','amine-ecriture':'✏️ Ardoise magique','amine-nombres':'👽 Planète des Nombres','amine-halloween':'🍬 Cagnotte de bonbons','amine-tounsi':'🇹🇳 Nahki Tounsi','amine-serpentin':'🐍 Serpentin','serpent3d':'🐉 Serpent Légendes','ludo3d':'🎲 Ludo Légendes','grimpeglace':'❄️ Grimpe-Glace','jasmin':'🌼 La Légende du Jasmin','atelier':"🎨 L'Atelier du Jasmin",'ecuries':"🐴 Les Écuries d'Essil",'medina':'🚋 Médina Express','defi':'🎯 Défi du jour','amine-lecture':'📖 Je lis avec Amine'};
 const GAME_COURSES = ['serpent3d','ludo3d','grimpeglace','jasmin','amine-serpentin'];
 const UNIT = {'essil-deutsch':'XP','essil-latin':'XP','amine-halloween':'bonbons','salma-cheval':'chapitres'};
 // un résumé court de l'état d'un cours, pour le suivre dans le temps
@@ -437,7 +447,7 @@ function lastSeen(S, name){ const p = S.players.find(x => x.name.toLowerCase() =
 /* ---------- Affichage : un tableau de bord en rubriques (onglets) ---------- */
 const KIDS = ['Essil', 'Salma', 'Amine'], KCOL = { Essil:'var(--essil)', Salma:'var(--salma)', Amine:'var(--amine-2)' }, KSUB = { Essil:'12 ans · collège', Salma:'8 ans · CE2', Amine:'5 ans · grande section' };
 const FAM = ['essil', 'salma', 'amine', 'anis', 'imen'];
-const TABS = [['vue', '📊', 'Vue d\'ensemble'], ['activite', '📅', 'Activités'], ['enfants', '🎓', 'Cours et jeux'], ['suivi', '🧭', 'Suivi'], ['records', '🏆', 'Records'], ['journal', '🌍', 'Journal']];
+const TABS = [['vue', '📊', 'Vue d\'ensemble'], ['activite', '📅', 'Activités'], ['enfants', '🎓', 'Cours et jeux'], ['suivi', '🧭', 'Suivi'], ['records', '🏆', 'Records'], ['journal', '🌍', 'Journal'], ['reglages', '⚙️', 'Réglages']];
 const mem = { get(k, d){ try{ return sessionStorage.getItem(k) || d; }catch(e){ return d; } }, set(k, v){ try{ sessionStorage.setItem(k, v); }catch(e){} } };
 let tab = mem.get('prog-tab', 'vue'), kid = mem.get('prog-kid', 'Salma'), aKid = 'Tous', vdays = +mem.get('prog-days', 7) || 7;
 let VIS = null, VERR = '', VKEEP = 60, vLoaded = 0, vBusy = false, jFilter = 'tous', jQuery = '';
@@ -584,15 +594,62 @@ function draw(){
   const S = lastS, pane = $('#pane'); if(!S || !pane) return;
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === tab));
   document.querySelectorAll('#pdays button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.d === vdays));
-  $('#pdays').style.visibility = tab === 'enfants' || tab === 'suivi' || tab === 'records' ? 'hidden' : '';
+  $('#pdays').style.visibility = tab === 'enfants' || tab === 'suivi' || tab === 'records' || tab === 'reglages' ? 'hidden' : '';
   const keep = tab === 'journal' && document.activeElement && document.activeElement.id === 'jQ' ? document.activeElement.selectionStart : null;
-  pane.innerHTML = tab === 'vue' ? vueHTML(S) : tab === 'activite' ? activiteHTML(S) : tab === 'enfants' ? enfantsHTML(S) : tab === 'suivi' ? manageHTML(S) : tab === 'records' ? recordsHTML(S) : journalHTML();
+  pane.innerHTML = tab === 'vue' ? vueHTML(S) : tab === 'activite' ? activiteHTML(S) : tab === 'enfants' ? enfantsHTML(S) : tab === 'suivi' ? manageHTML(S) : tab === 'records' ? recordsHTML(S) : tab === 'reglages' ? reglagesHTML(S) : journalHTML();
   if(tab === 'suivi') bindManage();
+  if(tab === 'reglages') bindReglages();
   pane.querySelectorAll('[data-kid]').forEach(b => b.onclick = () => { kid = b.dataset.kid; mem.set('prog-kid', kid); setTab('enfants'); });
   pane.querySelectorAll('#kidSeg button').forEach(b => b.onclick = () => { kid = b.dataset.k; mem.set('prog-kid', kid); draw(); });
   pane.querySelectorAll('#aKid button').forEach(b => b.onclick = () => { aKid = b.dataset.k; draw(); });
   pane.querySelectorAll('#jSeg button').forEach(b => b.onclick = () => { jFilter = b.dataset.f; draw(); });
   const q = $('#jQ'); if(q){ q.oninput = () => { jQuery = q.value; draw(); }; if(keep !== null){ q.focus(); try{ q.setSelectionRange(keep, keep); }catch(e){} } }
+}
+
+/* ---------- Réglages (13/11) : temps d'écran, défi du jour, joueurs ---------- */
+const FAMN = ['Essil', 'Salma', 'Amine', 'Anis', 'Imen'];
+const mn = s => Math.round(s / 60) + ' min';
+function reglagesHTML(S){
+  const E = S.ecran || {}, A = S.aujourdhui || {};
+  const defi = k => { const p = (S.progress || []).find(x => x.player === k && x.course === 'defi'); const d = p && p.data && p.data['defi:' + k]; if(!d) return 'pas encore commencé';
+    const j = new Date(), cle = j.getFullYear() + '-' + String(j.getMonth() + 1).padStart(2, '0') + '-' + String(j.getDate()).padStart(2, '0');
+    return (d.jours && d.jours[cle] && d.jours[cle].ok ? '✅ réussi aujourd\'hui' : '⏳ pas encore fait aujourd\'hui') + (d.serie > 1 ? ' · 🔥 ' + d.serie + ' jours' : '') + ' · ' + (d.tickets || 0) + ' 🎟️ gagnés'; };
+  const carte = k => { const e = E[k] || {}, a = A[k] || {}, pc = a.limite ? Math.min(100, Math.round(100 * a.utilise / a.limite)) : 0;
+    return '<div class="regk" data-k="' + k + '"><h3>' + k + '<label style="font-size:14px"><input type="checkbox" data-f="on"' + (e.on ? ' checked' : '') + '> limite active</label></h3>' +
+      '<label>Jeux en semaine (min)<input type="number" min="5" max="600" step="5" data-f="semaine" value="' + (e.semaine || 45) + '"></label>' +
+      '<label>Jeux le week-end (min)<input type="number" min="5" max="600" step="5" data-f="weekend" value="' + (e.weekend || 90) + '"></label>' +
+      '<label>Pause nuit à partir de<input type="time" data-f="nuit" value="' + esc(e.nuit || '20:30') + '"></label>' +
+      '<label>Les jeux reviennent à<input type="time" data-f="matin" value="' + esc(e.matin || '07:00') + '"></label>' +
+      '<div><div class="when">Aujourd\'hui : ' + mn(a.utilise || 0) + ' de jeu sur ' + mn(a.limite || 0) + (a.bonus ? ' (dont 10 min du défi)' : '') + '</div><div class="jauge"><i class="' + (pc >= 100 ? 'plein' : '') + '" style="width:' + pc + '%"></i></div></div>' +
+      '<div class="when">🎯 Défi du jour : ' + defi(k) + '</div>' +
+      '<button class="mini" data-plus="' + k + '">＋15 min aujourd\'hui</button></div>'; };
+  const joueurs = (S.players || []).filter(p => !FAMN.includes(p.name));
+  return '<section class="panel" id="regs"><h2>⏳ Temps d\'écran</h2>' +
+    '<p class="when">Seuls les jeux comptent (Serpent, Ludo, Jasmin, Ma Houma, Médina, Écuries, Grimpe-Glace, Atelier, Serpentin, la Nuit d\'Amine) : les cours restent toujours ouverts. Limite atteinte ou heure de la nuit : un écran doux propose d\'aller aux cours ; un parent peut débloquer 15 minutes avec le mot de passe parent. Réussir le défi du jour donne 10 minutes de plus.</p>' +
+    '<div class="reg">' + ['Essil', 'Salma', 'Amine'].map(carte).join('') + '</div>' +
+    '<div class="mrow"><button class="go2" id="regOk">Enregistrer</button><span class="msg" id="regMsg"></span></div></section>' +
+    '<section class="panel" id="joueurs"><h2>👥 Les joueurs</h2>' +
+    '<p class="when">Les prénoms tapés par des invités ou par erreur (« Aniss », « Test »…). Fusionne un prénom dans le bon (ses scores et progrès le suivent), ou supprime-le. La famille n\'apparaît pas ici.</p>' +
+    (joueurs.length ? '<div class="jlist">' + joueurs.map(p => '<div class="jrow"><b>' + esc(p.name) + '</b><span class="when">vu ' + ago(p.last_seen) + '</span><select data-vers="' + esc(p.name) + '"><option value="">Fusionner dans…</option>' +
+      FAMN.concat((S.players || []).map(x => x.name).filter(n => !FAMN.includes(n) && n !== p.name)).map(n => '<option>' + esc(n) + '</option>').join('') + '</select><button class="mini" data-fus="' + esc(p.name) + '">Fusionner</button><button class="mini" data-sup="' + esc(p.name) + '">🗑 Supprimer</button></div>').join('') + '</div>' : '<p class="none">Aucun autre joueur.</p>') +
+    '<p class="msg" id="jMsg"></p></section>';
+}
+function bindReglages(){
+  const msg = $('#regMsg'), jm = $('#jMsg');
+  const lire = () => { const e = {}; document.querySelectorAll('.regk').forEach(c => { const o = {}; c.querySelectorAll('[data-f]').forEach(i => { o[i.dataset.f] = i.type === 'checkbox' ? i.checked : i.type === 'number' ? +i.value : i.value; }); e[c.dataset.k] = o; }); return e; };
+  const envoie = async plus => { msg.textContent = 'Enregistrement…';
+    try{ const r = await post({ action:'reglages', pass, data:JSON.stringify({ ecran:lire(), ecran_plus:plus || {} }) }); lastS.ecran = r.ecran; lastS.aujourdhui = r.aujourdhui; draw(); $('#regMsg').textContent = '✔ Enregistré. Les tablettes l\'appliquent dans la minute.'; }
+    catch(e){ msg.textContent = e.message; } };
+  $('#regOk').onclick = () => envoie();
+  document.querySelectorAll('[data-plus]').forEach(b => b.onclick = () => envoie({ [b.dataset.plus]:15 }));
+  const refait = async () => { lastS = await post({ action:'summary', pass }); draw(); };
+  document.querySelectorAll('[data-fus]').forEach(b => b.onclick = async () => { const de = b.dataset.fus, vers = document.querySelector('[data-vers="' + CSS.escape(de) + '"]').value;
+    if(!vers){ jm.textContent = 'Choisis d\'abord dans quel prénom fusionner « ' + de + ' ».'; return; }
+    if(!confirm('Fusionner « ' + de + ' » dans « ' + vers + ' » ? Ses scores et ses progrès passent à ' + vers + ' (un cours déjà commencé par ' + vers + ' garde ses propres progrès).')) return;
+    try{ await post({ action:'joueur_fusion', pass, player:de, vers }); await refait(); $('#jMsg').textContent = '✔ « ' + de + ' » est fusionné dans ' + vers + '.'; }catch(e){ jm.textContent = e.message; } });
+  document.querySelectorAll('[data-sup]').forEach(b => b.onclick = async () => { const de = b.dataset.sup;
+    if(!confirm('Supprimer le joueur « ' + de + ' », ses scores et ses progrès ? On ne peut pas revenir en arrière.')) return;
+    try{ await post({ action:'joueur_supprime', pass, player:de }); await refait(); $('#jMsg').textContent = '✔ « ' + de + ' » est supprimé.'; }catch(e){ jm.textContent = e.message; } });
 }
 function setTab(t){ tab = t; mem.set('prog-tab', t); draw(); scrollTo({ top:0 }); }
 function show(S){

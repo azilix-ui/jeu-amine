@@ -100,7 +100,14 @@
       '.fm-head{border:0;cursor:pointer;font:inherit;color:#fff;border-radius:18px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 5px 0 rgba(0,0,0,.25);touch-action:manipulation;opacity:.75}' +
       '.fm-head img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.7)}.fm-head b{font-size:17px}' +
       '.fm-head.on{opacity:1;outline:5px solid #ffd23f;outline-offset:2px}' +
-      '.fm-msg{color:#d7263d;font-weight:600;text-align:center;min-height:1.2em;margin:-6px 0}';
+      '.fm-msg{color:#d7263d;font-weight:600;text-align:center;min-height:1.2em;margin:-6px 0}' +
+      '.fm-pause{background:rgba(16,12,32,.92);z-index:2147483000}.fm-p{margin:0;text-align:center;font-size:19px;line-height:1.45;color:#4a3f78}' +
+      '.fm-btn{display:flex;align-items:center;justify-content:center;min-height:58px;border-radius:18px;background:#8be08f;color:#14321a;font-weight:700;font-size:21px;text-decoration:none;box-shadow:0 6px 0 #4c9a52}' +
+      '.fm-parent summary{cursor:pointer;color:#6b6290;text-align:center;font-size:15px;padding:8px}.fm-parent .fm-other{margin-top:8px}' +
+      '.fm-toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:2147483001;background:#1b1533;color:#fff;font:600 18px Fredoka,Nunito,system-ui,sans-serif;padding:12px 20px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.4)}' +
+      '.fm-known{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.fm-known button{border:0;cursor:pointer;font:inherit;font-weight:600;font-size:17px;display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;color:#fff;min-height:48px;box-shadow:0 4px 0 rgba(0,0,0,.25)}' +
+      '.fm-known img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.7)}' +
+      '.fm-confirm{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.fm-confirm button{font:inherit;font-weight:600;font-size:18px;border:0;cursor:pointer;border-radius:14px;padding:10px 16px;background:#8be08f;color:#14321a}.fm-confirm button.non{background:#eee8fa;color:#4a3f78}';
     document.head.appendChild(st);
   }
   function choosePlayer(opts){
@@ -114,21 +121,46 @@
       back.innerHTML = '<div class="fm-box" role="dialog" aria-modal="true" aria-label="Qui joue ?"><h2>' + esc(opts.title || 'Qui joue ?') + '</h2>' +
         '<div class="fm-kids">' + KIDS.map(chip).join('') + '</div>' +
         (opts.extra && opts.extra.length ? '<div class="fm-kids fm-parents">' + opts.extra.map(chip).join('') + '</div>' : '') +
-        '<div class="fm-guest"><p>Un autre joueur ? Écris ton pseudo, puis choisis ta tête :</p>' +
+        '<div class="fm-guest"><div class="fm-known" id="fm-known" hidden></div><p>Un autre joueur ? Écris ton pseudo, puis choisis ta tête :</p>' +
         '<form class="fm-other"><input id="fm-name" maxlength="20" placeholder="Ton pseudo…" autocomplete="off" value="' + (cur && !all.some(function(k){ return k.name === cur; }) ? esc(cur) : '') + '"><button type="submit">OK</button></form>' +
         '<div class="fm-heads">' + MASCOTS.map(function(m){ return '<button type="button" class="fm-head" data-h="' + m.id + '" style="background:' + m.color + '"><img src="' + m.img + '" alt=""><b>' + esc(m.name) + '</b></button>'; }).join('') + '</div></div>' +
         '<div class="fm-msg" id="fm-msg"></div>' + (opts.cancel === false ? '' : '<button class="fm-cancel" type="button">Annuler</button>') + '</div>';
       document.body.appendChild(back);
-      function done(name){ back.remove(); if(name){ set('famille-joueur', name); } resolve(name); }
+      function done(name){ back.remove(); if(name){ set('famille-joueur', name); try{ document.dispatchEvent(new Event('famille-joueur')); }catch(e){} } resolve(name); }
       back.querySelectorAll('.fm-kid').forEach(function(b){ b.onclick = function(){ done(b.dataset.n); }; });
       var inp = back.querySelector('#fm-name'), pick = null, msg = back.querySelector('#fm-msg');
       function mark(id){ pick = id; back.querySelectorAll('.fm-head').forEach(function(b){ b.classList.toggle('on', b.dataset.h === id); }); }
       function known(){ var n = cleanName(inp.value); var t = get('famille-tetes', {}); if(n && t[n.toLowerCase()]) mark(t[n.toLowerCase()]); }
-      inp.addEventListener('input', known); known(); loadHeads().then(known);
+      // les invités déjà venus (leur tête est gardée) : un bouton chacun, pour ne pas retaper son prénom (13/11 : fini les « Aniss », « K », « Test »)
+      function connus(t){
+        var box = back.querySelector('#fm-known'); if(!box) return;
+        var noms = Object.keys(t || {}).filter(function(n){ return FAMILY.indexOf(n) < 0 && mascot(t[n]) && cleanName(n); }).sort().slice(0, 12);
+        box.innerHTML = noms.map(function(n){ var m = mascot(t[n]); var nom = cleanName(n); return '<button type="button" data-n="' + esc(nom) + '" style="background:' + m.color + '"><img src="' + m.img + '" alt="">' + esc(nom) + '</button>'; }).join('');
+        box.hidden = !noms.length;
+        box.querySelectorAll('button').forEach(function(b){ b.onclick = function(){ done(b.dataset.n); }; });
+      }
+      inp.addEventListener('input', function(){ attente = null; msg.innerHTML = ''; known(); }); known(); connus(get('famille-tetes', {})); loadHeads().then(function(t){ known(); connus(t); });
+      function dist(a, b){ var m = [], i, j; for(i = 0; i <= a.length; i++){ m[i] = [i]; } for(j = 1; j <= b.length; j++) m[0][j] = j;
+        for(i = 1; i <= a.length; i++) for(j = 1; j <= b.length; j++) m[i][j] = Math.min(m[i-1][j] + 1, m[i][j-1] + 1, m[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1)); return m[a.length][b.length]; }
+      function sansAccent(x){ return x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+      var attente = null;
+      function demande(html, oui, non){ msg.innerHTML = '<span style="color:#4a3f78">' + html + '</span><div class="fm-confirm" style="margin-top:8px"><button type="button" class="oui">' + oui[0] + '</button><button type="button" class="non">' + non[0] + '</button></div>';
+        msg.querySelector('.oui').onclick = oui[1]; msg.querySelector('.non').onclick = non[1]; }
       function go(){
         var n = cleanName(inp.value);
         if(!n){ msg.textContent = 'Écris ton pseudo (des lettres seulement).'; inp.focus(); return; }
         if(FAMILY.indexOf(n.toLowerCase()) >= 0){ done(all.filter(function(k){ return k.name.toLowerCase() === n.toLowerCase(); }).map(function(k){ return k.name; })[0] || n); return; }
+        var t = get('famille-tetes', {}), deja = !!t[n.toLowerCase()];
+        if(!deja && attente !== n){
+          // une faute de frappe sur un prénom connu (« Aniss », « Fares ») ?
+          var proches = FAMILY.concat(Object.keys(t)).filter(function(x){ var a = sansAccent(x), b = sansAccent(n); return a !== b ? dist(a, b) <= (b.length > 4 ? 2 : 1) : true; });
+          var p = proches[0] && cleanName(proches[0]);
+          if(p && p.toLowerCase() !== n.toLowerCase()){ attente = n; demande('Tu voulais dire <b>' + esc(p) + '</b> ?', ['Oui, c\'est ' + esc(p), function(){ inp.value = p; attente = null; msg.innerHTML = ''; known(); go(); }], ['Non, je suis ' + esc(n), function(){ go(); }]); return; }
+          // un mélange de lettres (« Lhchvckdhc… ») ?
+          var voy = (sansAccent(n).match(/[aeiouy]/g) || []).length;
+          if(n.length >= 7 && voy / n.length < .2 || /(.)\1\1/i.test(n)){ msg.textContent = 'Ce pseudo ressemble à des lettres au hasard 🙂 Écris ton vrai prénom.'; inp.focus(); return; }
+          attente = n; demande('Nouveau joueur : tu t\'appelles bien <b>' + esc(n) + '</b> ?', ['Oui, c\'est moi', function(){ go(); }], ['Je corrige', function(){ attente = null; msg.innerHTML = ''; inp.focus(); }]); return;
+        }
         if(!pick){ msg.textContent = 'Choisis ta tête : Nour, Yasmine ou Farès 🙂'; return; }
         saveHead(n, pick); done(n);
       }
@@ -204,6 +236,64 @@
       .then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ return j ? j.data : null; }).catch(function(){ return null; });
   }
 
+
+  /* ---------- Temps d'écran (13/11) ----------
+     Sur les pages de JEUX seulement (les cours restent libres) : pour Essil, Salma et Amine, le temps passé sur la page (visible)
+     est envoyé chaque minute au serveur, qui renvoie la limite du jour (réglée par les parents dans Progression, + 10 min si le
+     défi du jour est réussi). Limite atteinte ou heure du coucher : un écran doux « C'est l'heure de faire une pause » couvre le jeu ;
+     un parent peut débloquer 15 minutes avec le mot de passe parent. */
+  var JEUX = /^\/(jeux\/(serpent-legendes|ludo-legendes|grimpe-glace|legende-du-jasmin(-2|-3)?|medina-express|ma-houma|les-ecuries|atelier-du-jasmin)|essil\/les-ecuries|amine\/(serpentin|la-nuit-d-amine(-2)?))\.html$/;
+  var ESPACE = {Essil:'/essil/', Salma:'/salma/', Amine:'/amine/'};
+  function hm(s){ var p = String(s || '').split(':'); return (+p[0] || 0) * 60 + (+p[1] || 0); }
+  function ecranWatch(){
+    if(!online || !JEUX.test(location.pathname)) return;
+    var etat = null, vu = 0, cache = null, prev = Date.now(), averti = false;
+    function moi(){ var p = get('famille-joueur', null); return ESPACE[p] ? p : null; }
+    function debloque(){ var d = get('famille-ecran-deblocage', null); return d && d.p === moi() && d.jusqua > Date.now(); }
+    function bloque(){
+      if(!etat || etat.libre || debloque()) return null;
+      var n = new Date(), m = n.getHours() * 60 + n.getMinutes(), nuit = hm(etat.nuit), matin = hm(etat.matin);
+      if(nuit > matin ? (m >= nuit || m < matin) : (m >= nuit && m < matin)) return 'nuit';
+      if(etat.utilise >= etat.limite) return 'fini';
+      return null;
+    }
+    function toast(t){ css(); var d = document.createElement('div'); d.className = 'fm-toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 6000); }
+    function stopTouches(e){ if(cache && !cache.contains(e.target)){ e.stopImmediatePropagation(); e.preventDefault(); } }
+    function montre(pourquoi){
+      if(cache) return; css();
+      var p = moi(), k = KIDS.filter(function(x){ return x.name === p; })[0] || {};
+      cache = document.createElement('div'); cache.className = 'fm-back fm-pause';
+      cache.innerHTML = '<div class="fm-box" role="dialog" aria-modal="true" aria-label="Pause"><div style="font-size:64px;text-align:center">' + (pourquoi === 'nuit' ? '🌙' : '⏳') + '</div>' +
+        '<h2>' + (pourquoi === 'nuit' ? 'Bonne nuit, ' + esc(p) + ' !' : 'C\'est l\'heure de faire une pause, ' + esc(p) + ' !') + '</h2>' +
+        '<p class="fm-p">' + (pourquoi === 'nuit' ? 'Les jeux dorment jusqu\'à demain matin. Les cours restent ouverts si tu veux encore apprendre.' : 'Tu as bien joué aujourd\'hui ! Les jeux reviennent demain. Les cours, eux, restent ouverts.' + (etat && !etat.bonus ? ' Astuce : réussis ton défi du jour pour gagner 10 minutes de jeu.' : '')) + '</p>' +
+        '<a class="fm-btn" href="' + (ESPACE[p] || '/') + '">📚 Aller à mes cours</a>' +
+        '<details class="fm-parent"><summary>Un parent débloque 15 minutes</summary><form class="fm-other"><input type="password" placeholder="Mot de passe parent" autocomplete="current-password"><button type="submit">OK</button></form><div class="fm-msg"></div></details></div>';
+      document.body.appendChild(cache);
+      ['keydown', 'keyup', 'pointerdown', 'touchstart', 'mousedown'].forEach(function(t){ addEventListener(t, stopTouches, true); });
+      cache.querySelector('form').onsubmit = function(e){
+        e.preventDefault(); var inp = cache.querySelector('input'), msg = cache.querySelector('.fm-msg');
+        post({action:'ecran_plus', pass:inp.value, player:p, min:'15'}).then(function(j){ set('famille-ecran-deblocage', {p:p, jusqua:Date.now() + 15 * 60000}); etat = j; enleve(); toast('15 minutes de plus 🎉'); })
+          .catch(function(err){ msg.textContent = err.status === 403 ? 'Ce n\'est pas le bon mot de passe.' : 'Le serveur ne répond pas.'; });
+      };
+    }
+    function enleve(){ if(!cache) return; cache.remove(); cache = null; ['keydown', 'keyup', 'pointerdown', 'touchstart', 'mousedown'].forEach(function(t){ removeEventListener(t, stopTouches, true); }); }
+    function verifie(){
+      var b = bloque(); if(b) montre(b); else enleve();
+      if(etat && !etat.libre && !b && !averti && etat.limite - etat.utilise <= 300){ averti = true; toast('Encore 5 minutes de jeu ⏳'); }
+    }
+    function lit(){ var p = moi(); if(!p){ etat = null; enleve(); return; }
+      fetch(API + '?action=ecran&player=' + encodeURIComponent(p), {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ if(j){ etat = j; verifie(); } }).catch(function(){}); }
+    setInterval(function(){
+      var t = Date.now(), dt = Math.min(5, (t - prev) / 1000); prev = t;
+      if(!document.hidden && !cache && moi()) vu += dt;
+      if(vu >= 60 && moi()){ var s = Math.round(vu); vu = 0; post({action:'ecran', player:moi(), sec:String(Math.min(60, s))}).then(function(j){ if(j){ etat = j; verifie(); } }).catch(function(){}); }
+      else verifie();
+    }, 5000);
+    addEventListener('storage', function(e){ if(e.key === 'famille-joueur') lit(); }); document.addEventListener('famille-joueur', lit);   // le joueur a changé dans « Qui joue ? »
+    var setP = Famille.setPlayer; Famille.setPlayer = function(n){ var r = setP(n); lit(); return r; };
+    lit();
+  }
+
   window.Famille = {
     kids: KIDS,
     player: function(){ return get('famille-joueur', null); },
@@ -218,4 +308,5 @@
     load: load,
     online: online
   };
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ecranWatch); else ecranWatch();
 })();
