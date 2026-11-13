@@ -4,6 +4,7 @@
  * GET : la page. POST (fetch, en-tête X-Garde) : les actions, réponses en JSON.
  *   etat · activer(on) · ip_ajoute(ip?, nom) · ip_supprime(id) · appareil_renomme(id, nom) · appareil_revoque(id)
  *   invitation_cree(nom, lien, duree, usages) · invitation_supprime(id) · mdp(ancien, nouveau) · sortir
+ *   demande_accepte(id, duree) · demande_ignore(id) : les appareils inconnus qui ont frappé à la porte (cookie mf_demande)
  */
 declare(strict_types=1);
 require __DIR__ . '/garde.php';
@@ -35,6 +36,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $db->prepare('UPDATE appareils SET nom = ? WHERE id = ?')->execute([$nom ?: 'Appareil', $id]);
         } elseif ($a === 'appareil_revoque') {
             $db->prepare('UPDATE appareils SET revoque = 1 WHERE id = ?')->execute([$id]);
+        } elseif ($a === 'demande_accepte') {
+            $duree = max(86400, min(GA_ANNEE, (int)($in['duree'] ?? GA_ANNEE)));
+            $db->prepare("UPDATE demandes SET statut = 'accepte', duree = ? WHERE id = ? AND statut IN ('vu', 'attente', 'ignore')")->execute([$duree, $id]);
+        } elseif ($a === 'demande_ignore') {
+            $db->prepare("UPDATE demandes SET statut = 'ignore' WHERE id = ?")->execute([$id]);
         } elseif ($a === 'invitation_cree') {
             $lien = max(600, min(30 * 86400, (int)($in['lien'] ?? 86400)));
             $duree = max(3600, min(GA_ANNEE, (int)($in['duree'] ?? 7 * 86400)));
@@ -65,6 +71,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             'ips' => $db->query('SELECT id, ip, nom, cree FROM ips ORDER BY cree')->fetchAll(),
             'appareils' => $db->query('SELECT id, nom, via, invitation, cree, expire, vu, ip, ua FROM appareils WHERE revoque = 0 AND expire > ' . $t . ' ORDER BY vu DESC')->fetchAll(),
             'invitations' => $invs,
+            'demandes' => $db->query("SELECT id, nom, statut, duree, cree, vu, ip, ua, page, pages FROM demandes WHERE statut IN ('vu', 'attente', 'accepte') AND vu > " . ($t - 30 * 86400) . " ORDER BY (statut = 'attente') DESC, vu DESC LIMIT 60")->fetchAll(),
             'refus' => $db->query('SELECT ts, ip, page, ua FROM refus ORDER BY ts DESC LIMIT 80')->fetchAll(),
         ]);
     } catch (Throwable $e) { error_log('admin acces : ' . $e->getMessage()); rep(500, ['error' => "Le serveur n'a pas pu enregistrer."]); }
@@ -129,6 +136,12 @@ details summary{cursor:pointer;font-weight:800;color:var(--soft)}
   </section>
 
   <section class="carte">
+    <h2>🛎️ Les appareils qui frappent à la porte</h2>
+    <p>Les appareils inconnus qui ont essayé d'entrer ces 30 derniers jours, où qu'ils soient. Si tu reconnais quelqu'un, touche « Faire confiance » : son appareil entre dès sa prochaine page (ou tout de suite s'il attend sur la page « Accès réservé »). Ceux qui ont écrit leur prénom sont en haut.</p>
+    <div class="liste" id="dems"></div>
+  </section>
+
+  <section class="carte">
     <h2>🏠 L'adresse internet de la maison</h2>
     <p>Tout appareil qui se connecte depuis cette adresse (la box de la maison) entre sans rien demander, et devient de confiance pour un an, même en dehors de la maison. L'adresse de la box peut changer : mets-la à jour depuis la maison s'il le faut.</p>
     <p>Ton adresse en ce moment : <b id="monIp">…</b> <span id="monIpEtat"></span></p>
@@ -184,6 +197,8 @@ const quand = ts => ts ? new Date(ts * 1000).toLocaleString('fr-FR', { day:'2-di
 const jour = ts => new Date(ts * 1000).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
 const duree = s => s >= 300 * 86400 ? '1 an' : s >= 80 * 86400 ? '3 mois' : s >= 86400 ? Math.round(s / 86400) + ' jour' + (s >= 2 * 86400 ? 's' : '') : Math.round(s / 3600) + ' h';
 const nav = ua => { ua = ua || ''; return /iPad|Macintosh.*Mobile/.test(ua) ? 'iPad' : /iPhone/.test(ua) ? 'iPhone' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Macintosh/.test(ua) ? 'Mac' : /bot|crawl|spider|preview|facebookexternalhit|WhatsApp/i.test(ua) ? 'robot' : 'autre'; };
+const nomApp = ua => { ua = ua || ''; const os = /iPad/.test(ua) ? 'iPad' : /iPhone/.test(ua) ? 'iPhone' : /Android/.test(ua) ? (/Mobile/.test(ua) ? 'Téléphone Android' : 'Tablette Android') : /Windows/.test(ua) ? 'PC Windows' : /Macintosh/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : 'Appareil';
+  const n = /Edg\//.test(ua) ? 'Edge' : /SamsungBrowser/.test(ua) ? 'Samsung' : /Firefox|FxiOS/.test(ua) ? 'Firefox' : /Chrome|CriOS/.test(ua) ? 'Chrome' : /Safari/.test(ua) ? 'Safari' : ''; return n ? os + ' · ' + n : os; };
 let E = null;
 function toast(t){ const el = $('toast'); el.textContent = t; el.classList.add('vu'); clearTimeout(toast.k); toast.k = setTimeout(() => el.classList.remove('vu'), 2600); }
 async function api(action, data = {}){
@@ -211,7 +226,11 @@ function dessine(){
     return `<div class="ligne"><span class="q"><b>${esc(v.nom || 'Invitation')}</b><small>${fini ? 'Lien terminé' : 'Lien valable jusqu\'au ' + quand(v.lien_expire)} · accès ${duree(v.duree)} · ${v.usages}/${v.usages_max || '∞'} appareil(s) · ${v.actifs} entré(s)</small>
       ${fini ? '' : `<span class="lienbox"><input readonly value="${esc(v.lien)}"><button class="petit" data-copie="${esc(v.lien)}">Copier</button>${navigator.share ? `<button class="petit" data-partage="${esc(v.lien)}" data-nom="${esc(v.nom)}">Envoyer</button>` : ''}</span>`}</span>
       <button class="petit rouge" data-invdel="${v.id}">Supprimer</button></div>`; }).join('');
-  $('apps').innerHTML = E.appareils.length ? E.appareils.map(a => `<div class="ligne"><span class="q"><b>${esc(a.nom)}${a.id === E.moi ? '<span class="badge moi">cet appareil</span>' : ''}<span class="badge">${a.via === 'maison' ? 'maison' : a.via === 'admin' ? 'toi' : 'invité'}</span></b>
+  const optD = '<option value="86400">1 jour</option><option value="604800">7 jours</option><option value="2592000">30 jours</option><option value="31536000" selected>1 an</option>';
+  $('dems').innerHTML = E.demandes.length ? E.demandes.map(d => `<div class="ligne"><span class="q"><b>${d.nom ? esc(d.nom) : esc(nomApp(d.ua))}${d.statut === 'attente' ? '<span class="badge moi">attend ta réponse</span>' : ''}${d.statut === 'accepte' ? '<span class="badge">accepté</span>' : ''}</b>
+      <small>${d.nom ? esc(nomApp(d.ua)) + ' · ' : ''}${esc(d.ip)} · vu le ${quand(d.vu)} · ${d.pages} page(s)${d.page ? ' · ' + esc(d.page) : ''}</small></span>
+      ${d.statut === 'accepte' ? '<small style="color:var(--soft)">Il entrera à sa prochaine page.</small>' : `<select data-dur="${d.id}" aria-label="Durée de l'accès">${optD}</select><button class="petit vert" data-ok="${d.id}">Faire confiance</button><button class="petit" data-non="${d.id}">Ignorer</button>`}</div>`).join('') : '<p class="vide">Personne n\'a frappé à la porte pour l\'instant.</p>';
+  $('apps').innerHTML = E.appareils.length ? E.appareils.map(a => `<div class="ligne"><span class="q"><b>${esc(a.nom)}${a.id === E.moi ? '<span class="badge moi">cet appareil</span>' : ''}<span class="badge">${a.via === 'maison' ? 'maison' : a.via === 'admin' ? 'toi' : a.via === 'accepte' ? 'accepté par toi' : 'invité'}</span></b>
       <small>Vu le ${quand(a.vu)} · ${esc(a.ip)} · accès jusqu'au ${jour(a.expire)}</small></span>
       <button class="petit" data-ren="${a.id}" data-nom="${esc(a.nom)}">Renommer</button>${a.id === E.moi ? '' : `<button class="petit rouge" data-appdel="${a.id}">Retirer</button>`}</div>`).join('') : '<p class="vide">Aucun appareil pour l\'instant.</p>';
   $('refus').innerHTML = E.refus.length ? E.refus.map(r => `<div class="ligne"><span class="q"><b>${esc(r.ip)} <span class="badge">${nav(r.ua)}</span></b><small>${quand(r.ts)} · ${esc(r.page)}</small></span></div>`).join('') : '<p class="vide">Aucune visite refusée.</p>';
@@ -232,6 +251,8 @@ $('mdpOk').onclick = async () => { await charge('mdp', { ancien:$('mdpA').value,
 $('sortir').onclick = async () => { await api('sortir'); location.href = '/acces/?sortie=1'; };
 document.addEventListener('click', async e => {
   const b = e.target.closest('button'); if(!b) return; const d = b.dataset;
+  if(d.ok){ const sel = document.querySelector(`[data-dur="${d.ok}"]`); await charge('demande_accepte', { id:+d.ok, duree:+(sel ? sel.value : 31536000) }); toast('Accepté : la porte s\'ouvrira pour lui 🔓'); }
+  if(d.non) await charge('demande_ignore', { id:+d.non });
   if(d.ipdel && confirm('Retirer cette adresse ?')) await charge('ip_supprime', { id:+d.ipdel });
   if(d.invdel && confirm('Supprimer cette invitation ? Les appareils entrés avec ce lien perdront aussi l\'accès.')) await charge('invitation_supprime', { id:+d.invdel });
   if(d.appdel && confirm('Retirer cet appareil ? Il ne pourra plus entrer.')) await charge('appareil_revoque', { id:+d.appdel });
@@ -240,6 +261,7 @@ document.addEventListener('click', async e => {
   if(d.partage){ try { await navigator.share({ title:'Invitation · Famille Missaoui', text:'Je t\'invite sur le site de jeux de la famille Missaoui' + (d.nom ? ', ' + d.nom : '') + ' : ouvre ce lien puis touche « Entrer ».', url:d.partage }); } catch(err){} }
 });
 charge();
+setInterval(() => { if(!document.hidden && !(document.activeElement && /INPUT|SELECT/.test(document.activeElement.tagName))) charge().catch(() => {}); }, 20000);   // la liste se met à jour toute seule
 <?php if (isset($_GET['bienvenue'])): ?>toast('Compte créé, bienvenue Anis 👋');<?php endif; ?>
 </script>
 </body>

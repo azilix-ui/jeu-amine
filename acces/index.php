@@ -13,14 +13,19 @@ header('X-Frame-Options: DENY');
 
 $suite = (string)($_GET['suite'] ?? $_POST['suite'] ?? '/');
 if ($suite === '' || $suite[0] !== '/' || (strlen($suite) > 1 && ($suite[1] === '/' || $suite[1] === '\\')) || preg_match('/[\r\n]/', $suite)) $suite = '/';   // seulement une page de ce site
+if (isset($_GET['etat'])) { header('Content-Type: application/json'); echo json_encode(['entre' => ga_peut_entrer()]); exit; }   // la page d'attente demande toutes les 5 s si Anis a accepté
 $admin = ga_admin_fiche();
 $creation = empty($admin['hash']);
-$message = ''; $ok = '';
+$message = ''; $ok = ''; $msgDem = '';
 $raison = (string)($_GET['raison'] ?? '');
 if ($raison === 'invitation') $message = "Ce lien d'invitation n'est plus valable (trop ancien, déjà utilisé ou supprimé). Demande un nouveau lien à Anis.";
 if (isset($_GET['sortie'])) $ok = 'Tu es déconnecté de l\'administration.';
 
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['quoi'] ?? '') === 'demande') {   // « Demander l'accès à Anis » avec son prénom
+    $p = trim((string)($_POST['prenom'] ?? ''));
+    if ($p === '') $msgDem = 'Écris ton prénom pour qu\'Anis te reconnaisse.'; else ga_note_demande('', $p);
+    $_POST = [];
+} elseif (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     try {
         if (ga_trop_essais()) { $message = "Trop d'essais. Réessaie dans 15 minutes."; }
         elseif ($creation) {
@@ -50,7 +55,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     } catch (Throwable $e) { error_log('acces : ' . $e->getMessage()); $message = "Le serveur n'a pas pu enregistrer. Réessaie dans un moment."; }
 }
 $pourAdmin = isset($_GET['admin']) || ($_POST['vers'] ?? '') === 'admin';
-$dedans = !$pourAdmin && (!$creation && !ga_active() || ga_appareil() || ga_admin());
+$dedans = !$pourAdmin && (!$creation && !ga_active() || ga_appareil() || ga_admin() || (ga_active() && ga_peut_entrer()));
+$dem = (!$dedans && !$creation && ga_active()) ? (ga_demande() ?: ga_note_demande('')) : null;
+$attente = $dem && $dem['statut'] === 'attente';
 ?><!doctype html>
 <html lang="fr">
 <head>
@@ -98,6 +105,17 @@ $dedans = !$pourAdmin && (!$creation && !ga_active() || ga_appareil() || ga_admi
   <p class="sous"><?= $pourAdmin ? 'Connecte-toi pour gérer l\'accès au site.' : 'Ce site est celui de la famille : il est ouvert seulement aux appareils de la maison et aux proches invités.' ?></p>
   <?php if (!$pourAdmin): ?><div class="carte" style="gap:12px">
     <div class="invit"><span style="font-size:28px" aria-hidden="true">💌</span><span><b>Tu as reçu une invitation ?</b>Ouvre simplement le lien qu'Anis t'a envoyé : il t'ouvre la porte.</span></div>
+    <?php if ($attente): ?>
+    <div class="invit" style="background:#e3f4ea;color:#1f6b44" role="status"><span style="font-size:28px" aria-hidden="true">⏳</span><span><b>Demande envoyée à Anis, <?= ga_h($dem['nom']) ?> !</b>Garde cette page ouverte : elle s'ouvrira toute seule dès qu'il accepte (tu peux aussi revenir plus tard).</span></div>
+    <script>setInterval(async () => { try { const r = await fetch('/acces/?etat=1', { cache:'no-store', credentials:'same-origin' }); if((await r.json()).entre) location.href = <?= json_encode($suite) ?>; } catch(e){} }, 5000);</script>
+    <?php elseif ($dem): ?>
+    <form method="post" style="display:flex;flex-direction:column;gap:10px">
+      <input type="hidden" name="quoi" value="demande"><input type="hidden" name="suite" value="<?= ga_h($suite) ?>">
+      <?php if ($msgDem): ?><div class="msg" role="alert"><?= ga_h($msgDem) ?></div><?php endif; ?>
+      <label>Pas d'invitation ? Demande l'accès à Anis<input name="prenom" maxlength="40" placeholder="Ton prénom" autocomplete="given-name" required></label>
+      <button type="submit" style="background:var(--gold);box-shadow:0 6px 0 #c99a00;color:#3a2600">🛎️ Frapper à la porte</button>
+    </form>
+    <?php endif; ?>
   </div><?php endif; ?>
   <form class="carte" method="post">
     <h2>Connexion administrateur</h2>

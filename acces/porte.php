@@ -19,6 +19,7 @@ if (!$fichier || strpos($fichier, $racine . DIRECTORY_SEPARATOR) !== 0 || !is_fi
 }
 if (!ga_peut_entrer()) {
     ga_note_refus($chemin);
+    if ($ext === 'html') ga_note_demande($chemin);
     header('Cache-Control: no-store');
     if ($ext === 'html') { header('Location: /acces/?suite=' . rawurlencode((string)($_SERVER['REQUEST_URI'] ?? '/')), true, 302); exit; }
     http_response_code(403); exit;

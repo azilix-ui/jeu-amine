@@ -22,6 +22,7 @@ const GA_ESSAIS = 8;                  // essais de mot de passe…
 const GA_ESSAIS_FENETRE = 900;        // …par 15 minutes et par adresse
 const GA_COOKIE = 'mf_appareil';
 const GA_COOKIE_ADMIN = 'mf_admin';
+const GA_COOKIE_DEMANDE = 'mf_demande';   // un appareil inconnu qui frappe à la porte (30 jours) : Anis peut lui faire confiance à distance
 
 function ga_racine(): string { return dirname(__DIR__); }                    // public_html
 function ga_donnees(): string {
@@ -41,6 +42,8 @@ function ga_db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS sessions (hash TEXT PRIMARY KEY, expire INTEGER NOT NULL)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS refus (id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, ip TEXT, page TEXT, ua TEXT)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS echecs (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
+    // statut : vu (refusé, sans nom) · attente (il a écrit son prénom) · accepte (Anis a dit oui, l'appareil sera reconnu à sa prochaine page) · fait · ignore
+    $pdo->exec('CREATE TABLE IF NOT EXISTS demandes (id INTEGER PRIMARY KEY, hash TEXT UNIQUE NOT NULL, nom TEXT, statut TEXT NOT NULL, duree INTEGER, cree INTEGER NOT NULL, vu INTEGER NOT NULL, ip TEXT, ua TEXT, page TEXT, pages INTEGER NOT NULL DEFAULT 0)');
     return $pdo;
 }
 function ga_reglage(string $k, ?string $v = null): ?string {
@@ -134,6 +137,13 @@ function ga_peut_entrer(): bool {
         if (!ga_active()) return true;
         if (ga_appareil() || ga_admin()) return true;
         if (ga_ip_maison(ga_ip())) { ga_nouvel_appareil('maison', GA_ANNEE); return true; }
+        $d = ga_demande();
+        if ($d && $d['statut'] === 'accepte') {   // Anis lui a fait confiance depuis l'administration
+            ga_db()->prepare("UPDATE demandes SET statut = 'fait' WHERE id = ?")->execute([$d['id']]);
+            ga_nouvel_appareil('accepte', (int)$d['duree'] ?: GA_ANNEE, null, trim(($d['nom'] ? $d['nom'] . ' · ' : '') . ga_nom_appareil(ga_ua())));
+            ga_cookie(GA_COOKIE_DEMANDE, '', 1);
+            return true;
+        }
         return false;
     } catch (Throwable $e) {
         error_log('garde : ' . $e->getMessage());
@@ -146,6 +156,33 @@ function ga_note_refus(string $page): void {
         $db->prepare('INSERT INTO refus (ts, ip, page, ua) VALUES (?, ?, ?, ?)')->execute([$t, ga_ip(), mb_substr($page, 0, 200), ga_ua()]);
         if (random_int(1, 50) === 1) $db->prepare('DELETE FROM refus WHERE ts < ?')->execute([$t - 60 * 86400]);
     } catch (Throwable $e) {}
+}
+// L'appareil inconnu qui frappe à la porte (cookie mf_demande), ou null
+function ga_demande(): ?array {
+    $j = (string)($_COOKIE[GA_COOKIE_DEMANDE] ?? '');
+    if (!preg_match('/^[0-9a-f]{64}$/', $j)) return null;
+    $s = ga_db()->prepare('SELECT * FROM demandes WHERE hash = ?'); $s->execute([hash('sha256', $j)]);
+    return $s->fetch() ?: null;
+}
+function ga_robot(string $ua): bool { return $ua === '' || (bool)preg_match('/bot|crawl|spider|slurp|preview|facebookexternalhit|WhatsApp|Discord|Telegram|curl|wget|python|Go-http|HeadlessChrome|Lighthouse|monitor/i', $ua); }
+// Note la visite d'un appareil refusé (pour la liste « Appareils qui frappent à la porte ») ; un robot n'est pas noté.
+function ga_note_demande(string $page, ?string $nom = null): ?array {
+    try {
+        $ua = ga_ua(); $t = time(); $db = ga_db(); $d = ga_demande();
+        if (!$d) {
+            if (ga_robot($ua) && $nom === null) return null;
+            $j = bin2hex(random_bytes(32));
+            $db->prepare("INSERT INTO demandes (hash, statut, cree, vu, ip, ua, page) VALUES (?, 'vu', ?, ?, ?, ?, ?)")->execute([hash('sha256', $j), $t, $t, ga_ip(), $ua, mb_substr($page, 0, 200)]);
+            ga_cookie(GA_COOKIE_DEMANDE, $j, $t + 30 * 86400); $_COOKIE[GA_COOKIE_DEMANDE] = $j;
+            if (random_int(1, 30) === 1) $db->prepare("DELETE FROM demandes WHERE vu < ? AND statut IN ('vu', 'ignore', 'fait')")->execute([$t - 30 * 86400]);
+            $d = ga_demande();
+        }
+        $statut = $d['statut'];
+        if ($nom !== null) { $nom = mb_substr(trim(preg_replace('/\s+/u', ' ', $nom)), 0, 40); if ($statut === 'vu' || $statut === 'ignore') $statut = 'attente'; }
+        $db->prepare('UPDATE demandes SET vu = ?, ip = ?, ua = ?, page = COALESCE(?, page), pages = pages + ?, nom = COALESCE(?, nom), statut = ? WHERE id = ?')
+           ->execute([$t, ga_ip(), $ua, $page === '' ? null : mb_substr($page, 0, 200), $page === '' ? 0 : 1, $nom ?: null, $statut, $d['id']]);
+        return ga_demande();
+    } catch (Throwable $e) { error_log('demande : ' . $e->getMessage()); return null; }
 }
 // Pour les API : réponse 401 si l'appareil n'est pas de confiance.
 function ga_garde_api(): void {
