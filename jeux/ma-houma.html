@@ -65,6 +65,39 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .glow{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,#ffe9a0cc,#ffe9a000);mix-blend-mode:screen;z-index:8000}
 #toast{position:fixed;left:50%;top:calc(var(--bar) + env(safe-area-inset-top) + 12px);transform:translate(-50%,-140%);background:#fff;color:var(--ink);font-weight:800;font-size:clamp(16px,2.2vw,21px);padding:10px 20px;border-radius:999px;box-shadow:0 6px 0 #0002,0 0 0 3px var(--sun);z-index:60;transition:transform .35s cubic-bezier(.3,1.4,.6,1);max-width:92vw;text-align:center;pointer-events:none;opacity:0}
 #toast.on{transform:translate(-50%,0);opacity:1}
+.bg.room{position:absolute;inset:0;width:1280px;height:720px;pointer-events:none}
+.mwall{position:absolute;left:0;top:0;width:1280px;height:520px}.mwall.ciel{background:linear-gradient(#8fd0ff,#e6f6ff)}.mwall svg{width:100%;height:100%;display:block}
+.mshade{position:absolute;left:0;top:0;width:1280px;height:520px;background:linear-gradient(90deg,#0003,#0000 10%,#0000 90%,#0003),linear-gradient(#0000 75%,#0000001a)}
+.mplinthe{position:absolute;left:0;top:508px;width:1280px;height:14px;background:#8a6a3a;box-shadow:0 3px 0 #0002}
+.mfloor{position:absolute;left:0;top:520px;width:1280px;height:200px;overflow:hidden;perspective:320px;perspective-origin:50% -80px}
+.mfloor>div{position:absolute;left:-70%;width:240%;top:0;height:600px;transform-origin:50% 0;transform:rotateX(52deg)}
+.porte{position:absolute;top:400px;width:78px;height:140px;z-index:9000;display:grid;place-items:center;align-content:center;gap:2px;background:#ffffffd9;border:4px solid var(--blue);font-size:38px;line-height:1;color:var(--blue);pointer-events:auto}
+.porte.g{left:0;border-radius:0 40px 40px 0;border-left:0}.porte.d{right:0;border-radius:40px 0 0 40px;border-right:0}.porte b{font-size:24px}.porte:active{background:var(--sun)}
+.e.f .dimg{width:100%;height:100%;display:block;pointer-events:none;filter:drop-shadow(0 7px 5px #0003)}
+.e.f.sel .dimg{filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 9px #ffc93c) drop-shadow(0 7px 5px #0003)}
+.e.f .dimg.on-lumiere,.e.f .dimg.on-feu{filter:brightness(1.12) drop-shadow(0 0 14px #ffd84d) drop-shadow(0 0 30px #ffb84d88)}
+.cord{position:absolute;left:50%;bottom:100%;width:3px;margin-left:-1.5px;background:#4a4a4a}
+.tvon{position:absolute;left:11%;top:1.5%;width:78%;height:51%;border-radius:4px;background:linear-gradient(120deg,#5ad1ff,#ffd84d,#ff6fb5,#7cff9a,#5ad1ff);background-size:400% 400%;animation:tv 3s linear infinite;opacity:.9;pointer-events:none}
+@keyframes tv{to{background-position:400% 0}}
+.a-balance{animation:swing 1.8s ease-in-out infinite;transform-origin:50% 0}.e.c.a-balance{transform-origin:50% -130px}
+.a-bascule{animation:rock 1.2s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes swing{0%,100%{transform:rotate(-13deg)}50%{transform:rotate(13deg)}}@keyframes rock{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+.decolle{animation:decolle 2.6s ease-in forwards}@keyframes decolle{12%{transform:translateY(8px) rotate(-2deg)}24%{transform:translateY(0) rotate(2deg)}100%{transform:translateY(-950px)}}
+.boing{animation:boing .42s ease-in-out 4}@keyframes boing{50%{transform:translateY(-120px)}}
+.g-salut{animation:wig .35s ease-in-out 4}.g-danse{animation:dance .66s ease-in-out 5}.g-saut{animation:boing .5s ease-in-out 2}.g-bravo{animation:munch .3s ease 5}.g-bisou{animation:hop .5s ease 2}
+@keyframes wig{50%{transform:rotate(4deg)}}@keyframes dance{25%{transform:rotate(-6deg) translateY(-8px)}75%{transform:rotate(6deg) translateY(-8px)}}
+#selbar{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:20;display:flex;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 16px);gap:4px;background:#fffffff2;padding:5px;border-radius:18px;box-shadow:0 4px 0 #0003;border:3px solid var(--sun)}
+#selbar button{width:50px;height:50px;font-size:26px;line-height:1;border-radius:14px;background:#eef4fb;display:grid;place-items:center}
+@media (max-height:520px){#selbar button{width:42px;height:42px;font-size:21px}}
+#bulle{position:absolute;z-index:9600;display:flex;flex-wrap:wrap;justify-content:center;max-width:1272px;gap:calc(4px * var(--u));background:#fffffff2;padding:calc(5px * var(--u));border-radius:calc(18px * var(--u));box-shadow:0 calc(4px * var(--u)) 0 #0003}
+#bulle button{width:calc(50px * var(--u));height:calc(50px * var(--u));font-size:calc(27px * var(--u));line-height:1;border-radius:calc(14px * var(--u));background:#eef4fb;display:grid;place-items:center}
+#selbar button:active,#bulle button:active{background:var(--sun)}#bulle{border:3px solid var(--sun)}
+.ktabs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0}.ktab{min-height:48px;padding:0 14px;border-radius:999px;background:#e6edf6;font-weight:800;font-size:16px}.ktab.on{background:var(--blue);color:#fff}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin:10px 0}
+.kit{background:#eef4fb;border-radius:16px;padding:6px 4px;display:grid;justify-items:center;gap:2px;font-size:13px;font-weight:800;line-height:1.1}.kit img{width:84px;height:84px;object-fit:contain}.kit:active{background:var(--sun)}
+.swg{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;margin:6px 0 12px}.sw{height:66px;border-radius:14px;border:4px solid #fff;box-shadow:0 0 0 2px #c3cfdf}.sw.on{box-shadow:0 0 0 5px var(--sun)}
+.tb[hidden]{display:none}
+@media (max-width:640px){body.inroom #bDisc,body.inroom #bSnd,body.inroom #bMap{display:none}}
 /* la carte */
 #map{position:absolute;inset:0}
 #map svg{position:absolute;inset:0;width:100%;height:100%}
@@ -94,6 +127,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 <div id="top">
   <a class="tb quit" href="../index.html" aria-label="Quitter le jeu et revenir à l'accueil">✕<span>&nbsp;Quitter</span></a>
   <button class="tb" id="bMap" aria-label="La carte du quartier">🗺️</button>
+  <button class="tb" id="bRooms" aria-label="Les pièces de la maison" hidden>🏠</button>
+  <button class="tb deco" id="bDeco" aria-label="Décorer : ajouter des meubles et des objets" hidden>🛋️</button>
+  <button class="tb deco" id="bMur" aria-label="Changer les murs et le sol" hidden>🎨</button>
   <div id="title">Ma Houma<small>le quartier du Jasmin</small></div>
   <button class="tb" id="bDisc" aria-label="Mes découvertes"><span id="stars">⭐ 0</span></button>
   <button class="tb" id="bSnd" aria-label="Le son">🔊</button>
@@ -112,6 +148,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 <script src="../famille.js"></script>
 <script src="houma/corps.js"></script>
 <script src="houma/assis.js"></script>
+<script src="houma/gestes.js"></script>
+<script src="maison/catalogue.js"></script>
 <script src="sons/sons.js"></script>
 <script>
 'use strict';
@@ -460,7 +498,7 @@ function fresh(){
 }
 // complète une sauvegarde (nouvelle, ancienne ou abîmée) avec tout ce qui manque : rien ne plante si un champ a disparu
 function fill(s){
-  s = s && typeof s === 'object' ? s : {}; s.v = 1; ['chars', 'items', 'fx', 'disc', 'seen'].forEach(k => { if(!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {}; });
+  s = s && typeof s === 'object' ? s : {}; s.v = 1; ['chars', 'items', 'fx', 'disc', 'seen', 'deco', 'mur', 'mi'].forEach(k => { if(!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {}; });
   Object.entries(PLACES).forEach(([pid, P]) => {
     Object.entries(P.start || {}).forEach(([id, [x, y]]) => { const c = s.chars[id]; if(!c || !PLACES[c.p] || !isFinite(c.x) || !isFinite(c.y)) s.chars[id] = { p:pid, x, y, pose:'', o:'ville', acc:[] }; });
     P.items.forEach(([id, type, x, y]) => { const it = s.items[id]; if(!it || !isFinite(it.x) || !isFinite(it.y) || (it.p && !PLACES[it.p])) s.items[id] = { p:pid, x, y, s:'', h:'' }; });
@@ -468,6 +506,7 @@ function fill(s){
   SPAWN.forEach(id => { if(!s.items[id]) s.items[id] = { p:'', x:0, y:0, s:'', h:'' }; });
   Object.values(s.chars).forEach(c => { if(!OUTFITS[c.o]) c.o = 'ville'; if(!Array.isArray(c.acc)) c.acc = []; c.x = Math.max(0, Math.min(W, c.x)); c.y = Math.max(0, Math.min(H, c.y)); });
   Object.entries(s.items).forEach(([id, it]) => { if(it.h && !s.chars[it.h]) it.h = ''; if(!typeOf(id)) delete s.items[id]; });
+  Object.entries(s.deco).forEach(([u, d]) => { if(!d || !KAT[d.t] || !PLACES[d.p] || !isFinite(d.x) || !isFinite(d.y)) delete s.deco[u]; else { d.k = Math.max(.35, Math.min(3, +d.k || 1)); d.r = +d.r || 0; d.z = +d.z || 0; if(d.on && !s.deco[d.on]) d.on = ''; } });
   return s;
 }
 const HOME = {}; Object.entries(PLACES).forEach(([pid, P]) => P.items.forEach(([id, type, x, y]) => { HOME[id] = { p:pid, type, x, y }; }));
@@ -524,7 +563,7 @@ function box(el, x, y, w, h, z){ el.style.left = (x - w / 2) + 'px'; el.style.to
 function mk(cls, id){ const el = document.createElement('div'); el.className = 'e ' + cls; el.dataset.id = id; stage.appendChild(el); return el; }
 
 function drawFixed(f){
-  const e = ents.get(f.id), s = fxState(f.id); e.el.innerHTML = f.T.draw(s); box(e.el, f.x, f.y, f.T.w, f.T.h, 100 + (f.T.none ? 0 : 1));
+  const e = ents.get(f.id), s = fxState(f.id); e.el.innerHTML = f.T.draw(s); box(e.el, f.x, f.y, f.T.w, f.T.h, f.T.zz ? f.T.zz() : 100 + (f.T.none ? 0 : 1)); e.el.classList.toggle('sel', !!f.T.deco && sel === f.id);
   if(e.front){ e.front.innerHTML = f.T.front(s); box(e.front, f.x, f.y, f.T.w, f.T.h, f.T.zf || 2500); }   // devant les personnages assis ou dans l'eau, derrière ceux qui sont debout
   if(e.glow){ e.glow.style.display = s === 'on' ? 'block' : 'none'; }
 }
@@ -540,6 +579,7 @@ function drawItem(id){
 function drawChar(id){
   const e = ents.get(id), c = S.chars[id], C = CH[id]; if(!e) return; const { w, h } = sizeOf(id, c.o), sit = c.pose === 'sit' || c.pose === 'bath', Z = sit && c.a ? seatOf(id, c.o) : null;
   e.el.classList.toggle('hide', c.p !== place); e.el.classList.toggle('sleep', c.pose === 'sleep');
+  const G = !c.pose && gesteBody(id); if(G){ e.el.innerHTML = G.html; e.el.style.left = (c.x - G.fx * G.w) + 'px'; e.el.style.top = (c.y - G.h * G.gy) + 'px'; e.el.style.width = G.w + 'px'; e.el.style.height = G.h + 'px'; e.el.style.zIndex = 5000 + Math.round(c.y); return; }
   e.el.innerHTML = doll(C, c);
   const z = c.pose === 'bath' && !c.a ? 60 : sit ? 1500 + Math.round(c.y / 2) : 5000 + Math.round(c.y);   // dans la mer : derrière la vague
   if(Z) box(e.el, c.x, c.y + Z.h * .06 + (c.pose === 'bath' ? 46 : 0), Z.w, Z.h, z);   // assis en tailleur : posé sur le siège
@@ -548,11 +588,12 @@ function drawChar(id){
 }
 function render(){
   stage.innerHTML = ''; ents = new Map(); const P = PLACES[place]; stage.insertAdjacentHTML('beforeend', P.bg());
-  allFixed().forEach(f => { const e = { id:f.id, kind:'f', el:mk('f' + (f.T.tap || f.T.fill || f.T.water || f.T.seats || f.T.bed || f.T.bath ? '' : ' none'), f.id) };
+  allFixed().forEach(f => { const e = { id:f.id, kind:'f', el:mk('f' + (f.T.deco || f.T.tap || f.T.fill || f.T.water || f.T.seats || f.T.bed || f.T.bath ? '' : ' none'), f.id) };
     if(f.T.front){ e.front = mk('f none', f.id); } if(f.T.glow){ e.glow = document.createElement('div'); e.glow.className = 'glow'; const g = f.T.glow; e.glow.style.cssText = `left:${f.x + g[0] - g[2]}px;top:${f.y + g[1] - g[2]}px;width:${g[2] * 2}px;height:${g[2] * 2}px;display:none`; stage.appendChild(e.glow); }
     ents.set(f.id, e); drawFixed(f); });
   Object.keys(S.items).forEach(id => { ents.set(id, { id, kind:'i', el:mk('i', id) }); drawItem(id); });
   CHARS.forEach(C => { ents.set(C.id, { id:C.id, kind:'c', el:mk('c', C.id) }); drawChar(C.id); });
+  if(isRoom(place)){ Object.entries(S.deco).forEach(([u, d]) => { if(d.p === place && d.s === 'on') animDeco(u); }); drawSel(); }
   bar(); fit();
 }
 function bar(){
@@ -658,8 +699,7 @@ function tapItem(id){ const T = IT(id), it = S.items[id], t = typeOf(id); pulse(
   if(t === 'darbouka'){ sfx.drum(0); setTimeout(() => sfx.drum(1), 170); setTimeout(() => sfx.drum(1), 300); fx(it.x, it.y - 60, '🥁'); found('darbouka'); }
   else if(T.pet){ cry(id); fx(it.h ? S.chars[it.h].x : it.x, (it.h ? S.chars[it.h].y - 120 : it.y - 50), '💛'); found(T.d || 'chat'); if(T.alt){ it.s = it.s === 'b' ? '' : 'b'; drawItem(id); save(); } }
   else if(T.toy){ sfx.hop(); } else sfx.tap(); }
-function tapChar(id){ const c = S.chars[id]; pulse(id, 'hop'); sfx.hop();
-  if(c.acc.length){ takeOff(id, c.acc[c.acc.length - 1]); drawChar(id); save(); } else voix(id) || say(pick(['Coucou, c\'est ', 'Salut ! Moi, c\'est ', 'Bonjour ! Je suis ']) + CH[id].n), fx(c.x, c.y - 230 * CH[id].k, pick(['👋', '😄', '🎉', '💛'])); }
+function tapChar(id){ const c = S.chars[id]; pulse(id, 'hop'); sfx.hop(); voix(id) || say(pick(['Coucou, c\'est ', 'Salut ! Moi, c\'est ', 'Bonjour ! Je suis ']) + CH[id].n); bubble(id); }
 const pick = a => a[Math.floor(Math.random() * a.length)];
 function cry(id){ const t = typeOf(id); if(t === 'chatR' || t === 'chat') sfx.meow(); else if(t === 'chevre'){ tone(330, .3, 'sawtooth', .06, 0, 300); tone(340, .25, 'sawtooth', .05, .12, 290); } else if(['cigogne', 'mouette'].includes(t)) sfx.bird(); else if(t === 'grenouille') tone(140, .18, 'square', .06, 0, 220); else sfx.hop(); }
 
@@ -690,7 +730,8 @@ function dropChar(id, x, y){
   const c = S.chars[id], C = CH[id], a = anchorFor(x, y, sizeOf(id, c.o).h);
   if(a){ c.x = a.x; c.y = a.y; c.pose = a.pose; c.a = a.a; const t = a.f.type;
     if(a.pose === 'sleep') found(t === 'transat' ? 'sieste' : 'dodo'); if(t === 'pupitre') found('eleve'); if(t === 'barque'){ found('barque'); sfx.water(); }
-    if(t === 'baignoire'){ found('bain'); sfx.water(); if(fxState(a.f.id) !== 'm'){ S.fx[fxKey(a.f.id)] = 'm'; drawFixed(a.f); } } }
+    if(t === 'baignoire'){ found('bain'); sfx.water(); if(fxState(a.f.id) !== 'm'){ S.fx[fxKey(a.f.id)] = 'm'; drawFixed(a.f); } }
+    if(a.f.T.deco){ const dt = a.f.T.t; if(a.pose === 'sleep') found('dodo'); if(a.pose === 'bath'){ found('bain'); sfx.water(); } if(dt === 'trampoline') setTimeout(() => saute(id), 120); delete geste[id]; } }
   else { const f = floorFor(x, y); c.x = f.x; c.y = f.y; c.a = ''; c.pose = f.water ? 'bath' : ''; if(f.water){ found('baignade'); sfx.water(); fx(c.x, c.y - 20, '💦'); } }
   drawChar(id); sfx.drop(); save(); check();
 }
@@ -701,18 +742,22 @@ function check(){ if(!place) return;
 /* ---------- le doigt ---------- */
 let D = null;   // geste en cours
 view.addEventListener('pointerdown', e => {
+  touches.set(e.pointerId, { x:e.clientX, y:e.clientY }); closeBubble();
+  if(touches.size === 2 && isRoom(place)){ const u = D && D.ent && D.ent.kind === 'f' && S.deco[D.id] ? D.id : sel; if(u && S.deco[u]){ if(D && D.ent){ D.ent.el.classList.remove('drag'); if(D.moved) refreshDeco(D.id); } D = { pinch:1, pid:-1 }; startPinch(u); return; } }
   if(D) return; const el = place ? e.target.closest('.e') : null, p = pt(e);
   if(!el || el.classList.contains('none')){ D = { pan:1, sx:e.clientX, px:panX, id:e.pointerId }; return; }
-  const id = el.dataset.id, ent = ents.get(id); if(!ent) return; e.preventDefault(); ac();
+  const id = el.dataset.id, ent = ents.get(id); if(!ent) return; e.preventDefault(); ac(); if(sel && id !== sel) unselect();
   D = { ent, id, sx:e.clientX, sy:e.clientY, moved:false, pid:e.pointerId, ox:0, oy:0 };
-  if(ent.kind !== 'f'){ const r = el.getBoundingClientRect(); D.ox = (e.clientX - (r.left + r.width / 2)) / scale; D.oy = (e.clientY - r.bottom) / scale; }
+  if(ent.kind !== 'f' || S.deco[id]){ const r = el.getBoundingClientRect(); D.ox = (e.clientX - (r.left + r.width / 2)) / scale; D.oy = (e.clientY - r.bottom) / scale; }
   try{ view.setPointerCapture(e.pointerId); }catch(_){}
 });
 view.addEventListener('pointermove', e => {
+  if(touches.has(e.pointerId)) touches.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if(pinch){ movePinch(); return; }
   if(!D) return;
   if(D.pan){ if(W * scale > view.clientWidth){ panX = D.px + (e.clientX - D.sx); fit(); } return; }
   if(e.pointerId !== D.pid) return;
-  if(!D.moved){ if(Math.hypot(e.clientX - D.sx, e.clientY - D.sy) < 9) return; if(D.ent.kind === 'f') return; D.moved = true; D.ent.el.classList.add('drag'); sfx.pick();
+  if(!D.moved){ if(Math.hypot(e.clientX - D.sx, e.clientY - D.sy) < 9) return; if(D.ent.kind === 'f' && !S.deco[D.id]) return; D.moved = true; if(D.ent.kind === 'f') unselect(); D.ent.el.classList.add('drag'); sfx.pick();
     if(D.ent.kind === 'c'){ const c = S.chars[D.id]; c.pose = ''; c.a = ''; drawChar(D.id); D.ent.el.classList.add('drag'); } }
   const p = pt(e), el = D.ent.el, w = el.offsetWidth, h = el.offsetHeight, x = p.x - D.ox, y = p.y - D.oy;
   el.style.left = (x - w / 2) + 'px'; el.style.top = (y - h) + 'px';
@@ -722,14 +767,18 @@ view.addEventListener('pointermove', e => {
   if(D.hot !== hid){ if(D.hot && ents.get(D.hot)) ents.get(D.hot).el.classList.remove('hot'); if(hid) ents.get(hid).el.classList.add('hot'); D.hot = hid; }
 });
 function endDrag(e){
-  if(!D) return; const d = D; D = null; if(d.pan) return; if(e.pointerId !== d.pid){ D = d; return; }
+  touches.delete(e.pointerId);
+  if(pinch || (D && D.pinch)){ if(touches.size < 2){ endPinch(); if(!touches.size) D = null; } return; }
+  if(!D) return; const d = D; D = null; if(d.pan){ if(Math.abs(e.clientX - d.sx) < 9 && sel && !e.target.closest('#selbar')) unselect(); return; } if(e.pointerId !== d.pid){ D = d; return; }
   if(d.hot && ents.get(d.hot)) ents.get(d.hot).el.classList.remove('hot'); d.ent.el.classList.remove('drag');
-  if(!d.moved){ if(d.ent.kind === 'f'){ const f = fixedOf(d.id); if(f) tapFixed(f); } else if(d.ent.kind === 'i') tapItem(d.id); else tapChar(d.id); return; }
+  if(!d.moved){ if(d.ent.kind === 'f'){ if(S.deco[d.id]){ tapDeco(d.id); return; } const f = fixedOf(d.id); if(f) tapFixed(f); } else if(d.ent.kind === 'i') tapItem(d.id); else tapChar(d.id); return; }
   const p = pt(e), x = Math.max(20, Math.min(W - 20, p.x - d.ox)), y = Math.max(40, Math.min(H - 6, p.y - d.oy));
+  if(d.ent.kind === 'f'){ dropDeco(d.id, p.x - d.ox, p.y - d.oy); return; }
+  if(d.ent.kind === 'c'){ const door = doorAt(p.x, p.y); if(door){ moveToRoom('char', d.id, door); return; } }
   if(d.ent.kind === 'i') dropItem(d.id, x, y - IT(d.id).z * .3); else dropChar(d.id, x, y);
 }
 view.addEventListener('pointerup', endDrag);
-view.addEventListener('pointercancel', e => { if(!D) return; const d = D; D = null; if(d.pan) return; d.ent.el.classList.remove('drag'); if(d.ent.kind === 'i') drawItem(d.id); else { const f = floorFor(S.chars[d.id].x, S.chars[d.id].y); Object.assign(S.chars[d.id], f); drawChar(d.id); } });
+view.addEventListener('pointercancel', e => { touches.delete(e.pointerId); if(pinch){ endPinch(); D = null; return; } if(!D) return; if(D.ent && D.ent.kind === 'f'){ D.ent.el.classList.remove('drag'); refreshDeco(D.id); D = null; return; } const d = D; D = null; if(d.pan) return; d.ent.el.classList.remove('drag'); if(d.ent.kind === 'i') drawItem(d.id); else { const f = floorFor(S.chars[d.id].x, S.chars[d.id].y); Object.assign(S.chars[d.id], f); drawChar(d.id); } });
 
 /* =====================================================================
    LA CARTE et la navigation
@@ -746,13 +795,18 @@ function mapSVG(){ const house = (x, y, w, h, dome) => `<rect x="${x}" y="${y}" 
     ${[[470, 318], [800, 250], [1140, 322], [640, 548]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="22" fill="#d6338a"/><circle cx="${p[0] + 22}" cy="${p[1] + 12}" r="16" fill="#e04a9a"/>`).join('')}</svg>`; }
 function go(pid){
   saveNow();
-  if(pid === 'map'){ place = null; ambiance(null); stage.innerHTML = `<div id="map">${mapSVG()}${MAP.map(m => `<button class="pl${m[5] ? '' : ' soon'}" data-p="${m[0]}" style="left:${m[1]}%;top:${m[2]}%"><span style="font-size:64px;line-height:1">${m[4]}</span><span class="sign">${m[3]}${m[5] ? '' : ' 🚧'}</span></button>`).join('')}</div>`;
+  ['bRooms', 'bDeco', 'bMur'].forEach(b => { $(b).hidden = !isRoom(pid); }); document.body.classList.toggle('inroom', isRoom(pid));
+  if(pid === 'map'){ place = null; ambiance(null); unselect(); stage.innerHTML = `<div id="map">${mapSVG()}${MAP.map(m => `<button class="pl${m[5] ? '' : ' soon'}" data-p="${m[0]}" style="left:${m[1]}%;top:${m[2]}%"><span style="font-size:64px;line-height:1">${m[4]}</span><span class="sign">${m[3]}${m[5] ? '' : ' 🚧'}</span></button>`).join('')}</div>`;
     $('title').innerHTML = `Ma Houma<small>le quartier du Jasmin · choisis un lieu</small>`; bar(); panX = 0; fit(); if(player) say('Le quartier du Jasmin. Choisis un lieu.'); return; }
-  voix('lieu-' + pid) || say(PLACES[pid].n + ', ' + PLACES[pid].sub); place = pid; ambiance(pid); S.seen[pid] = 1; if(Object.keys(PLACES).every(k => S.seen[k])) setTimeout(() => found('voyage'), 800); $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
+  unselect(); closeBubble(); if(isRoom(pid)) seedRoom(pid);
+  voix('lieu-' + pid) || say(PLACES[pid].n + ', ' + PLACES[pid].sub); place = pid; ambiance(isRoom(pid) ? 'dar' : pid); S.seen[pid] = 1; if(Object.keys(PLACES).filter(k => !isRoom(k)).every(k => S.seen[k])) setTimeout(() => found('voyage'), 800); $('title').innerHTML = `${PLACES[pid].n}<small>${PLACES[pid].sub}</small>`; render(); save(); check();
 }
-stage.addEventListener('click', e => { const b = e.target.closest('.pl'); if(!b) return; sfx.tap(); if(PLACES[b.dataset.p]) go(b.dataset.p); else toast('Ce lieu est encore en travaux 🚧 Il arrive bientôt !'); });
+stage.addEventListener('click', e => { const pr = e.target.closest('.porte'); if(pr){ sfx.open(); go(pr.dataset.go); return; } const b = e.target.closest('.pl'); if(!b) return; sfx.tap(); if(PLACES[b.dataset.p]) go(b.dataset.p); else toast('Ce lieu est encore en travaux 🚧 Il arrive bientôt !'); });
 $('bMap').onclick = () => { sfx.tap(); go('map'); };
 $('who').onclick = () => { sfx.tap(); choose(); };
+$('bDeco').onclick = () => { sfx.tap(); catalogue(); };
+$('bMur').onclick = () => { sfx.tap(); mursSols(); };
+$('bRooms').onclick = () => { sfx.tap(); panel(`<h2>🏡 Ma maison</h2><p>Où veux-tu aller ?</p><div class="grid">${ROOMS.map(r => `<button class="dk" data-go="${r[0]}"><b>${r[2]}</b>${r[1]}</button>`).join('')}</div><button class="pill ghost" id="rMap">🗺️ La carte du quartier</button><button class="pill ghost" data-close>Rester ici</button>`); $('rMap').onclick = () => { closePanel(); go('map'); }; $('panel').querySelector('.grid').onclick = e => { const b = e.target.closest('[data-go]'); if(b){ closePanel(); go(b.dataset.go); } }; };
 $('bSnd').onclick = () => { muted = !muted; if(muted){ hush(); ambiance(null); } else if(place) ambiance(place); store.set('houma-muet', muted); $('bSnd').textContent = muted ? '🔇' : '🔊'; if(!muted) sfx.tap(); };
 $('bSnd').textContent = muted ? '🔇' : '🔊';
 function panel(html){ $('panel').innerHTML = html; $('veil').classList.add('on'); const b = $('panel').querySelector('button'); if(b) b.focus(); }
@@ -798,6 +852,280 @@ async function voixPanel(msg){
       b.textContent = '⏹'; m.textContent = '🔴 Parlez maintenant…'; r.start(); setTimeout(() => { if(vRec === r) r.stop(); }, 3000);
     }catch(err){ vRec = null; m.textContent = err.name === 'NotAllowedError' ? "Le micro n'est pas autorisé : acceptez la demande du navigateur." : err.message; } };
 }
+
+/* =====================================================================
+   MA MAISON (13/11) : une maison vide à meubler et décorer, pièce par pièce, sans limite.
+   Les meubles et objets sont des photos réalistes faites avec ComfyUI sur le PC du papa (docs/maison/build.py → jeux/maison/).
+   Chaque meuble posé est un « meuble fixe » comme ceux des autres lieux (FIXED), fabriqué à la volée : on peut s'y asseoir,
+   s'y coucher, poser des objets dessus… mais ici on le déplace, on l'agrandit (pincer), on le tourne (deux doigts), on le retourne (double toucher).
+   S.deco[uid] = { t:type, p:pièce, x, y, k:taille, r:angle, f:retourné, z:devant/derrière, on:posé sur, s:état }
+   S.mur[pièce] = { m:mur, s:sol } ; S.mi[pièce] = 1 quand la pièce a reçu ses premiers meubles.
+   ===================================================================== */
+const DIMS = window.MAISON_DIMS || {};
+// [id, nom, catégorie, hauteur affichée, où] : la liste complète est dans docs/maison/catalogue.py (avec les prompts ComfyUI)
+const KAT_L = [
+ ['canape_rouge', 'le canapé rouge', 'salon', 190, 'sol'], ['canape_bleu', 'la banquette bleue', 'salon', 170, 'sol'], ['fauteuil', 'le fauteuil', 'salon', 180, 'sol'], ['pouf', 'le pouf en cuir', 'salon', 70, 'sol'],
+ ['table_basse', 'la table basse', 'salon', 75, 'sol'], ['tele', 'la télévision', 'salon', 200, 'sol'], ['bibliotheque', 'la bibliothèque', 'salon', 300, 'sol'], ['lampadaire', 'le lampadaire', 'salon', 280, 'sol'],
+ ['monstera', 'la grande plante', 'salon', 220, 'sol'], ['tapis', 'le tapis', 'salon', 60, 'sol'], ['radio', 'la vieille radio', 'salon', 70, 'sol'], ['aquarium', "l'aquarium", 'salon', 170, 'sol'],
+ ['piano', 'le piano', 'salon', 230, 'sol'], ['cheminee', 'la cheminée', 'salon', 250, 'sol'],
+ ['frigo', 'le frigo', 'cuisine', 270, 'sol'], ['cuisiniere', 'la cuisinière', 'cuisine', 160, 'sol'], ['evier', "l'évier", 'cuisine', 170, 'sol'], ['table_cuisine', 'la table', 'cuisine', 130, 'sol'],
+ ['chaise', 'la chaise', 'cuisine', 160, 'sol'], ['buffet', 'le buffet', 'cuisine', 260, 'sol'], ['lave_linge', 'la machine à laver', 'cuisine', 140, 'sol'], ['panier_fruits', 'la corbeille de fruits', 'cuisine', 60, 'sol'],
+ ['couscoussier', 'le couscoussier', 'cuisine', 80, 'sol'], ['tajine', 'le plat en terre', 'cuisine', 60, 'sol'],
+ ['lit', 'le lit', 'chambre', 150, 'sol'], ['lit_double', 'le grand lit', 'chambre', 170, 'sol'], ['lit_superpose', 'le lit superposé', 'chambre', 290, 'sol'], ['berceau', 'le berceau', 'chambre', 120, 'sol'],
+ ['armoire', "l'armoire", 'chambre', 300, 'sol'], ['commode', 'la commode', 'chambre', 130, 'sol'], ['bureau', 'le bureau', 'chambre', 140, 'sol'], ['coffre_jouets', 'le coffre à jouets', 'chambre', 110, 'sol'],
+ ['cheval_bascule', 'le cheval à bascule', 'chambre', 140, 'sol'], ['ours', "l'ours en peluche", 'chambre', 80, 'sol'], ['tipi', 'la tente', 'chambre', 230, 'sol'], ['fusee', 'la fusée en carton', 'chambre', 250, 'sol'],
+ ['robot', 'le robot', 'chambre', 110, 'sol'], ['dino', 'le dinosaure', 'chambre', 120, 'sol'], ['train', 'le petit train', 'chambre', 60, 'sol'], ['globe', 'le globe', 'chambre', 80, 'sol'],
+ ['guitare', 'la guitare', 'chambre', 170, 'sol'], ['darbouka_d', 'la darbouka', 'chambre', 80, 'sol'],
+ ['baignoire', 'la baignoire', 'bain', 130, 'sol'], ['lavabo', 'le lavabo', 'bain', 160, 'sol'], ['toilettes', 'les toilettes', 'bain', 110, 'sol'], ['douche', 'la douche', 'bain', 290, 'sol'],
+ ['panier_linge', 'le panier à linge', 'bain', 80, 'sol'], ['serviettes', 'les serviettes', 'bain', 60, 'sol'], ['canard', 'le canard de bain', 'bain', 40, 'sol'],
+ ['balancoire', 'la balançoire', 'jardin', 280, 'sol'], ['toboggan', 'le toboggan', 'jardin', 230, 'sol'], ['trampoline', 'le trampoline', 'jardin', 130, 'sol'], ['piscine', 'la piscine gonflable', 'jardin', 80, 'sol'],
+ ['palmier', 'le palmier en pot', 'jardin', 300, 'sol'], ['citronnier_pot', 'le citronnier', 'jardin', 240, 'sol'], ['jasmin_pot', 'le jasmin', 'jardin', 200, 'sol'], ['fontaine', 'la fontaine', 'jardin', 170, 'sol'],
+ ['barbecue', 'le barbecue', 'jardin', 130, 'sol'], ['table_jardin', 'la table de jardin', 'jardin', 120, 'sol'], ['transat', 'la chaise longue', 'jardin', 110, 'sol'], ['hamac', 'le hamac', 'jardin', 170, 'sol'],
+ ['velo', 'le vélo', 'jardin', 110, 'sol'], ['trottinette', 'la trottinette', 'jardin', 110, 'sol'], ['niche', 'la niche', 'jardin', 130, 'sol'], ['chien', 'le chien', 'jardin', 110, 'sol'],
+ ['lapin', 'le lapin', 'jardin', 60, 'sol'], ['tortue', 'la tortue', 'jardin', 40, 'sol'], ['ballons', 'les ballons de fête', 'jardin', 230, 'sol'],
+ ['fenetre', 'la fenêtre bleue', 'mur', 210, 'mur'], ['porte_bleue', 'la porte bleue', 'mur', 330, 'mur'], ['tableau_mer', 'le tableau de la mer', 'mur', 120, 'mur'], ['tableau_fleurs', 'le tableau de fleurs', 'mur', 120, 'mur'],
+ ['horloge', "l'horloge", 'mur', 80, 'mur'], ['miroir', 'le miroir', 'mur', 150, 'mur'], ['etagere', "l'étagère", 'mur', 90, 'mur'], ['assiettes', 'les assiettes de Nabeul', 'mur', 90, 'mur'],
+ ['poster_planetes', 'le poster des planètes', 'mur', 130, 'mur'], ['guirlande', 'la guirlande lumineuse', 'mur', 60, 'mur'], ['lustre', 'le lustre', 'mur', 150, 'plafond'], ['suspension', 'la lampe suspendue', 'mur', 120, 'plafond'],
+ ['cage', 'la cage à oiseau', 'mur', 150, 'plafond']];
+const KAT = Object.fromEntries(KAT_L.filter(k => DIMS[k[0]]).map(([id, n, cat, h, ou]) => [id, { id, n, cat, h, ou }]));
+/* Ce que sait faire chaque meuble. Les repères sont en fractions de l'image (x de gauche à droite, y de haut en bas) :
+   seats = où s'assoient les hanches, bed = où se couche le personnage, bath = le bain, surf = [x1, x2, y] un dessus où poser des objets,
+   act = ce qui se passe quand on le touche, glow = [x, y, rayon] la lumière. */
+const MB = {
+  canape_rouge:{ seats:[[.3, .55], [.5, .55], [.7, .55]] }, canape_bleu:{ seats:[[.22, .55], [.42, .55], [.62, .55], [.8, .55]] }, fauteuil:{ seats:[[.5, .6]] }, pouf:{ seats:[[.5, .15]] }, chaise:{ seats:[[.5, .55]] },
+  transat:{ seats:[[.5, .55]] }, hamac:{ bed:[[.5, .5]] }, lit:{ bed:[[.5, .4]] }, lit_double:{ bed:[[.55, .45]] }, lit_superpose:{ bed:[[.4, .18], [.4, .62]] }, berceau:{ bed:[[.5, .35]] },
+  baignoire:{ bath:[[.5, .4]], act:'eau' }, piscine:{ bath:[[.5, .45]], act:'eau' }, balancoire:{ seats:[[.5, .72]], act:'balance' }, cheval_bascule:{ seats:[[.5, .42]], act:'bascule' }, velo:{ seats:[[.4, .3]] },
+  trampoline:{ seats:[[.5, .12]], act:'saute' }, toboggan:{ seats:[[.42, .2]], act:'glisse' }, trottinette:{ act:'roule' },
+  table_basse:{ surf:[.1, .9, .1] }, table_cuisine:{ surf:[.03, .97, .08] }, commode:{ surf:[.05, .95, .04] }, bureau:{ surf:[.05, .95, .46] }, table_jardin:{ surf:[.28, .72, .66] }, buffet:{ surf:[.05, .95, .02] },
+  cuisiniere:{ surf:[.05, .95, .08], act:'cuisine' }, evier:{ surf:[.05, .95, .34], act:'eau' }, lave_linge:{ surf:[.05, .95, .03], act:'lave' }, etagere:{ surf:[.05, .95, .62] }, coffre_jouets:{ act:'jouets' },
+  lampadaire:{ act:'lumiere', glow:[.5, .12, .9] }, lustre:{ act:'lumiere', glow:[.5, .55, 1.2] }, suspension:{ act:'lumiere', glow:[.5, .8, 1.1] }, guirlande:{ act:'lumiere', glow:[.5, .5, 2.2] }, cheminee:{ act:'feu', glow:[.5, .7, 1] },
+  tele:{ act:'tele', surf:[.04, .96, .72] }, radio:{ act:'radio' }, piano:{ act:'piano' }, guitare:{ act:'guitare' }, darbouka_d:{ act:'darbouka' }, lavabo:{ act:'eau' }, douche:{ act:'eau' }, fontaine:{ act:'eau' }, toilettes:{ act:'chasse' },
+  frigo:{ act:'frigo' }, aquarium:{ act:'bulles' }, chien:{ act:'chien' }, lapin:{ act:'lapin' }, tortue:{ act:'animal' }, cage:{ act:'oiseau' }, horloge:{ act:'tictac' }, fusee:{ act:'fusee' },
+  ballons:{ act:'ballons' }, robot:{ act:'robot' }, dino:{ act:'dino' }, ours:{ act:'calin' }, canard:{ act:'coin' }, train:{ act:'train' }, globe:{ act:'globe' }, barbecue:{ act:'grille' }, tajine:{ act:'cuisine' }, couscoussier:{ act:'cuisine' }
+};
+const ROOMS = [['m-salon', 'Le salon', '🛋️'], ['m-cuisine', 'La cuisine', '🍳'], ['m-chambre', 'La chambre', '🛏️'], ['m-bain', 'La salle de bain', '🛁'], ['m-jardin', 'Le jardin', '🌳']];
+const isRoom = pid => !!pid && pid.startsWith('m-');
+const MURS = [['m_chaux', 'Chaux blanche'], ['m_zellige', 'Zellige bleu'], ['m_zellige_vert', 'Zellige vert'], ['m_pierre', 'Pierre'], ['m_brique', 'Briques'], ['m_bois', 'Bois'], ['m_rayures', 'Rayures'], ['m_fleurs', 'Fleurs'], ['m_etoiles', 'Étoiles'], ['m_nuages', 'Nuages'],
+  ['#fdfdf8', 'Blanc'], ['#bfe0ff', 'Bleu ciel'], ['#1d6fb8', 'Bleu Sidi Bou Saïd'], ['#ffd6e7', 'Rose'], ['#c9f2d9', 'Vert menthe'], ['#ffe9a8', 'Jaune soleil'], ['#e8b566', 'Ocre'], ['#3a2e5c', 'Nuit']];
+const SOLS = [['s_parquet', 'Parquet'], ['s_marbre', 'Marbre'], ['s_tomettes', 'Tomettes'], ['s_ciment', 'Carreaux ciment'], ['s_damier', 'Damier'], ['s_moquette', 'Moquette'], ['s_jeux', 'Tapis de jeu'], ['s_terrasse', 'Dalles'], ['s_herbe', 'Herbe'], ['s_sable', 'Sable'],
+  ['#e9d9b8', 'Beige'], ['#9aa9bd', 'Gris'], ['#8a5a2b', 'Brun']];
+const ROOM0 = { 'm-salon':{ m:'m_chaux', s:'s_ciment', d:[['fenetre', 300, 330], ['canape_rouge', 640, 650], ['tapis', 640, 700], ['lampadaire', 1010, 640]] },
+  'm-cuisine':{ m:'m_zellige', s:'s_damier', d:[['frigo', 220, 640], ['cuisiniere', 450, 640], ['evier', 660, 640], ['table_cuisine', 980, 690]] },
+  'm-chambre':{ m:'m_etoiles', s:'s_parquet', d:[['fenetre', 940, 330], ['lit', 420, 670], ['coffre_jouets', 860, 690]] },
+  'm-bain':{ m:'m_zellige_vert', s:'s_marbre', d:[['baignoire', 420, 680], ['lavabo', 860, 650], ['miroir', 860, 380]] },
+  'm-jardin':{ m:'ciel', s:'s_herbe', d:[['palmier', 220, 640], ['balancoire', 680, 650], ['jasmin_pot', 1060, 650]] } };
+const WALL_Y = 520, FLOOR_Y = [540, 714];   // le bas du mur ; la profondeur où l'on pose les meubles
+
+ROOMS.forEach(([pid, n, ic]) => { PLACES[pid] = { n, sub:'ma maison', ic, room:1, floors:[[40, 1240, 664], [40, 1240, 610], [40, 1240, 712]], items:[], start:{},
+  get fixed(){ return decoList(pid); }, bg:() => roomBg(pid) }; });
+MAP.push(['m-salon', 64, 80, 'Ma maison', '🏡', 1]);
+
+const decoRoot = 'maison/';
+function texCss(v, sol){ if(!v || v === 'ciel') return ''; return v[0] === '#' ? `background:${v}` : `background:url(${decoRoot}tex/${v}.webp) 0 0/${sol ? 520 : 300}px ${sol ? 520 : 300}px`; }
+function roomBg(pid){
+  const M = S.mur[pid] || {}, i = ROOMS.findIndex(r => r[0] === pid), prev = ROOMS[(i + ROOMS.length - 1) % ROOMS.length], next = ROOMS[(i + 1) % ROOMS.length], jardin = pid === 'm-jardin';
+  const wall = M.m === 'ciel' || (!M.m && jardin) ? `<div class="mwall ciel"><svg viewBox="0 0 1280 520" preserveAspectRatio="none"><circle cx="1120" cy="90" r="46" fill="#ffd84d"/><path d="M150 140q30-26 60 0 24-18 44 0zM640 90q34-30 68 0 26-20 50 0z" fill="#fff" opacity=".9"/><rect y="380" width="1280" height="140" fill="#fdfdf8"/><rect y="372" width="1280" height="14" fill="#1d6fb8"/>${[180, 520, 860, 1180].map(x => `<path d="M${x} 380v-150" stroke="#8a5a2b" stroke-width="10"/><circle cx="${x}" cy="215" r="42" fill="#2e9e4f"/><circle cx="${x + 30}" cy="236" r="30" fill="#3fb560"/>`).join('')}</svg></div>`
+    : `<div class="mwall" style="${texCss(M.m || 'm_chaux')}"></div><div class="mshade"></div>`;
+  return `<div class="bg room">${wall}<div class="mplinthe"${jardin ? ' style="display:none"' : ''}></div><div class="mfloor"><div style="${texCss(M.s || 's_parquet', 1)}"></div></div>
+    <button class="porte g" data-go="${prev[0]}" aria-label="Aller dans ${prev[1]}"><b>◀</b><span>${prev[2]}</span></button><button class="porte d" data-go="${next[0]}" aria-label="Aller dans ${next[1]}"><span>${next[2]}</span><b>▶</b></button></div>`;
+}
+
+/* ---------- les meubles posés deviennent des FIXED ---------- */
+function decoZ(uid, depth = 0){ const d = S.deco[uid], K = KAT[d.t]; if(!K) return 100;
+  if(d.on && S.deco[d.on] && depth < 6) return decoZ(d.on, depth + 1) + 2 + (d.z || 0);
+  const base = K.ou === 'mur' ? 110 : K.ou === 'plafond' ? 130 : K.id === 'tapis' ? 150 : 200 + Math.round((d.y - 520) * 2.2);
+  return Math.max(101, Math.min(1440, base + (d.z || 0))); }
+function decoDef(uid){
+  const d = S.deco[uid], K = KAT[d.t], dm = DIMS[d.t], B = MB[d.t] || {}, h = K.h * d.k, w = h * dm[0] / dm[1];
+  const fx = v => (d.f ? .5 - v : v - .5) * w, fy = v => -(1 - v) * h, pts = L => L && L.map(a => [fx(a[0]), fy(a[1])]);
+  const T = { deco:1, uid, t:d.t, K, B, w, h, seats:pts(B.seats), bed:pts(B.bed), bath:pts(B.bath), zz:() => decoZ(uid),
+    draw:s => `${K.ou === 'plafond' ? `<i class="cord" style="height:${Math.max(0, d.y - h)}px"></i>` : ''}<img class="dimg${s === 'on' && B.act ? ' on-' + B.act : ''}" src="${decoRoot}${d.t}.webp" alt="" draggable="false" style="transform:${d.f ? 'scaleX(-1) ' : ''}rotate(${d.r || 0}deg)">${s === 'on' && B.act === 'tele' ? '<i class="tvon"></i>' : ''}` };
+  if(B.surf){ const a = fx(B.surf[0]), b = fx(B.surf[1]); T.surf = [[Math.min(a, b), Math.max(a, b), fy(B.surf[2])]]; }
+  if(B.glow) T.glow = [fx(B.glow[0]), fy(B.glow[1]), B.glow[2] * Math.min(w, h)];
+  if(B.act === 'lumiere' || B.act === 'feu' || B.act === 'tele' || B.act === 'balance' || B.act === 'bascule' || B.act === 'eau' || B.act === 'radio' || B.act === 'bulles') T.tap = ['', 'on'];
+  return T; }
+function decoList(pid){ if(!S || !S.deco) return []; return Object.entries(S.deco).filter(([, d]) => d.p === pid && KAT[d.t]).map(([uid, d]) => { FIXED['d:' + uid] = decoDef(uid); return [uid, 'd:' + uid, d.x, d.y]; }); }
+let decoN = 0;
+function addDeco(t, x, y, pid = place, quiet){
+  const K = KAT[t]; if(!K) return null; if(Object.keys(S.deco).length >= 160){ toast('La maison est bien remplie ! Enlève un objet avec la poubelle 🗑️'); return null; }
+  const uid = 'd' + Date.now().toString(36) + (decoN++).toString(36);
+  if(y == null) y = K.ou === 'mur' ? 300 : K.ou === 'plafond' ? 40 + K.h : 640 + Math.round(Math.random() * 40);
+  if(x == null) x = Math.round((-panX + view.clientWidth / 2) / scale + Math.random() * 120 - 60);
+  S.deco[uid] = { t, p:pid, x:Math.max(60, Math.min(W - 60, x)), y, k:1, r:0, f:0, z:0, on:'', s:'' };
+  if(!quiet){ found('meuble'); if(Object.keys(S.deco).length >= 20) found('decoratrice'); }
+  return uid; }
+function seedRoom(pid){ if(S.mi[pid]) return; S.mi[pid] = 1; const R = ROOM0[pid]; if(!R) return; S.mur[pid] = S.mur[pid] || { m:R.m, s:R.s }; R.d.forEach(([t, x, y]) => addDeco(t, x, y, pid, true)); save(); }
+
+/* ---------- toucher un meuble ---------- */
+let sel = null, lastTap = { id:'', t:0 };
+function decoEl(uid){ const e = ents.get(uid); return e && e.el; }
+function tapDeco(uid){
+  const now = Date.now(), dbl = lastTap.id === uid && now - lastTap.t < 380; lastTap = { id:uid, t:now };
+  const d = S.deco[uid], T = FIXED['d:' + uid], B = T.B, f = fixedOf(uid);
+  if(dbl){ d.f = d.f ? 0 : 1; refreshDeco(uid); sfx.wear(); found('miroir'); save(); return; }
+  select(uid); pulse(uid, 'hop');
+  const st = d.s === 'on' ? '' : 'on', a = B.act, at = (e, dy = .6) => fx(d.x, d.y - T.h * dy, e);
+  if(T.tap){ d.s = st; S.fx[fxKey(uid)] = st; }
+  if(a === 'lumiere' || a === 'feu'){ (st ? sfx.on : sfx.off)(); if(st) found('lampe'); if(a === 'feu' && st) noise(.6, .05, 900); }
+  else if(a === 'tele'){ if(st){ sfx.tune(); at(pick(['🦁', '🚀', '🐠', '⚽', '🎬', '🦄'])); found('tele'); } else sfx.off(); }
+  else if(a === 'radio'){ if(st){ sfx.tune(); at('🎶'); found('radio'); } else sfx.off(); }
+  else if(a === 'piano'){ [523, 587, 659, 784, 880, 784, 659].forEach((q, i) => tone(q, .32, 'triangle', .12, i * .16)); at('🎹'); found('piano'); }
+  else if(a === 'guitare'){ [196, 247, 294, 392].forEach((q, i) => tone(q, .7, 'triangle', .09, i * .04)); at('🎸'); found('piano'); }
+  else if(a === 'darbouka'){ sfx.drum(0); setTimeout(() => sfx.drum(1), 170); setTimeout(() => sfx.drum(1), 300); at('🥁'); found('darbouka'); }
+  else if(a === 'eau'){ if(st || !T.tap){ sfx.water(); at('💧'); } else sfx.off(); }
+  else if(a === 'chasse'){ sfx.water(); at('🌀'); }
+  else if(a === 'balance' || a === 'bascule'){ sfx.hop(); if(st) found('balance'); }
+  else if(a === 'bulles'){ if(st){ at('🫧'); sfx.water(); } }
+  else if(a === 'frigo'){ sfx.open(); at(pick(['🧃', '🧀', '🍉', '🥛', '🍦'])); found('frigo'); }
+  else if(a === 'chien'){ tone(420, .1, 'square', .08); tone(380, .12, 'square', .08, .16); at('🐶'); found('chien'); }
+  else if(a === 'lapin' || a === 'animal' || a === 'calin'){ sfx.hop(); at('💛'); }
+  else if(a === 'oiseau'){ sfx.bird(); at('🎵'); found('oiseau'); }
+  else if(a === 'tictac'){ [0, 1, 2, 3].forEach(i => tone(i % 2 ? 900 : 1200, .04, 'square', .05, i * .5)); }
+  else if(a === 'fusee'){ fusee(uid); }
+  else if(a === 'ballons'){ at('🎈'); sfx.hop(); }
+  else if(a === 'robot'){ [600, 900, 500, 1100].forEach((q, i) => tone(q, .08, 'square', .05, i * .1)); at('🤖'); }
+  else if(a === 'dino'){ tone(110, .5, 'sawtooth', .08, 0, 70); at('🦖'); }
+  else if(a === 'coin'){ tone(700, .12, 'square', .06, 0, 500); tone(700, .12, 'square', .06, .2, 500); at('🐤'); }
+  else if(a === 'train'){ [0, 1].forEach(i => tone(880, .25, 'triangle', .08, i * .35)); at('🚂'); }
+  else if(a === 'globe'){ sfx.hop(); at(pick(['🇹🇳', '🌍', '🗺️'])); }
+  else if(a === 'grille' || a === 'cuisine'){ noise(.5, .05, 1500); at('🍢'); found('cuisinier'); }
+  else if(a === 'jouets'){ sfx.star(); at(pick(['🧸', '🪀', '🧩', '🚗', '🪁'])); }
+  else if(a === 'saute' || a === 'glisse'){ const cid = Object.keys(S.chars).find(k => (S.chars[k].a || '').startsWith(uid + ':')); if(cid) (a === 'glisse' ? glisse : saute)(cid, uid); else { sfx.hop(); toast('Pose quelqu’un dessus !'); } }
+  else sfx.tap();
+  if(T.tap){ if(f) drawFixed(f); const e = ents.get(uid); if(e && e.glow) e.glow.style.display = d.s === 'on' && T.glow ? 'block' : 'none'; animDeco(uid); }
+  say(KAT[d.t].n.replace(/^l'/, 'l’')); save(); }
+function animDeco(uid){ const d = S.deco[uid], B = MB[d.t] || {}, on = d.s === 'on', el = decoEl(uid);
+  if(el) el.classList.toggle('a-' + B.act, on && (B.act === 'balance' || B.act === 'bascule'));
+  Object.entries(S.chars).forEach(([cid, c]) => { if(c.p === place && (c.a || '').startsWith(uid + ':')){ const ce = decoEl(cid); if(ce) ce.classList.toggle('a-' + B.act, on && (B.act === 'balance' || B.act === 'bascule')); } }); }
+function fusee(uid){ const el = decoEl(uid); if(!el || el.classList.contains('decolle')) return; found('fusee');
+  [300, 400, 520, 700, 900].forEach((q, i) => tone(q, .3, 'sawtooth', .04, i * .12)); noise(1.4, .08, 600); el.classList.add('decolle');
+  for(let i = 0; i < 6; i++) setTimeout(() => fx(S.deco[uid].x + (Math.random() * 60 - 30), S.deco[uid].y - 20, pick(['🔥', '💨', '✨'])), i * 140);
+  setTimeout(() => { el.classList.remove('decolle'); el.classList.add('pop'); toast('La fusée revient de l’espace ! 🌙'); setTimeout(() => el.classList.remove('pop'), 400); }, 2600); }
+function saute(cid){ const el = decoEl(cid); if(!el) return; el.classList.add('boing'); [0, 1, 2, 3].forEach(i => setTimeout(() => tone(300, .15, 'sine', .1, 0, 600), i * 420)); found('trampoline'); setTimeout(() => el.classList.remove('boing'), 1700); }
+function glisse(cid, uid){ const c = S.chars[cid], d = S.deco[uid], T = FIXED['d:' + uid]; c.a = ''; c.pose = ''; c.x = Math.max(40, Math.min(W - 40, d.x + (d.f ? -1 : 1) * T.w * .55)); c.y = Math.max(FLOOR_Y[0] + 60, d.y + 4);
+  tone(900, .6, 'sine', .08, 0, 300); drawChar(cid); fx(c.x, c.y - 120, '🎉'); found('toboggan'); save(); }
+
+/* ---------- la barre d'outils du meuble choisi ---------- */
+function select(uid){ sel = uid; drawSel(); }
+function unselect(){ sel = null; const b = $('selbar'); if(b) b.remove(); }
+function drawSel(){
+  let b = $('selbar'); if(!sel || !S.deco[sel] || S.deco[sel].p !== place){ if(b) b.remove(); sel = null; return; }
+  if(!b){ b = document.createElement('div'); b.id = 'selbar'; view.appendChild(b);   // en haut de l’écran (le haut du mur), à taille fixe : ne cache pas les personnages
+    b.innerHTML = [['moins', '➖', 'Plus petit'], ['plus', '➕', 'Plus grand'], ['g', '↺', 'Tourner'], ['d', '↻', 'Tourner'], ['flip', '⇋', 'Retourner'], ['copie', '⧉', 'Copier'], ['avant', '⬆️', 'Devant'], ['arriere', '⬇️', 'Derrière'], ['jette', '🗑️', 'Enlever']]
+      .map(([k, ic, n]) => `<button data-s="${k}" aria-label="${n}" title="${n}">${ic}</button>`).join('');
+    b.addEventListener('pointerdown', e => e.stopPropagation());
+    b.addEventListener('click', e => { const k = e.target.closest('[data-s]'); if(k) selAct(k.dataset.s); }); }
+  b.querySelector('[data-s="jette"]').setAttribute('aria-label', 'Enlever ' + KAT[S.deco[sel].t].n); }
+function selAct(k){ const uid = sel, d = S.deco[uid]; if(!d) return; sfx.tap();
+  if(k === 'plus' || k === 'moins'){ d.k = Math.max(.35, Math.min(3, d.k * (k === 'plus' ? 1.15 : 1 / 1.15))); }
+  else if(k === 'g' || k === 'd'){ d.r = ((d.r || 0) + (k === 'd' ? 15 : -15) + 540) % 360 - 180; }
+  else if(k === 'flip'){ d.f = d.f ? 0 : 1; found('miroir'); }
+  else if(k === 'avant'){ d.z = (d.z || 0) + 40; }
+  else if(k === 'arriere'){ d.z = (d.z || 0) - 40; }
+  else if(k === 'copie'){ const n = addDeco(d.t, d.x + 60, d.y); if(n){ Object.assign(S.deco[n], { k:d.k, r:d.r, f:d.f, z:d.z + 1, on:d.on }); save(); render(); select(n); pulse(n, 'pop'); } return; }
+  else if(k === 'jette'){ jette(uid); return; }
+  refreshDeco(uid); save(); }
+function jette(uid){ const d = S.deco[uid]; if(!d) return; Object.values(S.deco).forEach(o => { if(o.on === uid){ o.on = ''; o.y = Math.max(FLOOR_Y[0], Math.min(FLOOR_Y[1], d.y)); } });
+  Object.values(S.chars).forEach(c => { if((c.a || '').startsWith(uid + ':')){ c.a = ''; c.pose = ''; c.y = 664; } });
+  delete S.deco[uid]; delete FIXED['d:' + uid]; unselect(); sfx.close(); save(); render(); }
+function refreshDeco(uid){ FIXED['d:' + uid] = decoDef(uid); const f = fixedOf(uid); if(f) drawFixed(f);
+  const e = ents.get(uid); if(e && e.glow){ const g = f.T.glow; if(g){ e.glow.style.cssText = `left:${f.x + g[0] - g[2]}px;top:${f.y + g[1] - g[2]}px;width:${g[2] * 2}px;height:${g[2] * 2}px;display:${S.deco[uid].s === 'on' ? 'block' : 'none'}`; } }
+  // ce qui est posé dessus ou assis dessus suit
+  Object.entries(S.deco).forEach(([o, od]) => { if(od.on === uid && od.p === place){ const T = FIXED['d:' + uid]; if(T.surf){ od.y = d0(uid) + T.surf[0][2]; } refreshDeco(o); } });
+  Object.entries(S.chars).forEach(([cid, c]) => { const a = c.a || ''; if(c.p === place && a.startsWith(uid + ':')){ const T = FIXED['d:' + uid], i = +a.split(':')[1], L = T.seats || T.bed || T.bath; if(L && L[i]){ c.x = S.deco[uid].x + L[i][0]; c.y = S.deco[uid].y + L[i][1]; drawChar(cid); } } });
+  if(sel === uid) drawSel(); }
+const d0 = uid => S.deco[uid].y;
+
+/* ---------- déplacer un meuble ---------- */
+function supportAt(uid, x, y){   // un dessus (table, commode…) sous l'objet lâché
+  let best = null; Object.entries(S.deco).forEach(([o, od]) => { if(o === uid || od.p !== place || od.on === uid) return; const T = FIXED['d:' + o] || decoDef(o); if(!T.surf) return;
+    const s = T.surf[0], sy = od.y + s[2]; if(x >= od.x + s[0] - 10 && x <= od.x + s[1] + 10 && y > sy - 70 && y < sy + 50){ const dd = Math.abs(y - sy); if(!best || dd < best.dd) best = { o, y:sy, dd }; } });
+  return best; }
+function dropDeco(uid, x, y){
+  const d = S.deco[uid], K = KAT[d.t], T = FIXED['d:' + uid], ox = d.x, oy = d.y;
+  const door = doorAt(x, y); if(door && K.ou === 'sol'){ moveToRoom('deco', uid, door); return; }
+  d.x = Math.round(Math.max(30, Math.min(W - 30, x))); d.on = '';
+  if(K.ou === 'mur') d.y = Math.round(Math.max(T.h + 6, Math.min(WALL_Y + 40, y)));
+  else if(K.ou === 'plafond') d.y = Math.round(Math.max(T.h + 4, Math.min(WALL_Y - 40, y)));
+  else { const s = T.h < 140 && supportAt(uid, x, y); if(s){ d.y = Math.round(s.y); d.on = s.o; found('poser'); } else d.y = Math.round(Math.max(FLOOR_Y[0], Math.min(FLOOR_Y[1], y))); }
+  // ce qui était posé dessus (et les personnages assis) suit le meuble
+  const dx = d.x - ox, dy = d.y - oy;
+  Object.entries(S.deco).forEach(([o, od]) => { if(od.on === uid){ od.x += dx; od.y += dy; } });
+  Object.values(S.chars).forEach(c => { if(c.p === place && (c.a || '').startsWith(uid + ':')){ c.x += dx; c.y += dy; } });
+  Object.entries(S.items).forEach(([id, it]) => { if(it.p === place && !it.h && T.surf && Math.abs(it.y - (oy + T.surf[0][2])) < 4 && it.x >= ox + T.surf[0][0] - 6 && it.x <= ox + T.surf[0][1] + 6){ it.x += dx; it.y += dy; } });
+  sfx.drop(); save(); render(); select(uid); }
+function doorAt(x, y){ if(!isRoom(place) || y < 260) return null; const i = ROOMS.findIndex(r => r[0] === place); if(x < 70) return ROOMS[(i + ROOMS.length - 1) % ROOMS.length][0]; if(x > W - 70) return ROOMS[(i + 1) % ROOMS.length][0]; return null; }
+function moveToRoom(kind, id, to){
+  const R = ROOMS.find(r => r[0] === to), fromLeft = ROOMS.findIndex(r => r[0] === to) > ROOMS.findIndex(r => r[0] === place);
+  if(kind === 'deco'){ const d = S.deco[id]; Object.values(S.deco).forEach(o => { if(o.on === id){ o.p = to; o.x = (fromLeft ? 220 : W - 220) + (o.x - d.x); } }); d.p = to; d.on = ''; d.x = fromLeft ? 220 : W - 220; d.y = Math.max(FLOOR_Y[0], Math.min(FLOOR_Y[1], d.y));
+    Object.values(S.chars).forEach(c => { if((c.a || '').startsWith(id + ':')){ c.a = ''; c.pose = ''; c.y = 664; } }); }
+  else { const c = S.chars[id]; dropHeld(id, true); c.p = to; c.pose = ''; c.a = ''; c.x = fromLeft ? 180 : W - 180; c.y = 664; Object.values(S.items).forEach(it => { if(it.h === id) it.p = to; }); }
+  sfx.open(); toast((kind === 'deco' ? KAT[S.deco[id].t].n : CH[id].n) + ' → ' + R[1].toLowerCase() + ' ' + R[2]); found('demenage'); save(); unselect(); go(to); if(kind === 'deco') select(id); }
+
+/* ---------- pincer pour agrandir, tourner à deux doigts ---------- */
+const touches = new Map(); let pinch = null;
+function startPinch(uid){ const p = [...touches.values()]; if(p.length < 2) return; const d = S.deco[uid];
+  pinch = { uid, k0:d.k, r0:d.r || 0, d0:Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y) || 1, a0:Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x) }; select(uid); }
+function movePinch(){ const p = [...touches.values()]; if(!pinch || p.length < 2) return; const d = S.deco[pinch.uid];
+  d.k = Math.max(.35, Math.min(3, pinch.k0 * Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y) / pinch.d0));
+  let r = pinch.r0 + (Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x) - pinch.a0) * 180 / Math.PI; r = ((r + 540) % 360) - 180; d.r = Math.abs(r) < 6 ? 0 : Math.round(r);   // aimanté droit
+  refreshDeco(pinch.uid); }
+function endPinch(){ if(!pinch) return; const uid = pinch.uid; pinch = null; found('pincer'); save(); refreshDeco(uid); }
+
+/* ---------- le catalogue ---------- */
+const CATS = [['salon', '🛋️ Salon'], ['cuisine', '🍳 Cuisine'], ['chambre', '🧸 Chambre'], ['bain', '🛁 Bain'], ['jardin', '🌳 Jardin'], ['mur', '🖼️ Murs']];
+let catOn = 'salon';
+function catalogue(cat){
+  if(cat) catOn = cat; else { const r = (place || '').slice(2); catOn = CATS.some(c => c[0] === r) ? r : catOn; }
+  const L = Object.values(KAT).filter(k => k.cat === catOn);
+  panel(`<h2>🛋️ Décorer ${ROOMS.find(r => r[0] === place)[1].toLowerCase()}</h2><p>Touche un objet pour le mettre dans la pièce. Ensuite, fais-le glisser, pince-le pour l'agrandir, tourne-le avec deux doigts.</p>
+    <div class="ktabs">${CATS.map(([k, n]) => `<button class="ktab${k === catOn ? ' on' : ''}" data-cat="${k}">${n}</button>`).join('')}</div>
+    <div class="kgrid">${L.map(k => `<button class="kit" data-t="${k.id}" aria-label="${esc(k.n)}"><img src="${decoRoot}${k.id}.webp" alt="" loading="lazy"><span>${esc(k.n.replace(/^(le |la |les |l'|l’)/, ''))}</span></button>`).join('')}</div>
+    <button class="pill" data-close>Fermer</button>`);
+  $('panel').querySelector('.ktabs').onclick = e => { const b = e.target.closest('[data-cat]'); if(b){ sfx.tap(); catalogue(b.dataset.cat); } };
+  $('panel').querySelector('.kgrid').onclick = e => { const b = e.target.closest('[data-t]'); if(!b) return; const uid = addDeco(b.dataset.t); if(!uid) return; closePanel(); save(); render(); select(uid); pulse(uid, 'pop'); sfx.star(); say(KAT[b.dataset.t].n); };
+}
+function mursSols(){
+  const M = S.mur[place] = S.mur[place] || {}, sw = (v, n, k) => `<button class="sw${(M[k] || '') === v ? ' on' : ''}" data-k="${k}" data-v="${v}" aria-label="${n}" title="${n}" style="${v === 'ciel' ? 'background:linear-gradient(#bfe6ff,#fff)' : texCss(v, k === 's').replace(/\/\d+px \d+px/, '/cover')}"></button>`;
+  panel(`<h2>🎨 Les murs et le sol</h2><p><b>Les murs</b></p><div class="swg">${(place === 'm-jardin' ? [['ciel', 'Le ciel'], ...MURS] : MURS).map(([v, n]) => sw(v, n, 'm')).join('')}</div>
+    <p><b>Le sol</b></p><div class="swg">${SOLS.map(([v, n]) => sw(v, n, 's')).join('')}</div><button class="pill" data-close>C'est beau !</button>`);
+  $('panel').onclick = e => { const b = e.target.closest('.sw'); if(!b) return; M[b.dataset.k] = b.dataset.v; sfx.wear(); found('peintre'); save(); render(); mursSols(); };
+}
+
+/* ---------- les gestes des personnages ---------- */
+const GESTES = [['salut', '👋', 'Coucou'], ['danse', '💃', 'Danser'], ['saut', '🦘', 'Sauter'], ['bravo', '👏', 'Bravo'], ['dodo', '😴', 'Dormir'], ['bisou', '😘', 'Un bisou']];
+const GMETA = window.HOUMA_GESTES || {};   // GMETA[id][tenue] = [largeur case, hauteur case, pieds x, hauteur / debout, ligne du sol] (images g-<id>[-<tenue>].webp, cases : salut, danse A, danse B, saut, bravo)
+const GFR = { salut:0, danse:1, saut:3, bravo:4 };
+const geste = {};   // geste en cours (pas enregistré) : geste[id] = { k, t0, fr }
+function bubble(cid){
+  closeBubble(); const c = S.chars[cid], h = sizeOf(cid, c.o).h, b = document.createElement('div'); b.id = 'bulle'; const u = Math.min(1.7, Math.max(1, 1 / scale));
+  b.style.setProperty('--u', u); b.innerHTML = GESTES.map(([k, e, n]) => `<button data-g="${k}" aria-label="${n}" title="${n}">${e}</button>`).join('') + (c.acc.length ? `<button data-g="enlever" aria-label="Enlever">🎩</button>` : '');
+  stage.appendChild(b); const vx0 = Math.max(0, -panX / scale), vx1 = Math.min(W, vx0 + view.clientWidth / scale); b.style.maxWidth = (vx1 - vx0 - 8) + 'px'; const bw = b.offsetWidth; b.style.left = Math.max(vx0 + 4, Math.min(vx1 - bw - 4, c.x - bw / 2)) + 'px'; b.style.top = Math.max(4, c.y - h - b.offsetHeight - 10) + 'px';
+  b.addEventListener('pointerdown', e => e.stopPropagation()); b.onclick = e => { const g = e.target.closest('[data-g]'); if(!g) return; closeBubble(); if(g.dataset.g === 'enlever'){ takeOff(cid, c.acc[c.acc.length - 1]); drawChar(cid); save(); } else faire(cid, g.dataset.g); };
+  clearTimeout(bubble.t); bubble.t = setTimeout(closeBubble, 5000); }
+function closeBubble(){ const b = $('bulle'); if(b) b.remove(); }
+function faire(cid, k){
+  const c = S.chars[cid], at = e => fx(c.x, c.y - sizeOf(cid, c.o).h - 10, e); found('geste');
+  if(k === 'dodo'){ c.pose = 'sleep'; c.a = ''; drawChar(cid); at('💤'); tone(300, .8, 'sine', .05, 0, 200); save(); return; }
+  if(c.pose === 'sleep' || c.pose === 'sit' || c.pose === 'bath'){ c.pose = ''; c.a = ''; }
+  geste[cid] = { k, t0:Date.now() }; drawChar(cid); const el = decoEl(cid); if(el){ el.classList.remove('g-salut', 'g-danse', 'g-saut', 'g-bravo', 'g-bisou'); void el.offsetWidth; el.classList.add('g-' + k); }
+  if(k === 'salut'){ voix(cid) || say(pick(['Coucou !', 'Salut !', 'Bonjour !'])); at('👋'); }
+  if(k === 'danse'){ sfx.tune(); [0, 1, 2].forEach(i => setTimeout(() => at(pick(['🎵', '🎶', '✨'])), i * 600)); found('danse'); }
+  if(k === 'saut'){ tone(330, .2, 'square', .06, 0, 700); at('⭐'); }
+  if(k === 'bravo'){ [0, 1, 2, 3].forEach(i => setTimeout(() => noise(.06, .12, 2500), i * 180)); at('👏'); }
+  if(k === 'bisou'){ tone(1200, .15, 'sine', .07, 0, 1600); at('💋'); setTimeout(() => at('💕'), 300); }
+  const dur = k === 'danse' ? 3600 : 1800, t0 = geste[cid].t0;
+  if(k === 'danse'){ const tick = () => { if(!geste[cid] || geste[cid].t0 !== t0) return; geste[cid].fr = geste[cid].fr === 1 ? 2 : 1; drawChar(cid); setTimeout(tick, 330); }; tick(); }
+  setTimeout(() => { if(geste[cid] && geste[cid].t0 === t0){ delete geste[cid]; const e2 = decoEl(cid); if(e2) e2.classList.remove('g-' + k); drawChar(cid); } }, dur); }
+// image du geste (si elle existe pour ce personnage et cette tenue) : remplace le corps debout
+function gesteBody(cid){ const g = geste[cid]; if(!g || !(g.k in GFR)) return null; const c = S.chars[cid], o = OUTFITS[c.o] ? c.o : 'ville', G = GMETA[cid] && GMETA[cid][o]; if(!G) return null;
+  const st = sizeOf(cid, o), h = st.h * G[3], w = h * G[0] / G[1], fr = g.k === 'danse' ? (g.fr || 1) : GFR[g.k];
+  return { w, h, fx:G[2], gy:G[4] || 1, html:`<div class="body" style="background-image:url(houma/g-${cid}${o === 'ville' ? '' : '-' + o}.webp);background-size:500% 100%;background-position:${fr * 25}% 0"></div><i class="shade"></i>` }; }
+
+/* ---------- les découvertes de la maison ---------- */
+DISC.push(['meuble', '🛋️', 'Meubler sa maison'], ['decoratrice', '🏡', '20 objets dans la maison'], ['peintre', '🎨', 'Changer les murs'], ['pincer', '🤏', 'Agrandir avec deux doigts'], ['miroir', '🪞', 'Retourner un meuble'],
+  ['poser', '🍽️', 'Poser sur une table'], ['demenage', '🚪', "Changer de pièce"], ['tele', '📺', 'Regarder la télé'], ['piano', '🎹', 'Faire de la musique'], ['fusee', '🚀', 'Décoller en fusée'],
+  ['trampoline', '🤸', 'Le trampoline'], ['toboggan', '🛝', 'Le toboggan'], ['balance', '🎠', 'Se balancer'], ['chien', '🐶', 'Le chien'], ['cuisinier', '🍢', 'Faire la cuisine'], ['geste', '👋', 'Faire un geste'], ['danse', '💃', 'Danser']);
 
 /* ---------- démarrage ---------- */
 fit(); loadVoix();

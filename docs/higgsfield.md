@@ -107,6 +107,12 @@ Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet
 - **Recettes** : graphes décrits dans le journal du 12/11 ; scripts `docs/houma/entree_comfy.py`, `build_assis.py`, `build_tenues.py`, `detoure.py`, `docs/jasmin2-corps/objets_comfy.py`, `bande_comfy.py`.
 - **Règle** : gratuit, donc pas de prix à annoncer ; mais tout **téléchargement de modèle** se demande au papa (nom, source, taille).
 
+### Nuit du 12 au 13/11 : Ma maison
+- 81 meubles/objets (texte → image, FLUX.2 klein 4B, 4 étapes, ~20 s chacun avec la file pleine) : prompt « Photorealistic studio product photo of … straight front view … isolated on a flat uniform pure green background » (fond bleu pour ce qui est vert ou blanc : plantes, dinosaure, tortue, lapin, toilettes, couscoussier, darbouka). Liste et prompts : `docs/maison/catalogue.py`.
+- 20 textures 768 px (« Seamless flat texture photo, … ») rendues raccordables par miroir.
+- Gestes : 5 retouches par personnage et par tenue (8 × 10 × 5 = 400 images) depuis l'image debout (`input/houma_<id>[_<tenue>].png` ou `output/houma2/<id>_<tenue>_00001_.png`), prompt « The same person with exactly the same face, hair, body and the same clothes, now … Full body visible … same size and same position in the frame … plain flat bright green background », graine 777. Le cadrage est bien gardé : le saut reste en l'air.
+- Astuce : `POST /prompt` avec `"front": true` fait passer une image devant la file.
+
 ## ElevenLabs Sound Effects (depuis le 12/11) : les bruitages
 
 - Compte ElevenLabs du papa, **formule Starter** (~6 $/mois, 30 000 crédits, usage commercial, pas de mention obligatoire). Il se connecte lui-même dans le navigateur intégré ; Claude n'entre jamais le mot de passe.
