@@ -25,7 +25,7 @@ if (!ga_peut_entrer()) {
 }
 header('Content-Type: ' . $TYPES[$ext]);
 header('X-Content-Type-Options: nosniff');
-header($ext === 'html' ? 'Cache-Control: no-cache, must-revalidate' : 'Cache-Control: private, max-age=86400');
+header($ext === 'html' ? 'Cache-Control: private, no-cache, must-revalidate' : 'Cache-Control: private, max-age=86400');   // private : le CDN de Hostinger ne garde jamais une page pour tout le monde
 if (ga_active()) header('X-Robots-Tag: noindex, nofollow');
 header('Content-Length: ' . filesize($fichier));
 readfile($fichier);

@@ -105,6 +105,9 @@ function clean_player($p): string {
 }
 // Adresse du visiteur : derrière un proxy (CDN), la première adresse publique de X-Forwarded-For.
 function client_ip(): string {
+    // Chez Hostinger, REMOTE_ADDR est déjà l'adresse vraie du visiteur (le CDN la remplace) ; X-Forwarded-For, lui, peut être inventé (vu le 13/11)
+    $r = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    if (filter_var($r, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) return $r;
     foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'] as $h) {
         foreach (explode(',', (string)($_SERVER[$h] ?? '')) as $ip) {
             $ip = trim($ip);
