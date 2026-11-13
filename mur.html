@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<script src="/famille.js"></script>
+<meta name="theme-color" content="#14102b">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%B1%3C/text%3E%3C/svg%3E">
+<title>Le mur de la famille · Famille Missaoui</title>
+<link rel="stylesheet" href="famille.css?v=6">
+<style>
+/* Le mur de la famille (13/11) : un mur en briques claires, des messages épinglés comme des cartes */
+:root{ --night:#14102b; --gold:#ffc93c; --mint:#5fe0a8; --mint-deep:#2e9e6e }
+.mur-tete{display:flex;flex-direction:column;gap:8px}
+.mur-tete h1{font-family:var(--display);font-weight:800;font-size:clamp(40px,9vw,64px);line-height:.95;margin:0;letter-spacing:-.02em}
+.mur-tete h1 span{color:var(--essil-2)}
+.mur-tete p{margin:0;color:var(--soft);font-size:18px;max-width:56ch}
+.ecrire{background:var(--surface);border:2px solid var(--line);border-radius:26px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 24px #0000000d}
+.qui{display:flex;align-items:center;gap:12px;border:0;background:var(--bg);border-radius:999px;padding:6px 16px 6px 6px;font:inherit;font-weight:800;font-size:18px;color:var(--ink);cursor:pointer;align-self:flex-start;min-height:52px}
+.qui img,.qui .vide{width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--line);display:grid;place-items:center;font-size:24px}
+.ecrire textarea{font:inherit;font-size:19px;min-height:96px;resize:vertical;padding:14px 16px;border-radius:18px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.ecrire textarea:focus{outline:3px solid var(--gold);outline-offset:1px}
+.outils{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:800;font-size:17px;min-height:50px;padding:0 18px;border-radius:16px;border:0;cursor:pointer;background:var(--bg);color:var(--ink);display:inline-flex;align-items:center;gap:8px}
+.btn.go{background:var(--mint);color:#0d2a1d;box-shadow:0 5px 0 var(--mint-deep);margin-left:auto;font-size:19px;padding:0 26px}
+.btn.go:active{transform:translateY(3px);box-shadow:0 2px 0 var(--mint-deep)}
+.btn:disabled{opacity:.5;cursor:default}
+.apercu{position:relative;align-self:flex-start}.apercu img{max-width:min(320px,100%);max-height:240px;border-radius:16px;display:block}
+.apercu button{position:absolute;top:6px;right:6px;width:36px;height:36px;border-radius:50%;border:0;background:#000a;color:#fff;font-size:18px;cursor:pointer}
+.msgerr{color:var(--essil-2);font-weight:700;margin:0}.msgerr:empty{display:none}
+[hidden]{display:none!important}
+.fil{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px 16px;align-items:start;padding-top:8px}
+.carte{margin:0;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 6px 18px #0000000d;position:relative}
+.carte::before{content:'';position:absolute;top:-9px;left:50%;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff8f8f,#d7263d 70%);box-shadow:0 2px 3px #0004}
+.carte .de{display:flex;align-items:center;gap:10px}.carte .de img{width:42px;height:42px;border-radius:50%;object-fit:cover;background:var(--line)}
+.carte .de b{font-size:18px}.carte .de small{color:var(--soft);display:block;font-size:13px}
+.carte p{margin:0;font-size:19px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.carte .photo{width:100%;border-radius:14px;display:block;background:var(--bg)}
+.reac{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.reac button{font:inherit;font-size:17px;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 10px;min-height:40px;cursor:pointer}
+.reac button.on{border-color:var(--gold);background:#fff4d0;color:#3a2600}
+.reac .suppr{margin-left:auto;border:0;background:none;color:var(--soft);font-size:14px}
+.vide-mur{text-align:center;color:var(--soft);padding:30px;font-size:18px}
+/* l'atelier de dessin */
+.dessin-back{position:fixed;inset:0;z-index:1000;background:#14102be6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:12px}
+.dessin-back canvas{background:#fff;border-radius:18px;touch-action:none;max-width:100%;max-height:calc(100dvh - 190px);box-shadow:0 10px 40px #0008}
+.palette{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.palette .c{width:44px;height:44px;border-radius:50%;border:3px solid #fff;cursor:pointer}.palette .c.on{outline:4px solid var(--gold);outline-offset:2px}
+.palette .t{min-height:44px;padding:0 14px;border-radius:14px;border:0;font:inherit;font-weight:800;cursor:pointer;background:#ffffff22;color:#fff}.palette .t.on{background:var(--gold);color:#3a2600}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="back" href="./">← Famille Missaoui</a>
+  <header class="mur-tete">
+    <h1>Le mur de la famille<span>.</span></h1>
+    <p>Un mot, un dessin, la photo d'une création dans Ma Houma ou à l'Atelier : tout le monde le voit, la famille et les proches invités.</p>
+  </header>
+
+  <section class="ecrire" aria-label="Écrire sur le mur">
+    <button class="qui" id="qui" type="button"><span class="vide">🙂</span><span id="quiNom">Qui écrit ?</span></button>
+    <textarea id="texte" maxlength="500" placeholder="Écris ton message…"></textarea>
+    <div class="apercu" id="apercu" hidden><img id="apImg" alt="Image à publier"><button type="button" id="apSuppr" aria-label="Enlever l'image">✕</button></div>
+    <div class="outils">
+      <label class="btn" for="photo">📷 Photo<input type="file" id="photo" accept="image/*" hidden></label>
+      <button class="btn" id="dessiner" type="button">🎨 Dessiner</button>
+      <button class="btn go" id="publier" type="button">Épingler sur le mur</button>
+    </div>
+    <p class="msgerr" id="err" role="alert"></p>
+  </section>
+
+  <section class="fil" id="fil" aria-live="polite"></section>
+  <button class="btn" id="plus" type="button" hidden style="align-self:center">Voir les messages plus anciens</button>
+  <footer><span>© 2026 Anis Missaoui · Famille Missaoui</span></footer>
+</main>
+<script>
+'use strict';
+const API = '/api/mur.php', $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const FAMILLE = ['Anis', 'Imen', 'Essil', 'Salma', 'Amine'];
+// « c'est moi qui ai écrit ça » : un nombre au hasard gardé dans ce navigateur
+let JETON = ''; try{ JETON = localStorage.getItem('mur-jeton') || ''; if(!JETON){ JETON = [...crypto.getRandomValues(new Uint8Array(20))].map(b => b.toString(16).padStart(2, '0')).join(''); localStorage.setItem('mur-jeton', JETON); } }catch(e){ JETON = [...crypto.getRandomValues(new Uint8Array(20))].map(b => b.toString(16).padStart(2, '0')).join(''); }
+const tete = n => FAMILLE.includes(n) ? '/jeux/avatars/' + n.toLowerCase() + '.webp' : ((window.Famille && Famille.head(n)) || {}).img || '';
+const quand = ts => { const s = Date.now() / 1000 - ts; if(s < 60) return 'à l\'instant'; if(s < 3600) return 'il y a ' + Math.round(s / 60) + ' min'; if(s < 86400) return 'il y a ' + Math.round(s / 3600) + ' h'; const d = new Date(ts * 1000); return d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' }); };
+let qui = (window.Famille && Famille.player()) || null, image = null, dernier = 0, EMO = ['❤️', '👏', '😂', '😮'];
+
+function montreQui(){ $('quiNom').textContent = qui ? qui : 'Qui écrit ?'; $('qui').firstElementChild.outerHTML = qui && tete(qui) ? '<img src="' + tete(qui) + '" alt="">' : '<span class="vide">🙂</span>'; }
+$('qui').onclick = async () => { if(!window.Famille) return; const n = await Famille.choosePlayer({ title:'Qui écrit ?', extra:[{ name:'Anis', color:'#0f766e', emoji:'👨' }, { name:'Imen', color:'#b4235a', emoji:'👩' }], avatar:k => '<img src="/jeux/avatars/' + k.name.toLowerCase() + '.webp" alt="">' }); if(n){ qui = n; montreQui(); } };
+montreQui();
+
+// une photo : réduite ici (1280 px) avant l'envoi ; le serveur la réencode (plus d'infos cachées)
+function reduit(src, cb){ const im = new Image(); im.onload = () => { const k = Math.min(1, 1280 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); cb(c.toDataURL('image/jpeg', .85)); }; im.onerror = () => { $('err').textContent = 'Cette image ne s\'ouvre pas.'; }; im.src = src; }
+function apercu(d){ image = d; $('apImg').src = d || ''; $('apercu').hidden = !d; }
+$('photo').onchange = e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => reduit(r.result, apercu); r.readAsDataURL(f); e.target.value = ''; };
+$('apSuppr').onclick = () => apercu(null);
+
+// l'atelier de dessin
+$('dessiner').onclick = () => {
+  const back = document.createElement('div'); back.className = 'dessin-back';
+  const COUL = ['#18202e', '#d7263d', '#ff8c1a', '#ffc93c', '#2e9e6e', '#1f6fd1', '#7a4fd8', '#ff5fa2', '#8a5a2b', '#ffffff'];
+  back.innerHTML = '<div class="palette">' + COUL.map((c, i) => '<button class="c' + (i ? '' : ' on') + '" style="background:' + c + '" data-c="' + c + '" aria-label="Couleur"></button>').join('') + '</div>' +
+    '<canvas width="1000" height="700"></canvas><div class="palette"><button class="t" data-t="4">fin</button><button class="t on" data-t="10">moyen</button><button class="t" data-t="26">gros</button><button class="t" id="dEff">🧽 Tout effacer</button><button class="t" id="dAnn">Annuler</button><button class="t on" id="dOk" style="background:var(--mint);color:#0d2a1d">✔ Garder ce dessin</button></div>';
+  document.body.appendChild(back);
+  const cv = back.querySelector('canvas'), g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.lineCap = g.lineJoin = 'round';
+  let coul = COUL[0], taille = 10, bas = false, px = 0, py = 0;
+  const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
+  cv.onpointerdown = e => { bas = true; cv.setPointerCapture(e.pointerId); [px, py] = pos(e); g.fillStyle = coul; g.beginPath(); g.arc(px, py, taille / 2, 0, 7); g.fill(); };
+  cv.onpointermove = e => { if(!bas) return; const [x, y] = pos(e); g.strokeStyle = coul; g.lineWidth = taille; g.beginPath(); g.moveTo(px, py); g.lineTo(x, y); g.stroke(); px = x; py = y; };
+  cv.onpointerup = cv.onpointercancel = () => { bas = false; };
+  back.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { coul = b.dataset.c; back.querySelectorAll('[data-c]').forEach(x => x.classList.toggle('on', x === b)); });
+  back.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { taille = +b.dataset.t; back.querySelectorAll('[data-t]').forEach(x => x.classList.toggle('on', x === b)); });
+  back.querySelector('#dEff').onclick = () => { g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); };
+  back.querySelector('#dAnn').onclick = () => back.remove();
+  back.querySelector('#dOk').onclick = () => { apercu(cv.toDataURL('image/jpeg', .9)); back.remove(); };
+};
+
+async function api(fields){ const fd = new FormData(); Object.entries(Object.assign({ jeton:JETON }, fields)).forEach(([k, v]) => fd.append(k, v)); const r = await fetch(API, { method:'POST', body:fd, credentials:'same-origin' }); const j = await r.json().catch(() => ({})); if(!r.ok) throw new Error(j.error || 'Le serveur ne répond pas.'); return j; }
+$('publier').onclick = async () => {
+  const t = $('texte').value.trim(); $('err').textContent = '';
+  if(!qui){ $('qui').click(); return; }
+  if(!t && !image){ $('err').textContent = 'Écris un message, prends une photo ou fais un dessin 🙂'; return; }
+  $('publier').disabled = true; $('publier').textContent = 'J\'épingle…';
+  try{ await api({ action:'poste', auteur:qui, texte:t, image:image || '' }); $('texte').value = ''; apercu(null); await charge(); }
+  catch(e){ $('err').textContent = e.message; }
+  finally{ $('publier').disabled = false; $('publier').textContent = 'Épingler sur le mur'; }
+};
+
+function carte(m){
+  const r = m.reac || {};
+  return '<article class="carte" data-id="' + m.id + '"><div class="de">' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="">' : '') + '<span><b>' + esc(m.auteur) + '</b><small>' + quand(m.cree) + '</small></span></div>' +
+    (m.texte ? '<p>' + esc(m.texte) + '</p>' : '') + (m.img ? '<img class="photo" loading="lazy" src="' + API + '?img=' + m.id + '" alt="Image de ' + esc(m.auteur) + '">' : '') +
+    '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') +
+    '<button type="button" class="suppr" data-suppr="' + (m.mien ? 'moi' : 'parent') + '">' + (m.mien ? 'Effacer' : '🔒 Retirer') + '</button></div></article>';
+}
+let tous = [];
+async function charge(plus){
+  try{
+    const r = await fetch(API + '?action=liste&jeton=' + JETON + (plus ? '&avant=' + tous[tous.length - 1].id : ''), { cache:'no-store', credentials:'same-origin' });
+    const j = await r.json(); if(!r.ok) throw new Error(j.error || '');
+    EMO = j.emojis || EMO; tous = plus ? tous.concat(j.messages) : j.messages;
+    $('fil').innerHTML = tous.length ? tous.map(carte).join('') : '<p class="vide-mur">Le mur est encore tout neuf : écris le premier message ! ✨</p>';
+    $('plus').hidden = j.messages.length < 30;
+  }catch(e){ $('fil').innerHTML = '<p class="vide-mur">Le mur ne se charge pas pour l\'instant.</p>'; }
+}
+$('plus').onclick = () => charge(true);
+$('fil').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if(!b) return; const id = +b.closest('.carte').dataset.id;
+  if(b.dataset.e){ try{ await api({ action:'reagit', id, emoji:b.dataset.e }); await charge(); }catch(err){} }
+  if(b.dataset.suppr === 'moi' && confirm('Effacer ton message ?')){ try{ await api({ action:'supprime', id }); await charge(); }catch(err){ alert(err.message); } }
+  if(b.dataset.suppr === 'parent'){ const p = prompt('Pour retirer le message de quelqu\'un d\'autre, il faut le mot de passe parent :'); if(p){ try{ await api({ action:'supprime', id, pass:p }); await charge(); }catch(err){ alert(err.message); } } }
+});
+charge(); setInterval(() => { if(!document.hidden) charge(); }, 30000);
+if(window.Famille && Famille.loadHeads) Famille.loadHeads().then(() => charge());
+</script>
+</body>
+</html>

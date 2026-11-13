@@ -231,6 +231,8 @@ function ga_sauvegarde(): ?string {
             catch (Throwable $e) { $z->addFile($f, 'famille-data/' . $b); }
         } else $z->addFile($f, 'famille-data/' . $b);
     }
+    $murd = $data . '/mur';   // les images du mur de la famille
+    if (is_dir($murd)) foreach (glob($murd . '/*.webp') ?: [] as $f) $z->addFile($f, 'famille-data/mur/' . basename($f));
     $voix = dirname(ga_racine()) . '/nahki-voix';
     if (is_dir($voix)) {
         $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($voix, FilesystemIterator::SKIP_DOTS));
