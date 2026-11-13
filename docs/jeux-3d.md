@@ -117,6 +117,7 @@ Demandé par le papa : reprendre les personnages « en vrai » de Médina Expres
 - **Corrigé le 11/11 (Jasmin 1 et 2)** : dans le dernier monde, entrer dans la salle secrète (rangée après l'arène) déclenchait le combat du boss ; au retour la caméra restait sur l'arène et le héros n'était plus à l'écran. Le déclencheur `bossgate` exige maintenant `!g.inRoom` et une position dans l'arène.
 
 **Son (13/11)** : bouton **⚙️** à côté de ⏸ pendant la partie → met le jeu en pause et ouvre l'écran « Le son » (`#jopts`) : 🔊 bruitages, 🎵 musique, 🌿 ambiance du monde (Oui/Non, gardés dans `jasmin-prefs` : `sound`, `music`, `amb`). Aussi dans ⚙️ Réglages du menu. **Ambiance de chaque monde** : `jeux/sons/jasmin-amb-<n>.mp3` (ElevenLabs, 15 s en boucle, vagues, vent, souk, oud lointain…), chargée seulement en entrant dans le monde (`ambStart`/`ambStop`, branchés sur `musicStart`/`musicStop` : coupée en pause, à la mort et en fin de niveau).
+**Chaque bruitage à part (13/11 matin)** : bouton « 🎚️ Régler chaque bruitage » (dans ⚙️ Le son et dans Réglages) → écran `#sndlist` : pour les 21 sons (`SFX_NOMS` : saut, atterrissage, chute, pièce, gemme, brique, bloc, bonus, ennemi, aïe, piment, ressort, lampe, portail, plouf, boss, victoire, bonne/mauvaise réponse, soupir, clic) : ▶ écouter, 🎙️ nouveau (enregistré ElevenLabs), 🎹 ancien (le bip fabriqué en code d'avant), 🔇 rien. Gardé dans `jasmin-prefs.snd[clé]` ('new' par défaut) ; boutons « Tout nouveau / Tout ancien ».
 
 ## L'Atelier du Jasmin — `jeux/atelier-du-jasmin.html` (coloriage, 2D ou 3D) (10/11)
 

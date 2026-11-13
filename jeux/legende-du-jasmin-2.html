@@ -95,6 +95,9 @@ h2{font-family:var(--display);margin:0;font-size:30px;line-height:1.05}
 .opt{display:flex;justify-content:space-between;align-items:center;width:100%;background:#ffffff10;border-radius:16px;padding:10px 14px;font-weight:800;gap:10px;text-align:left}
 .opt button{min-width:96px;min-height:48px;border-radius:14px;background:#ffffff1c;font-weight:800}
 .opt button[aria-pressed="true"]{background:var(--mint);color:#063a2a}
+.sr{display:flex;align-items:center;gap:6px;width:100%;background:#ffffff10;border-radius:14px;padding:6px 8px;font-weight:800;text-align:left}.sr>span{flex:1;min-width:0}
+.sr button{min-width:48px;min-height:48px;border-radius:12px;background:#ffffff1c;font-weight:800;font-size:15px;padding:0 8px}.sr button[aria-pressed="true"]{background:var(--mint);color:#063a2a}.sr button.ec{background:#ffffff30}
+@media (max-width:620px){.sr .lb{display:none}}
 .back{position:fixed;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));z-index:11;background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:10px 16px;color:#fff;text-decoration:none;font-weight:800;min-height:48px;display:none;align-items:center}
 body.menu .back{display:inline-flex}
 .boss-img{width:min(260px,60%);border-radius:20px;border:3px solid var(--gold)}
@@ -141,7 +144,15 @@ body.menu .back{display:inline-flex}
   <div class="opt"><span>🔊 Bruitages <small>(saut, pièces, chute…)</small></span><button id="jSound"></button></div>
   <div class="opt"><span>🎵 Musique</span><button id="jMusic"></button></div>
   <div class="opt"><span>🌿 Ambiance du monde <small>(vagues, vent, souk…)</small></span><button id="jAmb"></button></div>
+  <button class="big ghost" id="jEach">🎚️ Régler chaque bruitage</button>
   <button class="big" id="jResume">▶ Reprendre</button>
+</div></div>
+<div class="screen" id="sndlist"><div class="box">
+  <h2>🎚️ Chaque bruitage</h2>
+  <p class="sub" style="margin:0">Pour chaque son : <b>🎙️ nouveau</b> (enregistré), <b>🎹 ancien</b> (le bip d'avant) ou <b>🔇 rien</b>. Touche ▶ pour écouter.</p>
+  <div class="row" style="gap:8px"><button class="big ghost" data-tout="new">Tout 🎙️ nouveau</button><button class="big ghost" data-tout="old">Tout 🎹 ancien</button></div>
+  <div id="sndRows" style="width:100%;display:flex;flex-direction:column;gap:6px"></div>
+  <button class="big" id="sndBack">C'est bon</button>
 </div></div>
 <div class="screen" id="end"><div class="box" id="endBox"></div></div>
 <div class="screen" id="recs"><div class="box">
@@ -155,6 +166,7 @@ body.menu .back{display:inline-flex}
   <div class="opt"><span>🔊 Bruitages</span><button id="oSound"></button></div>
   <div class="opt"><span>🎵 Musique</span><button id="oMusic"></button></div>
   <div class="opt"><span>🌿 Ambiance des mondes</span><button id="oAmb"></button></div>
+  <button class="big ghost" id="oEach">🎚️ Régler chaque bruitage</button>
   <div class="opt"><span>❓ Blocs savoir (questions)</span><button id="oQuiz"></button></div>
   <div class="opt"><span>🎮 Taille des boutons tactiles</span><span style="display:flex;gap:6px"><button data-bs="0.85">Petits</button><button data-bs="1">Moyens</button><button data-bs="1.2">Grands</button></span></div>
   <div class="opt"><span>⛶ Plein écran</span><button id="oFull">Activer</button></div>
@@ -624,7 +636,7 @@ function question(){ const k = (player || '').toLowerCase(); if(!Q[k] && k !== '
    ===================================================================== */
 const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
-const prefs = Object.assign({ sound:true, music:true, amb:true, quiz:true, bs:1 }, store.get('jasmin-prefs', {}));
+const prefs = Object.assign({ sound:true, music:true, amb:true, quiz:true, bs:1, snd:{} }, store.get('jasmin-prefs', {}));
 const fresh = () => ({ unlocked:1, best:{}, gems:{}, tickets:0, answers:{ ok:0, ko:0 }, games:0, t:0 });
 let player = null, save = fresh(), avatarImg = null, avatarProf = null, avatarSigh = null;   // avatarSigh : la tête qui soupire   // avatarProf : la tête de profil, quand le héros marche
 const skey = () => 'jasmin:' + player;
@@ -653,7 +665,8 @@ function audio(){ if(!AC){ try{ AC = new (window.AudioContext || window.webkitAu
 function tone(f, d, { type = 'triangle', v = .12, at = 0, slide = 0, dest = null } = {}){ if(!AC) return; const t = AC.currentTime + at, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * slide), t + d); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0008, t + d); o.connect(g).connect(dest || master); o.start(t); o.stop(t + d + .03); }
 function noise(d, { v = .2, at = 0, hp = 800, lp = 0, dest = null } = {}){ if(!AC) return; if(!noiseBuf){ noiseBuf = AC.createBuffer(1, AC.sampleRate * .5, AC.sampleRate); const ch = noiseBuf.getChannelData(0); for(let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1; }
   const t = AC.currentTime + at, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; f.type = lp ? 'lowpass' : 'highpass'; f.frequency.value = lp || hp; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0008, t + d); s.connect(f).connect(g).connect(dest || master); s.start(t); s.stop(t + d + .02); }
-const S = (fn, nom, vol = .7) => (...a) => { if(prefs.sound && AC) try{ if(nom && window.Sons && Sons.jouer(AC, master, nom, vol, 1)) return; fn(...a); }catch(e){} };   // bruitage enregistré s'il est prêt, sinon le bip
+// Chaque bruitage se règle à part (prefs.snd[clé]) : 'new' = son enregistré (ElevenLabs) s'il existe, 'old' = l'ancien bip fabriqué en code, 'off' = rien
+const S = (fn, nom, vol = .7) => { const f = (...a) => { const m = (prefs.snd || {})[f.k] || 'new'; if(!prefs.sound || !AC || m === 'off') return; try{ if(m === 'new' && nom && window.Sons && Sons.jouer(AC, master, nom, vol, 1)) return; fn(...a); }catch(e){} }; f.fn = fn; f.nom = nom; f.vol = vol; return f; };
 if(window.Sons) Sons.charger('jasmin', ['saut','atterrir','piece','gemme','brique','bonus','ecrase','aie','feu','ressort','lampe','boss','portail','plouf','chute','victoire']);   // un souci de son (tablette) ne doit jamais bloquer un bouton
 const sfx = {
   sigh:S(() => { noise(.45, { v:.06, lp:900 }); noise(.45, { v:.045, lp:600, at:.38 }); }),
@@ -672,6 +685,11 @@ const sfx = {
   warp:S(() => { tone(880, .5, { type:'square', v:.05, slide:.25 }); tone(440, .5, { type:'triangle', v:.08, slide:.25, at:.05 }); }, 'portail'),
   swim:S(() => noise(.12, { v:.06, lp:900 }), 'plouf'), thud:S(() => { tone(70, .3, { type:'sine', v:.4, slide:.5 }); noise(.15, { v:.12, lp:500 }); }, 'chute'), tap:S(() => tone(900, .05, { v:.05 }))
 };
+Object.keys(sfx).forEach(k => { sfx[k].k = k; });
+const SFX_NOMS = [['jump', '🦘 Saut'], ['land', '👣 Atterrissage'], ['thud', '🪨 Chute lourde'], ['coin', '🪙 Pièce'], ['gem', '💎 Gemme'], ['brick', '🧱 Brique cassée'], ['bump', '📦 Coup de tête dans un bloc'],
+  ['power', '⭐ Bonus'], ['stomp', '🦂 Ennemi écrasé'], ['hurt', '🤕 Aïe (touché)'], ['fire', '🌶️ Piment lancé'], ['spring', '🌀 Ressort'], ['lamp', '🪔 Lampe magique'], ['warp', '✨ Portail'],
+  ['swim', '💦 Plouf'], ['boss', '🦂 Le boss'], ['win', '🎉 Victoire'], ['ok', '✅ Bonne réponse'], ['no', '❌ Mauvaise réponse'], ['sigh', '😮‍💨 Soupir du héros'], ['tap', '👆 Clic des boutons']];
+function sfxEcoute(k, m){ const f = sfx[k]; if(!f || !audio() || m === 'off') return; try{ if(m === 'new' && f.nom && window.Sons && Sons.jouer(AC, master, f.nom, f.vol, 1)) return; f.fn(); }catch(e){} }
 // Musique : mode hijaz (oriental) et rythme de darbouka « maqsoum », jouée par un luth synthétique
 const HIJAZ = [0, 1, 4, 5, 7, 8, 10, 12];
 const MUS = { on:false, step:0, next:0, timer:null };
@@ -1632,6 +1650,17 @@ document.querySelectorAll('[data-bs]').forEach(b => b.onclick = () => { prefs.bs
 $('oFull').onclick = () => { const d = document.documentElement; try{ if(document.fullscreenElement) document.exitFullscreen(); else (d.requestFullscreen || d.webkitRequestFullscreen).call(d); }catch(e){} };
 $('openOpts').onclick = () => { audio(); sfx.tap(); renderOpts(); show('opts'); };
 $('optBack').onclick = () => { sfx.tap(); show('menu'); };
+let sndFrom = 'opts';
+function renderSnd(){ const P = prefs.snd || {};
+  $('sndRows').innerHTML = SFX_NOMS.map(([k, n]) => { const m = P[k] || 'new', rec = !!sfx[k].nom, b = (v, ic, lb) => `<button data-k="${k}" data-m="${v}" aria-pressed="${m === v || (v === 'old' && m === 'new' && !rec)}" aria-label="${n} : ${lb}">${ic}<span class="lb"> ${lb}</span></button>`;
+    return `<div class="sr"><span>${n}</span><button class="ec" data-ec="${k}" aria-label="Écouter ${n}">▶</button>${rec ? b('new', '🎙️', 'nouveau') : ''}${b('old', '🎹', 'ancien')}${b('off', '🔇', 'rien')}</div>`; }).join(''); }
+function openSnd(from){ sndFrom = from; renderSnd(); show('sndlist'); }
+$('sndRows').onclick = e => { const ec = e.target.closest('[data-ec]'); if(ec){ const k = ec.dataset.ec; sfxEcoute(k, (prefs.snd || {})[k] || 'new'); return; }
+  const b = e.target.closest('[data-m]'); if(!b) return; prefs.snd = prefs.snd || {}; prefs.snd[b.dataset.k] = b.dataset.m; store.set('jasmin-prefs', prefs); renderSnd(); sfxEcoute(b.dataset.k, b.dataset.m); };
+document.querySelectorAll('[data-tout]').forEach(b => b.onclick = () => { prefs.snd = {}; if(b.dataset.tout === 'old') SFX_NOMS.forEach(([k]) => { prefs.snd[k] = 'old'; }); store.set('jasmin-prefs', prefs); renderSnd(); sfxEcoute('jump', b.dataset.tout); });
+$('oEach').onclick = () => { audio(); sfx.tap(); openSnd('opts'); };
+$('jEach').onclick = () => { audio(); sfx.tap(); openSnd('jopts'); };
+$('sndBack').onclick = () => { sfx.tap(); if(sndFrom === 'jopts'){ renderOpts(); show('jopts'); } else { renderOpts(); show('opts'); } };
 $('openHelp').onclick = () => { audio(); sfx.tap(); show('help'); };
 $('helpBack').onclick = () => { sfx.tap(); show('menu'); };
 
