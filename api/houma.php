@@ -20,6 +20,9 @@
  * Les parents (mot de passe parent, le même que pour les voix) :
  *   POST action=historique pass                       -> {msgs, trocs}  tout l'historique (les 600 derniers messages)
  *   POST action=efface id pass                        -> {ok}     efface un message
+ * Le salon du site (14/11, l'étiquette en bas à gauche de chaque page, explorateur.js) : qui est sur le site et messages privés.
+ *   POST action=site client nom av page depuis      -> {en_ligne:[{nom, av, page}], msgs:[mes messages privés, id > depuis]}  (toutes les 8 s)
+ *   POST action=ecrit de a texte                    -> {id}     un message privé (300 caractères) ; il n'apparaît pas dans la discussion de la houma
  * Données : famille-data/houma-ligne.sqlite et famille-data/houma-voix/<id>.<ext> (hors du site public).
  */
 declare(strict_types=1);
@@ -46,6 +49,9 @@ function hl(): PDO {
     $p->exec('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nom TEXT NOT NULL, type TEXT NOT NULL, texte TEXT, lieu TEXT, son TEXT, duree INTEGER, ts INTEGER NOT NULL, ip TEXT)');
     $p->exec('CREATE TABLE IF NOT EXISTS trocs (id INTEGER PRIMARY KEY, de TEXT NOT NULL, a TEXT NOT NULL, donne TEXT NOT NULL, contre TEXT, statut TEXT NOT NULL, ts INTEGER NOT NULL, maj INTEGER NOT NULL, app_a INTEGER NOT NULL DEFAULT 0, app_b INTEGER NOT NULL DEFAULT 0)');
     $p->exec('CREATE TABLE IF NOT EXISTS envois (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
+    $p->exec('CREATE TABLE IF NOT EXISTS site (client TEXT PRIMARY KEY, nom TEXT NOT NULL, av TEXT, page TEXT, vu INTEGER NOT NULL)');
+    $cols = array_column($p->query('PRAGMA table_info(messages)')->fetchAll(), 'name');
+    if (!in_array('a', $cols, true)) $p->exec("ALTER TABLE messages ADD COLUMN a TEXT NOT NULL DEFAULT ''");   // destinataire d'un message privé ('' = la houma)
     return $p;
 }
 function nom($a): string {
@@ -71,14 +77,14 @@ function limite(): void {
     if ((int)$s->fetchColumn() >= HL_ENVOIS) fail(429, 'Doucement ! Attends un peu avant d\'envoyer encore.');
     hl()->prepare('INSERT INTO envois (ip, ts) VALUES (?, ?)')->execute([$ip, $t]);
 }
-function ajoute(string $nom, string $type, string $texte, string $lieu = '', string $son = '', int $duree = 0): int {
-    hl()->prepare('INSERT INTO messages (nom, type, texte, lieu, son, duree, ts, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')->execute([$nom, $type, $texte, $lieu, $son, $duree, time(), ga_ip()]);
+function ajoute(string $nom, string $type, string $texte, string $lieu = '', string $son = '', int $duree = 0, string $a = ''): int {
+    hl()->prepare('INSERT INTO messages (nom, type, texte, lieu, son, duree, ts, ip, a) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$nom, $type, $texte, $lieu, $son, $duree, time(), ga_ip(), $a]);
     $id = (int)hl()->lastInsertId();
     foreach (hl()->query('SELECT id, son FROM messages WHERE id <= ' . ($id - HL_GARDE)) as $v) { if ($v['son']) @unlink(hl_dossier() . '/' . $v['id'] . '.' . $v['son']); }
     hl()->exec('DELETE FROM messages WHERE id <= ' . ($id - HL_GARDE));
     return $id;
 }
-function msg_out(array $m): array { return ['id' => (int)$m['id'], 'nom' => $m['nom'], 'type' => $m['type'], 'texte' => (string)$m['texte'], 'lieu' => (string)$m['lieu'], 'son' => $m['son'] ? 1 : 0, 'duree' => (int)$m['duree'], 'ts' => (int)$m['ts']]; }
+function msg_out(array $m): array { return ['id' => (int)$m['id'], 'nom' => $m['nom'], 'type' => $m['type'], 'texte' => (string)$m['texte'], 'lieu' => (string)$m['lieu'], 'son' => $m['son'] ? 1 : 0, 'duree' => (int)$m['duree'], 'ts' => (int)$m['ts'], 'a' => (string)($m['a'] ?? '')]; }
 function troc_out(array $t): array { return ['id' => (int)$t['id'], 'de' => $t['de'], 'a' => $t['a'], 'donne' => json_decode($t['donne'], true), 'contre' => $t['contre'] ? json_decode($t['contre'], true) : null, 'statut' => $t['statut'], 'ts' => (int)$t['ts'], 'maj' => (int)$t['maj'], 'app_a' => (int)$t['app_a'], 'app_b' => (int)$t['app_b']]; }
 function troc(int $id): array { $s = hl()->prepare('SELECT * FROM trocs WHERE id = ?'); $s->execute([$id]); $t = $s->fetch(); if (!$t) fail(404, 'Ce troc n\'existe plus.'); return $t; }
 function parent(): void {
@@ -106,13 +112,31 @@ try {
         hl()->prepare('INSERT OR REPLACE INTO presence (client, nom, lieu, chez, vu) VALUES (?, ?, ?, ?, ?)')->execute([$client, $nom, lieu($_POST['lieu'] ?? ''), court($_POST['chez'] ?? '', 20), $t]);
         $en = []; foreach (hl()->query('SELECT nom, lieu, chez, vu FROM presence ORDER BY vu DESC') as $p) if (!isset($en[$p['nom']])) $en[$p['nom']] = ['nom' => $p['nom'], 'lieu' => $p['lieu'], 'chez' => $p['chez']];
         $depuis = (int)($_POST['depuis'] ?? 0);
-        $s = $depuis > 0 ? hl()->prepare('SELECT * FROM messages WHERE id > ? ORDER BY id LIMIT 60') : hl()->prepare('SELECT * FROM (SELECT * FROM messages WHERE id > ? ORDER BY id DESC LIMIT 40) ORDER BY id');
+        $s = $depuis > 0 ? hl()->prepare("SELECT * FROM messages WHERE id > ? AND a = '' ORDER BY id LIMIT 60") : hl()->prepare("SELECT * FROM (SELECT * FROM messages WHERE id > ? AND a = '' ORDER BY id DESC LIMIT 40) ORDER BY id");
         $s->execute([$depuis]); $msgs = array_map('msg_out', $s->fetchAll());
         hl()->prepare("UPDATE trocs SET statut = 'perime', maj = ? WHERE statut IN ('offre', 'contre') AND maj < ?")->execute([$t, $t - HL_TROC_VIE]);
         $s = hl()->prepare("SELECT * FROM trocs WHERE (de = ? OR a = ?) AND (statut IN ('offre', 'contre') OR (statut = 'fait' AND ((a = ? AND app_b = 0) OR (de = ? AND app_a = 0))) OR maj > ?) ORDER BY id DESC LIMIT 30");
         $s->execute([$nom, $nom, $nom, $nom, $t - 900]);
-        $d = (int)hl()->query('SELECT COALESCE(MAX(id), 0) FROM messages')->fetchColumn();
+        $d = (int)hl()->query("SELECT COALESCE(MAX(id), 0) FROM messages WHERE a = ''")->fetchColumn();
         out(200, ['en_ligne' => array_values($en), 'msgs' => $msgs, 'trocs' => array_map('troc_out', $s->fetchAll()), 'dernier' => $d, 'now' => $t]);
+    }
+    if ($a === 'site') {
+        $nom = nom($_POST['nom'] ?? ''); $client = (string)($_POST['client'] ?? '');
+        if (!preg_match('/^[0-9a-z]{8,40}$/', $client)) fail(400, 'Appareil inconnu.');
+        $av = preg_match('/^[a-z]{2,12}$/', (string)($_POST['av'] ?? '')) ? (string)$_POST['av'] : '';
+        hl()->prepare('DELETE FROM site WHERE vu < ?')->execute([$t - 25]);
+        hl()->prepare('INSERT OR REPLACE INTO site (client, nom, av, page, vu) VALUES (?, ?, ?, ?, ?)')->execute([$client, $nom, $av, court($_POST['page'] ?? '', 60), $t]);
+        $en = []; foreach (hl()->query('SELECT nom, av, page FROM site ORDER BY vu DESC') as $p) if (!isset($en[$p['nom']])) $en[$p['nom']] = $p;
+        $depuis = (int)($_POST['depuis'] ?? 0);
+        $s = $depuis > 0 ? hl()->prepare("SELECT * FROM messages WHERE id > ? AND a <> '' AND (a = ? OR nom = ?) ORDER BY id LIMIT 60")
+                         : hl()->prepare("SELECT * FROM (SELECT * FROM messages WHERE id > ? AND a <> '' AND (a = ? OR nom = ?) ORDER BY id DESC LIMIT 40) ORDER BY id");
+        $s->execute([$depuis, $nom, $nom]);
+        out(200, ['en_ligne' => array_values($en), 'msgs' => array_map('msg_out', $s->fetchAll()), 'now' => $t]);
+    }
+    if ($a === 'ecrit') {
+        $de = nom($_POST['de'] ?? ''); $vers = nom($_POST['a'] ?? ''); if ($de === $vers) fail(400, 'Choisis à qui écrire.');
+        $x = court($_POST['texte'] ?? '', HL_TEXTE); if ($x === '') fail(400, 'Le message est vide.');
+        limite(); out(200, ['id' => ajoute($de, 't', $x, '', '', 0, $vers)]);
     }
     if ($a === 'dit') {
         $nom = nom($_POST['nom'] ?? ''); $x = court($_POST['texte'] ?? '', HL_TEXTE); if ($x === '') fail(400, 'Le message est vide.');

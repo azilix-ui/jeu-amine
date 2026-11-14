@@ -163,6 +163,8 @@ Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de co
   1. bac à sable : `window.localStorage` est remplacé par une couche qui écrit dans `sessionStorage` (`explo:<clé>`) et lit le vrai en dessous ; les vraies données de la tablette ne bougent pas (vérifié) ;
   2. cookie `famille_explo` : `api/famille.php` répond « ok » sans rien enregistrer pour `score`, `progress`, `ecran`, `demande` quand le joueur est Essil, Salma ou Amine ;
   3. le joueur de la visite est l'explorateur (pas de limite de temps) ;
-  4. étiquette verte « Explorateur du site : <nom> » en haut à droite de chaque page (la toucher la réduit), « Changer » ramène à l'accueil.
+  4. étiquette verte « Explorateur du site : <nom> » **en bas à gauche** de chaque page, **déplaçable** (glisser ; la place est gardée pendant la visite) ; la toucher ouvre le salon (ci-dessous).
+- **Un visiteur peut écrire son prénom et choisir son avatar** (Nour, Yasmine ou Farès) : profil `{nom, type:'explo', av}` ; sa tête est enregistrée comme celle d'un joueur (`progress` cours `profil`). Les prénoms de la famille sont refusés.
+- **Le salon du site** (tout le monde, `explorateur.js`) : chaque page envoie toutes les 8 s `api/houma.php` `action=site` (client, nom, av, titre de la page) ; on disparaît après 25 s. Toucher l'étiquette : « Sur le site en ce moment » (qui, sur quelle page) → « 💬 Écrire » : discussion privée (`action=ecrit`, 300 caractères, émojis). Les messages privés ont un destinataire (colonne `a` de `messages`) et ne s'affichent pas dans la discussion de Ma Houma. Un enfant n'a pas d'étiquette : une bulle « 💬 Anis : … · Répondre » apparaît (et est lue à voix haute) quand on lui écrit, puis une pastille ronde reste en bas à gauche. Les parents voient aussi les messages privés dans Progression › 💬 Houma en ligne (« → destinataire (privé) »).
 - Pied de l'accueil : Progression, **Administration** (`acces/admin.php`), Changer d'avatar.
 

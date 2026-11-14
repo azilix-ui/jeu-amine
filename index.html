@@ -145,6 +145,19 @@ html.choisir main.wrap{display:none}
 #qui .inv{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 #qui .inv button{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:999px;padding:8px 22px 8px 8px;border:2px solid var(--line);font:inherit;font-size:21px;font-weight:800;color:var(--c);cursor:pointer;min-height:56px}
 #qui .inv img{width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--cs)}
+#qui .perso{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+#qui .perso .q2{margin:0;font-size:17px;font-weight:800;color:var(--soft)}
+#qui .perso .ligne{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+#qui .perso .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#qui .perso #quiNom{height:56px;width:min(240px,70vw);border:2px solid var(--line);border-radius:16px;padding:0 14px;font:inherit;font-size:19px;font-weight:700;background:var(--surface);color:var(--ink)}
+#qui .perso .avs{display:flex;gap:6px;border:0;margin:0;padding:0}
+#qui .perso .avs label{cursor:pointer;border-radius:50%;padding:3px;border:3px solid transparent}
+#qui .perso .avs input{position:absolute;opacity:0;pointer-events:none}
+#qui .perso .avs img{width:50px;height:50px;border-radius:50%;object-fit:cover;display:block;background:var(--line)}
+#qui .perso .avs label:has(input:checked){border-color:#0f766e}
+#qui .perso .avs label:has(input:focus-visible){outline:4px solid var(--ring);outline-offset:2px}
+#qui .perso button{min-height:56px;padding:0 24px;border:0;border-radius:16px;background:#0f766e;color:#fff;font:inherit;font-size:19px;font-weight:800;cursor:pointer;box-shadow:0 5px 0 #0b5a54}
+#qui .perso .err{margin:0;min-height:1.3em;color:#b42318;font-weight:800;font-size:15px}
 @media (max-width:760px){#qui .fam5{grid-template-columns:repeat(2,minmax(0,1fr))}#qui .fam5 .e:last-child{grid-column:1/-1;justify-self:center;width:calc(50% - 6px)}#qui .inv img{width:56px;height:56px}}
 @media (orientation:portrait) and (min-width:761px){#qui .fam5{grid-template-columns:repeat(3,minmax(0,1fr))}#qui .fam5 .p{grid-column:span 1}}
 
@@ -199,10 +212,24 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
   <div class="invites">
     <p class="q">Tu viens nous rendre visite ? Choisis un invité</p>
     <div class="inv">
-      <button type="button" data-nom="Nour" data-type="explo" style="--c:#136f73;--cs:#d9f2f2"><img src="jeux/avatars/mascotte-nour.webp" width="320" height="320" alt="">Nour</button>
-      <button type="button" data-nom="Yasmine" data-type="explo" style="--c:#b12f53;--cs:#fbe1e8"><img src="jeux/avatars/mascotte-yasmine.webp" width="320" height="320" alt="">Yasmine</button>
-      <button type="button" data-nom="Farès" data-type="explo" style="--c:#2a3f9a;--cs:#e2e6f6"><img src="jeux/avatars/mascotte-fares.webp" width="320" height="320" alt="">Farès</button>
+      <button type="button" data-nom="Nour" data-type="explo" data-av="nour" style="--c:#136f73;--cs:#d9f2f2"><img src="jeux/avatars/mascotte-nour.webp" width="320" height="320" alt="">Nour</button>
+      <button type="button" data-nom="Yasmine" data-type="explo" data-av="yasmine" style="--c:#b12f53;--cs:#fbe1e8"><img src="jeux/avatars/mascotte-yasmine.webp" width="320" height="320" alt="">Yasmine</button>
+      <button type="button" data-nom="Farès" data-type="explo" data-av="fares" style="--c:#2a3f9a;--cs:#e2e6f6"><img src="jeux/avatars/mascotte-fares.webp" width="320" height="320" alt="">Farès</button>
     </div>
+    <form class="perso" id="quiPerso" novalidate>
+      <p class="q2">… ou écris ton prénom et choisis ton avatar</p>
+      <div class="ligne">
+        <label class="lbl" for="quiNom">Ton prénom</label>
+        <input id="quiNom" maxlength="20" autocomplete="given-name" placeholder="Ton prénom" enterkeyhint="go">
+        <fieldset class="avs"><legend class="lbl">Ton avatar</legend>
+          <label><input type="radio" name="quiAv" value="nour" checked><img src="jeux/avatars/mascotte-nour.webp" width="320" height="320" alt="Avatar à la fleur"></label>
+          <label><input type="radio" name="quiAv" value="yasmine"><img src="jeux/avatars/mascotte-yasmine.webp" width="320" height="320" alt="Avatar à la tresse"></label>
+          <label><input type="radio" name="quiAv" value="fares"><img src="jeux/avatars/mascotte-fares.webp" width="320" height="320" alt="Avatar au chapeau rouge"></label>
+        </fieldset>
+        <button type="submit">Entrer</button>
+      </div>
+      <p class="err" id="quiErr" role="alert"></p>
+    </form>
     <p class="n">Papa, maman et les invités explorent le site : les exercices ne comptent pas dans les scores des enfants.</p>
   </div>
 </section>
@@ -356,9 +383,21 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
 (function(){
   const h = document.documentElement;
   document.querySelectorAll('#qui [data-nom]').forEach(b => b.onclick = () => {
-    FamilleProfil.choisir(b.dataset.nom, b.dataset.type);
+    FamilleProfil.choisir(b.dataset.nom, b.dataset.type, b.dataset.av);
     location.replace('/' + location.hash);   // on recharge sans « ?profil » : explorateur.js pose (ou retire) le bac à sable
   });
+  // un visiteur écrit son prénom et choisit son avatar (14/11)
+  document.getElementById('quiPerso').onsubmit = e => {
+    e.preventDefault();
+    const err = document.getElementById('quiErr'), brut = document.getElementById('quiNom').value.trim().replace(/\s+/g, ' ');
+    const av = (document.querySelector('input[name="quiAv"]:checked') || {}).value || 'nour';
+    if(!/^[\p{L}][\p{L}\p{M} '\-]{1,19}$/u.test(brut)){ err.textContent = 'Écris ton prénom (2 lettres au moins).'; return; }
+    const nom = brut.charAt(0).toUpperCase() + brut.slice(1);
+    if(['anis', 'imen', 'essil', 'salma', 'amine'].includes(nom.toLowerCase())){ err.textContent = 'Ce prénom est déjà dans la famille : touche son avatar plus haut.'; return; }
+    FamilleProfil.choisir(nom, 'explo', av);
+    const fd = new FormData(); fd.append('action', 'progress'); fd.append('player', nom); fd.append('course', 'profil'); fd.append('data', JSON.stringify({ tete:av }));
+    fetch('api/famille.php', { method:'POST', body:fd }).catch(() => {}).finally(() => location.replace('/' + location.hash));
+  };
   document.getElementById('moiChange').onclick = () => { location.href = '/?profil'; };
   if(/[?&]profil\b/.test(location.search) && window.FamilleProfil) FamilleProfil.oublier();
   const P = window.FamilleProfil && FamilleProfil.actuel();

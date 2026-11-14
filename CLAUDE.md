@@ -35,7 +35,7 @@ Ordre d'affichage voulu : **Essil, Salma, Amine**. Les prénoms et les avatars p
 
 ```
 index.html             accueil : d'abord l'écran « Qui es-tu ? » (5 avatars de la famille + invités Nour, Yasmine, Farès ; maquette Claude Design « Accueil Famille Missaoui — Qui es-tu ? », artifact `NXuEAchJfB4sw1q6CuzZJ3`) ; un enfant voit seulement ses cours + le bandeau des jeux de famille ; papa, maman et invités voient tout (titre, portrait, tableau du temps de jeu, 3 cartes enfants, jeux de famille) en mode explorateur ; en bas : Progression, Administration
-explorateur.js         mis en premier dans chaque page par acces/porte.php : le profil de la visite (sessionStorage) et le mode explorateur (bac à sable localStorage, cookie famille_explo, étiquette « Explorateur du site : <nom> »)
+explorateur.js         mis en premier dans chaque page par acces/porte.php : le profil de la visite (sessionStorage) et le mode explorateur (bac à sable localStorage, cookie famille_explo, étiquette « Explorateur du site : <nom> » en bas à gauche, déplaçable) et le salon du site (qui est connecté, messages privés : api/houma.php, actions site et ecrit)
 indexancien.html       ancienne page d'accueil (photos aimantées sur le frigo), gardée en ligne, noindex
 famille.css            style commun accueil + espaces (version de cache : ?v=6)
 famille.js             module commun : « Qui joue ? », scores, classements, suivi et relecture des progrès
