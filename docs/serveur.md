@@ -6,6 +6,7 @@ Hébergement Hostinger (PHP + SQLite). Données hors du site public, à côté d
 |---|---|
 | `famille-data/famille.sqlite` | joueurs, records, progrès, historique, anti-abus |
 | `famille-data/ludo.sqlite` | parties de Ludo en ligne |
+| `famille-data/lire-voix/<voix>/<clé>.mp3` | les voix ElevenLabs de « Je lis ! » (Lulu, Olivier, Jon), déposées par `amine/lire/depot.php` (jeton), servies par `son.php`, listées par `voix.php` ; comprises dans la sauvegarde |
 | `nahki-voix/` | `auth.json` (hash du mot de passe parent), `index.json`, `sons/` (voix de Nahki Tounsi) |
 
 ## `api/famille.php`
