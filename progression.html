@@ -447,7 +447,7 @@ function lastSeen(S, name){ const p = S.players.find(x => x.name.toLowerCase() =
 /* ---------- Affichage : un tableau de bord en rubriques (onglets) ---------- */
 const KIDS = ['Essil', 'Salma', 'Amine'], KCOL = { Essil:'var(--essil)', Salma:'var(--salma)', Amine:'var(--amine-2)' }, KSUB = { Essil:'12 ans · collège', Salma:'8 ans · CE2', Amine:'5 ans · grande section' };
 const FAM = ['essil', 'salma', 'amine', 'anis', 'imen'];
-const TABS = [['vue', '📊', 'Vue d\'ensemble'], ['activite', '📅', 'Activités'], ['enfants', '🎓', 'Cours et jeux'], ['suivi', '🧭', 'Suivi'], ['records', '🏆', 'Records'], ['journal', '🌍', 'Journal'], ['reglages', '⚙️', 'Réglages']];
+const TABS = [['vue', '📊', 'Vue d\'ensemble'], ['activite', '📅', 'Activités'], ['enfants', '🎓', 'Cours et jeux'], ['suivi', '🧭', 'Suivi'], ['records', '🏆', 'Records'], ['journal', '🌍', 'Journal'], ['houma', '💬', 'Houma en ligne'], ['reglages', '⚙️', 'Réglages']];
 const mem = { get(k, d){ try{ return sessionStorage.getItem(k) || d; }catch(e){ return d; } }, set(k, v){ try{ sessionStorage.setItem(k, v); }catch(e){} } };
 let tab = mem.get('prog-tab', 'vue'), kid = mem.get('prog-kid', 'Salma'), aKid = 'Tous', vdays = +mem.get('prog-days', 7) || 7;
 let VIS = null, VERR = '', VKEEP = 60, vLoaded = 0, vBusy = false, jFilter = 'tous', jQuery = '';
@@ -594,11 +594,12 @@ function draw(){
   const S = lastS, pane = $('#pane'); if(!S || !pane) return;
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === tab));
   document.querySelectorAll('#pdays button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.d === vdays));
-  $('#pdays').style.visibility = tab === 'enfants' || tab === 'suivi' || tab === 'records' || tab === 'reglages' ? 'hidden' : '';
+  $('#pdays').style.visibility = tab === 'enfants' || tab === 'suivi' || tab === 'records' || tab === 'reglages' || tab === 'houma' ? 'hidden' : '';
   const keep = tab === 'journal' && document.activeElement && document.activeElement.id === 'jQ' ? document.activeElement.selectionStart : null;
-  pane.innerHTML = tab === 'vue' ? vueHTML(S) : tab === 'activite' ? activiteHTML(S) : tab === 'enfants' ? enfantsHTML(S) : tab === 'suivi' ? manageHTML(S) : tab === 'records' ? recordsHTML(S) : tab === 'reglages' ? reglagesHTML(S) : journalHTML();
+  pane.innerHTML = tab === 'vue' ? vueHTML(S) : tab === 'activite' ? activiteHTML(S) : tab === 'enfants' ? enfantsHTML(S) : tab === 'suivi' ? manageHTML(S) : tab === 'records' ? recordsHTML(S) : tab === 'reglages' ? reglagesHTML(S) : tab === 'houma' ? houmaHTML() : journalHTML();
   if(tab === 'suivi') bindManage();
   if(tab === 'reglages') bindReglages();
+  if(tab === 'houma') bindHouma();
   pane.querySelectorAll('[data-kid]').forEach(b => b.onclick = () => { kid = b.dataset.kid; mem.set('prog-kid', kid); setTab('enfants'); });
   pane.querySelectorAll('#kidSeg button').forEach(b => b.onclick = () => { kid = b.dataset.k; mem.set('prog-kid', kid); draw(); });
   pane.querySelectorAll('#aKid button').forEach(b => b.onclick = () => { aKid = b.dataset.k; draw(); });
@@ -651,6 +652,25 @@ function bindReglages(){
     if(!confirm('Supprimer le joueur « ' + de + ' », ses scores et ses progrès ? On ne peut pas revenir en arrière.')) return;
     try{ await post({ action:'joueur_supprime', pass, player:de }); await refait(); $('#jMsg').textContent = '✔ « ' + de + ' » est supprimé.'; }catch(e){ jm.textContent = e.message; } });
 }
+/* ---------- Ma Houma en ligne (14/11) : tout ce que les enfants se disent et s'échangent (api/houma.php) ---------- */
+let HLH = null, HLERR = '', hlCharge = false;
+async function hlPost(f){ const fd = new FormData(); Object.entries(f).forEach(([k, v]) => fd.append(k, v)); const r = await fetch('api/houma.php', { method:'POST', body:fd }); let j = {}; try{ j = await r.json(); }catch(e){} if(!r.ok) throw new Error(j.error || 'Erreur du serveur (' + r.status + ')'); return j; }
+async function chargeHouma(){ if(hlCharge) return; hlCharge = true; try{ HLH = await hlPost({ action:'historique', pass }); HLERR = ''; }catch(e){ HLERR = e.message; } hlCharge = false; if(tab === 'houma') draw(); }
+function houmaHTML(){
+  if(!HLH && !HLERR){ chargeHouma(); return '<p class="none">Chargement de la houma en ligne…</p>'; }
+  if(HLERR) return '<p class="none">' + esc(HLERR) + '</p>';
+  const q = ts => fmtDate(new Date(ts * 1000).toISOString()), ST = { offre:'proposé', contre:'réponse attendue', fait:'✅ fait', non:'refusé', annule:'annulé', perime:'oublié (2 jours)' };
+  const M = HLH.msgs.map(m => '<tr><td>' + q(m.ts) + '</td><td><b>' + esc(m.nom) + '</b></td><td>' + (m.type === 'v' ? '<audio controls preload="none" src="api/houma.php?son=' + m.id + '"></audio> ' + m.duree + ' s' : m.type === 'm' ? '📣 montre « ' + esc(m.texte || m.lieu) + ' »' : esc(m.texte)) + '</td><td><button class="tool" data-hlx="' + m.id + '">Effacer</button></td></tr>').join('');
+  const T = HLH.trocs.map(t => '<tr><td>' + q(t.ts) + '</td><td>' + esc(t.de) + ' → ' + esc(t.a) + '</td><td>' + esc(t.donne.n) + '</td><td>' + (t.contre ? esc(t.contre.n) : t.statut === 'offre' ? '…' : '🎁 rien') + '</td><td>' + (ST[t.statut] || t.statut) + '</td></tr>').join('');
+  return '<h3 class="sub">💬 Ce que les enfants se disent dans Ma Houma</h3><p>Messages écrits, messages vocaux et « Viens voir ! » (les 600 derniers). <button class="tool" id="hlRe">↻ Actualiser</button> <span id="hlMsg"></span></p>' +
+    (M ? '<div class="table-wrap"><table><thead><tr><th>Quand</th><th>Qui</th><th>Message</th><th></th></tr></thead><tbody>' + M + '</tbody></table></div>' : '<p class="none">Pas encore de message.</p>') +
+    '<h3 class="sub">🤝 Les échanges d\'objets</h3>' + (T ? '<div class="table-wrap"><table><thead><tr><th>Quand</th><th>Qui</th><th>Donne</th><th>Reçoit</th><th>État</th></tr></thead><tbody>' + T + '</tbody></table></div>' : '<p class="none">Pas encore d\'échange.</p>');
+}
+function bindHouma(){
+  const re = $('#hlRe'); if(re) re.onclick = () => { HLH = null; HLERR = ''; draw(); };
+  document.querySelectorAll('[data-hlx]').forEach(b => b.onclick = async () => { if(!confirm('Effacer ce message pour tout le monde ?')) return;
+    try{ await hlPost({ action:'efface', id:b.dataset.hlx, pass }); HLH.msgs = HLH.msgs.filter(m => m.id !== +b.dataset.hlx); draw(); }catch(e){ $('#hlMsg').textContent = e.message; } });
+}
 function setTab(t){ tab = t; mem.set('prog-tab', t); draw(); scrollTo({ top:0 }); }
 function show(S){
   $('#login').hidden = true; const b = $('#board'); b.hidden = false; lastS = S;
@@ -660,7 +680,7 @@ function show(S){
   document.querySelectorAll('#tabs button').forEach(x => x.onclick = () => setTab(x.dataset.t));
   document.querySelectorAll('#pdays button').forEach(x => x.onclick = () => { vdays = +x.dataset.d; mem.set('prog-days', vdays); draw(); fetchVisits(); });
   $('#reload').onclick = async () => { try{ const S2 = await post({action:'summary', pass}); VIS = null; vLoaded = 0; show(S2); }catch(e){ loginForm(e.message); } };
-  $('#logout').onclick = () => { pass = null; VIS = null; vLoaded = 0; try{ sessionStorage.removeItem('famille-pass'); }catch(e){} loginForm(''); };
+  $('#logout').onclick = () => { pass = null; VIS = null; HLH = null; vLoaded = 0; try{ sessionStorage.removeItem('famille-pass'); }catch(e){} loginForm(''); };
   draw(); fetchVisits();
 }
 /* ---------- Journal des visites (site.js, toutes les pages) ---------- */

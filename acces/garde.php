@@ -233,6 +233,7 @@ function ga_sauvegarde(): ?string {
     }
     $murd = $data . '/mur';   // les images du mur de la famille
     if (is_dir($murd)) foreach (glob($murd . '/*.webp') ?: [] as $f) $z->addFile($f, 'famille-data/mur/' . basename($f));
+    foreach (glob($data . '/houma-voix/*') ?: [] as $f) if (is_file($f)) $z->addFile($f, 'famille-data/houma-voix/' . basename($f));   // les messages vocaux de Ma Houma en ligne
     foreach (glob($data . '/lire-voix/*/*.mp3') ?: [] as $f) $z->addFile($f, 'famille-data/lire-voix/' . basename(dirname($f)) . '/' . basename($f));   // les voix de « Je lis ! »
     $voix = dirname(ga_racine()) . '/nahki-voix';
     if (is_dir($voix)) {

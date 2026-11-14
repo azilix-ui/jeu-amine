@@ -130,6 +130,7 @@ body.peinture #bPeint{background:var(--sun)}
 @media (max-height:520px){:root{--bar:46px}.tb{min-width:38px;height:36px;font-size:19px;border-radius:12px}#stars{font-size:15px}#who img{width:30px;height:30px}
   #bottom{height:calc(52px + env(safe-area-inset-bottom))}#view{bottom:calc(52px + env(safe-area-inset-bottom))}.hd{width:46px;font-size:0}.hd img{width:40px;height:40px}#barHint{display:none}#title small{display:none}}
 @media (max-width:700px){.tb.quit span{display:none}}
+@media (max-width:1000px){.tb{min-width:44px;height:46px;padding:0 6px;font-size:23px}#top{gap:5px}body.inroom #bSnd{display:none}}   /* les boutons 👫 et 💬 de la houma en ligne (14/11) : un peu plus serré en portrait */
 @media (max-width:560px){#title small{display:none}#barHint{display:none}.tb{min-width:42px;height:44px;padding:0 6px;font-size:22px}#top{gap:5px}}
 @media (prefers-reduced-motion:reduce){.e,.e.hop,.e.munch,.e.pop,.fxp,.spr.an{animation:none;transition:none}}
 </style>
@@ -528,8 +529,8 @@ const HOME = {}; Object.entries(PLACES).forEach(([pid, P]) => P.items.forEach(([
 SPAWN.forEach(id => { HOME[id] = { type:id }; });
 function typeOf(id){ return HOME[id] ? HOME[id].type : null; }
 const IT = id => ITEMS[typeOf(id)];
-function save(){ S.t = Date.now(); clearTimeout(saveT); saveT = setTimeout(() => store.set(key(), S), 350); }
-function saveNow(){ if(S && player){ clearTimeout(saveT); store.set(key(), S); } }
+function save(){ if(window.HL && HL.visite) return; S.t = Date.now(); clearTimeout(saveT); saveT = setTimeout(() => store.set(key(), S), 350); }
+function saveNow(){ if(S && player && !(window.HL && HL.visite)){ clearTimeout(saveT); store.set(key(), S); } }
 addEventListener('pagehide', saveNow); document.addEventListener('visibilitychange', () => { if(document.hidden) saveNow(); else if(player) sync(); });
 
 /* ---------- joueur et serveur ---------- */
@@ -543,7 +544,7 @@ async function setPlayer(name){
 }
 // Deux appareils : on garde le monde le plus récent, mais les découvertes des deux se réunissent (rien ne se perd).
 async function sync(){
-  if(!window.Famille || !player) return; const name = player;
+  if(!window.Famille || !player || (window.HL && HL.visite)) return; const name = player;
   try{ const r = await Famille.load('houma', name), d = r && r[key()]; if(!d || player !== name) return;
     const mine = Object.assign({}, S.disc, d.disc || {}), seen = Object.assign({}, S.seen, d.seen || {});
     if((d.t || 0) > (S.t || 0)){ S = fill(d); S.disc = mine; S.seen = seen; store.set(key(), S); if(place) render(); }
@@ -551,7 +552,7 @@ async function sync(){
     stars();
   }catch(e){}
 }
-async function choose(){ const n = await Famille.choosePlayer({ title:'Qui joue dans la houma ?', cancel:!!player }); if(n) await setPlayer(n); }
+async function choose(){ if(window.HL && HL.visite) HL.rentre(); const n = await Famille.choosePlayer({ title:'Qui joue dans la houma ?', cancel:!!player }); if(n) await setPlayer(n); }
 
 /* =====================================================================
    AFFICHAGE
@@ -622,7 +623,7 @@ function pulse(id, cls){ const e = ents.get(id); if(!e) return; e.el.classList.r
 function fx(x, y, emo, dx){ if(calm()) return; const s = document.createElement('span'); s.className = 'fxp'; s.textContent = emo; s.style.left = (x - 15) + 'px'; s.style.top = (y - 30) + 'px'; s.style.setProperty('--dx', (dx == null ? Math.random() * 40 - 20 : dx) + 'px'); stage.appendChild(s); setTimeout(() => s.remove(), 1500); }
 let toastT = 0; function toast(t, ms = 2400){ say(t); const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), ms); }
 function stars(){ $('stars').textContent = '⭐ ' + Object.keys(S ? S.disc : {}).filter(k => DISC.some(d => d[0] === k)).length; }
-function found(id){ if(S.disc[id]) return; const d = DISC.find(d => d[0] === id); if(!d) return; S.disc[id] = 1; stars(); save(); sfx.star(); toast(`⭐ Découverte : ${d[2]} ${d[1]}`, 3200); }
+function found(id){ if((window.HL && HL.visite) || S.disc[id]) return; const d = DISC.find(d => d[0] === id); if(!d) return; S.disc[id] = 1; stars(); save(); sfx.star(); toast(`⭐ Découverte : ${d[2]} ${d[1]}`, 3200); }
 
 /* ---------- la vie du décor : vapeur, notes, bulles, zzz ---------- */
 setInterval(() => { if(!place || document.hidden) return;
@@ -813,7 +814,7 @@ function mapSVG(){ const house = (x, y, w, h, dome) => `<rect x="${x}" y="${y}" 
     ${[[470, 318], [800, 250], [1140, 322], [640, 548]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="22" fill="#d6338a"/><circle cx="${p[0] + 22}" cy="${p[1] + 12}" r="16" fill="#e04a9a"/>`).join('')}</svg>`; }
 function go(pid){
   saveNow();
-  ['bRooms', 'bDeco', 'bMur', 'bPeint'].forEach(b => { $(b).hidden = !isRoom(pid); }); if(peinture) modePeinture(false); document.body.classList.toggle('inroom', isRoom(pid));
+  ['bRooms', 'bDeco', 'bMur', 'bPeint'].forEach(b => { $(b).hidden = !isRoom(pid) || (b !== 'bRooms' && !!(window.HL && HL.visite)); }); if(peinture) modePeinture(false); document.body.classList.toggle('inroom', isRoom(pid));
   if(pid === 'map'){ place = null; ambiance(null); unselect(); stage.innerHTML = `<div id="map">${mapSVG()}<img class="reel" src="houma/reel/carte.webp?v=1" alt="" draggable="false" onerror="this.remove()">${MAP.map(m => `<button class="pl${m[5] ? '' : ' soon'}" data-p="${m[0]}" style="left:${m[1]}%;top:${m[2]}%"><span style="font-size:64px;line-height:1">${m[4]}</span><span class="sign">${m[3]}${m[5] ? '' : ' 🚧'}</span></button>`).join('')}</div>`;
     $('title').innerHTML = `Ma Houma<small>le quartier du Jasmin · choisis un lieu</small>`; bar(); panX = 0; fit(); if(player) say('Le quartier du Jasmin. Choisis un lieu.'); return; }
   unselect(); closeBubble(); if(isRoom(pid)) seedRoom(pid);
@@ -1402,6 +1403,7 @@ function gesteBody(cid){ const g = geste[cid]; if(!g || !(g.k in GFR)) return nu
   return { w, h, fx:G[2], gy:G[4] || 1, html:`<div class="body" style="background-image:url(houma/g-${cid}${o === 'ville' ? '' : '-' + o}.webp);background-size:500% 100%;background-position:${fr * 25}% 0"></div><i class="shade"></i>` }; }
 
 /* ---------- les découvertes de la maison ---------- */
+DISC.push(['chezami', '🚪', 'Aller chez un ami'], ['montrer', '📣', 'Montrer sa maison aux autres'], ['bavard', '💬', 'Envoyer un message'], ['troc', '🤝', 'Faire un échange']);
 DISC.push(['fermier', '🌾', 'Nourrir un animal de la ferme'], ['recolte', '🥚', 'Ramasser un œuf, du lait ou de la laine'], ['bebe', '🐣', 'Un bébé est né à la ferme'], ['maisons', '🏘️', 'Visiter les maisons d’Essil, Salma et Amine']);
 DISC.push(['meuble', '🛋️', 'Meubler sa maison'], ['decoratrice', '🏡', '20 objets dans la maison'], ['peintre', '🎨', 'Changer les murs'], ['pincer', '🤏', 'Agrandir avec deux doigts'], ['miroir', '🪞', 'Retourner un meuble'],
   ['poser', '🍽️', 'Poser sur une table'], ['demenage', '🚪', "Changer de pièce"], ['tele', '📺', 'Regarder la télé'], ['piano', '🎹', 'Faire de la musique'], ['fusee', '🚀', 'Décoller en fusée'],
@@ -1411,5 +1413,6 @@ DISC.push(['meuble', '🛋️', 'Meubler sa maison'], ['decoratrice', '🏡', '2
 fit(); loadVoix();
 (async () => { const p = window.Famille && Famille.player(); if(p) await setPlayer(p); else { S = fresh(); go('map'); await choose(); } window.__houma = { get S(){ return S; }, get place(){ return place; }, go, PLACES, CHARS, DISC, save:saveNow, hit, land }; })();
 </script>
+<script src="houma/ligne.js?v=1"></script>
 </body>
 </html>

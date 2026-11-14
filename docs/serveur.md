@@ -6,6 +6,7 @@ Hébergement Hostinger (PHP + SQLite). Données hors du site public, à côté d
 |---|---|
 | `famille-data/famille.sqlite` | joueurs, records, progrès, historique, anti-abus |
 | `famille-data/ludo.sqlite` | parties de Ludo en ligne |
+| `famille-data/houma-ligne.sqlite`, `famille-data/houma-voix/<id>.<webm/mp4>` | Ma Houma en ligne (`api/houma.php`) : présence, messages (600 gardés), messages vocaux, échanges ; compris dans la sauvegarde |
 | `famille-data/lire-voix/<voix>/<clé>.mp3` | les voix ElevenLabs de « Je lis ! » (Lulu, Olivier, Jon), déposées par `amine/lire/depot.php` (jeton), servies par `son.php`, listées par `voix.php` ; comprises dans la sauvegarde |
 | `nahki-voix/` | `auth.json` (hash du mot de passe parent), `index.json`, `sons/` (voix de Nahki Tounsi) |
 
@@ -125,7 +126,7 @@ Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de co
 
 - **Appareil de confiance** = cookie `mf_appareil` (jeton aléatoire ; la base garde son empreinte SHA-256), `HttpOnly`, `Secure`, `SameSite=Lax`. Viennent de : la maison (IP enregistrée → carte valable un an, gardée ensuite hors de la maison), la connexion d'Anis (un an), une invitation (durée choisie). Session administrateur : cookie `mf_admin`, 12 h, `SameSite=Strict` ; actions en `POST` JSON avec l'en-tête `X-Garde: 1`.
 - **Adresse IP** : `REMOTE_ADDR` (chez Hostinger, le CDN y met déjà la vraie adresse du visiteur, vu le 13/11 ; `X-Forwarded-For` peut être inventé par le visiteur, testé) ; `X-Forwarded-For` (adresse la plus à droite) seulement si la connexion vient d'une adresse privée (relais). En IPv6, même bloc /64 = même maison. Le détail brut est affiché dans « Secours et détails techniques » de l'administration.
-- **API** (`api/famille.php`, `api/ludo.php`, `amine/voix/api.php`) : `ga_garde_api()` répond 401 aux appareils inconnus. Les images, sons, scripts et vidéos des jeux restent publics (seules les pages et les photos de famille sont gardées).
+- **API** (`api/famille.php`, `api/ludo.php`, `api/houma.php`, `api/mur.php`, `amine/voix/api.php`) : `ga_garde_api()` répond 401 aux appareils inconnus. Les images, sons, scripts et vidéos des jeux restent publics (seules les pages et les photos de famille sont gardées).
 - **Tant que la protection n'est pas activée** (ou sans compte administrateur), tout le monde entre comme avant. Une panne de la porte (exception) laisse entrer, pour ne jamais enfermer la famille dehors.
 - **Secours** : un fichier vide `famille-data/acces-ouvert` (gestionnaire de fichiers hPanel) ouvre le site à tous. Mot de passe administrateur oublié : supprimer `famille-data/acces-admin.json`, puis recréer le compte (mot de passe parent). Trop d'essais : 8 par 15 min et par adresse.
 - Test en local : `php -S` avec un routeur qui imite les règles `.htaccess` (voir le journal du 13/11).
@@ -141,3 +142,10 @@ Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de co
   - `summary` renvoie aussi `ecran` et `aujourdhui`.
 - Cours ajoutés : `defi` (défi du jour) et `amine-lecture` (Je lis !), dans `COURSES`, `READABLE` et `LEARNING`.
 - `api/mur.php` : le mur de la famille (voir `docs/contenus.md`), gardé par la porte comme les autres API.
+
+## `api/houma.php` (Ma Houma en ligne, 14/11)
+- `salut` (toutes les 3 s : client, nom, lieu, chez, depuis) → qui est là (15 s), nouveaux messages, échanges qui me concernent. `dit` (texte), `voix` (fichier audio vérifié : webm, mp4, ogg, wav ; 1,5 Mo, 60 s), `montre` (lieu), `?son=ID`.
+- Troc : `propose` → `repond` (contre ou non) → `conclut` (oui/non, par celui qui a proposé) ; `annule` ; `applique` (le receveur, une seule fois). États : offre, contre, fait, non, annule, perime (2 jours).
+- Parents (mot de passe parent) : `historique` (600 messages, 200 échanges), `efface`. Onglet « 💬 Houma en ligne » de Progression.
+- Limite : 120 envois par adresse et par 10 minutes. Seuls les appareils de confiance passent (`ga_garde_api()`).
+
