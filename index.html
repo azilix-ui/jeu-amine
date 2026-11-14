@@ -189,6 +189,31 @@ html.enfant-salma #moi{--c:var(--salma-card);--c2:var(--salma-sky);--c3:#fff;--c
 html.enfant-amine #moi{--c:var(--amine-card);--c2:var(--amine-2);--c3:var(--amine-moon);--cs:var(--amine-soft)}
 html.enfant .tj:not(.moi){display:none}html.enfant .tdj .grille{grid-template-columns:1fr}html.enfant .tdj{display:none!important}
 
+/* le mur des nouveautés (14/11) : un vrai tableau en liège au cadre bleu sur un mur à la chaux (ComfyUI), des papiers épinglés dessus */
+#mur{display:none}
+html.explo #mur,html.enfant #mur{display:block}
+#mur{position:relative;border-radius:26px;overflow:hidden;background:#efe9df url(jeux/avatars/qui/mur.webp) center/cover;aspect-ratio:1600/704;box-shadow:0 10px 30px #0002}
+#mur h2{position:absolute;left:23.5%;top:3.2%;margin:0;font-family:var(--display);font-weight:800;font-size:clamp(16px,2vw,24px);color:#1d4f8a;background:#fffdf5;padding:2px 14px;border-radius:6px;transform:rotate(-1.5deg);box-shadow:0 2px 6px #0003;z-index:2}
+#mur .liege{position:absolute;left:25%;right:24.5%;top:14%;bottom:12%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:1fr;gap:4%}
+.note{position:relative;display:flex;flex-direction:column;gap:2px;padding:14px 10px 8px;background:var(--p,#fff7c2);color:#1f2433;text-decoration:none;box-shadow:0 6px 10px #0003,0 1px 2px #0002;transform:rotate(var(--r,-1.5deg));transition:transform .15s;font-size:clamp(11px,1.15vw,14px);line-height:1.2;overflow:hidden;border-radius:2px}
+.note:hover,.note:focus-visible{transform:rotate(0) scale(1.05);z-index:3}
+.note::before{content:'';position:absolute;top:4px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff8,transparent 45%),var(--pin,#d7263d);box-shadow:0 2px 3px #0005}
+.note b{font-family:var(--display);font-size:1.15em}
+.note .e{font-size:1.5em;line-height:1}
+.note small{margin-top:auto;font-size:.8em;color:#5b5f6e}
+#mur .affiche{position:absolute;left:3.2%;top:9%;width:17.5%;background:#fff;padding:.6% .6% 2.6%;box-shadow:0 8px 16px #0004;transform:rotate(-3deg);transition:transform .15s;z-index:2}
+#mur .affiche:hover{transform:rotate(0) scale(1.04)}
+#mur .affiche img{display:block;width:100%;height:auto}
+#mur .affiche span{position:absolute;left:0;right:0;bottom:2px;text-align:center;font:700 clamp(9px,1vw,13px)/1.2 var(--display,inherit);color:#333}
+#mur .affiche::before{content:'';position:absolute;top:-10px;left:35%;width:30%;height:22px;background:#fff9;box-shadow:0 1px 3px #0002;transform:rotate(2deg)}
+@media (max-width:820px){
+  #mur{aspect-ratio:auto;padding:58px 14px 18px;background-size:cover;background-position:center}
+  #mur h2{left:16px;top:14px}
+  #mur .liege{position:static;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .note{min-height:110px;font-size:14px}
+  #mur .affiche{position:relative;display:block;left:auto;top:auto;width:min(220px,60%);margin:0 auto 16px}
+}
+
 /* explorateur : une ligne pour dire que rien ne compte */
 .explo-note{display:none}
 html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4f1;border:2px solid #9fd9d1;border-radius:18px;padding:10px 16px;font-size:16px;font-weight:700;color:#0b4f4a}
@@ -205,9 +230,9 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
   <div class="fam5">
     <button class="av5 p" type="button" data-nom="Anis" data-type="explo" style="--c:#0f766e;--cs:#d7f1ee"><img src="jeux/avatars/anis.webp" width="320" height="320" alt=""><b>Anis</b><small>Papa</small></button>
     <button class="av5 p" type="button" data-nom="Imen" data-type="explo" style="--c:#b4235a;--cs:#fbe3ec"><img src="jeux/avatars/imen.webp" width="320" height="320" alt=""><b>Imen</b><small>Maman</small></button>
-    <button class="av5 e" type="button" data-nom="Essil" data-type="enfant" style="--c:var(--essil-card);--c2:var(--essil-rail);--cs:var(--essil-soft)"><img src="jeux/avatars/essil.webp" width="320" height="320" alt=""><b>Essil</b><small>Collège</small></button>
-    <button class="av5 e" type="button" data-nom="Salma" data-type="enfant" style="--c:var(--salma-card);--c2:var(--salma-sky);--cs:var(--salma-soft)"><img src="jeux/avatars/salma.webp" width="320" height="320" alt=""><b>Salma</b><small>CE2</small></button>
-    <button class="av5 e" type="button" data-nom="Amine" data-type="enfant" style="--c:var(--amine-card);--c2:var(--amine-2);--cs:var(--amine-soft)"><img src="jeux/avatars/amine.webp" width="320" height="320" alt=""><b style="color:var(--amine-moon)">Amine</b><small>Grande section</small></button>
+    <button class="av5 e" type="button" data-nom="Essil" data-type="enfant" style="--c:var(--essil-card);--c2:var(--essil-rail);--cs:var(--essil-soft)"><img src="jeux/avatars/qui/essil.webp" width="320" height="320" alt=""><b>Essil</b><small>Collège</small></button>
+    <button class="av5 e" type="button" data-nom="Salma" data-type="enfant" style="--c:var(--salma-card);--c2:var(--salma-sky);--cs:var(--salma-soft)"><img src="jeux/avatars/qui/salma.webp" width="320" height="320" alt=""><b>Salma</b><small>CE2</small></button>
+    <button class="av5 e" type="button" data-nom="Amine" data-type="enfant" style="--c:var(--amine-card);--c2:var(--amine-2);--cs:var(--amine-soft)"><img src="jeux/avatars/qui/amine.webp" width="320" height="320" alt=""><b style="color:var(--amine-moon)">Amine</b><small>Grande section</small></button>
   </div>
   <div class="invites">
     <p class="q">Tu viens nous rendre visite ? Choisis un invité</p>
@@ -243,6 +268,11 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
     <h2 id="moiCoursT">Mes cours et mes jeux pour apprendre</h2>
     <ul class="cours" id="moiCours"></ul>
     <div class="jeuxf"><h2>Les jeux de toute la famille</h2><ul id="moiJeux"></ul></div>
+  </section>
+  <section id="mur" aria-labelledby="murT">
+    <h2 id="murT">📌 Les nouveautés</h2>
+    <a class="affiche" href="jeux/avatars/qui/affiche-famille.jpg" target="_blank" rel="noopener"><img src="jeux/avatars/qui/affiche-famille.webp" width="900" height="1159" alt="L'affiche de la famille Missaoui : papa, maman, Essil, Salma et Amine devant une maison de Sidi Bou Saïd"><span>Notre affiche 🖼️</span></a>
+    <div class="liege" id="murNotes"></div>
   </section>
   <p class="explo-note" role="note"><span aria-hidden="true" style="font-size:22px">🧭</span>Mode explorateur : ouvre les cours et les jeux des enfants, fais les exercices. Rien ne compte dans leurs scores ni leur progression.</p>
   <header class="hero">
@@ -378,6 +408,25 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
   </footer>
 </main>
 <script src="version.js"></script>
+<script>
+// Le mur des nouveautés (14/11) : à compléter ici à chaque nouveauté (la plus récente en premier). « pour » : tous, explo, ou des prénoms.
+const NOUVEAUTES = [
+  { d:'14/11', e:'🖍️', t:'Colorie ta famille', x:'Papa, maman, Essil, Salma et Amine à colorier dans l\'Atelier.', l:'jeux/atelier-du-jasmin.html', p:'#fff7c2', pin:'#d7263d' },
+  { d:'14/11', e:'🖼️', t:'Notre affiche', x:'Toute la famille à Sidi Bou Saïd, à imprimer.', l:'jeux/avatars/qui/affiche-famille.jpg', p:'#e3f1ff', pin:'#1f6b44' },
+  { d:'14/11', e:'🏘️', t:'Ma Houma en ligne', x:'Va chez les autres, échange des objets et discute.', l:'jeux/ma-houma.html', p:'#ffe1ea', pin:'#1f3c88' },
+  { d:'14/11', e:'📖', t:'Je lis !', x:'Apprends à lire avec la voix de Lulu.', l:'amine/je-lis.html', p:'#e9e1ff', pin:'#ff8c1a', pour:['Amine', 'explo'] },
+  { d:'14/11', e:'💬', t:'Le salon', x:'Touche ton étiquette en bas à gauche : écris à qui est connecté.', p:'#dff7e8', pin:'#7c3aed', pour:['explo'] },
+  { d:'14/11', e:'🙋', t:'Encore un peu ?', x:'Quand le temps est fini, demande plus de temps à papa ou maman.', p:'#dff7e8', pin:'#7c3aed', pour:['Essil', 'Salma', 'Amine'] },
+  { d:'14/11', e:'🐑', t:'La ferme', x:'Dans Ma Houma : nourris les animaux, ramasse les œufs.', l:'jeux/ma-houma.html', p:'#fff1dc', pin:'#0f766e' },
+  { d:'13/11', e:'🌸', t:'Le Jasmin en vrai', x:'Les 24 mondes en images réalistes.', l:'jeux/legende-du-jasmin-3.html', p:'#fff7c2', pin:'#b4235a' }];
+(function(){
+  const P = window.FamilleProfil && FamilleProfil.actuel(); if(!P) return;
+  const qui = P.type === 'explo' ? 'explo' : P.nom, R = ['-2deg', '1.5deg', '-1deg', '2deg', '-1.5deg', '1deg'];
+  const L = NOUVEAUTES.filter(n => !n.pour || n.pour.includes(qui)).slice(0, 6);
+  document.getElementById('murNotes').innerHTML = L.map((n, i) => { const tag = n.l ? 'a' : 'div', h = n.l ? ` href="${n.l}"` : '';
+    return `<${tag} class="note"${h} style="--p:${n.p};--pin:${n.pin};--r:${R[i % R.length]}"><span class="e" aria-hidden="true">${n.e}</span><b>${n.t}</b><span>${n.x}</span><small>${n.d}</small></${tag}>`; }).join('');
+})();
+</script>
 <script>
 // « Qui es-tu ? » et la vue de chaque enfant (14/11)
 (function(){

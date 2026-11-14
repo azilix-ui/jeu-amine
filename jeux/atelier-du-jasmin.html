@@ -221,7 +221,7 @@ body.m3d #shcv{display:none}
   <div class="grid">
     <button class="big c1" data-go="pick:p"><span aria-hidden="true">🏞️</span><div><b>Les paysages</b><small>24 lieux de Tunisie à colorier</small></div></button>
     <button class="big c6" data-go="pick:a"><span aria-hidden="true">🐴</span><div><b>Les animaux</b><small>Chat, chien, cheval… les amis de la ferme</small></div></button>
-    <button class="big c2" data-go="pick:c"><span aria-hidden="true">👘</span><div><b>Les costumes</b><small>Habille Nour, Yasmine et Farès</small></div></button>
+    <button class="big c2" data-go="pick:c"><span aria-hidden="true">👘</span><div><b>La famille et les costumes</b><small>Colorie papa, maman, Essil, Salma, Amine, et habille Nour, Yasmine et Farès</small></div></button>
     <button class="big c5" data-go="pick:l"><span aria-hidden="true">✏️</span><div><b>Je dessine</b><small>Une feuille blanche, des crayons : à toi de jouer</small></div></button>
     <button class="big c4" data-go="pick:d"><span aria-hidden="true">🪄</span><div><b>Dessin pas à pas</b><small>Apprends à dessiner un chat, une maison…</small></div></button>
     <button class="big c3" data-go="snake"><span aria-hidden="true">🐍</span><div><b>Mon serpent</b><small>Crée ton skin pour Serpent Légendes</small></div></button>
@@ -323,6 +323,8 @@ const COST = [
   { who:'Nour', img:'avatars/mascotte-nour.webp', items:[['c-nour-1','Jebba de fête'],['c-nour-2','Pêcheur de Djerba'],['c-nour-3','Prince du désert']] },
   { who:'Yasmine', img:'avatars/mascotte-yasmine.webp', items:[['c-yasmine-1','Farmla et chéchia'],['c-yasmine-2','Melia berbère'],['c-yasmine-3','Caftan de fête']] },
   { who:'Farès', img:'avatars/mascotte-fares.webp', items:[['c-fares-1','Jebba brodée'],['c-fares-2','Cavalier du désert'],['c-fares-3','Farmla et sarouel']] }];
+/* La famille à colorier (14/11, ComfyUI d'après les nouveaux portraits) : à part des costumes, qui servent aussi de marionnettes au spectacle. */
+const FAMC = [['c-anis-1', 'Anis'], ['c-imen-1', 'Imen'], ['c-essil-1', 'Essil'], ['c-salma-1', 'Salma'], ['c-amine-1', 'Amine']];
 /* Feuilles blanches (« l- ») et dessins pas à pas (« d- ») : pas d'image, une feuille 1024 × 768 où l'on dessine au crayon. */
 const FREE = [1, 2, 3, 4, 5, 6].map(i => ['l-' + i, 'Ma feuille ' + i]);
 const ring = (cx, cy, d, r, n) => [...Array(n)].map((_, i) => ['c', Math.round(cx + d * Math.cos(i * 6.2832 / n - 1.5708)), Math.round(cy + d * Math.sin(i * 6.2832 / n - 1.5708)), r]);
@@ -372,7 +374,7 @@ const LESSONS = {
 };
 const DRAW = Object.keys(LESSONS).map(id => [id, LESSONS[id].name]);
 const blank = id => id[0] === 'l' || id[0] === 'd';
-const NAME = Object.fromEntries(LAND.concat(ANIM, FREE, DRAW.map(d => [d[0], 'Je dessine : ' + d[1].toLowerCase()]), ...COST.map(c => c.items.map(i => [i[0], c.who + ' · ' + i[1]]))));
+const NAME = Object.fromEntries(LAND.concat(ANIM, FREE, DRAW.map(d => [d[0], 'Je dessine : ' + d[1].toLowerCase()]), ...COST.map(c => c.items.map(i => [i[0], c.who + ' · ' + i[1]])), FAMC.map(i => [i[0], 'La famille · ' + i[1]])));
 const PATX = [['b','Arabesque'],['f','Fleurs'],['s','Étoiles'],['h','Cœurs'],['k','Losanges'],['c','Damier'],['v','Chevrons'],['e','Écailles']];
 const STAMPS = '⭐ 🌟 ✨ 🌙 ☀️ ☁️ 🌈 ❤️ 💖 🌸 🌺 🌼 🌷 🌹 🍀 🌴 🌵 🦋 🐝 🐞 🐱 🐶 🐴 🐪 🐦 🐟 🐢 🦩 🎈 🎀 👑 💎 🍉 🍓 🍊 🍋 🧁 🍭 ⚽ 🚗 ⛵ 🏠 🕌 🪁 😀 😍 😎 🥳'.split(' ');
 const COLORS = ['#e8333a','#ff7a1a','#ffc928','#fff0a0','#8fd14f','#2f9e44','#1fb8a6','#5cc8f5','#1f6fd8','#27348b','#8a4fd8','#d264c8','#ff8fb8','#ffd9c2','#e0a878','#a8683c','#6b4226','#ffffff','#9aa3ad','#2b2b33'];
@@ -961,9 +963,10 @@ let toastT = null; function toast(m){ const t = $('toast'); t.classList.remove('
 let backTo = 'pick';
 function card(id, label, tall){ const it = ART.items[id]; return `<button class="card ${tall ? 'tall' : ''}" data-id="${id}"><img src="${it && it.th ? it.th : blank(id) ? blankThumb(id) : `atelier/${id}.webp?v=2`}" alt="" loading="lazy">${S.done[id] ? '<span class="ok" aria-label="fini">✔</span>' : ''}<b>${label}</b></button>`; }
 function renderPick(kind){
-  pickKind = kind; $('pickTitle').textContent = kind === 'p' ? 'Choisis un paysage' : kind === 'a' ? 'Choisis un animal' : kind === 'l' ? 'Choisis une feuille' : kind === 'd' ? 'Que veux-tu dessiner ?' : 'Choisis un ami et sa tenue';
+  pickKind = kind; $('pickTitle').textContent = kind === 'p' ? 'Choisis un paysage' : kind === 'a' ? 'Choisis un animal' : kind === 'l' ? 'Choisis une feuille' : kind === 'd' ? 'Que veux-tu dessiner ?' : 'Choisis qui colorier';
   $('pickGrid').innerHTML = kind !== 'c' ? (kind === 'a' ? ANIM : kind === 'l' ? FREE : kind === 'd' ? DRAW.map(d => [d[0], LESSONS[d[0]].ico + ' ' + d[1]]) : LAND).map(l => card(l[0], l[1])).join('')
-    : COST.map(c => `<div class="sect"><img src="${c.img}" alt="">${c.who}</div>` + c.items.map(i => card(i[0], i[1], true)).join('')).join('');
+    : `<div class="sect"><img src="avatars/qui/amine.webp" alt="">La famille Missaoui</div>` + FAMC.map(i => card(i[0], i[1], true)).join('') +
+      COST.map(c => `<div class="sect"><img src="${c.img}" alt="">${c.who}</div>` + c.items.map(i => card(i[0], i[1], true)).join('')).join('');
   if(kind !== 'l' && kind !== 'd') say(kind === 'p' ? 'paysage' : kind === 'a' ? 'animaux' : 'costume', true);
 }
 function renderGallery(){
