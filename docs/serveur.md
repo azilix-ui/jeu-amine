@@ -149,3 +149,10 @@ Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de co
 - Parents (mot de passe parent) : `historique` (600 messages, 200 échanges), `efface`. Onglet « 💬 Houma en ligne » de Progression.
 - Limite : 120 envois par adresse et par 10 minutes. Seuls les appareils de confiance passent (`ga_garde_api()`).
 
+## Tableau du temps de jeu et « 🙋 Demander plus de temps » (14/11)
+- **Accueil** (`index.html`, section `#tdj`) : pour Essil, Salma et Amine, ce qu'il reste à jouer aujourd'hui, la jauge, la pause de nuit, le temps en plus accordé et les demandes en attente. `GET api/famille.php?action=ecran_tous` (toutes les minutes). Caché si l'API ne répond pas.
+- **Écran de pause** (`famille.js`) : bouton « 🙋 Demander plus de temps » → `POST action=demande player` → table `demandes` (id, player, jour, ts, jeton, statut attente/oui/non/oubliee, min, maj) et notification **ntfy** (publiée en JSON sur `https://ntfy.sh/`, même canal secret que les alertes de la porte, `ga_canal_ntfy()`, réglé dans l'administration) avec 3 boutons : +15 min, +30 min, Non. Toucher la notification ouvre `api/reponse.php` (+15, +30, +1 h, non).
+- `api/reponse.php` : **hors de la porte** (le téléphone n'est pas forcément un appareil de confiance), n'accepte que `d=ID&t=JETON` (32 caractères, usage unique, 12 h ; essais ratés comptés par `ga_note_echec`).
+- Une réponse « oui » retire les minutes du temps joué et la tablette de l'enfant (qui relit l'état toutes les 5 s pendant l'attente) lève la pause pendant ces minutes, même la nuit (`famille-ecran-deblocage`). « Non » : l'enfant peut redemander après 30 min ; 6 demandes par jour au plus.
+- On peut aussi répondre dans Progression › Réglages (carte de l'enfant : `action=demande_reponse`, mot de passe parent). `ecran_etat()` renvoie `demande` (la dernière du jour) et `now`.
+

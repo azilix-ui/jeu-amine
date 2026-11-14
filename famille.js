@@ -103,6 +103,7 @@
       '.fm-msg{color:#d7263d;font-weight:600;text-align:center;min-height:1.2em;margin:-6px 0}' +
       '.fm-pause{background:rgba(16,12,32,.92);z-index:2147483000}.fm-p{margin:0;text-align:center;font-size:19px;line-height:1.45;color:#4a3f78}' +
       '.fm-btn{display:flex;align-items:center;justify-content:center;min-height:58px;border-radius:18px;background:#8be08f;color:#14321a;font-weight:700;font-size:21px;text-decoration:none;box-shadow:0 6px 0 #4c9a52}' +
+      '.fm-dem{width:100%;border:0;font:inherit;background:#ffd36b;color:#4a3300;box-shadow:0 6px 0 #c9962a;cursor:pointer}.fm-dem[disabled]{opacity:.75;cursor:default}.fm-dmsg{margin:0;text-align:center;font-size:17px;font-weight:700;color:#4a3f78;min-height:1.2em}' +
       '.fm-parent summary{cursor:pointer;color:#6b6290;text-align:center;font-size:15px;padding:8px}.fm-parent .fm-other{margin-top:8px}' +
       '.fm-toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:2147483001;background:#1b1533;color:#fff;font:600 18px Fredoka,Nunito,system-ui,sans-serif;padding:12px 20px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.4)}' +
       '.fm-known{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.fm-known button{border:0;cursor:pointer;font:inherit;font-weight:600;font-size:17px;display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;color:#fff;min-height:48px;box-shadow:0 4px 0 rgba(0,0,0,.25)}' +
@@ -267,8 +268,15 @@
         '<h2>' + (pourquoi === 'nuit' ? 'Bonne nuit, ' + esc(p) + ' !' : 'C\'est l\'heure de faire une pause, ' + esc(p) + ' !') + '</h2>' +
         '<p class="fm-p">' + (pourquoi === 'nuit' ? 'Les jeux dorment jusqu\'à demain matin. Les cours restent ouverts si tu veux encore apprendre.' : 'Tu as bien joué aujourd\'hui ! Les jeux reviennent demain. Les cours, eux, restent ouverts.' + (etat && !etat.bonus ? ' Astuce : réussis ton défi du jour pour gagner 10 minutes de jeu.' : '')) + '</p>' +
         '<a class="fm-btn" href="' + (ESPACE[p] || '/') + '">📚 Aller à mes cours</a>' +
+        '<button class="fm-btn fm-dem" type="button">🙋 Demander plus de temps</button><p class="fm-dmsg" aria-live="polite"></p>' +
         '<details class="fm-parent"><summary>Un parent débloque 15 minutes</summary><form class="fm-other"><input type="password" placeholder="Mot de passe parent" autocomplete="current-password"><button type="submit">OK</button></form><div class="fm-msg"></div></details></div>';
       document.body.appendChild(cache);
+      cache.querySelector('.fm-dem').onclick = function(){
+        var b = this; b.disabled = true; b.textContent = '📨 J\'envoie ta demande…';
+        post({action:'demande', player:p}).then(function(j){ etat = j; demandeUI(); dis(j.envoye === false ? 'Oups, la notification n\'est pas partie. Va voir papa ou maman !' : 'C\'est envoyé ! Papa ou maman va répondre.'); })
+          .catch(function(err){ b.disabled = false; b.textContent = '🙋 Demander plus de temps'; var m = cache && cache.querySelector('.fm-dmsg'); if(m) m.textContent = (err && err.message && err.status === 429) ? err.message : 'Le serveur ne répond pas.'; });
+      };
+      demandeUI();
       ['keydown', 'keyup', 'pointerdown', 'touchstart', 'mousedown'].forEach(function(t){ addEventListener(t, stopTouches, true); });
       cache.querySelector('form').onsubmit = function(e){
         e.preventDefault(); var inp = cache.querySelector('input'), msg = cache.querySelector('.fm-msg');
@@ -276,16 +284,34 @@
           .catch(function(err){ msg.textContent = err.status === 403 ? 'Ce n\'est pas le bon mot de passe.' : 'Le serveur ne répond pas.'; });
       };
     }
+    // « 🙋 Demander plus de temps » (14/11) : l'état de la dernière demande du jour vient du serveur (etat.demande)
+    function dis(t){ try{ if('speechSynthesis' in window){ speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; speechSynthesis.speak(u); } }catch(e){} }
+    function demandeUI(){
+      if(!cache || !etat) return; var b = cache.querySelector('.fm-dem'), m = cache.querySelector('.fm-dmsg'), d = etat.demande, t = etat.now || Date.now() / 1000;
+      if(d && d.statut === 'attente' && d.ts > t - 7200){ b.disabled = true; b.textContent = '📨 Demande envoyée…'; m.textContent = 'On attend la réponse de papa ou maman.'; }
+      else if(d && d.statut === 'non' && d.maj > t - 1800){ b.hidden = true; m.textContent = 'Papa ou maman a dit non pour cette fois 💛'; }
+      else { b.hidden = false; b.disabled = false; b.textContent = '🙋 Demander plus de temps'; m.textContent = ''; }
+    }
+    function reponse(){   // un « oui » lève la pause pendant les minutes données (même la nuit) ; un « non » s'affiche une fois
+      var d = etat && etat.demande, p = moi(); if(!d || !p || d.statut === 'attente') return;
+      var vue = get('famille-demande-vue', 0); if(vue === d.id) return;
+      if(d.statut === 'oui'){ var fin = Date.now() + ((d.maj + d.min * 60) - (etat.now || Date.now() / 1000)) * 1000;
+        if(fin > Date.now()){ set('famille-ecran-deblocage', {p:p, jusqua:fin}); toast('🎉 Papa ou maman t\'a donné ' + d.min + ' minutes de plus !'); dis('Bonne nouvelle ! Tu as ' + d.min + ' minutes de jeu en plus.'); } }
+      else if(d.statut === 'non' && cache){ dis('Papa ou maman a dit non pour cette fois.'); }
+      set('famille-demande-vue', d.id);
+    }
     function enleve(){ if(!cache) return; cache.remove(); cache = null; ['keydown', 'keyup', 'pointerdown', 'touchstart', 'mousedown'].forEach(function(t){ removeEventListener(t, stopTouches, true); }); }
     function verifie(){
+      reponse(); demandeUI();
       var b = bloque(); if(b) montre(b); else enleve();
-      if(etat && !etat.libre && !b && !averti && etat.limite - etat.utilise <= 300){ averti = true; toast('Encore 5 minutes de jeu ⏳'); }
+      if(etat && !etat.libre && !b && !averti && !debloque() && etat.limite - etat.utilise <= 300 && etat.limite > etat.utilise){ averti = true; toast('Encore 5 minutes de jeu ⏳'); }
     }
     function lit(){ var p = moi(); if(!p){ etat = null; enleve(); return; }
       fetch(API + '?action=ecran&player=' + encodeURIComponent(p), {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ if(j){ etat = j; verifie(); } }).catch(function(){}); }
     setInterval(function(){
       var t = Date.now(), dt = Math.min(5, (t - prev) / 1000); prev = t;
       if(!document.hidden && !cache && moi()) vu += dt;
+      if(cache && etat && etat.demande && etat.demande.statut === 'attente' && !document.hidden){ lit(); return; }   // on attend la réponse : on relit toutes les 5 s
       if(vu >= 60 && moi()){ var s = Math.round(vu); vu = 0; post({action:'ecran', player:moi(), sec:String(Math.min(60, s))}).then(function(j){ if(j){ etat = j; verifie(); } }).catch(function(){}); }
       else verifie();
     }, 5000);

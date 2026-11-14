@@ -625,6 +625,8 @@ function reglagesHTML(S){
       '<label><span>☀️ Week-end : les jeux reviennent à<br><small class="when">samedi et dimanche matin</small></span><input type="time" data-f="matin_we" value="' + esc(e.matin_we || e.matin || '07:00') + '"></label>' +
       '<div><div class="when">Aujourd\'hui : ' + mn(a.utilise || 0) + ' de jeu sur ' + mn(a.limite || 0) + (a.bonus ? ' (dont 10 min du défi)' : '') + '</div><div class="jauge"><i class="' + (pc >= 100 ? 'plein' : '') + '" style="width:' + pc + '%"></i></div></div>' +
       '<div class="when">🎯 Défi du jour : ' + defi(k) + '</div>' +
+      (a.demande && a.demande.statut === 'attente' ? '<div class="when" style="font-weight:800;color:var(--ink)">🙋 ' + k + ' demande plus de temps : <button class="mini" data-dem="' + a.demande.id + '" data-min="15">+15 min</button> <button class="mini" data-dem="' + a.demande.id + '" data-min="30">+30 min</button> <button class="mini" data-dem="' + a.demande.id + '" data-min="0">Non</button></div>'
+        : a.demande && a.demande.statut !== 'oubliee' ? '<div class="when">🙋 Dernière demande : ' + (a.demande.statut === 'oui' ? '+' + a.demande.min + ' min accordées' : 'refusée') + '</div>' : '') +
       '<button class="mini" data-plus="' + k + '">＋15 min aujourd\'hui</button></div>'; };
   const joueurs = (S.players || []).filter(p => !FAMN.includes(p.name));
   return '<section class="panel" id="regs"><h2>⏳ Temps d\'écran</h2>' +
@@ -645,6 +647,8 @@ function bindReglages(){
     catch(e){ msg.textContent = e.message; } };
   $('#regOk').onclick = () => envoie();
   document.querySelectorAll('[data-plus]').forEach(b => b.onclick = () => envoie({ [b.dataset.plus]:15 }));
+  document.querySelectorAll('[data-dem]').forEach(b => b.onclick = async () => { msg.textContent = 'Envoi…';
+    try{ const r = await post({ action:'demande_reponse', pass, id:b.dataset.dem, min:b.dataset.min }); lastS.aujourdhui = r.aujourdhui; draw(); $('#regMsg').textContent = '✔ ' + r.msg; }catch(e){ msg.textContent = e.message; } });
   const refait = async () => { lastS = await post({ action:'summary', pass }); draw(); };
   document.querySelectorAll('[data-fus]').forEach(b => b.onclick = async () => { const de = b.dataset.fus, vers = document.querySelector('[data-vers="' + CSS.escape(de) + '"]').value;
     if(!vers){ jm.textContent = 'Choisis d\'abord dans quel prénom fusionner « ' + de + ' ».'; return; }

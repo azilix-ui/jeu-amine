@@ -96,6 +96,7 @@ function db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS geo (ip TEXT PRIMARY KEY, cc TEXT, country TEXT, region TEXT, city TEXT, isp TEXT, ts INTEGER)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS reglages (k TEXT PRIMARY KEY, v TEXT)');                                              // réglages des parents (temps d'écran…)
     $pdo->exec('CREATE TABLE IF NOT EXISTS ecran (player TEXT NOT NULL COLLATE NOCASE, jour TEXT NOT NULL, sec INTEGER NOT NULL, PRIMARY KEY (player, jour))');   // temps de jeu par jour
+    $pdo->exec('CREATE TABLE IF NOT EXISTS demandes (id INTEGER PRIMARY KEY, player TEXT NOT NULL, jour TEXT NOT NULL, ts INTEGER NOT NULL, jeton TEXT NOT NULL, statut TEXT NOT NULL, min INTEGER NOT NULL DEFAULT 0, maj INTEGER NOT NULL)');   // « je demande plus de temps » (14/11)
     return $pdo;
 }
 function now(): string { return gmdate('Y-m-d\TH:i:s\Z'); }
@@ -193,7 +194,44 @@ function ecran_etat(string $p): array {
     $n = (int)(new DateTime('now', new DateTimeZone('Europe/Paris')))->format('N'); $we = in_array($n, [6, 7], true);
     $nuit = in_array($n, [5, 6], true) && !empty($r['nuit_we']) ? $r['nuit_we'] : $r['nuit'];      // ce soir : demain, pas d'école ?
     $matin = $we && !empty($r['matin_we']) ? $r['matin_we'] : $r['matin'];                          // ce matin : samedi ou dimanche ?
-    return ['libre' => empty($r['on']), 'jour' => $j, 'limite' => (int)($we ? $r['weekend'] : $r['semaine']) * 60 + $bonus, 'bonus' => $bonus, 'utilise' => $u, 'nuit' => $nuit, 'matin' => $matin, 'weekend' => $we];
+    return ['libre' => empty($r['on']), 'jour' => $j, 'limite' => (int)($we ? $r['weekend'] : $r['semaine']) * 60 + $bonus, 'bonus' => $bonus, 'utilise' => $u, 'nuit' => $nuit, 'matin' => $matin, 'weekend' => $we, 'demande' => demande_du_jour($p), 'now' => time()];
+}
+
+/* ---------- « Je demande plus de temps » (14/11, demandé par le papa) ----------
+   Sur l'écran de pause, l'enfant touche « 🙋 Demander plus de temps » : le papa reçoit une notification ntfy (même canal secret
+   que les alertes de la porte) avec trois boutons (+15 min, +30 min, Non). Les boutons appellent api/reponse.php avec un jeton
+   à usage unique (le téléphone n'est pas forcément un appareil de confiance). On peut aussi répondre dans Progression › Réglages.
+   La tablette de l'enfant relit l'état toutes les 5 s : « oui » lève la pause pendant les minutes données (même la nuit). */
+const DEMANDES_PAR_JOUR = 6;
+function demande_du_jour(string $p): ?array {
+    $s = db()->prepare('SELECT id, statut, min, ts, maj FROM demandes WHERE player = ? AND jour = ? ORDER BY id DESC LIMIT 1'); $s->execute([$p, jour_paris()]);
+    $d = $s->fetch(PDO::FETCH_ASSOC); if (!$d) return null;
+    return ['id' => (int)$d['id'], 'statut' => $d['statut'], 'min' => (int)$d['min'], 'ts' => (int)$d['ts'], 'maj' => (int)$d['maj']];
+}
+function hmin(int $s): string { $m = (int)round($s / 60); return $m >= 60 ? intdiv($m, 60) . ' h ' . str_pad((string)($m % 60), 2, '0', STR_PAD_LEFT) : $m . ' min'; }
+function demande_notifie(string $p, int $id, string $jeton, array $e): bool {
+    $base = 'https://www.missaoui-family.com/api/reponse.php?d=' . $id . '&t=' . $jeton;
+    $pourquoi = $e['utilise'] >= $e['limite'] ? 'a fini son temps de jeu (' . hmin($e['utilise']) . ' sur ' . hmin($e['limite']) . ')' : 'est en pause de nuit (depuis ' . $e['nuit'] . ')';
+    $actions = [['action' => 'http', 'label' => '+15 min', 'url' => $base . '&m=15', 'method' => 'POST', 'clear' => true],
+                ['action' => 'http', 'label' => '+30 min', 'url' => $base . '&m=30', 'method' => 'POST', 'clear' => true],
+                ['action' => 'http', 'label' => 'Non', 'url' => $base . '&m=0', 'method' => 'POST', 'clear' => true]];
+    $msg = ['topic' => ga_canal_ntfy(), 'title' => "🙋 $p demande plus de temps de jeu", 'message' => "$p $pourquoi. Touche +15 min, +30 min ou Non (ou ouvre la notification).",
+            'tags' => ['raising_hand'], 'priority' => 4, 'click' => $base, 'actions' => $actions];
+    $ctx = stream_context_create(['http' => ['method' => 'POST', 'timeout' => 5, 'ignore_errors' => true, 'header' => "Content-Type: application/json",
+        'content' => json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]]);
+    $r = @file_get_contents('https://ntfy.sh/', false, $ctx);
+    $ok = $r !== false && isset($http_response_header[0]) && strpos($http_response_header[0], ' 200') !== false;
+    return $ok;
+}
+/** donne la réponse d'un parent à une demande (Progression ou bouton de la notification) */
+function demande_repond(int $id, int $m): array {
+    $s = db()->prepare('SELECT * FROM demandes WHERE id = ?'); $s->execute([$id]); $d = $s->fetch(PDO::FETCH_ASSOC);
+    if (!$d) return ['ok' => false, 'msg' => 'Cette demande n’existe plus.'];
+    if ($d['statut'] !== 'attente') return ['ok' => false, 'msg' => 'Déjà répondu : ' . ($d['statut'] === 'oui' ? '+' . $d['min'] . ' min.' : 'non.'), 'player' => $d['player']];
+    $m = max(0, min(120, $m)); $t = time();
+    db()->prepare('UPDATE demandes SET statut = ?, min = ?, maj = ? WHERE id = ? AND statut = \'attente\'')->execute([$m > 0 ? 'oui' : 'non', $m, $t, $id]);
+    if ($m > 0) db()->prepare('UPDATE ecran SET sec = MAX(0, sec - ?) WHERE player = ? AND jour = ?')->execute([$m * 60, $d['player'], $d['jour']]);
+    return ['ok' => true, 'msg' => $m > 0 ? $d['player'] . ' a ' . $m . ' minutes de jeu en plus.' : 'C’est noté : pas de temps en plus pour ' . $d['player'] . '.', 'player' => $d['player']];
 }
 
 $action = (string)($_REQUEST['action'] ?? '');
@@ -296,6 +334,10 @@ try {
     // temps d'écran : les règles du jour pour un enfant (lu par famille.js sur les pages de jeu)
     if ($method === 'GET' && $action === 'ecran') {
         out(200, ecran_etat((string)($_GET['player'] ?? '')));
+    }
+    // le tableau de bord de l'accueil : le temps de jeu des trois enfants
+    if ($method === 'GET' && $action === 'ecran_tous') {
+        out(200, ['enfants' => array_combine(ENFANTS, array_map('ecran_etat', ENFANTS)), 'now' => time()]);
     }
     if ($method !== 'POST') fail(405, 'Action inconnue.');
 
@@ -450,6 +492,26 @@ try {
         $p = clean_player($_POST['player'] ?? ''); $m = max(5, min(120, (int)($_POST['min'] ?? 15)));
         if (in_array($p, ENFANTS, true)) db()->prepare('UPDATE ecran SET sec = MAX(0, sec - ?) WHERE player = ? AND jour = ?')->execute([$m * 60, $p, jour_paris()]);
         $e = ecran_etat($p); $e['nuit_levee'] = true; out(200, $e);
+    }
+    // « 🙋 Demander plus de temps » (écran de pause) : une notification au papa
+    if ($action === 'demande') {
+        $p = clean_player($_POST['player'] ?? ''); if (!in_array($p, ENFANTS, true)) fail(400, 'Joueur inconnu.');
+        $e = ecran_etat($p); $d = $e['demande']; $t = time();
+        if ($d && $d['statut'] === 'attente' && $d['ts'] > $t - 7200) out(200, $e);                         // déjà demandé : on attend
+        if ($d && $d['statut'] === 'non' && $d['maj'] > $t - 1800) fail(429, 'On t’a déjà répondu non. Tu pourras redemander dans un moment.');
+        $s = db()->prepare('SELECT COUNT(*) FROM demandes WHERE player = ? AND jour = ?'); $s->execute([$p, jour_paris()]);
+        if ((int)$s->fetchColumn() >= DEMANDES_PAR_JOUR) fail(429, 'Tu as déjà beaucoup demandé aujourd’hui. Demande à papa ou maman de vive voix !');
+        db()->prepare("UPDATE demandes SET statut = 'oubliee', maj = ? WHERE player = ? AND statut = 'attente'")->execute([$t, $p]);
+        $jeton = bin2hex(random_bytes(16));
+        db()->prepare("INSERT INTO demandes (player, jour, ts, jeton, statut, maj) VALUES (?, ?, ?, ?, 'attente', ?)")->execute([$p, jour_paris(), $t, $jeton, $t]);
+        $id = (int)db()->lastInsertId();
+        $e = ecran_etat($p); $e['envoye'] = demande_notifie($p, $id, $jeton, $e);
+        out(200, $e);
+    }
+    // répondre à une demande depuis Progression (mot de passe parent)
+    if ($action === 'demande_reponse') {
+        check_pass(); $r = demande_repond((int)($_POST['id'] ?? 0), (int)($_POST['min'] ?? 0));
+        out(200, $r + ['aujourdhui' => array_combine(ENFANTS, array_map('ecran_etat', ENFANTS))]);
     }
     // joueurs : fusionner un faux prénom dans le bon (« Aniss » → « Anis »), ou le supprimer
     if ($action === 'joueur_fusion' || $action === 'joueur_supprime') {
