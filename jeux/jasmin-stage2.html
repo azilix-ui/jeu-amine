@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#0b1e46">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>La Légende du Jasmin · Stage 2</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8C%BC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* La Légende du Jasmin · Stage 2 (14/11/2026) : 10 nouveaux mondes tunisiens, échelles, étages, objets à porter et lancer, ennemis plus malins.
+   Le moteur est dans stage2/moteur.js, les réglages et la liste des mondes dans stage2/niveaux.js, les cartes dans stage2/cartes/. */
+:root{--gold:#ffc93c;--red:#d7263d;--blue:#1f5fbf;--panel:rgba(14,30,70,.92);--line:rgba(255,255,255,.25);--mist:#c9d6f2;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;--body:"Nunito","Trebuchet MS",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#0b1e46;color:#fff;font-family:var(--body);overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));z-index:10;background:rgba(6,14,36,.55)}
+.screen.on{display:flex}
+.box{background:var(--panel);border:2px solid var(--line);border-radius:28px;padding:18px 20px;width:min(860px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;box-shadow:0 20px 60px #0009}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,46px);line-height:1;margin:0}
+h1 small{display:block;font-size:.5em;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+h2{font-family:var(--display);margin:0;font-size:28px}
+p{margin:0;line-height:1.35}
+.btn{min-height:56px;padding:0 26px;border-radius:18px;background:var(--gold);color:#3a2600;font-family:var(--display);font-weight:800;font-size:22px;box-shadow:0 5px 0 #b38600}
+.btn.bleu{background:#2b6fd6;color:#fff;box-shadow:0 5px 0 #17468f}.btn.gris{background:rgba(255,255,255,.14);color:#fff;box-shadow:none;font-size:18px;min-height:48px}
+.btn:active{transform:translateY(3px);box-shadow:none}
+.rang{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#who{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);border-radius:999px;padding:5px 18px 5px 5px;min-height:56px;font-weight:800;font-size:18px}
+#who img{width:46px;height:46px;border-radius:50%;object-fit:cover;background:#fff}
+.diff{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.diff button{min-height:52px;min-width:120px;border-radius:16px;background:rgba(255,255,255,.1);font-weight:800;font-size:18px;border:3px solid transparent}
+.diff button.on{border-color:var(--gold);background:rgba(255,201,60,.18)}
+.mondes{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;width:100%}
+.monde{position:relative;border-radius:18px;padding:10px 8px 8px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.12);text-align:left;min-height:96px;display:flex;flex-direction:column;gap:2px}
+.monde b{font-family:var(--display);font-size:17px;line-height:1.1}.monde small{color:var(--mist);font-size:13px}
+.monde .n{font-family:var(--display);font-size:13px;color:var(--gold);font-weight:800}
+.monde.ouvert{background:linear-gradient(160deg,#2b6fd6,#173f8a);border-color:#7fb0ff}.monde.choisi{outline:4px solid var(--gold)}
+.monde.ferme{opacity:.55}.monde .etat{margin-top:auto;font-size:13px;font-weight:800}
+.touches{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;font-size:15px;color:var(--mist)}
+.touches kbd{font-family:var(--display);background:rgba(255,255,255,.14);border-radius:6px;padding:0 6px;color:#fff}
+#pauseB{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));width:52px;height:52px;border-radius:50%;background:rgba(11,30,70,.7);font-size:22px;z-index:5;display:none}
+body.joue #pauseB{display:block}
+/* commandes tactiles : le joystick à gauche (on pose le pouce n'importe où dans la moitié gauche), trois boutons à droite */
+#tactile{position:fixed;inset:0;display:none;z-index:4;pointer-events:none}
+body.touch.joue #tactile{display:block}
+#joy{position:absolute;left:0;bottom:0;width:45%;height:62%;pointer-events:auto;touch-action:none}
+#joyBase{position:absolute;width:132px;height:132px;margin:-66px 0 0 -66px;left:110px;top:calc(100% - 120px);border-radius:50%;background:rgba(255,255,255,.12);border:3px solid rgba(255,255,255,.4);pointer-events:none}
+#joyBase.on{background:rgba(255,255,255,.2)}
+#joyKnob{position:absolute;left:36px;top:36px;width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.6)}
+.pb{position:absolute;pointer-events:auto;touch-action:none;border-radius:50%;display:grid;place-items:center;font-size:32px;font-weight:800;color:#fff;border:3px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16)}
+.pb.on{transform:scale(.92);background:rgba(255,255,255,.4)}
+#bSaut{right:max(22px,env(safe-area-inset-right));bottom:max(26px,env(safe-area-inset-bottom));width:104px;height:104px;background:rgba(215,38,61,.55);border-color:#ffb3bd}
+#bAgir{right:calc(max(22px,env(safe-area-inset-right)) + 118px);bottom:max(20px,env(safe-area-inset-bottom));width:80px;height:80px;background:rgba(47,191,143,.5);border-color:#a8f0d6}
+#bLancer{right:max(30px,env(safe-area-inset-right));bottom:calc(max(26px,env(safe-area-inset-bottom)) + 118px);width:80px;height:80px;background:rgba(31,95,191,.6);border-color:#a9c8ff}
+.pb small{position:absolute;bottom:-20px;font-size:12px;font-weight:800;text-shadow:0 1px 3px #000}
+@media (max-height:520px){.box{padding:10px 14px;gap:8px}h1{font-size:26px}.monde{min-height:70px}.btn{min-height:48px;font-size:19px}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<button id="pauseB" aria-label="Pause">⏸</button>
+<div id="tactile" aria-hidden="true">
+  <div id="joy"><div id="joyBase"><div id="joyKnob"></div></div></div>
+  <button class="pb" id="bSaut" aria-label="Sauter">⤒<small>Saut</small></button>
+  <button class="pb" id="bAgir" aria-label="Prendre, poser, tirer">✋<small>Prendre</small></button>
+  <button class="pb" id="bLancer" aria-label="Lancer">🎯<small>Lancer</small></button>
+</div>
+
+<div class="screen on" id="menu"><div class="box">
+  <h1>La Légende du Jasmin<small>Stage 2 · 10 nouveaux mondes</small></h1>
+  <button id="who" type="button"><img id="whoImg" alt="" src="avatars/mascotte-nour.webp"><span id="whoNom">Qui joue ?</span></button>
+  <div class="diff" role="radiogroup" aria-label="Difficulté">
+    <button data-d="facile" role="radio">🌼 Facile</button><button data-d="normal" role="radio">⭐ Normal</button><button data-d="difficile" role="radio">🔥 Difficile</button>
+  </div>
+  <div class="mondes" id="mondes"></div>
+  <div class="rang"><button class="btn" id="jouer">▶ Jouer</button><button class="btn gris" id="aide">🎮 Les commandes</button></div>
+  <div class="rang"><a class="btn gris" style="display:grid;place-items:center;text-decoration:none" href="legende-du-jasmin-3.html">← Le Jasmin</a><a class="btn gris" style="display:grid;place-items:center;text-decoration:none" href="/">🏠 Accueil</a><button class="btn gris" id="sonB">🔊 Son</button></div>
+</div></div>
+
+<div class="screen" id="intro"><div class="box" style="max-width:640px">
+  <h2 id="introT"></h2><p id="introP"></p>
+  <div class="touches" id="introK"></div>
+  <button class="btn" id="go">C'est parti !</button>
+</div></div>
+
+<div class="screen" id="aideS"><div class="box" style="max-width:640px">
+  <h2>🎮 Les commandes</h2>
+  <div class="touches">
+    <kbd>◀ ▶</kbd><span>marcher (Maj : courir)</span>
+    <kbd>Espace</kbd><span>sauter (tiens pour sauter plus haut)</span>
+    <kbd>▲ ▼</kbd><span>monter et descendre les échelles</span>
+    <kbd>▼</kbd><span>s’accroupir ; ▼ en marchant : ramper</span>
+    <kbd>E</kbd><span>prendre, poser, tirer un levier</span>
+    <kbd>F</kbd><span>lancer l’objet qu’on porte</span>
+    <kbd>Échap</kbd><span>pause</span>
+  </div>
+  <p style="color:var(--mist)">Sur tablette : pose ton pouce gauche n’importe où à gauche de l’écran (joystick : pousse loin pour courir, vers le haut pour l’échelle, vers le bas pour t’accroupir), et les boutons ⤒ Saut, ✋ Prendre, 🎯 Lancer à droite.</p>
+  <p style="color:var(--mist)">Saute sur la tête des ennemis pour les étourdir, ou lance-leur un objet. Une caisse sert aussi de marchepied !</p>
+  <button class="btn" data-ferme>Compris !</button>
+</div></div>
+
+<div class="screen" id="pause"><div class="box" style="max-width:460px">
+  <h2>⏸ Pause</h2>
+  <button class="btn" id="reprendre">▶ Reprendre</button>
+  <button class="btn bleu" id="recommencer">↺ Recommencer le monde</button>
+  <button class="btn gris" id="menuB">Retour au menu</button>
+</div></div>
+
+<div class="screen" id="fin"><div class="box" style="max-width:560px" id="finBox"></div></div>
+
+<script src="../famille.js"></script>
+<script src="sons/sons.js"></script>
+<script src="stage2/niveaux.js?v=1"></script>
+<script src="stage2/cartes/m1.js?v=1"></script>
+<script src="stage2/moteur.js?v=1"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
+const PEOPLE = ['essil', 'salma', 'amine', 'anis', 'imen'];
+const PARENTS = [{ name:'Anis', color:'#0f766e', emoji:'🧔' }, { name:'Imen', color:'#b4235a', emoji:'👩' }];
+let joueur = null, sv = null, diff = 'normal', choisi = 1;
+const cle = () => 'stage2:' + joueur;
+const neuf = () => ({ ouvert:1, best:{}, diff:'normal', t:0 });
+const garder = () => { sv.t = Date.now(); store.set(cle(), sv); };
+const suivis = new Set();
+function tete(nom){ const k = (nom || '').toLowerCase(); if(PEOPLE.includes(k)) return `avatars/${k}.webp`; const h = window.Famille && Famille.head ? Famille.head(nom) : null; return `avatars/mascotte-${h && h.id ? h.id : 'nour'}.webp`; }
+// la tenue choisie dans le Jasmin (même garde-robe que Médina Express)
+function tenue(){ const js = store.get('jasmin:' + joueur, {}) || {}, m = store.get('medina:' + joueur, {}) || {}, skins = Array.isArray(m.skins) ? m.skins : ['classique']; return js.tenue && (js.tenue === 'classique' || skins.includes(js.tenue)) ? js.tenue : 'classique'; }
+function choisirJoueur(nom){
+  joueur = nom; sv = Object.assign(neuf(), store.get(cle(), {}) || {}); diff = sv.diff || 'normal';
+  $('whoImg').src = tete(nom); $('whoNom').textContent = nom; S2J.joueur(nom, tenue());
+  if(window.Famille && !suivis.has(nom)){ suivis.add(nom); Famille.track('jasmin-s2', nom, [cle()]); Famille.track('jasmin', nom, ['jasmin:' + nom]); }
+  menu();
+}
+async function qui(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="">` }); if(n) choisirJoueur(n); return n; }
+$('who').onclick = qui;
+function montre(id){ document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); document.body.classList.toggle('joue', !id); }
+function menu(){
+  document.querySelectorAll('.diff button').forEach(b => { b.classList.toggle('on', b.dataset.d === diff); b.setAttribute('aria-checked', b.dataset.d === diff); });
+  $('mondes').innerHTML = S2.MONDES.map(m => { const ouvert = m.pret && sv && m.n <= sv.ouvert, b = sv && sv.best[m.n];
+    return `<button class="monde ${ouvert ? 'ouvert' : 'ferme'} ${m.n === choisi ? 'choisi' : ''}" data-n="${m.n}" ${ouvert ? '' : 'aria-disabled="true"'}><span class="n">Monde ${m.n}</span><b>${m.nom}</b><small>${m.lieu}</small><span class="etat">${!m.pret ? '🔒 Bientôt' : b ? '✔ ' + '🌼'.repeat(b.jasmins || 0) + ' · 🪙 ' + b.dinars : ouvert ? '▶ À toi !' : '🔒'}</span></button>`; }).join('');
+  montre('menu');
+}
+document.querySelectorAll('.diff button').forEach(b => b.onclick = () => { diff = b.dataset.d; if(sv){ sv.diff = diff; garder(); } menu(); });
+$('mondes').onclick = e => { const b = e.target.closest('.monde'); if(!b) return; const m = S2.MONDES.find(x => x.n === +b.dataset.n); if(!m.pret){ dire('Ce monde arrive bientôt !'); return; } choisi = m.n; menu(); };
+function dire(t){ try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; speechSynthesis.speak(u); }catch(e){} }
+$('jouer').onclick = async () => { if(!joueur && !(await qui())) return; const m = S2.MONDES.find(x => x.n === choisi);
+  $('introT').textContent = `Monde ${m.n} · ${m.nom}`; $('introP').textContent = m.histoire || '';
+  $('introK').innerHTML = `<kbd>${S2.DIFF[diff].ic}</kbd><span>${S2.DIFF[diff].nom} : ${S2.DIFF[diff].coeurs} cœurs, ${S2.DIFF[diff].vies} vies</span><kbd>🌼</kbd><span>3 jasmins d’or sont cachés : trouve-les !</span><kbd>!</kbd><span>Les panneaux te donnent des conseils.</span>`;
+  montre('intro'); dire(m.histoire || ''); };
+$('go').onclick = () => { try{ speechSynthesis.cancel(); }catch(e){} if(S2J.lancer(choisi, diff)) montre(null); };
+$('aide').onclick = () => montre('aideS');
+document.querySelectorAll('[data-ferme]').forEach(b => b.onclick = () => menu());
+$('sonB').onclick = () => { S2J.son = !S2J.son; S2J.voix = S2J.son; $('sonB').textContent = S2J.son ? '🔊 Son' : '🔇 Muet'; };
+$('pauseB').onclick = () => { if(S2J.pause()) montre('pause'); };
+S2J.surPause = () => montre('pause');
+S2J.surReprise = () => { S2J.reprendre(); montre(null); };
+$('reprendre').onclick = () => { S2J.reprendre(); montre(null); };
+$('recommencer').onclick = () => { if(S2J.lancer(choisi, diff)) montre(null); };
+$('menuB').onclick = () => { S2J.quitter(); menu(); };
+document.addEventListener('visibilitychange', () => { if(document.hidden && S2J.pause()) montre('pause'); });
+S2J.surFin = ({ perdu, g }) => {
+  const m = S2.MONDES.find(x => x.n === g.n);
+  if(perdu){ $('finBox').innerHTML = `<h2>Oh non… 😢</h2><p>Tu n’as plus de vies dans « ${m.nom} ». Tu y étais presque !</p><div class="rang"><button class="btn" id="fRe">↺ Réessayer</button><button class="btn gris" id="fMenu">Menu</button></div>`; dire('Oh non ! Tu y étais presque. On réessaie ?'); }
+  else {
+    const j = g.jasmins.size, b = sv.best[g.n] || {}, rec = { jasmins:Math.max(j, b.jasmins || 0), dinars:Math.max(g.dinars, b.dinars || 0), diff, t:Math.round(g.t) };
+    sv.best[g.n] = rec; sv.ouvert = Math.max(sv.ouvert, g.n + 1); garder();
+    // les dinars vont dans la bourse du Jasmin (pour acheter des tenues)
+    const js = store.get('jasmin:' + joueur, {}) || {}; if(typeof js.bourse === 'number'){ js.bourse += g.dinars; js.t = Date.now(); store.set('jasmin:' + joueur, js); }
+    const suivant = S2.MONDES.find(x => x.n === g.n + 1);
+    $('finBox').innerHTML = `<h2>Bravo ${joueur} ! 🎉</h2><p>Tu as traversé « ${m.nom} ».</p><p style="font-size:34px">${'🌼'.repeat(j)}${'⚪'.repeat(3 - j)}</p><p>🪙 ${g.dinars} dinars${typeof js.bourse === 'number' ? ' (ajoutés à ta bourse du Jasmin)' : ''} · ⏱ ${Math.floor(g.t / 60)} min ${String(Math.round(g.t % 60)).padStart(2, '0')} s · ${g.chasses || 0} ennemis chassés</p>
+      ${j < 3 ? `<p style="color:var(--mist)">Il reste ${3 - j} jasmin${3 - j > 1 ? 's' : ''} d’or caché${3 - j > 1 ? 's' : ''} : cherche les passages secrets !</p>` : ''}
+      <div class="rang">${suivant && suivant.pret ? `<button class="btn" id="fSuite">Monde ${suivant.n} ▶</button>` : `<p style="color:var(--gold);font-weight:800">Le monde ${g.n + 1} arrive bientôt !</p>`}<button class="btn bleu" id="fRe">↺ Rejouer</button><button class="btn gris" id="fMenu">Menu</button></div>`;
+    dire(`Bravo ${joueur} ! Tu as trouvé ${j} jasmin${j > 1 ? 's' : ''} d'or.`); if(window.Famille && Famille.score) try{ Famille.score('jasmin', joueur, g.dinars * 10 + j * 500); }catch(e){} }
+  montre('fin');
+  const re = $('fRe'), mn = $('fMenu'), su = $('fSuite');
+  if(re) re.onclick = () => { if(S2J.lancer(choisi, diff)) montre(null); };
+  if(mn) mn.onclick = () => { S2J.quitter(); menu(); };
+  if(su) su.onclick = () => { choisi = g.n + 1; $('jouer').onclick(); };
+};
+if(matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window) document.body.classList.add('touch');
+addEventListener('touchstart', () => document.body.classList.add('touch'), { passive:true });
+document.addEventListener('gesturestart', e => e.preventDefault());
+// le joueur de la tablette
+(function(){ let n = null; try{ n = JSON.parse(localStorage.getItem('famille-joueur') || 'null'); }catch(e){} if(n) choisirJoueur(n); else { sv = neuf(); menu(); } })();
+</script>
+</body>
+</html>

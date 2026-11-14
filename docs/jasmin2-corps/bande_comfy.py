@@ -2,7 +2,7 @@
 Prend les 33 images « anim_<nom>_000NN_.png » (fond vert 832 x 480), cherche la boucle la plus propre (deux images presque identiques
 à 10-24 images d'écart), en tire 12 images, les détoure, les recadre ensemble et écrit une bande de 12 cases : jeux/jasmin2/<nom>-anim.webp.
 Affiche le rapport « hauteur de case / hauteur de la créature » pour régler la taille dans BETE.
-Usage : python3 docs/jasmin2-corps/bande_comfy.py <dossier> <nom>:<hauteur de case>[:<fond green|blue>[:<début>]] ..."""
+Usage (SORTIE=<dossier> pour écrire ailleurs que jeux/jasmin2) : python3 docs/jasmin2-corps/bande_comfy.py <dossier> <nom>:<hauteur de case>[:<fond green|blue>[:<début>]] ..."""
 import sys, os
 from PIL import Image, ImageChops, ImageStat
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'houma')); from detoure import cut
@@ -23,6 +23,6 @@ for arg in sys.argv[2:]:
     k = ch / (box[3] - box[1]); cw = round((box[2] - box[0]) * k)
     out = Image.new('RGBA', (cw * 12, ch))
     for n, f in enumerate(fr): out.paste(f.crop(box).resize((cw, ch), Image.LANCZOS), (n * cw, 0))
-    out.save(f'jeux/jasmin2/{name}-anim.webp', quality=86, method=6)
+    out.save(os.path.join(os.environ.get('SORTIE', 'jeux/jasmin2'), f'{name}-anim.webp'), quality=86, method=6)
     hs = sorted(b[3] - b[1] for b in boxes)
     print(name, 'boucle', i, j, 'écart', round(best[0], 1), 'case', cw, ch, 'rapport', round((box[3] - box[1]) / hs[len(hs) // 2], 2))

@@ -50,3 +50,6 @@ window.__assis = (img, prompt, seed, prefix) => ({
   16:{ class_type:'ImageFromBatch', inputs:{ image:['15', 0], batch_index:30, length:3 } },
   17:{ class_type:'SaveImage', inputs:{ images:['16', 0], filename_prefix:prefix } } });
 'aides prêtes';
+
+// Stage 2 (14/11) : animation d'une créature en paysage (832 × 480), les 33 images sont gardées (anim_<nom>_000NN_.png) pour bande_comfy.py
+window.__anim = (img, prompt, seed, prefix) => { const w = __assis(img, prompt, seed, prefix); w[12].inputs.width = 832; w[12].inputs.height = 480; delete w[16]; w[17].inputs.images = ['15', 0]; return w; };

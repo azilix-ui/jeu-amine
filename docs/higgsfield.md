@@ -139,3 +139,7 @@ Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet
 - Affiche : `__edit` avec 6 images (toile 896×1152 + 5 portraits, 0,45 Mpx chacun, toile à 1,1 Mpx), tenues décrites une à une sinon Imen disparaît ou change de robe ; graine 8484 retenue ; titre posé ensuite (Playwright, police Bricolage Grotesque).
 - Mur : `__t2i` 1600×704 « empty cork noticeboard in a sky-blue wooden frame on a whitewashed Tunisian wall, bougainvillea », graine 8080.
 
+
+## 14/11 (nuit) : Jasmin · Stage 2, monde 1 avec ComfyUI
+- Images fixes (FLUX.2 klein, `__t2i`, préfixe `s2/m1_<nom>`) : photo de ruelle de la médina (`fond`), façades (`maisons`, fond vert), textures carrées `t_mur` (mur à la chaux), `t_fissure` (enduit fissuré), `t_planche` (planches turquoise), `t_dessus` (tuiles vertes : on garde la bande de tuiles), objets sur fond vert (caisse, ballon rond en cuir, pierre, clé, levier, grille, porte verrouillée, porte de sortie, échelle, sac), ennemis de profil sur fond vert 832 × 480 (garde en jebba et chéchia, chien, vieux marchand avec une orange). La pierre grise a des reflets verts : `build_m1.py` la découpe en ovale.
+- Animations (Wan 2.2 image → vidéo, aide `__anim`) : le garde qui marche, le chien qui court, le marchand qui lève l'orange (il ne la lance pas vraiment : la bande suit l'aller-retour du bras). Les images fixes sont copiées dans `input/s2_<nom>.png` avant.
