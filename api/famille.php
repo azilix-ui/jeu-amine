@@ -341,6 +341,12 @@ try {
     }
     if ($method !== 'POST') fail(405, 'Action inconnue.');
 
+    // Mode explorateur (14/11) : papa, maman ou un invité essaient les cours des enfants (profil choisi sur l'accueil).
+    // explorateur.js pose le cookie famille_explo : rien de ce qui concerne Essil, Salma ou Amine n'est enregistré.
+    if (!empty($_COOKIE['famille_explo']) && in_array($action, ['score', 'progress', 'ecran', 'demande'], true)) {
+        $q = mb_convert_case(trim((string)($_POST['player'] ?? '')), MB_CASE_TITLE, 'UTF-8');
+        if (in_array($q, ENFANTS, true)) out(200, ['ok' => true, 'explorateur' => true, 'libre' => true, 'personalBest' => false, 'best' => 0, 'rank' => 0]);
+    }
     if ($action === 'visit') {
         $pdo = db();
         $ip = client_ip(); $t = time();

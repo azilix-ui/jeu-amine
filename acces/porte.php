@@ -28,8 +28,16 @@ header('Content-Type: ' . $TYPES[$ext]);
 header('X-Content-Type-Options: nosniff');
 header($ext === 'html' ? 'Cache-Control: private, no-cache, must-revalidate' : 'Cache-Control: private, max-age=86400');   // private : le CDN de Hostinger ne garde jamais une page pour tout le monde
 if (ga_active()) header('X-Robots-Tag: noindex, nofollow');
-header('Content-Length: ' . filesize($fichier));
-readfile($fichier);
+if ($ext === 'html') {
+    // le mode explorateur (14/11) : explorateur.js passe avant tous les autres scripts de la page
+    $html = (string)file_get_contents($fichier);
+    $html = preg_replace('/<head(\s[^>]*)?>/i', '$0<script src="/explorateur.js"></script>', $html, 1);
+    header('Content-Length: ' . strlen($html));
+    echo $html;
+} else {
+    header('Content-Length: ' . filesize($fichier));
+    readfile($fichier);
+}
 // après la page : la sauvegarde de la semaine si elle est due (le visiteur n'attend pas)
 if (function_exists('litespeed_finish_request')) litespeed_finish_request(); elseif (function_exists('fastcgi_finish_request')) fastcgi_finish_request(); else return;
 ga_sauvegarde_si_due();

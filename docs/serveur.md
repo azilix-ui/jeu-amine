@@ -156,3 +156,13 @@ Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de co
 - Une réponse « oui » retire les minutes du temps joué et la tablette de l'enfant (qui relit l'état toutes les 5 s pendant l'attente) lève la pause pendant ces minutes, même la nuit (`famille-ecran-deblocage`). « Non » : l'enfant peut redemander après 30 min ; 6 demandes par jour au plus.
 - On peut aussi répondre dans Progression › Réglages (carte de l'enfant : `action=demande_reponse`, mot de passe parent). `ecran_etat()` renvoie `demande` (la dernière du jour) et `now`.
 
+## « Qui es-tu ? » et le mode explorateur (14/11)
+- À chaque visite, l'accueil demande « Qui es-tu ? » (`#qui` dans `index.html`). Le choix dure le temps de la visite : `sessionStorage['famille-profil'] = {nom, type:'enfant'|'explo'}` ; `/?profil` (bouton « Changer ») le redemande. Pas de mot de passe (choix du papa).
+- **Un enfant** : l'accueil ne montre que ses cours (les liens de sa carte qui ne sont pas dans `jeux/`) et le bandeau des jeux de famille, avec son temps de jeu restant ; `famille-joueur` est mis à son prénom.
+- **Papa, maman, Nour, Yasmine, Farès = mode explorateur** (`explorateur.js`, mis par `acces/porte.php` juste après `<head>` dans chaque page) :
+  1. bac à sable : `window.localStorage` est remplacé par une couche qui écrit dans `sessionStorage` (`explo:<clé>`) et lit le vrai en dessous ; les vraies données de la tablette ne bougent pas (vérifié) ;
+  2. cookie `famille_explo` : `api/famille.php` répond « ok » sans rien enregistrer pour `score`, `progress`, `ecran`, `demande` quand le joueur est Essil, Salma ou Amine ;
+  3. le joueur de la visite est l'explorateur (pas de limite de temps) ;
+  4. étiquette verte « Explorateur du site : <nom> » en haut à droite de chaque page (la toucher la réduit), « Changer » ramène à l'accueil.
+- Pied de l'accueil : Progression, **Administration** (`acces/admin.php`), Changer d'avatar.
+
