@@ -120,7 +120,7 @@ h1,h2{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-heig
 </section>
 
 <script src="../famille.js"></script>
-<script src="lire/voix.js"></script>
+<script src="lire/voix.php"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -158,37 +158,66 @@ function save(){ S.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify
 const total = () => Object.values(S.stars).reduce((a, b) => a + (+b || 0), 0);
 
 /* ---------- la voix ----------
-   Des voix enregistrées avec ElevenLabs (lire/voix/<voix>/<clé>.mp3, la liste est dans lire/voix.js), une phrase courte par fichier,
-   enchaînées une par une. Réglage ⚙️ : choisir la voix (Lulu, Papi Olivier, Jon le conteur) ou la voix de la tablette.
-   Sans fichier pour une phrase : la voix française de la tablette. */
+   Des voix enregistrées avec ElevenLabs, une phrase courte par son, enchaînées une par une. Les sons sont rangés sur le serveur
+   (famille-data/lire-voix, servis par lire/son.php, liste dans lire/voix.php). Lecture en Web Audio : le silence au début et
+   à la fin de chaque son est coupé et le volume égalisé, pour que les morceaux s'enchaînent comme une seule phrase.
+   Réglage 🔊 : choisir la voix (Lulu, Papi Olivier, Jon le conteur) ou la voix de la tablette.
+   Sans son pour une phrase : la voix française de la tablette. */
 const VOIX = [{ id:'lulu', nom:'Lulu', desc:'joyeuse, comme dans un dessin animé', ic:'🧚' }, { id:'olivier', nom:'Papi Olivier', desc:'un grand-père rigolo', ic:'👴' }, { id:'jon', nom:'Jon le conteur', desc:'douce et calme', ic:'📚' }, { id:'tablette', nom:'La voix de la tablette', desc:'toujours disponible', ic:'📱' }];
-const cle = t => String(t).toLowerCase().replace(/é/g, 'ee').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
+const cle = t => String(t).toLowerCase().replace(/é/g, 'ee').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
 const DISPO = window.LIRE_VOIX || {};
-if(!S.voix || !VOIX.some(v => v.id === S.voix)) S.voix = DISPO.lulu ? 'lulu' : 'tablette';
+const aSons = v => !!(DISPO[v] && DISPO[v].k && DISPO[v].k.length);
+// la voix choisie à la main (S.voixMain) ; sinon Lulu dès que ses sons sont là (un ancien « tablette » par défaut ne bloque plus)
+const voixActive = () => (S.voixMain && S.voix && (S.voix === 'tablette' || aSons(S.voix))) ? S.voix : (aSons('lulu') ? 'lulu' : (VOIX.find(v => aSons(v.id)) || { id:'tablette' }).id);
 let VTAB = null;
 function choisitVoix(){ const v = (window.speechSynthesis && speechSynthesis.getVoices && speechSynthesis.getVoices()) || []; const fr = v.filter(x => /^fr/i.test(x.lang)); VTAB = fr.find(x => /Amélie|Audrey|Marie|Google français|Denise|Thomas/i.test(x.name)) || fr.find(x => /FR/.test(x.lang)) || fr[0] || null; }
 if(window.speechSynthesis){ choisitVoix(); speechSynthesis.onvoiceschanged = choisitVoix; }
 let file = [], dernier = [], joueur = null, jeton = 0;
-const cache = {};
-function fichier(t){ const k = cle(t), v = S.voix; return v !== 'tablette' && DISPO[v] && DISPO[v].includes(k) ? `lire/voix/${v}/${k}.mp3?v=1` : null; }
-function precharge(liste){ liste.forEach(t => { const f = fichier(t); if(f && !cache[f]){ const a = new Audio(); a.preload = 'auto'; a.src = f; cache[f] = a; } }); }
-function stop(){ jeton++; file = []; if(joueur){ try{ joueur.pause(); }catch(e){} joueur.onended = joueur.onerror = null; joueur = null; } try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
+const cache = {};   // adresse → Promise<{ buf, debut, duree, gain }> (Web Audio) ou HTMLAudio
+function fichier(t){ const k = cle(t), v = voixActive(); return v !== 'tablette' && aSons(v) && DISPO[v].k.includes(k) ? `lire/son.php?v=${v}&k=${k}&r=${DISPO[v].r}` : null; }
+// découpe le silence et calcule le gain (crête à 0,9, au plus ×3)
+function mesure(buf){
+  const d = buf.getChannelData(0), n = d.length, seuil = .02; let a = 0, b = n - 1, pic = 0;
+  while(a < n && Math.abs(d[a]) < seuil) a++;
+  while(b > a && Math.abs(d[b]) < seuil) b--;
+  for(let i = a; i <= b; i++){ const x = Math.abs(d[i]); if(x > pic) pic = x; }
+  if(a >= b) return { buf, debut:0, duree:buf.duration, gain:1 };
+  const marge = .04 * buf.sampleRate; a = Math.max(0, a - marge); b = Math.min(n - 1, b + marge * 2);
+  return { buf, debut:a / buf.sampleRate, duree:(b - a) / buf.sampleRate, gain:Math.min(3, .9 / (pic || .9)) };
+}
+function charge(f){
+  if(cache[f]) return cache[f];
+  const ac = audio();
+  if(!ac || !window.fetch){ const a = new Audio(); a.preload = 'auto'; a.src = f; return cache[f] = Promise.resolve(a); }
+  return cache[f] = fetch(f).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); })
+    .then(ab => new Promise((ok, ko) => { const p = ac.decodeAudioData(ab, ok, ko); if(p && p.catch) p.catch(ko); }))
+    .then(mesure).catch(e => { delete cache[f]; throw e; });
+}
+function precharge(liste){ liste.forEach(t => { const f = fichier(t); if(f) charge(f).catch(() => {}); }); }
+function stop(){ jeton++; file = []; if(joueur){ try{ joueur.onended = null; joueur.onerror = null; joueur.stop ? joueur.stop() : joueur.pause(); }catch(e){} joueur = null; } try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
 function parle(liste, garde){
   if(garde !== false) dernier = liste.slice();
-  stop(); file = liste.slice(); precharge(file); const j = jeton;
+  stop(); audio(); file = liste.slice(); precharge(file); const j = jeton;
   setTimeout(() => { if(j === jeton) suivant(j); }, 80);   // laisser la voix précédente s'arrêter vraiment (sinon la suivante était coupée)
 }
 function suivant(j){
   if(j !== jeton) return;
   const t = file.shift(); if(t === undefined) return;
-  const f = fichier(t), fin = () => { if(j === jeton) setTimeout(() => suivant(j), 120); };
-  if(f){
-    const a = cache[f] || new Audio(f); cache[f] = a; joueur = a; a.currentTime = 0;
-    a.onended = fin; a.onerror = () => { tts(t, fin); };
-    const p = a.play(); if(p && p.catch) p.catch(() => tts(t, fin));
-    return;
-  }
-  tts(t, fin);
+  const f = fichier(t), fin = (pause) => { if(j === jeton) setTimeout(() => suivant(j), pause == null ? 120 : pause); };
+  if(!f){ tts(t, fin); return; }
+  let fini = false; const garde = setTimeout(() => { if(!fini){ fini = true; tts(t, fin); } }, 4000);   // son trop long à venir : la tablette le dit
+  charge(f).then(s => {
+    if(fini || j !== jeton) return; fini = true; clearTimeout(garde);
+    if(s instanceof Audio){
+      joueur = s; s.currentTime = 0; s.onended = () => fin(); s.onerror = () => tts(t, fin);
+      const p = s.play(); if(p && p.catch) p.catch(() => tts(t, fin)); return;
+    }
+    const ac = audio(), src = ac.createBufferSource(), g = ac.createGain();
+    src.buffer = s.buf; g.gain.value = s.gain; src.connect(g).connect(ac.destination);
+    let fait = false; const ok = () => { if(fait) return; fait = true; clearTimeout(g2); if(joueur === src) joueur = null; fin(60); };
+    const g2 = setTimeout(ok, s.duree * 1000 + 800);   // si la tablette ne prévient pas de la fin
+    src.onended = ok; joueur = src; src.start(0, s.debut, s.duree);
+  }).catch(() => { if(fini || j !== jeton) return; fini = true; clearTimeout(garde); tts(t, fin); });
 }
 // la voix de la tablette, avec un garde-fou : si elle ne dit rien (onend jamais appelé), on passe à la suite
 function tts(t, fin){
@@ -222,8 +251,8 @@ function menu(dire){
   if(dire) parle(['Je lis ! Choisis un jeu.']);
 }
 function menuVoix(){
-  $('voixListe').innerHTML = VOIX.map(v => { const ok = v.id === 'tablette' || DISPO[v.id]; return `<button class="vx${v.id === S.voix ? ' on' : ''}${ok ? '' : ' non'}" data-v="${v.id}" type="button"><span class="ic">${v.ic}</span><span><b>${v.nom}</b><small>${ok ? v.desc : 'bientôt'}</small></span></button>`; }).join('');
-  $('voixListe').querySelectorAll('.vx').forEach(b => b.onclick = () => { const v = b.dataset.v; if(v !== 'tablette' && !DISPO[v]) return; S.voix = v; save(); sfx.tape(); menuVoix(); parle(['Bonjour Amine !', 'On lit ensemble ?']); });
+  $('voixListe').innerHTML = VOIX.map(v => { const ok = v.id === 'tablette' || aSons(v.id); return `<button class="vx${v.id === voixActive() ? ' on' : ''}${ok ? '' : ' non'}" data-v="${v.id}" type="button"><span class="ic">${v.ic}</span><span><b>${v.nom}</b><small>${ok ? v.desc : 'bientôt'}</small></span></button>`; }).join('');
+  $('voixListe').querySelectorAll('.vx').forEach(b => b.onclick = () => { const v = b.dataset.v; if(v !== 'tablette' && !aSons(v)) return; S.voix = v; S.voixMain = 1; save(); sfx.tape(); menuVoix(); parle(['Bonjour Amine !', 'On lit ensemble ?']); });
   $('voixBox').hidden = false;
 }
 $('bVoix').onclick = () => { audio(); menuVoix(); };
