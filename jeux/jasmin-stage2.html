@@ -72,8 +72,8 @@ body.touch.joue #tactile{display:block}
 <div id="tactile" aria-hidden="true">
   <div id="joy"><div id="joyBase"><div id="joyKnob"></div></div></div>
   <button class="pb" id="bSaut" aria-label="Sauter">⤒<small>Saut</small></button>
-  <button class="pb" id="bAgir" aria-label="Prendre, poser, tirer">✋<small>Prendre</small></button>
-  <button class="pb" id="bLancer" aria-label="Lancer">🎯<small>Lancer</small></button>
+  <button class="pb" id="bAgir" aria-label="Ramasser ou déposer">✋<small>Ramasser</small></button>
+  <button class="pb" id="bLancer" aria-label="Espace : lancer">🎯<small>Lancer</small></button>
 </div>
 
 <div class="screen on" id="menu"><div class="box">
@@ -96,15 +96,19 @@ body.touch.joue #tactile{display:block}
 <div class="screen" id="aideS"><div class="box" style="max-width:640px">
   <h2>🎮 Les commandes</h2>
   <div class="touches">
-    <kbd>◀ ▶</kbd><span>marcher (Maj : courir)</span>
-    <kbd>Espace</kbd><span>sauter (tiens pour sauter plus haut)</span>
-    <kbd>▲ ▼</kbd><span>monter et descendre les échelles</span>
-    <kbd>▼</kbd><span>s’accroupir ; ▼ en marchant : ramper</span>
-    <kbd>E</kbd><span>prendre, poser, tirer un levier</span>
-    <kbd>F</kbd><span>lancer l’objet qu’on porte</span>
+    <kbd>← →</kbd><span>marcher à gauche / à droite</span>
+    <kbd>↑</kbd><span>sauter (garde ↑ pour sauter plus haut)</span>
+    <kbd>↑ + ← / →</kbd><span>sauter en avançant</span>
+    <kbd>↓</kbd><span>s’accroupir</span>
+    <kbd>↓ + ← / →</kbd><span>ramper</span>
+    <kbd>↓ + Espace</kbd><span>ramasser un objet / le déposer</span>
+    <kbd>Espace</kbd><span>lancer l’objet (ou tirer un levier)</span>
+    <kbd>↓ maintenu</kbd><span>entrer dans un passage secret (petite porte ▼)</span>
+    <kbd>↑ ↓</kbd><span>devant une échelle : monter, descendre (← ou → pour la lâcher)</span>
     <kbd>Échap</kbd><span>pause</span>
   </div>
-  <p style="color:var(--mist)">Sur tablette : pose ton pouce gauche n’importe où à gauche de l’écran (joystick : pousse loin pour courir, vers le haut pour l’échelle, vers le bas pour t’accroupir), et les boutons ⤒ Saut, ✋ Prendre, 🎯 Lancer à droite.</p>
+  <p style="color:var(--mist)">Sur tablette : pose ton pouce gauche n’importe où à gauche de l’écran (joystick : vers le haut pour sauter ou monter, vers le bas pour t’accroupir), et à droite les boutons ⤒ Saut, ✋ Ramasser (comme ↓ + Espace), 🎯 Lancer (comme Espace).</p>
+  <p style="color:var(--mist)">Scooter et tapis volant : touche-les pour monter, ↓ + Espace pour descendre. Coincé ? Pause › « Revenir à la lanterne ».</p>
   <p style="color:var(--mist)">Saute sur la tête des ennemis pour les étourdir, ou lance-leur un objet. Une caisse sert aussi de marchepied !</p>
   <button class="btn" data-ferme>Compris !</button>
 </div></div>
@@ -112,6 +116,7 @@ body.touch.joue #tactile{display:block}
 <div class="screen" id="pause"><div class="box" style="max-width:460px">
   <h2>⏸ Pause</h2>
   <button class="btn" id="reprendre">▶ Reprendre</button>
+  <button class="btn bleu" id="revenirB">📍 Revenir à la dernière lanterne</button>
   <button class="btn bleu" id="recommencer">↺ Recommencer le monde</button>
   <button class="btn gris" id="menuB">Retour au menu</button>
 </div></div>
@@ -120,9 +125,19 @@ body.touch.joue #tactile{display:block}
 
 <script src="../famille.js"></script>
 <script src="sons/sons.js"></script>
-<script src="stage2/niveaux.js?v=1"></script>
-<script src="stage2/cartes/m1.js?v=1"></script>
-<script src="stage2/moteur.js?v=1"></script>
+<script src="stage2/niveaux.js?v=2"></script>
+<script src="stage2/cartes/m1.js?v=2"></script>
+<script src="stage2/cartes/m2.js?v=2"></script>
+<script src="stage2/cartes/m3.js?v=2"></script>
+<script src="stage2/cartes/m4.js?v=2"></script>
+<script src="stage2/cartes/m5.js?v=2"></script>
+<script src="stage2/cartes/m6.js?v=2"></script>
+<script src="stage2/cartes/m7.js?v=2"></script>
+<script src="stage2/cartes/m8.js?v=2"></script>
+<script src="stage2/cartes/m9.js?v=2"></script>
+<script src="stage2/cartes/m10.js?v=2"></script>
+<script src="stage2/heros/heros.js?v=1"></script>
+<script src="stage2/moteur.js?v=2"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -157,7 +172,7 @@ $('mondes').onclick = e => { const b = e.target.closest('.monde'); if(!b) return
 function dire(t){ try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; speechSynthesis.speak(u); }catch(e){} }
 $('jouer').onclick = async () => { if(!joueur && !(await qui())) return; const m = S2.MONDES.find(x => x.n === choisi);
   $('introT').textContent = `Monde ${m.n} · ${m.nom}`; $('introP').textContent = m.histoire || '';
-  $('introK').innerHTML = `<kbd>${S2.DIFF[diff].ic}</kbd><span>${S2.DIFF[diff].nom} : ${S2.DIFF[diff].coeurs} cœurs, ${S2.DIFF[diff].vies} vies</span><kbd>🌼</kbd><span>3 jasmins d’or sont cachés : trouve-les !</span><kbd>!</kbd><span>Les panneaux te donnent des conseils.</span>`;
+  $('introK').innerHTML = `<kbd>${S2.DIFF[diff].ic}</kbd><span>${S2.DIFF[diff].nom} : barre de vie en ${S2.DIFF[diff].coeurs} morceaux, ${S2.DIFF[diff].vies} vies</span><kbd>🌼</kbd><span>3 jasmins d’or sont cachés : trouve-les !</span><kbd>!</kbd><span>Les panneaux te donnent des conseils.</span>`;
   montre('intro'); dire(m.histoire || ''); };
 $('go').onclick = () => { try{ speechSynthesis.cancel(); }catch(e){} if(S2J.lancer(choisi, diff)) montre(null); };
 $('aide').onclick = () => montre('aideS');
@@ -167,6 +182,7 @@ $('pauseB').onclick = () => { if(S2J.pause()) montre('pause'); };
 S2J.surPause = () => montre('pause');
 S2J.surReprise = () => { S2J.reprendre(); montre(null); };
 $('reprendre').onclick = () => { S2J.reprendre(); montre(null); };
+$('revenirB').onclick = () => { S2J.revenir(); montre(null); };
 $('recommencer').onclick = () => { if(S2J.lancer(choisi, diff)) montre(null); };
 $('menuB').onclick = () => { S2J.quitter(); menu(); };
 document.addEventListener('visibilitychange', () => { if(document.hidden && S2J.pause()) montre('pause'); });

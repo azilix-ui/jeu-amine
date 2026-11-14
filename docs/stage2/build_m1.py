@@ -42,4 +42,4 @@ def pierre():   # la pierre a des reflets verts (le détourage la troue) : on la
 objet('caisse'); objet('ballon2', 'ballon', 128); pierre(); objet('cle', maxi=128); objet('levier', maxi=128); objet('sac')
 objet('echelle', taille=(80, 128)); objet('grille', taille=(72, 192)); objet('porte_verrou', maxi=256); objet('porte_sortie', maxi=256)
 # les ennemis (image fixe, si l'animation manque)
-for n in ('garde', 'chien', 'marchand'): objet(n, maxi=200)
+for n in ('garde', 'chien', 'marchand'): objet(n, maxi=200); os.replace(os.path.join(OUT, n + '.webp'), os.path.join(OUT, '..', 'en', n + '.webp'))
