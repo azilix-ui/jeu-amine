@@ -256,3 +256,14 @@ D'après le cahier des charges du papa (`grande section\clone subway\`, course i
   - **🖌️ Peindre sur les murs** : bombe (trait doux + gouttes), pinceau, gomme, 12 couleurs, 3 épaisseurs, annuler, tout effacer. `S.peint[pièce]` = traits en entiers, 12 000 nombres au plus ; la sauvegarde `houma` passe dans `BIG` (200 000, sans historique dans Progression).
   - Découvertes : graffeur, habits, anniversaire, cavalier.
 
+
+
+### Ma Houma, nuit du 14/11 : la carte en vrai, les maisons des enfants, la ferme
+- **La carte du quartier** est une vraie image (ComfyUI, FLUX.2 klein, vue aérienne d'un quartier tunisien au bord de la mer : maisons blanches aux portes bleues, café, école, souk, plage, ferme) : `jeux/houma/reel/carte.webp`, posée au-dessus du dessin d'avant (qui reste si l'image manque). Les panneaux `MAP` sont placés sur l'image (en % de la scène).
+- **Les maisons** (`HOUSES` : même moteur que Ma maison, pièces `<lettre>-<pièce>`, portes ◀ ▶ entre les pièces d'une même maison, bouton 🏠 = pièces de la maison + autres maisons) :
+  - **Dar Essil** 🐴 (chambre : moucharabieh, poster du cheval, trophées, selle, bureau ; salon : arche bleue, dokkana, plateau en cuivre, lanterne de fer, niche, carte d'Europe ; patio : fontaine, citronnier, jasmin, cage bleue, grande jarre) ;
+  - **Dar Salma** 🎨 (chambre fleurie : licorne, coiffeuse, guirlande ; atelier : chevalet, tableau de dessins, maison de poupée, coffre peint ; terrasse face à la mer) ;
+  - **Dar Amine** 🚀 (chambre étoilée : mobile des planètes, lit cabane, astronaute, fusée ; salle de jeux : tapis des routes, garage, voiture de course, dino, train ; jardin : toboggan, trampoline, lapin).
+  - Le dehors (patio, terrasse, jardin, ferme) a un **fond en vraie photo** (`PHOTOS`, `jeux/houma/reel/<pièce>.webp`) tant que le mur reste « ciel ».
+- **La ferme** 🐄 (enclos des moutons, poulailler, étable) : mouton, chèvre, âne, poules, canard, vache, cheval… Un animal a **faim** 3 h après son repas (🌾 au-dessus de lui). Le toucher quand il y a du foin ou des grains dans la pièce, ou poser le foin à côté de lui : il mange, fait un cœur et donne parfois **un œuf, du lait ou de la laine** à ramasser (panier `S.panier`). Nourri **3 jours différents** : un **bébé** naît (poussins pour les poules, agneau pour le mouton). Données : `S.ferme[uid] = { r, j, b }`.
+- **43 objets de plus** dans le catalogue (`docs/maison/catalogue.py`, onglets 🇹🇳 Tunisie, 🧒 Essil, Salma, Amine, 🐄 La ferme), 400 objets au plus dans toutes les maisons. 4 découvertes de plus : nourrir, récolter, un bébé, visiter les maisons des enfants.

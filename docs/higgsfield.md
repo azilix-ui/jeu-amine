@@ -125,3 +125,9 @@ Tenues des avatars : Essil sweat bleu marine à étoile dorée (fond bleu-violet
 - Les aides ComfyUI sont maintenant écrites dans `docs/comfy/aides.js` (à recoller dans l'onglet 127.0.0.1:8188 si la page est rechargée) : `__t2i`, `__edit`, `__assis` (Wan 2.2), `__fpb`, `__q`.
 - Jasmin 3 : 7 images par monde × 23 (fond 1792×768, décor du milieu 1536×640 détouré, 4 textures 768, pics détourés). Fond bleu pour le décor des mondes 2, 4, 10, 15, 17, 18, 19, 21, 23 et pour les pics des mondes 2, 14, 15, 16, 17, 19, 23.
 - Ma Houma : 32 tenues debout + 32 yeux fermés + 32 vidéos assises (Wan) + 160 gestes ; Imen en sport refaite en violet (le vert clair partait au détourage). 62 décorations, dont 20 arabesques et graffitis.
+
+
+## ElevenLabs : les voix de « Je lis ! » (14/11)
+- Le papa n'a plus de crédits Higgsfield : les voix se font avec son compte ElevenLabs Starter (30 000 crédits par mois ; 31 291 restants le 14/11 à 1 h).
+- **Voix** : **Lulu - Je lis (Amine)**, créée avec *Voice Design* (description : jeune femme française joyeuse, voix de dessin animé pour enfants, articulation claire ; 171 crédits) ; **Olivier - Eccentric and Aged** (acteur français, vieux personnage de dessin animé) et **Jon - Le Narrateur Cinématique** (voix française douce pour histoires d'enfants), ajoutées depuis la bibliothèque (gratuites). Philippine et Darling ont un **tarif personnalisé** (0,25 $ / 1000 crédits facturés par leur auteur) : non ajoutées.
+- **Méthode sans téléchargements** : page Text to Speech, modèle Eleven v4 ; une phrase par génération, tapée par un petit script dans l'éditeur ; le son arrive dans la page (lecteur `data:audio/mpeg`) et il est rangé dans la base du navigateur (IndexedDB `jelis`), puis **un seul fichier** est exporté par voix. `docs/lire/prepare.py` découpe le silence, égalise le volume, écrit `amine/lire/voix/<voix>/<clé>.mp3` et `amine/lire/voix.js`. 157 phrases par voix (≈ 930 caractères, chaque génération en donne 2 versions).
