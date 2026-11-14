@@ -171,7 +171,9 @@ function check_pass(): void {
 
 
 /* ---------- Temps d'écran (13/11) ----------
-   Réglages des parents dans reglages.ecran : {Essil:{on, semaine, weekend, nuit, matin}, …} (minutes ; heures « HH:MM »).
+   Réglages des parents dans reglages.ecran : {Essil:{on, semaine, weekend, nuit, matin, nuit_we, matin_we}, …} (minutes ; heures « HH:MM »).
+   Week-end (14/11) : nuit_we vaut le vendredi et le samedi soir (pas d'école le lendemain), matin_we le samedi et le dimanche matin ;
+   vides = les mêmes heures qu'en semaine. Le serveur envoie à la tablette les heures du moment (nuit, matin), la tablette ne change pas.
    Seuls les jeux comptent (famille.js envoie le temps passé sur une page de jeu) ; les cours restent libres.
    Un défi du jour réussi (cours « defi ») donne 10 minutes de plus ce jour-là. */
 const ENFANTS = ['Essil', 'Salma', 'Amine'];
@@ -188,8 +190,10 @@ function ecran_etat(string $p): array {
     $s = db()->prepare('SELECT sec FROM ecran WHERE player = ? AND jour = ?'); $s->execute([$p, $j]); $u = (int)$s->fetchColumn();
     $d = db()->prepare("SELECT data FROM progress WHERE player = ? AND course = 'defi'"); $d->execute([$p]); $dd = json_decode((string)$d->fetchColumn(), true);
     $bonus = !empty($dd['jours'][$j]['ok']) ? DEFI_BONUS : 0;
-    $we = in_array((int)(new DateTime('now', new DateTimeZone('Europe/Paris')))->format('N'), [6, 7], true);
-    return ['libre' => empty($r['on']), 'jour' => $j, 'limite' => (int)($we ? $r['weekend'] : $r['semaine']) * 60 + $bonus, 'bonus' => $bonus, 'utilise' => $u, 'nuit' => $r['nuit'], 'matin' => $r['matin'], 'weekend' => $we];
+    $n = (int)(new DateTime('now', new DateTimeZone('Europe/Paris')))->format('N'); $we = in_array($n, [6, 7], true);
+    $nuit = in_array($n, [5, 6], true) && !empty($r['nuit_we']) ? $r['nuit_we'] : $r['nuit'];      // ce soir : demain, pas d'école ?
+    $matin = $we && !empty($r['matin_we']) ? $r['matin_we'] : $r['matin'];                          // ce matin : samedi ou dimanche ?
+    return ['libre' => empty($r['on']), 'jour' => $j, 'limite' => (int)($we ? $r['weekend'] : $r['semaine']) * 60 + $bonus, 'bonus' => $bonus, 'utilise' => $u, 'nuit' => $nuit, 'matin' => $matin, 'weekend' => $we];
 }
 
 $action = (string)($_REQUEST['action'] ?? '');
@@ -432,7 +436,8 @@ try {
         check_pass();
         $in = json_decode((string)($_POST['data'] ?? ''), true); if (!is_array($in)) fail(400, 'Réglages illisibles.');
         $e = []; foreach (ENFANTS as $k) { $x = $in['ecran'][$k] ?? []; $hh = fn($v, $d) => preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string)$v) ? (string)$v : $d;
-            $e[$k] = ['on' => !empty($x['on']), 'semaine' => max(5, min(600, (int)($x['semaine'] ?? 45))), 'weekend' => max(5, min(600, (int)($x['weekend'] ?? 90))), 'nuit' => $hh($x['nuit'] ?? '', '20:30'), 'matin' => $hh($x['matin'] ?? '', '07:00')]; }
+            $e[$k] = ['on' => !empty($x['on']), 'semaine' => max(5, min(600, (int)($x['semaine'] ?? 45))), 'weekend' => max(5, min(600, (int)($x['weekend'] ?? 90))), 'nuit' => $hh($x['nuit'] ?? '', '20:30'), 'matin' => $hh($x['matin'] ?? '', '07:00')];
+            $e[$k]['nuit_we'] = $hh($x['nuit_we'] ?? '', $e[$k]['nuit']); $e[$k]['matin_we'] = $hh($x['matin_we'] ?? '', $e[$k]['matin']); }
         reglage_set('ecran', $e);
         if (isset($in['ecran_plus']) && is_array($in['ecran_plus'])) {   // « 15 minutes de plus aujourd'hui » : on retire du temps déjà joué
             foreach ($in['ecran_plus'] as $k => $m) if (in_array($k, ENFANTS, true)) db()->prepare('UPDATE ecran SET sec = MAX(0, sec - ?) WHERE player = ? AND jour = ?')->execute([max(0, min(240, (int)$m)) * 60, $k, jour_paris()]);

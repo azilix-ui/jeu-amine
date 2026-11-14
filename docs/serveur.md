@@ -134,7 +134,7 @@ Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de co
 
 ## Temps d'écran, défi du jour, joueurs (14/11)
 
-- `api/famille.php` : tables `reglages` (k, v JSON ; `ecran` = {Essil:{on, semaine, weekend, nuit, matin}, …}) et `ecran` (player, jour « AAAA-MM-JJ » heure de Paris, sec).
+- `api/famille.php` : tables `reglages` (k, v JSON ; `ecran` = {Essil:{on, semaine, weekend, nuit, matin, nuit_we, matin_we}, …} ; `nuit_we` = pause nuit du vendredi et du samedi soir, `matin_we` = reprise du samedi et du dimanche matin (ajoutés le 14/11 ; par défaut les heures de la semaine) : le serveur envoie à la tablette les heures du moment) et `ecran` (player, jour « AAAA-MM-JJ » heure de Paris, sec).
   - `GET ?action=ecran&player=P` → {libre, jour, limite (s, + 600 si le défi du jour est réussi), bonus, utilise, nuit, matin, weekend} ; `{libre:true}` pour un joueur qui n'est pas un enfant.
   - `POST action=ecran player sec` (60 s au plus par envoi, envoyé chaque minute de page visible par `famille.js`).
   - `POST action=reglages pass data={ecran:{…}, ecran_plus:{Amine:15}}` (Progression › Réglages) ; `POST action=ecran_plus pass player min` (« Un parent débloque 15 minutes » sur l'écran de pause).

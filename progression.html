@@ -621,6 +621,8 @@ function reglagesHTML(S){
       '<label>Jeux le week-end (min)<input type="number" min="5" max="600" step="5" data-f="weekend" value="' + (e.weekend || 90) + '"></label>' +
       '<label>Pause nuit à partir de<input type="time" data-f="nuit" value="' + esc(e.nuit || '20:30') + '"></label>' +
       '<label>Les jeux reviennent à<input type="time" data-f="matin" value="' + esc(e.matin || '07:00') + '"></label>' +
+      '<label><span>🌙 Week-end : pause nuit à partir de<br><small class="when">vendredi et samedi soir</small></span><input type="time" data-f="nuit_we" value="' + esc(e.nuit_we || e.nuit || '20:30') + '"></label>' +
+      '<label><span>☀️ Week-end : les jeux reviennent à<br><small class="when">samedi et dimanche matin</small></span><input type="time" data-f="matin_we" value="' + esc(e.matin_we || e.matin || '07:00') + '"></label>' +
       '<div><div class="when">Aujourd\'hui : ' + mn(a.utilise || 0) + ' de jeu sur ' + mn(a.limite || 0) + (a.bonus ? ' (dont 10 min du défi)' : '') + '</div><div class="jauge"><i class="' + (pc >= 100 ? 'plein' : '') + '" style="width:' + pc + '%"></i></div></div>' +
       '<div class="when">🎯 Défi du jour : ' + defi(k) + '</div>' +
       '<button class="mini" data-plus="' + k + '">＋15 min aujourd\'hui</button></div>'; };
