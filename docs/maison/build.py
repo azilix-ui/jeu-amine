@@ -8,9 +8,11 @@ from PIL import Image, ImageOps
 ICI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(ICI, '..', 'houma')); from detoure import cut
 exec(open(os.path.join(ICI, 'catalogue.py'), encoding='utf-8').read())
-BLEU = {'monstera', 'dino', 'palmier', 'citronnier_pot', 'jasmin_pot', 'tortue', 'lapin', 'toilettes', 'couscoussier', 'darbouka_d', 'cactus_pot', 'bambou', 'olivier', 'arrosoir', 'cabane_arbre', 'ara_fleurs', 'graf_dino'}   # les 4 derniers refaits sur fond bleu (le vert mangeait le blanc)
+BLEU = {'monstera', 'dino', 'palmier', 'citronnier_pot', 'jasmin_pot', 'tortue', 'lapin', 'toilettes', 'couscoussier', 'darbouka_d', 'cactus_pot', 'bambou', 'olivier', 'arrosoir', 'cabane_arbre', 'ara_fleurs', 'graf_dino', 'tapis_route', 'chevalet', 'poster_cheval', 'mobile_planetes', 'tableau_dessins', 'carte_europe'}   # les 4 derniers refaits sur fond bleu (le vert mangeait le blanc)
 src = sys.argv[1]; out = os.path.join(ICI, '..', '..', 'jeux', 'maison'); os.makedirs(out + '/tex', exist_ok=True)
 dims, manque = {}, []
+old = os.path.join(out, 'catalogue.js')   # on garde les images déjà faites (on peut ne refaire qu'une partie du catalogue)
+if os.path.exists(old): dims.update(json.loads(open(old, encoding='utf-8').read().split('=', 1)[1].strip().rstrip(';')))
 for id_, nom, cat, h, ou, fmt, p in C:
     f = sorted(glob.glob(f'{src}/{id_}_0000*_.png'))
     if not f: manque.append(id_); continue

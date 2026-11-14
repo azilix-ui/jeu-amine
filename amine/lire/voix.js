@@ -1,0 +1,1 @@
+window.LIRE_VOIX = {};

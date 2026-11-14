@@ -77,6 +77,14 @@ h1,h2{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-heig
 .go{background:var(--mint);color:#0d2a1d;border-radius:24px;padding:16px 36px;font-size:28px;box-shadow:0 7px 0 #1f9e66}
 .reglage{display:flex;gap:8px;justify-content:center;align-items:center;font-size:18px;color:#d5ecff}
 .reglage button{background:rgba(0,0,0,.25);border-radius:999px;padding:8px 16px;min-height:48px}.reglage button.on{background:var(--gold);color:#3a2600}
+
+.voixback{position:fixed;inset:0;z-index:50;background:rgba(10,20,40,.75);display:grid;place-items:center;padding:16px}
+.voixbox{background:#fff;color:var(--ink);border-radius:30px;padding:22px;width:min(520px,100%);display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.voixbox h2{text-align:center;font-size:32px}
+.vx{display:flex;align-items:center;gap:14px;width:100%;padding:12px 16px;border-radius:22px;background:#eef4fb;text-align:left;min-height:72px}
+.vx .ic{font-size:40px}.vx b{display:block;font-size:22px}.vx small{font-size:16px;color:#4b5b72;font-weight:600}
+.vx.on{background:#fff2c4;outline:4px solid var(--gold)}
+.vx.non{opacity:.45}
 #fete{position:fixed;inset:0;pointer-events:none;overflow:hidden}
 #fete i{position:absolute;top:-60px;font-style:normal;animation:tombe 2.2s ease-in forwards}
 @keyframes tombe{to{transform:translateY(115vh) rotate(360deg)}}
@@ -92,13 +100,15 @@ h1,h2{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-heig
   <h1>Je lis<span> !</span></h1>
   <p class="sous">Les sons, les syllabes, puis les premiers mots.</p>
   <div class="cartes" id="cartes"></div>
-  <div class="reglage"><span>Lettres :</span><button data-casse="maj" type="button">MAJUSCULES</button><button data-casse="min" type="button">minuscules</button></div>
+  <div class="reglage"><span>Lettres :</span><button data-casse="maj" type="button">MAJUSCULES</button><button data-casse="min" type="button">minuscules</button><button id="bVoix" type="button">🔊 La voix</button></div>
 </section>
 
 <section class="scr" id="jeu">
   <div class="haut"><button class="rond" id="retour" type="button" aria-label="Retour au menu">←</button><div class="barre" id="barre"></div><button class="rond" id="redis" type="button" aria-label="Réécouter">🔊</button></div>
   <div class="tableau" id="tableau"></div>
 </section>
+
+<div class="voixback" id="voixBox" hidden><div class="voixbox" role="dialog" aria-modal="true" aria-label="Choisir la voix"><h2>Qui lit avec Amine ?</h2><div id="voixListe"></div><button class="go" id="voixOk" type="button">C'est parti !</button></div></div>
 
 <section class="scr" id="fin">
   <div class="gros" id="fGros">⭐</div>
@@ -109,6 +119,7 @@ h1,h2{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-heig
 </section>
 
 <script src="../famille.js"></script>
+<script src="lire/voix.js"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -146,21 +157,49 @@ function save(){ S.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify
 const total = () => Object.values(S.stars).reduce((a, b) => a + (+b || 0), 0);
 
 /* ---------- la voix ----------
-   D'abord un fichier enregistré s'il existe (lire/voix/<texte>.mp3), sinon la voix française de l'appareil, un peu lente. */
-let VOIX = null;
-function choisitVoix(){ const v = (speechSynthesis.getVoices && speechSynthesis.getVoices()) || []; const fr = v.filter(x => /^fr/i.test(x.lang)); VOIX = fr.find(x => /Amélie|Audrey|Marie|Google français|Denise|Thomas/i.test(x.name)) || fr.find(x => /FR/.test(x.lang)) || fr[0] || null; }
+   Des voix enregistrées avec ElevenLabs (lire/voix/<voix>/<clé>.mp3, la liste est dans lire/voix.js), une phrase courte par fichier,
+   enchaînées une par une. Réglage ⚙️ : choisir la voix (Lulu, Papi Olivier, Jon le conteur) ou la voix de la tablette.
+   Sans fichier pour une phrase : la voix française de la tablette. */
+const VOIX = [{ id:'lulu', nom:'Lulu', desc:'joyeuse, comme dans un dessin animé', ic:'🧚' }, { id:'olivier', nom:'Papi Olivier', desc:'un grand-père rigolo', ic:'👴' }, { id:'jon', nom:'Jon le conteur', desc:'douce et calme', ic:'📚' }, { id:'tablette', nom:'La voix de la tablette', desc:'toujours disponible', ic:'📱' }];
+const cle = t => String(t).toLowerCase().replace(/é/g, 'ee').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
+const DISPO = window.LIRE_VOIX || {};
+if(!S.voix || !VOIX.some(v => v.id === S.voix)) S.voix = DISPO.lulu ? 'lulu' : 'tablette';
+let VTAB = null;
+function choisitVoix(){ const v = (window.speechSynthesis && speechSynthesis.getVoices && speechSynthesis.getVoices()) || []; const fr = v.filter(x => /^fr/i.test(x.lang)); VTAB = fr.find(x => /Amélie|Audrey|Marie|Google français|Denise|Thomas/i.test(x.name)) || fr.find(x => /FR/.test(x.lang)) || fr[0] || null; }
 if(window.speechSynthesis){ choisitVoix(); speechSynthesis.onvoiceschanged = choisitVoix; }
-let file = [], dernier = [];
+let file = [], dernier = [], joueur = null, jeton = 0;
+const cache = {};
+function fichier(t){ const k = cle(t), v = S.voix; return v !== 'tablette' && DISPO[v] && DISPO[v].includes(k) ? `lire/voix/${v}/${k}.mp3?v=1` : null; }
+function precharge(liste){ liste.forEach(t => { const f = fichier(t); if(f && !cache[f]){ const a = new Audio(); a.preload = 'auto'; a.src = f; cache[f] = a; } }); }
+function stop(){ jeton++; file = []; if(joueur){ try{ joueur.pause(); }catch(e){} joueur.onended = joueur.onerror = null; joueur = null; } try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
 function parle(liste, garde){
   if(garde !== false) dernier = liste.slice();
-  try{ speechSynthesis.cancel(); }catch(e){}
-  file = liste.slice(); suivant();
+  stop(); file = liste.slice(); precharge(file); const j = jeton;
+  setTimeout(() => { if(j === jeton) suivant(j); }, 80);   // laisser la voix précédente s'arrêter vraiment (sinon la suivante était coupée)
 }
-function suivant(){
-  const t = file.shift(); if(t === undefined || !window.speechSynthesis) return;
-  const u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; if(VOIX) u.voice = VOIX; u.rate = /^[a-zé]{1,3}$|^[a-z]h+$|^([a-z])\1+$/i.test(t) ? .7 : .88; u.pitch = 1.05;
-  u.onend = () => setTimeout(suivant, 180); u.onerror = () => suivant();
-  speechSynthesis.speak(u);
+function suivant(j){
+  if(j !== jeton) return;
+  const t = file.shift(); if(t === undefined) return;
+  const f = fichier(t), fin = () => { if(j === jeton) setTimeout(() => suivant(j), 120); };
+  if(f){
+    const a = cache[f] || new Audio(f); cache[f] = a; joueur = a; a.currentTime = 0;
+    a.onended = fin; a.onerror = () => { tts(t, fin); };
+    const p = a.play(); if(p && p.catch) p.catch(() => tts(t, fin));
+    return;
+  }
+  tts(t, fin);
+}
+// la voix de la tablette, avec un garde-fou : si elle ne dit rien (onend jamais appelé), on passe à la suite
+function tts(t, fin){
+  if(!window.speechSynthesis){ fin(); return; }
+  try{
+    const u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; if(VTAB) u.voice = VTAB; u.rate = /^[a-zé]{1,3}$|^([a-z])\1+$|h{3,}/i.test(t) ? .7 : .9; u.pitch = 1.05;
+    let fait = false; const ok = () => { if(fait) return; fait = true; clearTimeout(g); fin(); };
+    const g = setTimeout(ok, 1500 + t.length * 110);
+    u.onend = ok; u.onerror = ok;
+    speechSynthesis.speak(u);
+    if(speechSynthesis.paused) speechSynthesis.resume();
+  }catch(e){ fin(); }
 }
 // petits sons
 let AC = null;
@@ -181,6 +220,13 @@ function menu(dire){
   $('cartes').querySelectorAll('.carte').forEach(b => b.onclick = () => { audio(); sfx.tape(); joue(+b.dataset.e); });
   if(dire) parle(['Je lis ! Choisis un jeu.']);
 }
+function menuVoix(){
+  $('voixListe').innerHTML = VOIX.map(v => { const ok = v.id === 'tablette' || DISPO[v.id]; return `<button class="vx${v.id === S.voix ? ' on' : ''}${ok ? '' : ' non'}" data-v="${v.id}" type="button"><span class="ic">${v.ic}</span><span><b>${v.nom}</b><small>${ok ? v.desc : 'bientôt'}</small></span></button>`; }).join('');
+  $('voixListe').querySelectorAll('.vx').forEach(b => b.onclick = () => { const v = b.dataset.v; if(v !== 'tablette' && !DISPO[v]) return; S.voix = v; save(); sfx.tape(); menuVoix(); parle(['Bonjour Amine !', 'On lit ensemble ?']); });
+  $('voixBox').hidden = false;
+}
+$('bVoix').onclick = () => { audio(); menuVoix(); };
+$('voixOk').onclick = () => { $('voixBox').hidden = true; stop(); };
 document.querySelectorAll('[data-casse]').forEach(b => b.onclick = () => { S.casse = b.dataset.casse; save(); casse(); sfx.tape(); });
 
 /* ---------- les questions ---------- */
@@ -188,23 +234,23 @@ const imgHTML = i => i[0] === '@' ? `<img src="/jeux/avatars/${i.slice(1)}.webp"
 function question(e){
   if(e === 'voy'){
     const [L, son, ims] = pick(VOY), [im, mot] = pick(ims);
-    if(Math.random() < .5) return { consigne:'Touche la lettre ' + L, dit:['Touche la lettre', son], modele:'', choix:mele([L].concat(mele(VOY.map(v => v[0]).filter(x => x !== L)).slice(0, 2))), bonne:L, apres:[L + ', comme ' + mot] };
-    return { consigne:'Quelle lettre on entend au début ?', dit:[mot, 'Quelle lettre on entend au début de ' + mot + ' ?'], modele:`<div class="modele"><span class="img">${im}</span></div>`, choix:mele([L].concat(mele(VOY.map(v => v[0]).filter(x => x !== L)).slice(0, 2))), bonne:L, apres:[son + ', comme ' + mot] };
+    if(Math.random() < .5) return { consigne:'Touche la lettre ' + L, dit:['Touche la lettre', son], modele:'', choix:mele([L].concat(mele(VOY.map(v => v[0]).filter(x => x !== L)).slice(0, 2))), bonne:L, apres:[son, 'comme', mot] };
+    return { consigne:'Quelle lettre on entend au début ?', dit:[mot, 'Quelle lettre on entend au début de ce mot ?'], modele:`<div class="modele"><span class="img">${im}</span></div>`, choix:mele([L].concat(mele(VOY.map(v => v[0]).filter(x => x !== L)).slice(0, 2))), bonne:L, apres:[son, 'comme', mot] };
   }
   if(e === 'cons'){
     const [L, son, ims] = pick(CONS), [im, mot] = pick(ims), autres = mele(CONS.filter(c => c[0] !== L)).slice(0, 2).map(c => pick(c[2]));
-    if(Math.random() < .5) return { consigne:'Quel mot commence par ' + L + ' ?', dit:['Écoute', son, 'Quel mot commence par le son', son, '?'], modele:`<div class="fusion"><span class="l">${L}</span></div>`, choix:mele([[im, mot]].concat(autres)).map(x => x[0]), em:true, bonne:im, apres:[mot, 'commence par', son] };
-    return { consigne:'Par quelle lettre commence ce mot ?', dit:[mot, 'Par quelle lettre commence le mot ' + mot + ' ?'], modele:`<div class="modele"><span class="img">${im}</span></div>`, choix:mele([L].concat(mele(CONS.map(c => c[0]).filter(x => x !== L)).slice(0, 2))), bonne:L, apres:[mot, 'commence par', son] };
+    if(Math.random() < .5) return { consigne:'Quel mot commence par ' + L + ' ?', dit:['Écoute :', son, 'Quel mot commence par ce son ?'], modele:`<div class="fusion"><span class="l">${L}</span></div>`, choix:mele([[im, mot]].concat(autres)).map(x => x[0]), em:true, bonne:im, apres:[mot, 'commence par', son] };
+    return { consigne:'Par quelle lettre commence ce mot ?', dit:[mot, 'Par quelle lettre commence ce mot ?'], modele:`<div class="modele"><span class="img">${im}</span></div>`, choix:mele([L].concat(mele(CONS.map(c => c[0]).filter(x => x !== L)).slice(0, 2))), bonne:L, apres:[mot, 'commence par', son] };
   }
   if(e === 'syl'){
     const c = pick(SYLC), v = pick(c === 'V' || c === 'F' ? ['A', 'I', 'O', 'É'] : SYLV), sy = c + v, lu = sy.toLowerCase();
     const autres = mele(SYLC.flatMap(x => SYLV.map(y => x + y)).filter(x => x !== sy && (x[0] === c || x.slice(1) === v))).slice(0, 2);
-    if(Math.random() < .45) return { fusion:[c, v], consigne:c + ' et ' + v + ', ça fait…', dit:[c === 'CH' ? 'ch' : c.toLowerCase() + c.toLowerCase() + c.toLowerCase(), v.toLowerCase(), 'ça fait'], choix:mele([sy].concat(autres)), bonne:sy, apres:[lu] };
-    return { consigne:'Touche la syllabe que tu entends', dit:['Touche', lu], modele:'', choix:mele([sy].concat(autres)), bonne:sy, apres:[lu] };
+    if(Math.random() < .45) return { fusion:[c, v], consigne:c + ' et ' + v + ', ça fait…', dit:[CONS.find(x => x[0] === c)[1], 'et', VOY.find(x => x[0] === v)[1], 'ça fait…'], choix:mele([sy].concat(autres)), bonne:sy, apres:[lu] };
+    return { consigne:'Touche la syllabe que tu entends', dit:['Touche la syllabe que tu entends :', lu], modele:'', choix:mele([sy].concat(autres)), bonne:sy, apres:[lu] };
   }
   // mots : lis le mot (syllabe par syllabe), trouve l'image
   const m = pick(MOTS), autres = mele(MOTS.filter(x => x !== m && (x[1][0] === '@') === (m[1][0] === '@'))).slice(0, 2);
-  return { mot:m[0], consigne:'Lis le mot, puis touche la bonne image', dit:['Lis le mot, puis touche la bonne image.'], choix:mele([m].concat(autres)).map(x => x[1]), em:true, img:true, bonne:m[1], apres:[m[0].join(' ').toLowerCase(), m[2]] };
+  return { mot:m[0], consigne:'Lis le mot, puis touche la bonne image', dit:['Lis le mot, puis touche la bonne image.'], choix:mele([m].concat(autres)).map(x => x[1]), em:true, img:true, bonne:m[1], apres:m[0].map(x => x.toLowerCase()).concat([m[2]]) };
 }
 
 /* ---------- une partie ---------- */
@@ -236,7 +282,7 @@ function repond(b){
     setTimeout(() => { k++; k < TOUR ? suivante() : fin(); }, 2600);
   } else {
     essais++; b.classList.add('non'); b.disabled = true; sfx.non();
-    parle(['Essaie encore !'].concat(Q.dit.slice(-1)), false);
+    parle(['Essaie encore !'].concat(Q.dit.length > 1 ? Q.dit.slice(-2) : Q.dit), false);
   }
 }
 function fin(){
@@ -252,7 +298,7 @@ function fin(){
 }
 $('fOk').onclick = () => { sfx.tape(); joue(E); };
 $('fMenu').onclick = () => menu(false);
-$('retour').onclick = () => { try{ speechSynthesis.cancel(); }catch(e){} menu(false); };
+$('retour').onclick = () => { stop(); menu(false); };
 $('redis').onclick = () => parle(dernier, false);
 menu(false);
 document.addEventListener('pointerdown', function premier(){ document.removeEventListener('pointerdown', premier); audio(); }, { once:true });
