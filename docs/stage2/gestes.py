@@ -30,15 +30,17 @@ def boucle(fichiers):
     _, i, j = best; return [fichiers[i + round(k * (j - i) / 12)] for k in range(12)]
 
 def planche(dos, id):
+    fond = 'blue' if 'plage' in id else 'green'   # le short de plage est vert : ces images-là sont faites sur fond bleu
+    cut_ = lambda f: cut(f, fond)
     s = lambda k: os.path.join(dos, f'{id}_{k}_00001_.png')
     anim = lambda k: [os.path.join(dos, f'anim_{id}_{k}_{n:05d}_.png') for n in range(1, 34)]
     rampe3 = s('rampe3') if os.path.exists(s('rampe3')) else None
     lignes = {}
-    g = propre(cut(s('grimpe2'))); lignes['grimpe'] = [g, ImageOps.mirror(g)]
-    ra = anim('rampe'); lignes['rampe'] = [propre(cut(f)) for f in boucle(ra)] if all(os.path.exists(f) for f in ra) else [propre(cut(rampe3 or s('rampe')))]
-    lignes['accroupi'] = [propre(cut(s('accroupi')))]
-    po = anim('porte'); lignes['porte'] = [propre(cut(f)) for f in boucle(po)] if all(os.path.exists(f) for f in po) else [propre(cut(s('porte2')))]
-    lignes['lance'] = [propre(cut(s('lance') if os.path.exists(s('lance')) else s('porte2')))]   # (le jeu lance avec l'image « porter »)
+    g = propre(cut_(s('grimpe2'))); lignes['grimpe'] = [g, ImageOps.mirror(g)]
+    ra = anim('rampe'); lignes['rampe'] = [propre(cut_(f)) for f in boucle(ra)] if all(os.path.exists(f) for f in ra) else [propre(cut_(rampe3 or s('rampe')))]
+    lignes['accroupi'] = [propre(cut_(s('accroupi')))]
+    po = anim('porte'); lignes['porte'] = [propre(cut_(f)) for f in boucle(po)] if all(os.path.exists(f) for f in po) else [propre(cut_(s('porte2')))]
+    lignes['lance'] = [propre(cut_(s('lance') if os.path.exists(s('lance')) else s('porte2')))]   # (le jeu lance avec l'image « porter »)
     cases = {}
     for k, ims in lignes.items():
         boxes = [im.getchannel('A').point(lambda v: 255 if v > 60 else 0).getbbox() for im in ims]
