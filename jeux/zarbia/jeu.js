@@ -222,7 +222,7 @@ function commandes(){
 }
 document.addEventListener('visibilitychange', () => { if(document.hidden && G && !G.fini && !G.net) { G.pause = true; pauseFenetre(); } });
 $('pause').onclick = () => togglePause();
-function togglePause(){ if(!G || G.fini) return; if(G.net){ message('En ligne, on ne peut pas mettre en pause 🙂'); return; } G.pause = !G.pause; if(G.pause) pauseFenetre(); else $('modal').classList.remove('on'); }
+function togglePause(){ if(!G || G.fini) return; if(G.net){ G.net.demandeQuitter(); return; } G.pause = !G.pause; if(G.pause) pauseFenetre(); else $('modal').classList.remove('on'); }
 function pauseFenetre(){ modal(`<h2>⏸ Pause</h2><p>Ta zarbia : <b>${fmt(G.moi.score)}</b></p><div class="rang"><button class="pill go" id="mRep">▶ Continuer</button><button class="pill" id="mQuit">🏠 Menu</button></div>`);
   $('mRep').onclick = () => { G.pause = false; $('modal').classList.remove('on'); last = performance.now(); }; $('mQuit').onclick = () => { quitter(); }; }
 function quitter(){ if(G && !G.fini && !G.net) enregistre(); if(G && G.net) G.net.quitte(); G = null; $('modal').classList.remove('on'); document.body.classList.remove('jeu'); ctx.clearRect(0, 0, cv.width, cv.height); menu(); }

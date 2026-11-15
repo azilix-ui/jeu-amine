@@ -544,5 +544,22 @@ const NOUVEAUTES = [
   box.addEventListener('click', e => { if(e.target === box) box.hidden = true; });
 })();
 </script>
+<!-- l'affiche de la famille s'ouvre dans une fenêtre qu'on ferme (15/11, demande du papa : avant, le clic ouvrait l'image seule) -->
+<div id="afficheVue" style="position:fixed;inset:0;z-index:9999;background:rgba(10,20,30,.82);display:none;align-items:center;justify-content:center;padding:16px">
+  <figure style="margin:0;position:relative;max-width:min(92vw,720px);max-height:92vh;display:flex;flex-direction:column;align-items:center;gap:10px">
+    <img src="jeux/avatars/qui/affiche-famille.webp" alt="L'affiche de la famille Missaoui" style="max-width:100%;max-height:calc(92vh - 70px);border-radius:10px;box-shadow:0 12px 40px #0008;background:#fff">
+    <figcaption style="display:flex;gap:10px"><a href="jeux/avatars/qui/affiche-famille.jpg" download="affiche-famille-missaoui.jpg" style="background:#fff;color:#14213d;border-radius:999px;padding:10px 18px;font:800 16px Nunito,system-ui,sans-serif;text-decoration:none">⬇️ Télécharger pour imprimer</a></figcaption>
+    <button type="button" id="afficheFerme" aria-label="Fermer" style="position:absolute;top:-12px;right:-12px;width:48px;height:48px;border-radius:50%;border:0;background:#fff;color:#14213d;font-size:24px;font-weight:800;box-shadow:0 4px 12px #0006;cursor:pointer">✕</button>
+  </figure>
+</div>
+<script>
+(() => {
+  const vue = document.getElementById('afficheVue'), ouvert = () => vue.style.display === 'flex', ferme = () => { vue.style.display = 'none'; };
+  document.addEventListener('click', e => { const a = e.target.closest('a[href$="affiche-famille.jpg"]'); if(!a || a.hasAttribute('download')) return; e.preventDefault(); vue.style.display = 'flex'; });
+  document.getElementById('afficheFerme').onclick = ferme;
+  vue.addEventListener('click', e => { if(e.target === vue) ferme(); });
+  addEventListener('keydown', e => { if(e.key === 'Escape' && ouvert()) ferme(); });
+})();
+</script>
 </body>
 </html>

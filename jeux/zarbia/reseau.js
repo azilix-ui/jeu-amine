@@ -77,6 +77,8 @@ export class Reseau {
     s.joueurs.forEach((j, i) => { const l = placeLibre(M); const p = o.joueurDe(M, { nom:j.nom, couleur:j.couleur, motif:j.motif, tete:j.tete, humain:true, client:j.client }, l.x, l.y); p.local = j.client === this.client; if(p.local) G.moi = p; else p.vitesse = 0; });
     for(let i = 0; i < s.bots; i++){ const [id, n] = BOTS[(s.seed + i * 3) % BOTS.length], l = placeLibre(M); const p = o.joueurDe(M, { nom:n, couleur:COUL_BOTS[i % COUL_BOTS.length], motif:4 + ((s.seed + i) % 8), tete:o.tete(null, id), bot:id, niveau:i % 3 === 2 ? 'normal' : 'facile' }, l.x, l.y); p.local = hote; if(!hote) p.vitesse = 0; }
     M.events.length = 0; this.since = 0; this.sortants = []; this.finT = performance.now() + s.duree * 1000; this.envoiT = 0; this.vus = {};
+    // qui est encore là : un joueur qui quitte (ou dont la tablette ne répond plus depuis 8 s) est remplacé par la machine
+    this.ordre = s.joueurs.map(j => j.client); this.partis = new Set(); this.vuT = {}; const t0 = performance.now(); this.ordre.forEach(c => this.vuT[c] = t0);
     o.demarre(); o.message('C\'est parti pour ' + s.duree / 60 + ' minutes ! 🧶', 3000);
     this.boucle();
   }
@@ -87,15 +89,16 @@ export class Reseau {
       // toutes les 4 s, la zarbia complète d'un de mes joueurs (les tablettes se recalent si elles ont un peu dérivé)
       if(t0 - (this.toutT || 0) > 4000 / Math.max(1, G.M.joueurs.filter(p => p && p.local && p.vivant).length)){ this.toutT = t0; const mes = G.M.joueurs.filter(p => p && p.local && p.vivant); if(mes.length){ const p = mes[(this.toutI = (this.toutI || 0) + 1) % mes.length]; this.sortants.push({ k:'tout', id:p.id, c:compresse(casesDe(G.M, p.id)) }); } }
       const e = this.sortants; this.sortants = [];
-      try{ const r = await post({ action:'sync', code:this.code, client:this.client, since:this.since, msgs:{ p:pos, e } }); if(this.since === 0) this.since = r.id; else { this.since = r.id; r.msgs.forEach(m => this.recoit(m.m)); } }catch(err){ this.sortants = e.concat(this.sortants); }
+      try{ const r = await post({ action:'sync', code:this.code, client:this.client, since:this.since, msgs:{ p:pos, e } }); if(this.since === 0) this.since = r.id; else { this.since = r.id; const now = performance.now(); r.msgs.forEach(m => { this.vuT[m.c] = now; this.recoit(m.m); }); } }catch(err){ this.sortants = e.concat(this.sortants); }
       if(performance.now() > this.finT && !this.G.fini) this.termine();
+      if(this.enJeu) for(const c of this.ordre){ if(c !== this.client && !this.partis.has(c) && performance.now() - (this.vuT[c] || 0) > 8000) this.depart(c, true); }
       const reste = 120 - (performance.now() - t0); if(reste > 0) await new Promise(r => setTimeout(r, reste));
     }
   }
   recoit(m){
     const M = this.G.M, now = performance.now();
     (m.p || []).forEach(([id, x, y, a]) => { const p = M.joueurs[id]; if(!p || p.local) return; p.net = { x, y, a, t:now }; });
-    (m.e || []).forEach(e => { const p = M.joueurs[e.id]; if(!p) return;
+    (m.e || []).forEach(e => { if(e.k === 'part'){ this.depart(e.client); return; } const p = M.joueurs[e.id]; if(!p) return;
       if(e.k === 'cap' && !p.local){ appliqueCases(M, e.id, decompresse(e.c)); }
       else if(e.k === 'tout' && !p.local && p.vivant){ resynchro(M, e.id, decompresse(e.c)); }
       else if(e.k === 'mort' && p.vivant){ this.recu = true; elimine(M, p, e.par); this.recu = false; }
@@ -114,7 +117,22 @@ export class Reseau {
   capture(p, cells){ this.sortants.push({ k:'cap', id:p.id, c:compresse(cells) }); }
   mort(p, par){ if(this.recu) return; const tueur = this.G.M.joueurs[par]; if(p.local || (tueur && tueur.local)) this.sortants.push({ k:'mort', id:p.id, par }); }
   nait(p){ this.sortants.push({ k:'nait', id:p.id, x:Math.floor(p.x), y:Math.floor(p.y) }); }
-  moiMort(pourquoi){ this.o.message(pourquoi + ' : tu regardes la fin de la partie 👀', 4000); }
+  moiMort(pourquoi){ this.o.modal(`<div style="font-size:54px">✂️</div><h2>${esc(pourquoi)}</h2><p>Tu peux regarder la fin de la partie, ou quitter.</p><div class="rang"><button class="pill go" id="mVoir">👀 Regarder la fin</button><button class="pill" id="mPart">🚪 Quitter la partie</button></div>`);
+    $('mVoir').onclick = () => $('modal').classList.remove('on'); $('mPart').onclick = () => this.partir(); }
+  // le bouton ⏸ en ligne : pas de pause (les autres jouent), mais on peut quitter ; la machine prend la place
+  demandeQuitter(){ this.o.modal(`<h2>🚪 Quitter la partie ?</h2><p>Les autres continuent : ${this.G.moi.vivant ? 'la machine prendra ta place' : 'ta place reste vide'}.</p><div class="rang"><button class="pill go" id="mReste">▶ Je reste</button><button class="pill" id="mPart">🚪 Quitter</button></div>`);
+    $('mReste').onclick = () => $('modal').classList.remove('on'); $('mPart').onclick = () => this.partir(); }
+  async partir(){ const code = this.code; this.quitte(); post({ action:'sync', code, client:this.client, since:this.since || 1, msgs:{ p:[], e:[{ k:'part', client:this.client }] } }).catch(() => {}); this.code = null; this.room = null; this.o.quitter(); }
+  // un joueur est parti : s'il avait créé la partie, la tablette suivante la reprend (avec les machines) ; sa place est jouée par la machine
+  depart(c, silence){
+    if(!this.enJeu || this.partis.has(c) || c === this.client) return; this.partis.add(c);
+    const M = this.G.M, j = (this.room.joueurs.find(x => x.client === c) || {}), q = M.joueurs.find(p => p && p.client === c);
+    if(c === this.host) this.host = this.ordre.find(x => !this.partis.has(x));
+    const moiHote = this.host === this.client;
+    if(q){ q.nom = (j.nom || q.nom) + ' 🤖'; q.bot = q.bot || 'relais'; q.niveau = 'normal'; q.ia = null; }
+    if(moiHote) for(const p of M.joueurs){ if(!p || p.local) continue; if(p.bot && (!p.client || this.partis.has(p.client))){ p.local = true; p.vitesse = 16; p.ia = null; p.net = null; } }
+    this.o.message(`${j.nom || 'Un joueur'} ${silence ? 'ne répond plus' : 'a quitté la partie'} : la machine prend sa place 🤖`, 3500);
+  }
   termine(){
     const G = this.G; if(G.fini) return; G.fini = true;
     const cl = classement(G.M).concat(G.M.joueurs.filter(p => p && !p.vivant && !p.libre)), moi = G.moi, rang = cl.indexOf(moi) + 1;
