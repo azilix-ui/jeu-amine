@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#b0462a">
+<title>Zarbia</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%B6%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* Zarbia : chacun tisse sa zarbia (le tapis tunisien). On sort de son tapis en déroulant un fil de laine ;
+   en revenant, la boucle se ferme et tout ce qui est dedans devient sa zarbia. Couper le fil d'un autre l'élimine.
+   D'après le cahier des charges du papa (15/11, « Territory Rush »), adapté au site : univers tunisien original,
+   avatars de la famille, deux modes (Tranquille pour Amine, Champion), et en ligne pour jouer entre frère et sœurs.
+   Code : zarbia/moteur.js (la logique, testée en Node : docs/zarbia/), bots.js (les joueurs de la machine),
+   jeu.js (dessin, commandes, menus), reseau.js (en ligne, + api/zarbia.php). Images ComfyUI : zarbia/img/. */
+:root{ --terre:#b0462a; --sable:#f6e7c8; --nuit:#2b1a12; --bleu:#1f6fd8; --ok:#2e9e6b; --ombre:0 4px 0 rgba(0,0,0,.18); }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body{ margin:0; height:100%; overflow:hidden; background:#d8b98a; font-family:Nunito, system-ui, sans-serif; color:var(--nuit); touch-action:none; user-select:none; -webkit-user-select:none; }
+button{ font:inherit; cursor:pointer; border:0; }
+#cv{ position:fixed; inset:0; width:100%; height:100%; display:block; }
+.ecran{ position:fixed; inset:0; display:none; overflow:auto; touch-action:pan-y; }
+.ecran.on{ display:block; }
+#menu{ background:#3a2418 url(zarbia/img/menu.webp) center/cover; }
+#menu::before{ content:''; position:fixed; inset:0; background:linear-gradient(180deg, rgba(40,20,10,.15), rgba(40,20,10,.55)); pointer-events:none; }
+.boite{ position:relative; max-width:760px; margin:0 auto; padding:calc(14px + env(safe-area-inset-top)) 16px 30px; }
+.haut{ display:flex; align-items:center; gap:10px; }
+.pill{ background:#fff8ec; color:var(--nuit); border-radius:999px; padding:10px 16px; font-weight:800; box-shadow:var(--ombre); min-height:48px; display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+.pill img{ width:32px; height:32px; border-radius:50%; object-fit:cover; }
+h1{ font-family:'Baloo 2', sans-serif; font-size:clamp(54px, 13vw, 96px); line-height:.9; margin:18px 0 0; color:#fff; text-shadow:0 4px 0 #8e2a17, 0 8px 18px rgba(0,0,0,.4); letter-spacing:1px; }
+.sous{ color:#fff; font-size:20px; margin:4px 0 18px; text-shadow:0 2px 6px rgba(0,0,0,.6); }
+.carte{ background:rgba(255,248,236,.96); border-radius:22px; padding:16px; box-shadow:0 6px 0 rgba(0,0,0,.15); margin-bottom:14px; }
+.carte h2{ font-family:'Baloo 2', sans-serif; margin:0 0 10px; font-size:24px; }
+.modes{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.mode{ background:#fff; border-radius:18px; padding:14px; text-align:left; box-shadow:inset 0 0 0 3px #e9d6b4; min-height:120px; }
+.mode b{ display:block; font-family:'Baloo 2', sans-serif; font-size:24px; }
+.mode span{ font-size:15px; color:#6b5444; }
+.mode.on{ box-shadow:inset 0 0 0 4px var(--terre); background:#fff3e6; }
+.grand{ display:block; width:100%; margin-top:12px; background:var(--terre); color:#fff; font-family:'Baloo 2', sans-serif; font-size:30px; border-radius:20px; padding:12px; box-shadow:0 6px 0 #7a2c18; }
+.grand.bleu{ background:var(--bleu); box-shadow:0 6px 0 #164f9c; font-size:24px; }
+.couleurs{ display:flex; flex-wrap:wrap; gap:8px; }
+.couleurs button{ width:48px; height:48px; border-radius:50%; box-shadow:inset 0 0 0 3px rgba(0,0,0,.15); }
+.couleurs button.on{ box-shadow:0 0 0 4px #fff, 0 0 0 7px var(--nuit); }
+.motifs{ display:flex; gap:10px; margin-top:12px; }
+.motifs button{ width:84px; height:64px; border-radius:14px; background-size:cover; box-shadow:inset 0 0 0 3px rgba(0,0,0,.1); }
+.motifs button.on{ box-shadow:0 0 0 4px #fff, 0 0 0 7px var(--nuit); }
+.regles{ margin:0; padding-left:20px; line-height:1.5; font-size:17px; }
+.records{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.records ol{ margin:0; padding-left:22px; font-size:16px; line-height:1.6; }
+.records h3{ margin:0 0 4px; font-size:16px; }
+.none{ color:#8a7464; margin:0; }
+/* pendant la partie */
+#hud{ position:fixed; inset:0; pointer-events:none; display:none; }
+body.jeu #hud{ display:block; }
+.coin{ position:absolute; display:flex; gap:8px; align-items:center; }
+.coin.hg{ left:calc(10px + env(safe-area-inset-left)); top:calc(10px + env(safe-area-inset-top)); }
+.coin.hd{ right:calc(10px + env(safe-area-inset-right)); top:calc(10px + env(safe-area-inset-top)); flex-direction:column; align-items:stretch; }
+.tag{ background:rgba(43,26,18,.78); color:#fff; border-radius:16px; padding:6px 12px; font-weight:800; font-size:18px; min-width:64px; text-align:center; }
+.tag small{ display:block; font-size:11px; opacity:.8; font-weight:700; }
+#pct{ font-family:'Baloo 2', sans-serif; font-size:26px; }
+#pause{ pointer-events:auto; width:52px; height:52px; border-radius:50%; background:#fff8ec; box-shadow:var(--ombre); font-size:22px; }
+#top{ background:rgba(43,26,18,.72); color:#fff; border-radius:16px; padding:6px 10px; min-width:170px; font-size:15px; }
+#top div{ display:flex; align-items:center; gap:6px; padding:2px 0; }
+#top i{ width:14px; height:14px; border-radius:4px; flex:none; }
+#top b{ margin-left:auto; padding-left:8px; }
+#top .moi{ color:#ffe08a; }
+#carte{ position:absolute; right:calc(10px + env(safe-area-inset-right)); bottom:calc(10px + env(safe-area-inset-bottom)); width:120px; height:120px; border-radius:14px; border:3px solid rgba(255,248,236,.9); background:#c9a674; image-rendering:pixelated; }
+#msg{ position:absolute; left:50%; top:22%; transform:translate(-50%, 0) scale(.9); background:rgba(43,26,18,.85); color:#fff; font-family:'Baloo 2', sans-serif; font-size:26px; padding:8px 20px; border-radius:18px; opacity:0; transition:opacity .25s, transform .25s; white-space:nowrap; }
+#msg.on{ opacity:1; transform:translate(-50%, 0) scale(1); }
+#joy{ position:absolute; width:120px; height:120px; margin:-60px 0 0 -60px; border-radius:50%; border:4px solid rgba(255,255,255,.55); background:rgba(255,255,255,.12); display:none; }
+#joy i{ position:absolute; left:50%; top:50%; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:50%; background:rgba(255,255,255,.75); }
+#aide{ position:absolute; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); background:rgba(43,26,18,.7); color:#fff; padding:8px 16px; border-radius:16px; font-size:16px; transition:opacity .6s; text-align:center; max-width:80vw; }
+/* fenêtres */
+#modal{ position:fixed; inset:0; background:rgba(30,15,8,.55); display:none; align-items:center; justify-content:center; padding:16px; z-index:5; }
+#modal.on{ display:flex; }
+#modal .carte{ max-width:460px; width:100%; text-align:center; }
+#modal h2{ font-size:32px; }
+.res{ display:grid; grid-template-columns:auto auto; gap:6px 18px; justify-content:center; font-size:18px; margin:8px 0; text-align:left; }
+.res b{ text-align:right; }
+.rang{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+.rang .pill{ font-size:18px; }
+.rang .pill.go{ background:var(--terre); color:#fff; }
+/* le salon en ligne */
+#salon{ background:#f6e7c8; }
+.gens{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+.gens button{ background:#fff; border-radius:16px; padding:10px; box-shadow:inset 0 0 0 3px #e9d6b4; display:flex; align-items:center; gap:8px; font-weight:800; min-height:64px; }
+.gens button img{ width:44px; height:44px; border-radius:50%; object-fit:cover; }
+.gens button:disabled{ opacity:1; color:inherit; cursor:default; }
+.gens button small{ display:block; font-weight:700; color:#8a7464; font-size:12px; }
+.code{ font-family:'Baloo 2', sans-serif; font-size:44px; letter-spacing:6px; color:var(--terre); }
+#invit{ position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:6; display:none; }
+#invit.on{ display:block; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<section class="ecran on" id="menu"><div class="boite">
+  <div class="haut"><a class="pill" href="../" aria-label="Retour à l'accueil">←</a><button class="pill" id="who">Qui joue ?</button></div>
+  <h1>Zarbia</h1>
+  <p class="sous">Tisse la plus grande zarbia de Tunisie !</p>
+  <div class="carte">
+    <div class="modes">
+      <button class="mode" data-m="tranquille"><b>🐢 Tranquille</b><span>On ne perd jamais : si ton fil est coupé, tu recommences. Gagne à 25 %.</span></button>
+      <button class="mode" data-m="champion"><b>🐆 Champion</b><span>Les vraies règles : ne croise pas ton propre fil, et garde-le loin des autres !</span></button>
+    </div>
+    <button class="grand" id="jouer">▶ Jouer</button>
+    <button class="grand bleu" id="ensemble">🧶 Jouer ensemble (en ligne)</button>
+  </div>
+  <div class="carte"><h2>Ta zarbia</h2><div class="couleurs" id="couleurs"></div><div class="motifs" id="motifs"></div></div>
+  <div class="carte"><h2>Comment jouer</h2><ul class="regles">
+    <li>Tu es sur ta zarbia. Dès que tu en sors, tu déroules <b>un fil de laine</b>.</li>
+    <li>Reviens sur ta zarbia : <b>tout ce que ton fil entoure</b> devient à toi.</li>
+    <li>Si quelqu'un touche <b>ton fil</b> pendant que tu es dehors, ta zarbia est défaite ! Si toi tu touches le fil d'un autre, c'est lui qui perd.</li>
+    <li>Sur ta zarbia, personne ne peut te faire de mal.</li>
+    <li>Tablette : pose le doigt n'importe où et glisse dans la direction voulue. Ordinateur : la souris, ou les flèches (ZQSD, WASD). Échap pour la pause.</li>
+  </ul></div>
+  <div class="carte"><h2>🏆 Records de la famille</h2><div class="records"><div><h3>🐆 Champion</h3><ol id="recC"><p class="none">…</p></ol></div><div><h3>🐢 Tranquille</h3><ol id="recT"><p class="none">…</p></ol></div></div></div>
+</div></section>
+
+<section class="ecran" id="salon"><div class="boite">
+  <div class="haut"><button class="pill" id="salonRetour">←</button><b style="font-family:'Baloo 2';font-size:28px">Jouer ensemble</b></div>
+  <div class="carte" id="salonCorps"></div>
+</div></section>
+
+<div id="hud">
+  <div class="coin hg"><button id="pause" aria-label="Pause">⏸</button><div class="tag"><span id="pct">0 %</span><small>ma zarbia</small></div><div class="tag"><span id="temps">0:00</span><small>temps</small></div><div class="tag"><span id="kills">0</span><small>✂️ fils coupés</small></div></div>
+  <div class="coin hd"><div id="top"></div></div>
+  <canvas id="carte" width="120" height="120"></canvas>
+  <div id="msg"></div>
+  <div id="joy"><i></i></div>
+  <div id="aide">Glisse le doigt pour te diriger · sors de ta zarbia, fais une boucle et reviens !</div>
+</div>
+<div id="modal"></div>
+<div id="invit"></div>
+
+<script src="../famille.js"></script>
+<script type="module" src="zarbia/jeu.js?v=1"></script>
+</body>
+</html>
