@@ -28,7 +28,7 @@ export class Reseau {
   }
   invitation(i){ if(this.enJeu || this.code === i.code) return; const d = $('invit');
     d.innerHTML = `<div class="carte" style="display:flex;gap:10px;align-items:center;margin:0">${i.tete ? `<img src="${esc(i.tete)}" style="width:48px;height:48px;border-radius:50%">` : '🧶'}<b>${esc(i.name)} t'invite à jouer à Zarbia !</b><button class="pill" style="background:#b0462a;color:#fff" id="invOk">Rejoindre</button><button class="pill" id="invNo">✕</button></div>`;
-    d.classList.add('on'); this.o.SON.gagne(); $('invOk').onclick = () => { d.classList.remove('on'); this.rejoindre(i.code); }; $('invNo').onclick = () => d.classList.remove('on'); setTimeout(() => d.classList.remove('on'), 30000); }
+    d.classList.add('on'); this.o.SON.invite(); $('invOk').onclick = () => { d.classList.remove('on'); this.rejoindre(i.code); }; $('invNo').onclick = () => d.classList.remove('on'); setTimeout(() => d.classList.remove('on'), 30000); }
   ouvreSalon(){ this.status = 'salon'; this.o.montre('salon'); $('salonRetour').onclick = () => this.quitteSalon(); if(this.room) this.rendSalle(); else this.rendSalon(); this.hello(); }
   quitteSalon(){ this.status = 'menu'; this.code = null; this.room = null; clearInterval(this.poll); this.o.menu(); }
   rendSalon(){

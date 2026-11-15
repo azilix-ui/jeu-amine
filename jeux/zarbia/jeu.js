@@ -32,12 +32,22 @@ export function teteDe(nom, botId){
 /* ---------- les sons (fabriqués par le navigateur) ---------- */
 let AC = null; const ac = () => { if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state === 'suspended') AC.resume(); return AC; };
 function ton(f, d, type = 'sine', v = .12, f2 = 0, t0 = 0){ const a = ac(); if(!a) return; const t = a.currentTime + t0, o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if(f2) o.frequency.exponentialRampToValueAtTime(f2, t + d); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + d + .02); }
+/* les bruitages ElevenLabs (15/11) : rangés hors du site public, servis par son.php ; 4 versions de chaque, on en tire une au hasard.
+   Tant qu'ils ne sont pas chargés (ou hors ligne), les sons fabriqués par le navigateur prennent le relais. */
+const BRUIT = {}, BRUIT_URL = new URL('./son.php', import.meta.url).href;
+fetch(BRUIT_URL + '?liste=1').then(r => r.json()).then(async l => { const a = ac(); if(!a) return; const par = {};
+  l.forEach(n => { const k = n.slice(0, -1); (par[k] = par[k] || []).push(n); });
+  for(const k in par){ const n = par[k][Math.floor(Math.random() * par[k].length)];
+    try{ const b = await fetch(BRUIT_URL + '?n=' + n).then(r => r.arrayBuffer()); BRUIT[k] = await new Promise((ok, ko) => a.decodeAudioData(b, ok, ko)); }catch(e){} } }).catch(() => {});
+function bruit(k, v = .8){ const a = ac(), b = BRUIT[k]; if(!a || !b) return false; const s = a.createBufferSource(), g = a.createGain(); g.gain.value = v; s.buffer = b; s.connect(g); g.connect(a.destination); s.start(); return true; }
 const SON = {
-  capture(n){ const k = Math.min(5, 1 + Math.floor(n / 80)); [523, 659, 784, 988, 1175].slice(0, k).forEach((f, i) => ton(f, .22, 'triangle', .11, 0, i * .07)); },
-  coupe(){ ton(1800, .08, 'square', .06, 600); ton(900, .18, 'sawtooth', .05, 200, .05); },
-  perdu(){ ton(440, .25, 'triangle', .12, 220); ton(330, .4, 'triangle', .1, 160, .2); },
-  gagne(){ [523, 659, 784, 1047, 1319].forEach((f, i) => ton(f, .35, 'triangle', .12, 0, i * .11)); },
-  tap(){ ton(660, .06, 'sine', .08); },
+  capture(n){ if(bruit(n > 300 ? 'grande' : 'capture', n > 300 ? .8 : .6)) return; const k = Math.min(5, 1 + Math.floor(n / 80)); [523, 659, 784, 988, 1175].slice(0, k).forEach((f, i) => ton(f, .22, 'triangle', .11, 0, i * .07)); },
+  coupe(){ if(bruit('coupe', .9)) return; ton(1800, .08, 'square', .06, 600); ton(900, .18, 'sawtooth', .05, 200, .05); },
+  perdu(){ if(bruit('perdu', .8)) return; ton(440, .25, 'triangle', .12, 220); ton(330, .4, 'triangle', .1, 160, .2); },
+  gagne(){ if(bruit('victoire', .8)) return; [523, 659, 784, 1047, 1319].forEach((f, i) => ton(f, .35, 'triangle', .12, 0, i * .11)); },
+  nait(){ bruit('nait', .6); },
+  invite(){ if(bruit('invite', .8)) return; ton(880, .2, 'sine', .1); ton(660, .3, 'sine', .1, 0, .2); },
+  tap(){ if(bruit('tap', .6)) return; ton(660, .06, 'sine', .08); },
 };
 
 /* ---------- la sauvegarde ---------- */
@@ -135,7 +145,7 @@ function partieSolo(){
 }
 export function demarre(){
   montre('-'); document.body.classList.add('jeu'); $('modal').classList.remove('on'); $('aide').style.opacity = 1; setTimeout(() => { $('aide').style.opacity = 0; }, 6000);
-  G.cam.x = G.moi.x; G.cam.y = G.moi.y; G.moi.vise = G.moi.a = Math.random() * 6.28; last = performance.now();
+  G.cam.x = G.moi.x; G.cam.y = G.moi.y; G.moi.vise = G.moi.a = Math.random() * 6.28; last = performance.now(); SON.nait();
   if(!raf) raf = requestAnimationFrame(boucle);
 }
 
@@ -164,7 +174,7 @@ function boucle(t){
 function renaissances(){
   const M = G.M;
   for(const p of M.joueurs){ if(!p || p.vivant || p.local === false || p.libre) continue;
-    if(p === G.moi){ if(G.mode === 'tranquille' && M.t - p.mort > 2.2 && !G.fini){ const l = placeLibre(M); nait(M, p, l.x, l.y); p.vise = p.a; message('C\'est reparti ! 🧶'); if(G.net) G.net.nait(p); } continue; }
+    if(p === G.moi){ if(G.mode === 'tranquille' && M.t - p.mort > 2.2 && !G.fini){ const l = placeLibre(M); nait(M, p, l.x, l.y); p.vise = p.a; SON.nait(); message('C\'est reparti ! 🧶'); if(G.net) G.net.nait(p); } continue; }
     if(p.bot && M.t - p.mort > 3){ const l = placeLibre(M); nait(M, p, l.x, l.y); p.ia = null; if(G.net) G.net.nait(p); }
   }
 }
