@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2a1f4f">
+<title>Monsieur Loup chez Amine · Famille Missaoui</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700;800&display=swap">
+<style>
+/* Le week-end de Monsieur Loup (la mascotte de la classe d'Amine, 14-15/11/2026) : la version en ligne de l'affiche pour l'école.
+   Les vraies photos restent sur l'affiche imprimée (PDF, pas publié) ; ici le texte et les dessins imaginés avec ComfyUI (amine/loup/). */
+*{ box-sizing:border-box; }
+body{ margin:0; background:#fff8e6; color:#2a1f4f; font-family:Nunito, system-ui, sans-serif; }
+.boite{ max-width:860px; margin:0 auto; padding:calc(14px + env(safe-area-inset-top)) 16px 40px; }
+.retour{ display:inline-flex; align-items:center; gap:6px; background:#fff; color:#2a1f4f; border-radius:999px; padding:10px 16px; font-weight:800; text-decoration:none; box-shadow:0 4px 0 #0002; min-height:48px; }
+.bandeau{ margin-top:14px; background:#2a1f4f; color:#fff1bf; border-radius:24px; padding:20px 24px; display:flex; gap:16px; align-items:center; box-shadow:0 6px 0 #ff8c1a; }
+.bandeau h1{ font-family:'Baloo 2', sans-serif; font-size:clamp(26px, 5vw, 40px); line-height:1.05; margin:0; }
+.bandeau p{ margin:6px 0 0; color:#ffd79a; font-weight:700; }
+.bandeau .ic{ font-size:44px; }
+.texte{ background:#fff; border-radius:22px; padding:18px 22px; margin:20px 0; font-size:19px; line-height:1.55; box-shadow:0 5px 0 #f0dcb4; }
+.texte p{ margin:0 0 10px; } .texte b{ color:#c25e00; }
+.ecoute{ display:inline-flex; align-items:center; gap:8px; background:#ff8c1a; color:#fff; border:0; border-radius:999px; padding:12px 20px; font:800 18px Nunito, sans-serif; box-shadow:0 4px 0 #c25e00; cursor:pointer; min-height:52px; }
+h2{ font-family:'Baloo 2', sans-serif; font-size:28px; margin:26px 0 12px; }
+.grille{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap:18px; }
+figure{ margin:0; background:#fff; padding:10px 10px 8px; border-radius:16px; box-shadow:0 4px 12px #0002; transform:rotate(var(--r)); }
+figure img{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; }
+figcaption{ font-family:'Baloo 2', sans-serif; font-weight:600; font-size:18px; text-align:center; margin-top:6px; }
+.note{ color:#7a6a8f; font-size:15px; text-align:center; }
+.merci{ margin-top:26px; background:#ff8c1a; color:#fff; border-radius:22px; padding:18px; text-align:center; font-family:'Baloo 2', sans-serif; font-weight:800; font-size:26px; box-shadow:0 6px 0 #c25e00; }
+footer{ text-align:center; color:#9a8ab0; margin-top:26px; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="boite">
+  <a class="retour" href="./">← Mes jeux</a>
+  <div class="bandeau"><div class="ic">🐺</div><div><h1>Le week-end de Monsieur Loup chez Amine</h1><p>Grande section · samedi 14 et dimanche 15 novembre 2026</p></div></div>
+  <div class="texte" id="texte">
+    <p>Ce week-end, <b>Monsieur Loup</b> est venu à la maison ! Il a rencontré toute ma famille : papa Anis, maman Imen, ma grande sœur Essil et ma sœur Salma.</p>
+    <p>Le matin, on a pris le petit-déjeuner en pyjama avec Salma, et Monsieur Loup était assis sur mes genoux. Ensuite, on s'est installés sur le canapé pour faire des câlins et regarder des histoires sur la tablette.</p>
+    <p>Après le bain, je l'ai emmené dans ma serviette bleue à capuche. Il s'est assis avec moi à table, et le soir je lui ai fait un dernier gros câlin avant de dormir.</p>
+    <p>Je l'ai beaucoup aimé : il est tout doux et il ne fait pas peur du tout !</p>
+    <button class="ecoute" id="ecoute">🔊 Écouter l'histoire</button>
+  </div>
+  <h2>✨ Ce qu'on a imaginé avec Monsieur Loup</h2>
+  <div class="grille">
+    <figure style="--r:-1deg"><img src="loup/couscous.webp" alt="Amine et un loup en peluche mangent un couscous" loading="lazy"><figcaption>Un bon couscous en famille</figcaption></figure>
+    <figure style="--r:1deg"><img src="loup/foot.webp" alt="Amine joue au foot avec un loup en peluche" loading="lazy"><figcaption>Un match de foot dans le jardin</figcaption></figure>
+    <figure style="--r:.8deg"><img src="loup/dessin.webp" alt="Amine dessine à côté d'un loup en peluche" loading="lazy"><figcaption>On dessine ensemble</figcaption></figure>
+    <figure style="--r:-1.2deg"><img src="loup/histoire.webp" alt="Amine lit une histoire au lit avec un loup en peluche" loading="lazy"><figcaption>Une histoire avant de dormir</figcaption></figure>
+  </div>
+  <p class="note">Des dessins imaginés à l'ordinateur. Les vraies photos du week-end sont sur l'affiche imprimée pour l'école.</p>
+  <div class="merci">Merci Monsieur Loup, reviens quand tu veux ! 💛</div>
+  <footer>© 2026 Anis Missaoui</footer>
+</div>
+<script>
+// Amine ne lit pas encore : la voix du navigateur lui lit son histoire
+document.getElementById('ecoute').onclick = () => {
+  const s = window.speechSynthesis; if(!s) return; if(s.speaking){ s.cancel(); return; }
+  const t = [...document.querySelectorAll('#texte p')].map(p => p.textContent).join(' ');
+  const u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; u.rate = .92; const v = s.getVoices().find(v => /^fr/i.test(v.lang)); if(v) u.voice = v; s.speak(u);
+};
+</script>
+</body>
+</html>
