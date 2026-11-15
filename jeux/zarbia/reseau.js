@@ -75,7 +75,7 @@ export class Reseau {
     const s = this.room, hote = this.host === this.client, o = this.o;
     const G = o.nouvellePartie({ mode:s.mode, seed:s.seed, net:this }); const M = G.M; this.G = G;
     s.joueurs.forEach((j, i) => { const l = placeLibre(M); const p = o.joueurDe(M, { nom:j.nom, couleur:j.couleur, motif:j.motif, tete:j.tete, humain:true, client:j.client }, l.x, l.y); p.local = j.client === this.client; if(p.local) G.moi = p; else p.vitesse = 0; });
-    for(let i = 0; i < s.bots; i++){ const [id, n] = BOTS[(s.seed + i * 3) % BOTS.length], l = placeLibre(M); const p = o.joueurDe(M, { nom:n, couleur:COUL_BOTS[i % COUL_BOTS.length], motif:1 + (i % 3), tete:o.tete(null, id), bot:id, niveau:i % 3 === 2 ? 'normal' : 'facile' }, l.x, l.y); p.local = hote; if(!hote) p.vitesse = 0; }
+    for(let i = 0; i < s.bots; i++){ const [id, n] = BOTS[(s.seed + i * 3) % BOTS.length], l = placeLibre(M); const p = o.joueurDe(M, { nom:n, couleur:COUL_BOTS[i % COUL_BOTS.length], motif:4 + ((s.seed + i) % 8), tete:o.tete(null, id), bot:id, niveau:i % 3 === 2 ? 'normal' : 'facile' }, l.x, l.y); p.local = hote; if(!hote) p.vitesse = 0; }
     M.events.length = 0; this.since = 0; this.sortants = []; this.finT = performance.now() + s.duree * 1000; this.envoiT = 0; this.vus = {};
     o.demarre(); o.message('C\'est parti pour ' + s.duree / 60 + ' minutes ! 🧶', 3000);
     this.boucle();

@@ -134,7 +134,7 @@ try {
             if (($s['etat'] ?? '') !== 'attente') { $pdo->exec('ROLLBACK'); fail(409, 'La partie a déjà commencé.'); }
             if (count($js) >= 4) { $pdo->exec('ROLLBACK'); fail(409, 'La partie est pleine (4 joueurs).'); }
             $col = (string)($_POST['couleur'] ?? ''); if (!preg_match('/^#[0-9a-f]{6}$/i', $col)) $col = '#1f6fd8';
-            $js[] = ['client' => $client, 'nom' => clean_text($_POST['name'] ?? '', 24), 'tete' => clean_img($_POST['tete'] ?? ''), 'couleur' => $col, 'motif' => max(1, min(3, (int)($_POST['motif'] ?? 1)))];
+            $js[] = ['client' => $client, 'nom' => clean_text($_POST['name'] ?? '', 24), 'tete' => clean_img($_POST['tete'] ?? ''), 'couleur' => $col, 'motif' => max(1, min(11, (int)($_POST['motif'] ?? 1)))];
             $s['joueurs'] = $js; $pdo->prepare('UPDATE rooms SET state = ?, updated = ? WHERE code = ?')->execute([json_encode($s, JSON_UNESCAPED_UNICODE), time(), $code]);
         }
         $pdo->exec('COMMIT'); out(200, ['state' => $s, 'host' => $r['host']]);

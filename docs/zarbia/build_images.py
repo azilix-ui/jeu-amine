@@ -32,6 +32,13 @@ for k in ('zarbia1', 'zarbia2', 'zarbia3'):
     a = np.array(im.convert('L')).astype(np.float32); lo, hi = np.percentile(a, 3), np.percentile(a, 97); a = np.clip((a - lo) / max(1, hi - lo), 0, 1)
     a = 120 + a * 135
     Image.fromarray(a.astype(np.uint8)).convert('RGB').save(os.path.join(OUT, k + '.webp'), quality=82, method=6)
+# 15/11 (soir) : 8 vrais tapis de Kairouan en couleurs (zarbia4 à zarbia11) ; le jeu tourne leurs teintes vers la couleur du joueur
+BORD = { 'zarbia4':.07, 'zarbia11':.06 }   # ceux-là sont sortis avec une bordure : on la coupe
+for n in range(4, 20):
+    k = f'zarbia{n}'; f = dernier(k)
+    if not f: continue
+    im = Image.open(f).convert('RGB'); w, h = im.size; c = int(w * BORD.get(k, 0)); im = im.crop((c, c, w - c, h - c))
+    raccord(im, 384).save(os.path.join(OUT, k + '.webp'), quality=84, method=6)
 for f in glob.glob(os.path.join(SRC, 'bot_*_00001_.png')):
     id = os.path.basename(f)[4:-11]; im = Image.open(dernier('bot_' + id)).convert('RGB'); w, h = im.size
     s = int(w * .62); x0 = (w - s) // 2; y0 = int(h * .04)

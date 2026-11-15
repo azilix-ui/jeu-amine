@@ -21,7 +21,8 @@ const MODES = { tranquille:{ bots:8, niveaux:['facile', 'facile', 'facile', 'fac
 /* ---------- les images ---------- */
 const IM = {}; const charge = src => IM[src] || (IM[src] = Object.assign(new Image(), { src, decoding:'async' }));
 const pret = im => im && im.complete && im.naturalWidth > 0;
-['sol', 'zarbia1', 'zarbia2', 'zarbia3'].forEach(k => charge(IMG + k + '.webp'));
+export const NMOTIFS = 11;   // 1 à 3 : tapis clairs teints ; 4 à 11 : vrais tapis de Kairouan en couleurs, dont on tourne les teintes
+['sol'].concat(Array.from({ length:NMOTIFS }, (_, i) => 'zarbia' + (i + 1))).forEach(k => charge(IMG + k + '.webp'));
 export function teteDe(nom, botId){
   if(botId) return IMG + 'bot-' + botId + '.webp';
   const k = String(nom || '').toLowerCase(); if(FAMILLE[k]) return AV + k + '.webp';
@@ -42,7 +43,7 @@ const SON = {
 /* ---------- la sauvegarde ---------- */
 let joueur = null, sv = null;
 const cle = () => 'zarbia:' + joueur;
-const neuf = () => ({ couleur:null, motif:1, best:{ champion:0, tranquille:0 }, parties:0, kills:0, t:0 });
+const neuf = () => ({ couleur:null, motif:4, best:{ champion:0, tranquille:0 }, parties:0, kills:0, t:0 });
 function sauve(){ if(!joueur) return; sv.t = Date.now(); store.set(cle(), sv); }
 async function setJoueur(n){
   joueur = n; sv = Object.assign(neuf(), store.get(cle(), {}) || {});
@@ -66,7 +67,7 @@ function menu(){
   document.querySelectorAll('.mode').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
   const col = sv ? sv.couleur : COULEURS[0], mot = sv ? sv.motif : 1;
   $('couleurs').innerHTML = COULEURS.map(c => `<button data-c="${c}" class="${c === col ? 'on' : ''}" style="background:${c}" aria-label="couleur"></button>`).join('');
-  $('motifs').innerHTML = [1, 2, 3].map(k => `<button data-mo="${k}" class="${k === mot ? 'on' : ''}" style="background-image:url(${apercu(col, k)})" aria-label="motif ${k}"></button>`).join('');
+  $('motifs').innerHTML = Array.from({ length:NMOTIFS }, (_, i) => i + 1).map(k => `<button data-mo="${k}" class="${k === mot ? 'on' : ''}" style="background-image:url(${apercu(col, k)})" aria-label="motif ${k}"></button>`).join('');
   records();
 }
 const fmt = v => (Math.round(v * 10) / 10).toString().replace('.', ',') + ' %';
@@ -84,9 +85,29 @@ const teints = new Map();
 function tapis(couleur, motif){
   const k = couleur + motif; if(teints.has(k)) return teints.get(k);
   const im = IM[IMG + 'zarbia' + motif + '.webp'], c = document.createElement('canvas'); c.width = c.height = MOTIF_PX; const x = c.getContext('2d');
-  if(pret(im)){ x.drawImage(im, 0, 0, MOTIF_PX, MOTIF_PX); x.globalCompositeOperation = 'multiply'; x.fillStyle = couleur; x.fillRect(0, 0, MOTIF_PX, MOTIF_PX); x.globalCompositeOperation = 'source-over'; teints.set(k, c); }
+  if(pret(im)){ x.drawImage(im, 0, 0, MOTIF_PX, MOTIF_PX);
+    if(motif <= 3){ x.globalCompositeOperation = 'multiply'; x.fillStyle = couleur; x.fillRect(0, 0, MOTIF_PX, MOTIF_PX); x.globalCompositeOperation = 'source-over'; }
+    else recolore(x, couleur);
+    teints.set(k, c); }
   else { x.fillStyle = couleur; x.fillRect(0, 0, MOTIF_PX, MOTIF_PX); }
   return c;
+}
+/* un vrai tapis en couleurs : on tourne toutes ses teintes pour que sa couleur principale devienne celle du joueur
+   (les autres couleurs du tapis suivent : il reste un vrai tapis à plusieurs couleurs), puis on le pousse un peu vers la couleur */
+function hsl(r, g, b){ r /= 255; g /= 255; b /= 255; const M = Math.max(r, g, b), m = Math.min(r, g, b), l = (M + m) / 2, d = M - m; if(!d) return [0, 0, l];
+  const s = d / (1 - Math.abs(2 * l - 1)); let h = M === r ? ((g - b) / d) % 6 : M === g ? (b - r) / d + 2 : (r - g) / d + 4; return [h * 60 < 0 ? h * 60 + 360 : h * 60, s, l]; }
+function rgb(h, s, l){ const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2; const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x]; return [(r + m) * 255, (g + m) * 255, (b + m) * 255]; }
+function recolore(x, couleur){
+  const id = x.getImageData(0, 0, MOTIF_PX, MOTIF_PX), d = id.data;
+  const [ch, cs, cl] = hsl(parseInt(couleur.slice(1, 3), 16), parseInt(couleur.slice(3, 5), 16), parseInt(couleur.slice(5, 7), 16));
+  let sx = 0, sy = 0; for(let i = 0; i < d.length; i += 16){ const [h, s, l] = hsl(d[i], d[i + 1], d[i + 2]), w = s * (1 - Math.abs(2 * l - 1)); sx += Math.cos(h * Math.PI / 180) * w; sy += Math.sin(h * Math.PI / 180) * w; }
+  const dom = Math.atan2(sy, sx) * 180 / Math.PI, force = Math.hypot(sx, sy) / (d.length / 16);   // la couleur principale, et à quel point le tapis est coloré
+  const pousse = force < .12 ? .55 : .3;   // un tapis presque sans couleur (laine naturelle) prend plus la couleur du joueur
+  for(let i = 0; i < d.length; i += 4){ let [h, s, l] = hsl(d[i], d[i + 1], d[i + 2]); h = (h + ch - dom + 720) % 360; s = Math.min(1, s * .8 + cs * .25);
+    const [r, g, b] = rgb(h, s, l); const t = pousse * (1 - Math.abs(2 * l - 1) * .6);
+    const mr = d[i] / 255 * parseInt(couleur.slice(1, 3), 16) * 1.25, mg = d[i + 1] / 255 * parseInt(couleur.slice(3, 5), 16) * 1.25, mb = d[i + 2] / 255 * parseInt(couleur.slice(5, 7), 16) * 1.25;
+    d[i] = r * (1 - t) + mr * t; d[i + 1] = g * (1 - t) + mg * t; d[i + 2] = b * (1 - t) + mb * t; }
+  x.putImageData(id, 0, 0);
 }
 function apercu(couleur, motif){ const c = tapis(couleur, motif); try{ return c.toDataURL('image/jpeg', .7); }catch(e){ return ''; } }
 
@@ -109,7 +130,7 @@ function partieSolo(){
   const l = placeLibre(g.M); g.moi = joueurDe(g.M, { nom:joueur || 'Moi', couleur:sv ? sv.couleur : COULEURS[1], motif:sv ? sv.motif : 1, tete:teteDe(joueur), humain:true }, l.x, l.y);
   const pris = new Set([g.moi.couleur]); const ordre = [...BOTS].sort(() => Math.random() - .5);
   for(let i = 0; i < cfg.bots; i++){ const b = ordre[i % ordre.length], c = COULEURS.find(c => !pris.has(c)) || COULEURS[i % COULEURS.length]; pris.add(c);
-    const l2 = placeLibre(g.M); joueurDe(g.M, { nom:b.n, couleur:c, motif:1 + (i % 3), tete:teteDe(null, b.id), bot:b.id, niveau:cfg.niveaux[i] }, l2.x, l2.y); }
+    const l2 = placeLibre(g.M); joueurDe(g.M, { nom:b.n, couleur:c, motif:4 + Math.floor(Math.random() * (NMOTIFS - 3)), tete:teteDe(null, b.id), bot:b.id, niveau:cfg.niveaux[i] }, l2.x, l2.y); }
   demarre();
 }
 export function demarre(){
@@ -323,7 +344,7 @@ $('ensemble').onclick = async () => { if(!joueur && !(await choisir())) return; 
 let R = null; const reseau = () => R || (R = new Reseau({ joueur:() => joueur, sv:() => sv, tete:teteDe, montre, nouvellePartie, demarre, joueurDe, charge, menu, message, fin:(t, v) => fin(t, v), G:() => G, SON, modal, quitter }));
 
 // au démarrage : les tapis teints dès que les images sont là, puis le joueur de cet appareil
-Promise.all(['zarbia1', 'zarbia2', 'zarbia3'].map(k => new Promise(r => { const im = IM[IMG + k + '.webp']; if(pret(im)) r(); else { im.onload = r; im.onerror = r; } }))).then(() => { teints.clear(); menu(); });
+Promise.all(Array.from({ length:NMOTIFS }, (_, i) => 'zarbia' + (i + 1)).map(k => new Promise(r => { const im = IM[IMG + k + '.webp']; if(pret(im)) r(); else { im.onload = r; im.onerror = r; } }))).then(() => { teints.clear(); menu(); });
 sv = neuf(); menu();
 const p0 = window.Famille ? Famille.player() : null; if(p0) setJoueur(p0);
 window.__zarbia = { get G(){ return G; }, partieSolo, quitter, fin, get joueur(){ return joueur; } };
