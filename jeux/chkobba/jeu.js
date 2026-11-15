@@ -1,6 +1,7 @@
 /* Chkobba : la table, les cartes, les adversaires, les mondes, les sons, le jeu contre l'ordinateur et en ligne.
    Les règles sont dans regles.js ; en ligne, c'est le serveur (api/chkobba.php) qui arbitre. */
 import { nouvellePartie, nouvelleManche, jouer, options, choisir, vue, val, coul } from './regles.js';
+import * as VOIX from './voix.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -20,6 +21,8 @@ const DIT = {
   boude:['Yaa khsara… 😤', 'Ouh, ça pique ! 😅', 'Mezyen, mezyen… 🙄', 'Ya wildi, t\'as de la chance !'],
   pose:['Hmm… 🤔', 'À toi, ya sghir !', 'Choufli hal… 🧐', 'Yalla, yalla !'],
   gagne:['Barcha behi ! 🏆', 'Ya3tik essaha ! 👏'],
+  perd:['Mabrouk ! T\'as gagné 👏', 'Ya wildi, la prochaine fois… 😅'],
+  coupe:['Je coupe ! ✂️', 'Tfadhel, coupe ! ✂️', 'Hop, coupé ! ✂️'],
 };
 const hasard = a => a[Math.floor(Math.random() * a.length)];
 
@@ -126,17 +129,66 @@ async function vole(cartes, de, vers, cw = 64){
   box.innerHTML = cartes.map(c => carteEl(c)).join(''); document.body.appendChild(box); await attends(20);
   box.style.transform = `translate(${vers.left + vers.width / 2 - de.left - de.width / 2}px, ${vers.top + vers.height / 2 - de.top - de.height / 2}px) scale(.8)`;
   await attends(470); box.remove(); }
-function bulle(i, txt){ const r = rectSiege(i); if(!r) return; const b = document.createElement('div'); b.className = 'bulle'; b.textContent = txt;
+function bulle(i, txt, situ){ const p = P && P.sieges[i]; if(situ && p && p.perso) VOIX.dit(p.perso, situ);
+  const r = rectSiege(i); if(!r) return; const b = document.createElement('div'); b.className = 'bulle'; b.textContent = txt;
   const y = i === P.moi ? r.top - 50 : r.bottom + 6; b.style.left = Math.max(8, Math.min(innerWidth - 260, r.left + r.width / 2 - 80)) + 'px'; b.style.top = Math.max(8, y) + 'px'; document.body.appendChild(b); setTimeout(() => b.remove(), 2700); }
 function humeur(i, h, ms = 3200){ if(!P || !P.sieges[i] || !P.sieges[i].perso) return; P.humeur[i] = h; rend(); clearTimeout(P['hT' + i]); P['hT' + i] = setTimeout(() => { if(P){ P.humeur[i] = 'malin'; rend(); } }, ms); }
 function banniere(t, ms = 1500){ const b = $('banniere'); b.textContent = t; b.classList.add('on'); setTimeout(() => b.classList.remove('on'), ms); }
+
+/* ---------- couper et distribuer ----------
+   On part de ce qu'on voit, et on donne carte par carte jusqu'à « cible » (la table juste après la donne).
+   premiere = début de manche : le joueur avant le donneur coupe le paquet, puis 4 cartes vont sur la table. */
+function lance(html, de, vers, cw, ms){
+  const el = document.createElement('div'); el.className = 'volant'; el.style.cssText = `left:${de.left + de.width / 2 - cw / 2}px;top:${de.top + de.height / 2 - cw * .72}px;--cw:${cw}px;transition:transform ${ms}ms cubic-bezier(.3,.8,.3,1)`;
+  el.innerHTML = html; document.body.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => { el.style.transform = `translate(${vers.left + vers.width / 2 - de.left - de.width / 2}px, ${vers.top + vers.height / 2 - de.top - de.height / 2}px) rotate(${Math.random() * 16 - 8}deg) scale(.85)`; }));
+  return new Promise(r => setTimeout(() => { el.remove(); r(); }, ms + 30));
+}
+async function coupe(i){
+  const c = rectDe('#centre'); if(!c) return; const cw = 70, x = c.left + c.width / 2 - cw / 2, y = c.top + c.height / 2 - cw * .72;
+  const tas = k => `<div class="tas" style="--cw:${cw}px">${'<div class="c dos"></div>'.repeat(k)}</div>`;
+  const bas = document.createElement('div'), haut = document.createElement('div');
+  for(const [el, z] of [[bas, 1], [haut, 2]]){ el.className = 'volant coupe'; el.style.cssText = `left:${x}px;top:${y}px;z-index:${5 + z};transition:transform .45s cubic-bezier(.3,.8,.3,1)`; el.innerHTML = tas(5); document.body.appendChild(el); }
+  haut.style.marginTop = '-10px';
+  SON.distrib();
+  if(P.sieges[i].perso) bulle(i, hasard(DIT.coupe)); else bulle(i, i === P.moi ? '✂️ Tu coupes !' : '✂️ ' + P.sieges[i].nom.replace(' 🤖', '') + ' coupe !');
+  VOIX.dit('commentateur', 'debut');
+  await attends(350);
+  haut.style.transform = 'translate(95px, -40px) rotate(8deg)'; bas.style.transform = 'translate(-30px, 0)'; await attends(550);
+  haut.style.zIndex = 5; bas.style.zIndex = 6; haut.style.transform = 'translate(0, 6px)'; bas.style.transform = 'translate(0, -6px) rotate(-3deg)'; await attends(500);
+  // le paquet rejoint sa place
+  const pq = rectDe('#paquet'); if(pq){ const t = `translate(${pq.left + pq.width / 2 - x - cw / 2}px, ${pq.top + 20 - y - cw * .72}px) scale(.65)`; haut.style.transform = t; bas.style.transform = t; await attends(480); }
+  haut.remove(); bas.remove();
+}
+async function distribue(cible, premiere){
+  if(!P) return; const occ = P.occupe; P.occupe = true; P.sel = null;
+  const n = P.n, d = cible.donneur, z = cible.nMains.map(() => 0);
+  const v = P.v = { ...cible, main:[], nMains:z.slice(), tour:-1,
+    tapis:premiere ? [] : P.v.tapis.slice(), nPris:premiere ? z.slice() : P.v.nPris.slice(), chk:premiere ? z.slice() : P.v.chk.slice(),
+    nPaquet:cible.nPaquet + 3 * n + (premiere ? 4 : 0) };
+  rend();
+  if(premiere) await coupe((d - 1 + n) % n); else SON.distrib();
+  const pq = () => rectDe('#paquet') || rectDe('#centre'), vols = [];
+  // une carte à la fois à chacun, en commençant par celui qui suit le donneur, trois tours
+  for(let t = 0; t < 3; t++) for(let k = 1; k <= n; k++){
+    const j = (d + k) % n; if(!P || P.v !== v) return; v.nPaquet--; rend();
+    const vers = j === P.moi ? (rectDe('#main') || rectSiege(j)) : rectSiege(j);
+    ton(900 + Math.random() * 300, .04, 'triangle', .04, 400);
+    vols.push(lance('<div class="c dos"></div>', pq(), vers, 52, 300).then(() => { if(P && P.v === v){ if(j === P.moi) v.main.push(cible.main[v.main.length]); else v.nMains[j]++; rend(); } }));
+    await attends(n === 4 ? 120 : 150);
+  }
+  await Promise.all(vols);
+  if(premiere) for(const c of cible.tapis){ if(!P || P.v !== v) return; v.nPaquet--; SON.carte(); await lance(carteEl(c), pq(), rectDe('#centre'), 64, 280); v.tapis.push(c); rend(); await attends(60); }
+  if(!P || P.v !== v) return;
+  P.v = cible; P.occupe = occ; rend();
+}
 
 /* jouer les événements les uns après les autres, en mettant à jour ce qu'on voit */
 async function anime(evs){
   for(const e of evs){
     if(!P) return;
     const v = P.v;
-    if(e.k === 'pose'){ SON.carte(); if(e.j !== P.moi && P.sieges[e.j].bot && Math.random() < .25) bulle(e.j, hasard(DIT.pose));
+    if(e.k === 'pose'){ SON.carte(); if(e.j !== P.moi && P.sieges[e.j].bot && Math.random() < .25) bulle(e.j, hasard(DIT.pose), 'pose');
       await vole([e.carte], rectSiege(e.j), rectDe('#centre')); v.tapis.push(e.carte); if(e.j === P.moi) v.main = v.main.filter(c => c !== e.carte); else v.nMains[e.j] = Math.max(0, v.nMains[e.j] - 1); rend(); await attends(150); }
     else if(e.k === 'prise'){ SON.carte(); await vole([e.carte], rectSiege(e.j), rectDe('#centre'));
       if(e.j === P.moi) v.main = v.main.filter(c => c !== e.carte); else v.nMains[e.j] = Math.max(0, v.nMains[e.j] - 1);
@@ -144,11 +196,17 @@ async function anime(evs){
       SON.prise(); v.tapis = v.tapis.filter(c => !e.prise.includes(c)); v.nPris[e.j] += 1 + e.prise.length; rend();
       await vole([e.carte, ...e.prise].slice(0, 5), rectDe('#centre'), rectSiege(e.j), 52);
       if(e.chk){ v.chk[e.j]++; SON.chkobba(); banniere('CHKOBBA !'); const nous = e.j === P.moi || (v.equipes && e.j % 2 === P.moi % 2);
-        P.sieges.forEach((p, i) => { if(!p.perso) return; if(i === e.j){ humeur(i, 'joie'); bulle(i, hasard(DIT.chk)); } else if(nous || (v.equipes && i % 2 !== e.j % 2)) { humeur(i, 'boude'); if(Math.random() < .6) setTimeout(() => bulle(i, hasard(DIT.boude)), 700); } });
+        P.sieges.forEach((p, i) => { if(!p.perso) return; if(i === e.j){ humeur(i, 'joie'); bulle(i, hasard(DIT.chk), 'chk'); } else if(nous || (v.equipes && i % 2 !== e.j % 2)) { humeur(i, 'boude'); if(Math.random() < .6) setTimeout(() => bulle(i, hasard(DIT.boude), 'boude'), 900); } });
+        VOIX.dit('commentateur', 'chk');
         if(e.j === P.moi && sv){ sv.chkobbas++; sauve(); } await attends(900); }
-      if([e.carte, ...e.prise].includes('d7')){ SON.haya(); if(P.sieges[e.j].perso){ humeur(e.j, 'joie'); bulle(e.j, hasard(DIT.haya)); } else banniere('La Haya ! ⭐', 1200); await attends(500); }
+      if([e.carte, ...e.prise].includes('d7')){ SON.haya(); if(P.sieges[e.j].perso){ humeur(e.j, 'joie'); bulle(e.j, hasard(DIT.haya), 'haya'); } else banniere('La Haya ! ⭐', 1200); VOIX.dit('commentateur', 'haya'); await attends(500); }
       rend(); }
-    else if(e.k === 'redonne' || e.k === 'donne'){ SON.distrib(); }
+    else if(e.k === 'redonne'){ // on redonne 3 cartes à chacun
+      const c = P.mode === 'solo' ? vue(P.s, P.moi) : { ...v, main:(LIGNE.salle && LIGNE.salle.jeu.main) || [], nMains:v.nMains.map(() => 3), nPaquet:Math.max(0, v.nPaquet - 3 * P.n) };
+      await distribue(c, false); }
+    else if(e.k === 'donne'){ // une nouvelle manche (en ligne) : on coupe et on distribue
+      $('modal').classList.remove('on'); const j = (LIGNE.salle && LIGNE.salle.jeu) || v, z = v.nMains.map(() => 0);
+      await distribue({ ...j, manche:e.manche, donneur:e.donneur, tapis:e.tapis || j.tapis, main:j.main, nMains:v.nMains.map(() => 3), nPris:z, chk:z, nPaquet:40 - 4 - 3 * P.n, phase:'jeu', tour:-1 }, true); }
     else if(e.k === 'ramasse'){ if(e.cartes && e.cartes.length){ await vole(e.cartes.slice(0, 5), rectDe('#centre'), rectSiege(e.j), 52); v.tapis = []; v.nPris[e.j] += e.cartes.length; rend(); } }
     else if(e.k === 'fin'){ v.total = e.total; v.points = e.points; v.phase = e.phase; v.gagnant = e.gagnant; rend(); await attends(400); finManche(e); }
   }
@@ -159,26 +217,29 @@ function finManche(e){
   const fini = e.phase === 'fini', monE = v.equipes ? P.moi % 2 : P.moi, gagne = fini && e.gagnant === monE;
   const tab = `<table class="points"><tr><th></th>${Array.from({ length:E }, (_, k) => `<th>${esc(noms(k))}</th>`).join('')}</tr>${L.map(([k, t, f]) => `<tr><td>${t}</td>${e.points.map(p => `<td>${f(p)}</td>`).join('')}</tr>`).join('')}<tr><td>Points de la manche</td>${e.points.map(p => `<td><b>+${p.total}</b></td>`).join('')}</tr><tr class="tot"><td>Total</td>${e.total.map(t => `<td>${t}</td>`).join('')}</tr></table>`;
   let bas;
-  if(fini){ if(gagne) SON.victoire(); P.sieges.forEach((p, i) => { if(p.perso){ const lui = v.equipes ? i % 2 : i; humeur(i, lui === e.gagnant ? 'joie' : 'boude', 8000); if(lui === e.gagnant) bulle(i, hasard(DIT.gagne)); } });
+  if(fini){ if(gagne) SON.victoire(); P.sieges.forEach((p, i) => { if(p.perso){ const lui = v.equipes ? i % 2 : i; humeur(i, lui === e.gagnant ? 'joie' : 'boude', 8000); if(lui === e.gagnant) bulle(i, hasard(DIT.gagne), 'gagne'); else setTimeout(() => bulle(i, hasard(DIT.perd), 'perd'), 2200); } });
+    setTimeout(() => VOIX.dit('commentateur', gagne ? 'gagne' : 'perd'), 600); }
+  else VOIX.dit('commentateur', 'manche');
+  if(fini){
     if(P.mode === 'solo' && sv){ sv.jouees++; if(gagne){ sv.gagnees++; if(window.Famille) Famille.score('chkobba', 'victoires', sv.gagnees, joueur).catch(() => {}); } sauve(); }
     bas = `<div class="rang">${P.mode === 'solo' ? '<button class="pill go" id="mRe">🔁 Rejouer</button>' : LIGNE.hote ? '<button class="pill go" id="mRe">🔁 Rejouer</button>' : ''}<button class="pill" id="mMenu">🏠 Menu</button></div>`; }
   else bas = P.mode === 'solo' ? '<div class="rang"><button class="pill go" id="mSuite">▶ Manche suivante</button></div>' : '<p style="font-weight:800">La manche suivante commence toute seule…</p>';
   $('modal').innerHTML = `<div class="carte-ui"><h2>${fini ? (gagne ? '🏆 Vous avez gagné !' : '😅 Perdu cette fois !') : 'Fin de la manche ' + v.manche}</h2>${fini ? `<p style="font-size:20px;margin:4px 0">${gagne ? 'Bravo, ' + esc(joueur || 'champion') + ' !' : esc(noms(e.gagnant)) + ' a gagné la partie.'}</p>` : ''}${tab}${bas}</div>`;
   $('modal').classList.add('on');
-  if($('mSuite')) $('mSuite').onclick = () => { $('modal').classList.remove('on'); nouvelleManche(P.s); P.v = vue(P.s, P.moi); SON.distrib(); rend(); soloSuite(); };
+  if($('mSuite')) $('mSuite').onclick = async () => { $('modal').classList.remove('on'); nouvelleManche(P.s); await distribue(vue(P.s, P.moi), true); soloSuite(); };
   if($('mRe')) $('mRe').onclick = () => { $('modal').classList.remove('on'); if(P.mode === 'solo') partieSolo(); else LIGNE.rejouer(); };
   if($('mMenu')) $('mMenu').onclick = () => { if(P && P.mode === 'ligne') LIGNE.quitte(); menu(); };
 }
 
 /* ---------- contre l'ordinateur ---------- */
-function partieSolo(){
+async function partieSolo(){
   ac(); sons(); const s0 = sv || neuf(), n = s0.n || 2;
   const persos = Object.keys(PERSOS).sort(() => Math.random() - .5);
   const sieges = [{ nom:joueur || 'Moi', tete:tete(joueur) }];
   for(let i = 1; i < n; i++){ const k = persos[i - 1]; sieges.push({ nom:PERSOS[k], perso:k, bot:true }); }
   const s = nouvellePartie({ n, equipes:n === 4, cible:s0.cible || 11, seed:(Math.random() * 2 ** 31) | 0, donneur:Math.floor(Math.random() * n) });
   P = { mode:'solo', n, moi:0, sieges, s, v:vue(s, 0), humeur:sieges.map(() => 'malin'), niveau:s0.niveau || 'moyen', monde:s0.monde || 'sidibou', occupe:false, sel:null };
-  entreTable(); SON.distrib(); soloSuite();
+  entreTable(); await distribue(vue(s, 0), true); soloSuite();
 }
 function entreTable(){ montre('-'); document.body.classList.add('jeu'); $('modal').classList.remove('on'); fond(P.monde); ambiance(P.monde); rend(); }
 async function soloJoue(j, c, prise){
@@ -224,7 +285,8 @@ const LIGNE = {
     if(r.etat === 'attente'){ this.status = 'salon'; if(!document.getElementById('salon').classList.contains('on')) montre('salon'); this.rendSalle(); return; }
     this.status = 'joue';
     if(!P || P.mode !== 'ligne'){   // on arrive à la table
-      P = { mode:'ligne', n:r.n, moi:r.moi, sieges:r.sieges, v:r.jeu, humeur:r.sieges.map(() => 'malin'), monde:r.monde, occupe:false, sel:null }; this.lastV = r.jeu.version; entreTable(); SON.distrib(); return; }
+      P = { mode:'ligne', n:r.n, moi:r.moi, sieges:r.sieges, v:r.jeu, humeur:r.sieges.map(() => 'malin'), monde:r.monde, occupe:false, sel:null }; this.lastV = r.jeu.version; entreTable();
+      if(r.jeu.phase === 'jeu' && r.jeu.nPris.every(x => !x) && r.jeu.tapis.length === 4 && r.jeu.nMains.every(x => x === 3)){ const c = r.jeu; await distribue(c, true); P.v = c; rend(); } return; }
     P.sieges = r.sieges;
     const nouveaux = (r.log || []).filter(e => e.v > this.lastV);
     if(nouveaux.length){ P.occupe = true; this.lastV = Math.max(...r.log.map(e => e.v)); if(r.jeu.phase === 'jeu' && $('modal').classList.contains('on') && nouveaux.some(e => e.k === 'donne')) $('modal').classList.remove('on');
@@ -251,9 +313,11 @@ const LIGNE = {
   quitte(){ if(this.code) post({ action:'quitter', code:this.code, client:this.client }).catch(() => {}); this.sort(); },
 };
 setInterval(() => LIGNE.hello(), 4000);
+$('voixBtn').onclick = async () => { ac(); montre('studio'); $('studioCorps').innerHTML = '<p>…</p>'; await VOIX.charge(); VOIX.studio($('studioCorps'), () => joueur); };
+$('studioRetour').onclick = () => menu();
 $('ligne').onclick = async () => { if(!joueur && !(await choisirJoueur())) return; LIGNE.ouvre(); };
 
 /* ---------- au démarrage ---------- */
-sv = neuf(); menu();
+sv = neuf(); menu(); VOIX.init(ac).then(() => VOIX.prepare(['garde', 'marchand', 'voleur', 'controleur', 'commentateur']));
 const p0 = window.Famille ? Famille.player() : null; if(p0) setJoueur(p0);
-window.__chk = { get P(){ return P; }, partieSolo, LIGNE, set niveau(v){ if(P) P.niveau = v; } };
+window.__chk = { get P(){ return P; }, partieSolo, LIGNE, VOIX, set niveau(v){ if(P) P.niveau = v; } };

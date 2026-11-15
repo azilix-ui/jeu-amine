@@ -34,7 +34,7 @@ export function nouvelleManche(s){
   s.mains = []; s.pris = []; s.chk = [];
   for(let j = 0; j < s.n; j++){ s.mains.push(s.paquet.splice(0, 3)); s.pris.push([]); s.chk.push(0); }
   s.donneur = (s.donneur + 1) % s.n; s.tour = (s.donneur + 1) % s.n; s.dernier = -1; s.manche++; s.phase = 'jeu'; s.points = null; s.version++;
-  s.log.push({ k:'donne', manche:s.manche, donneur:s.donneur });
+  s.log.push({ k:'donne', manche:s.manche, donneur:s.donneur, tapis:[...s.tapis] });
 }
 
 /* les prises possibles d'une carte : une liste de listes de cartes de la table ([] = aucune prise, la carte est posée) */

@@ -33,7 +33,7 @@ function chk_nouvelle_manche(array &$s): void {
     $s['mains'] = []; $s['pris'] = []; $s['chk'] = [];
     for ($j = 0; $j < $s['n']; $j++) { $s['mains'][] = array_splice($s['paquet'], 0, 3); $s['pris'][] = []; $s['chk'][] = 0; }
     $s['donneur'] = ($s['donneur'] + 1) % $s['n']; $s['tour'] = ($s['donneur'] + 1) % $s['n']; $s['dernier'] = -1; $s['manche']++; $s['phase'] = 'jeu'; $s['points'] = null; $s['version']++;
-    $s['log'][] = ['k' => 'donne', 'manche' => $s['manche'], 'donneur' => $s['donneur'], 'v' => $s['version']];
+    $s['log'][] = ['k' => 'donne', 'manche' => $s['manche'], 'donneur' => $s['donneur'], 'tapis' => $s['tapis'], 'v' => $s['version']];
 }
 function chk_options(string $carte, array $tapis): array {
     $v = chk_val($carte); $eg = array_values(array_filter($tapis, fn($c) => chk_val($c) === $v));
