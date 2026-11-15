@@ -38,7 +38,7 @@ def planche(dos, id):
     ra = anim('rampe'); lignes['rampe'] = [propre(cut(f)) for f in boucle(ra)] if all(os.path.exists(f) for f in ra) else [propre(cut(rampe3 or s('rampe')))]
     lignes['accroupi'] = [propre(cut(s('accroupi')))]
     po = anim('porte'); lignes['porte'] = [propre(cut(f)) for f in boucle(po)] if all(os.path.exists(f) for f in po) else [propre(cut(s('porte2')))]
-    lignes['lance'] = [propre(cut(s('lance')))]
+    lignes['lance'] = [propre(cut(s('lance') if os.path.exists(s('lance')) else s('porte2')))]   # (le jeu lance avec l'image « porter »)
     cases = {}
     for k, ims in lignes.items():
         boxes = [im.getchannel('A').point(lambda v: 255 if v > 60 else 0).getbbox() for im in ims]
