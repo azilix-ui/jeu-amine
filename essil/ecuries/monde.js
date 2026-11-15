@@ -1,7 +1,8 @@
-/* Les Écuries d'Essil — le monde en 3D : l'écurie (voir ses chevaux, les panser, les nourrir) et les concours (CSO, cross, dressage).
+/* Les Écuries d'Essil — le monde en 3D : l'écurie (depuis le 15/11, seulement pour voir le cheval harnaché) et les concours
+   (CSO, cross, dressage ; et depuis le 15/11 : course contre d'autres chevaux, hunter noté sur le style, western barrel racing).
    createWorld(THREE, canvas, api) ; api = { sfx(nom), toast(msg), hud(obj), finish(resultat), pick(i), spot(evt), sparkle() } */
 import { makeHorse } from './cheval.js';
-import { COAT } from './data.js';
+import { COAT, CHEVAUX } from './data.js';
 
 export function createWorld(THREE, canvas, api){
   const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
@@ -135,10 +136,12 @@ export function createWorld(THREE, canvas, api){
   // un obstacle : { x, z, a (sens du passage), w, h, type }
   function buildObstacle(o, i){
     const g = new THREE.Group(); g.position.set(o.x, 0, o.z); g.rotation.y = o.a; group.add(g); o.g = g; o.bars = [];
+    if(o.type === 'tonneau'){ const t = cyl(g, .45, .42, .95, new THREE.MeshLambertMaterial({ map:stripeTex('#1f6fd8', '#ffffff') }), 0, .475, 0, 14); o.bar = t; o.num = sprite(label(String(i + 1), { bg:'#7a3b12', fs:64, w:96, h:96 }), .8, .8, 0, 1.9, 0, g); return; }
+    if(o.type === 'balise'){ [1, -1].forEach(s => { cyl(g, .06, .06, 1.6, L('#ffffff'), s * o.w / 2, .8, 0, 6); const f = new THREE.Mesh(new THREE.ConeGeometry(.18, .4, 4), L(s > 0 ? '#ffffff' : '#e8333a')); f.position.set(s * o.w / 2, 1.75, 0); g.add(f); }); return; }
     const w = o.w, flag = (x, col) => { const f = new THREE.Mesh(new THREE.ConeGeometry(.16, .4, 4), L(col)); f.position.set(x, Math.max(1.9, o.h + .95), 0); g.add(f); };
     // vu par le cavalier qui arrive : le fanion rouge est à sa droite (côté -X local), le blanc à sa gauche
     if(o.type === 'vertical' || o.type === 'oxer'){
-      const cols = POLE[i % POLE.length], tex = stripeTex(cols[0], cols[1]); tex.wrapT = THREE.RepeatWrapping;
+      const cols = o.rustique ? [['#7a5a32', '#d9c79e'], ['#3f6b35', '#e8e0c8'], ['#8a6a40', '#f2eadb']][i % 3] : POLE[i % POLE.length], tex = stripeTex(cols[0], cols[1]); tex.wrapT = THREE.RepeatWrapping;
       const planes = o.type === 'oxer' ? [-.45, .45] : [0];
       planes.forEach(dz => { [1, -1].forEach(s => { box(g, .16, o.h + .7, .16, L('#f4f4f4'), s * (w / 2 + .1), (o.h + .7) / 2, dz); box(g, .5, .08, .5, L(cols[0]), s * (w / 2 + .1), .04, dz); });
         const n = Math.max(1, Math.round(o.h / .32)); for(let k = 0; k < n; k++){ const y = o.h - k * (o.h / n); const b = cyl(g, .05, .05, w, new THREE.MeshLambertMaterial({ map:tex }), 0, y, dz, 8); b.rotation.z = Math.PI / 2; if(k === 0) o.bars.push(b); } });
@@ -147,6 +150,7 @@ export function createWorld(THREE, canvas, api){
     else if(o.type === 'stere'){ for(let r = 0; r < 3; r++) for(let k = 0; k < Math.floor(w / .34) - r; k++) { const b = cyl(g, o.h / 6, o.h / 6, .9, L(k % 2 ? '#8a5f38' : '#a07040'), -w / 2 + .2 + r * .17 + k * .34, o.h / 6 + r * o.h / 3.4, 0, 7); b.rotation.x = Math.PI / 2; } }
     else if(o.type === 'gue'){ const p = new THREE.Mesh(new THREE.PlaneGeometry(w + 6, 12), new THREE.MeshLambertMaterial({ color:'#5fb6e8', transparent:true, opacity:.85 })); p.rotation.x = -Math.PI / 2; p.position.set(0, .03, 3); g.add(p); [1, -1].forEach(s => box(g, .12, 1.9, .12, L('#f4f4f4'), s * w / 2, .95, 0)); }
     else if(o.type === 'fin'){ [1, -1].forEach(s => box(g, .14, 3, .14, L('#f4f4f4'), s * w / 2, 1.5, 0)); const b = box(g, w, .5, .06, new THREE.MeshLambertMaterial({ map:label('ARRIVÉE', { bg:'#1f3c88', fs:60, w:512, h:96 }) }), 0, 2.9, 0); }
+    if(o.rustique){ [1, -1].forEach(s => { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(.55, 0), L('#3f7f3a')); b.position.set(s * (w / 2 + .6), .45, 0); g.add(b); }); }
     if(o.type !== 'fin'){ flag(-(w / 2 + .1), '#e8333a'); flag(w / 2 + .1, '#ffffff'); o.num = sprite(label(String(i + 1), { bg:'#1c2340', fs:64, w:96, h:96 }), .9, .9, 0, Math.max(2.6, o.h + 1.7), 0, g); }
   }
   function grass(size, col = '#7fbf5f'){ const p = new THREE.Mesh(new THREE.PlaneGeometry(size, size), L(col)); p.rotation.x = -Math.PI / 2; group.add(p); }
@@ -170,6 +174,38 @@ export function createWorld(THREE, canvas, api){
     for(let i = 0; i < 150; i++){ const x = (Math.random() - .5) * 320, z = (Math.random() - .5) * 260; let ok = true; for(let k = 0; k < 60; k++){ const [px, pz] = P(-1.9 + k / 60 * 6.1); if(Math.hypot(px - x, pz - z) < 11){ ok = false; break; } } if(ok) tree(x, z, .9 + Math.random() * 1.2); }
     const [sx, sz] = P(-1.9), [sx2, sz2] = P(-1.88);
     return { obs, start:[sx, sz, Math.atan2(sx2 - sx, sz2 - sz)], bounds:[-170, 170, -140, 140], opt:(ep.id === 'cross3' ? 78 : ep.id === 'cross2' ? 88 : 100), kind:'cross' };
+  }
+  // la course : une piste ovale ; des balises à passer dans l'ordre ; des adversaires qui galopent
+  const OV = { a:55, b:32, lw:12, nb:8 };
+  const ovP = (t, d = 0) => [(OV.a + d) * Math.cos(t), (OV.b + d) * Math.sin(t)];
+  function courseCourse(ep){
+    scene.background = new THREE.Color('#aee0ff'); scene.fog = new THREE.Fog('#aee0ff', 120, 300); grass(600, '#8cc66a');
+    for(let k = 0; k < 160; k++){ const t = k / 160 * 6.2832, [x, z] = ovP(t); const d = new THREE.Mesh(new THREE.CircleGeometry(7.2, 10), L('#c9a877')); d.rotation.x = -Math.PI / 2; d.position.set(x, .015, z); group.add(d); }
+    const lice = (d, col) => { const m = L(col); for(let k = 0; k < 120; k++){ const t0 = k / 120 * 6.2832, t1 = (k + 1) / 120 * 6.2832, [x0, z0] = ovP(t0, d), [x1, z1] = ovP(t1, d), len = Math.hypot(x1 - x0, z1 - z0), r = box(group, .1, .08, len, m, (x0 + x1) / 2, 1.0, (z0 + z1) / 2); r.rotation.y = Math.atan2(x1 - x0, z1 - z0); if(k % 3 === 0) box(group, .1, 1.05, .1, m, x0, .5, z0); } };
+    lice(-OV.lw / 2, '#ffffff'); lice(OV.lw / 2, '#ffffff');
+    for(let i = 0; i < 3; i++) for(let k = 0; k < 16; k++) box(group, 1.6, .5, 1, L(['#d7263d', '#1f3c88', '#ffc928'][(i + k) % 3]), -25 + k * 3.2, .5 + i * .7, -OV.b - 12 - i * 1.2);   // la tribune
+    for(let i = 0; i < 40; i++){ const a = i / 40 * 6.283, r = 1.6 + Math.random() * .5; tree(Math.cos(a) * OV.a * r, Math.sin(a) * OV.b * r * 1.4, .9 + Math.random() * .8); }
+    const t0 = -Math.PI / 2, obs = [];
+    for(let lap = 0; lap < ep.tours; lap++) for(let k = 1; k <= OV.nb; k++){ const t = t0 + k / OV.nb * 6.2832, [x, z] = ovP(t), [x2, z2] = ovP(t + .01); const last = lap === ep.tours - 1 && k === OV.nb; obs.push({ x, z, a:Math.atan2(x2 - x, z2 - z), type:last ? 'fin' : 'balise', w:OV.lw + 1, h:0, t:t + lap * 6.2832 }); }
+    // les adversaires
+    const pris = new Set(), rivals = [];
+    for(let i = 0; i < ep.rivaux; i++){ let d; do d = CHEVAUX[Math.floor(Math.random() * CHEVAUX.length)]; while(pris.has(d.id) && pris.size < CHEVAUX.length - 1); pris.add(d.id);
+      const h = makeHorse(THREE, d, COAT[d.robe]); h.setEquip({ filet:'havane', selle:'havane', tapis:['rouge', 'marine', 'vert', 'jaune', 'violet', 'rose', 'turquoise'][i % 7] }, { rider:true }); group.add(h.root);
+      rivals.push({ h, d, lane:[-3.5, 3.5, -1.5, 1.5, -4.5, 4.5][i % 6], t:t0 - .02 * (1 + i % 3), v:0, vb:(7.2 + (Math.random() - .5) * .9 + (i % 3) * .15) * ep.niv, fini:false, prog:0 }); }
+    const [sx, sz] = ovP(t0, 0), [sx2, sz2] = ovP(t0 + .01, 0);
+    return { obs, rivals, t0, start:[sx, sz, Math.atan2(sx2 - sx, sz2 - sz)], bounds:[-OV.a - 30, OV.a + 30, -OV.b - 30, OV.b + 30], opt:999, kind:'course', tours:ep.tours };
+  }
+  // le hunter : un parcours de CSO aux obstacles naturels ; le jury note le style (galop régulier, bonnes distances)
+  function courseHunter(ep){
+    const c = courseCSO(ep); c.obs.forEach(o => { o.rustique = true; }); c.kind = 'hunter'; c.opt = ep.nb * 7 + 14; return c; }
+  // le western : le barrel racing, trois tonneaux en trèfle
+  function courseWestern(ep){
+    scene.background = new THREE.Color('#ffe2b0'); scene.fog = new THREE.Fog('#ffe2b0', 90, 220); grass(400, '#c9b27a'); rect(40, 52, '#d9b47a');
+    const brun = '#7a4a22'; fence(-20, -26, 20, -26, brun); fence(20, -26, 20, 26, brun); fence(20, 26, -20, 26, brun); fence(-20, 26, -20, -26, brun);
+    for(let i = 0; i < 26; i++){ const a = i / 26 * 6.283, r = 36 + Math.random() * 24; const c = cyl(group, .5, .7, 3 + Math.random() * 3, L('#5f8f3a'), Math.cos(a) * r, 1.8, Math.sin(a) * r * 1.2, 7); }
+    for(let i = 0; i < 2; i++) for(let k = 0; k < 10; k++) box(group, 1.6, .5, 1, L(['#b3541e', '#e8c07a'][(i + k) % 2]), -15 + k * 3.2, .5 + i * .7, -30 - i * 1.2);
+    const obs = [{ x:-8, z:4, a:0, type:'tonneau', w:1, h:0 }, { x:8, z:4, a:0, type:'tonneau', w:1, h:0 }, { x:0, z:19, a:0, type:'tonneau', w:1, h:0 }, { x:0, z:-14, a:Math.PI, type:'fin', w:8, h:0 }];
+    return { obs, start:[0, -21, 0], bounds:[-19, 19, -25, 25], opt:999, kind:'western', tmax:ep.tmax };
   }
   // dressage : carrière de 20 × 40. Quand on entre en A et qu'on regarde C, K-E-H sont à gauche (+X), F-B-M à droite.
   const LET = { A:[0, -20], K:[10, -14], E:[10, 0], H:[10, 14], C:[0, 20], M:[-10, 14], B:[-10, 0], F:[-10, -14], X:[0, 0] };
@@ -225,12 +261,12 @@ export function createWorld(THREE, canvas, api){
 
   // it : { def, eq } ; ep : l'épreuve
   function openRide(it, ep, o = {}){
-    clear(); const c = ep.k === 'cso' ? courseCSO(ep) : ep.k === 'cross' ? courseCross(ep) : courseDressage(ep);
+    clear(); const c = ep.k === 'cso' ? courseCSO(ep) : ep.k === 'cross' ? courseCross(ep) : ep.k === 'course' ? courseCourse(ep) : ep.k === 'hunter' ? courseHunter(ep) : ep.k === 'western' ? courseWestern(ep) : courseDressage(ep);
     c.obs.forEach(buildObstacle);
     const h = makeHorse(THREE, it.def, COAT[it.def.robe]); h.setEquip(it.eq, { rider:true, jacket:o.jacket }); group.add(h.root);
     const s = it.def.s, form = o.form == null ? 1 : o.form;   // forme : 0.8 à 1.05 selon les soins
     R = { c, ep, h, it, x:c.start[0], z:c.start[1], a:c.start[2], v:0, gait:0, y:0, vy:0, airT:0, airLen:1, steer:0, next:0, pen:0, refus:0, bars:0, t:0, go:false, count:3.4, done:false, stam:100, msgT:0,
-      vmax:[0, 1.7, 3.7, (6.0 + .5 * s[0]) * form], jumpH:(.78 + .17 * s[1]) * (.9 + .1 * form), endu:s[3], tol:.35 + .09 * s[2], mi:0, idx:0, dev:0, devN:0, gOK:0, gN:0, notes:[], haltT:0, falls:[], path:null, camP:new THREE.Vector3(), camL:new THREE.Vector3(), first:true };
+      vmax:[0, 1.7, 3.7, (6.0 + .5 * s[0]) * form], jumpH:(.78 + .17 * s[1]) * (.9 + .1 * form), endu:s[3], tol:.35 + .09 * s[2], mi:0, idx:0, dev:0, devN:0, gOK:0, gN:0, notes:[], haltT:0, falls:[], path:null, camP:new THREE.Vector3(), camL:new THREE.Vector3(), first:true, style:100, sec:0, touches:0, tour:1, tourne:0, prevAng:null };
     if(c.kind === 'dressage') showPath(c.moves[0]);
     h.root.position.set(R.x, 0, R.z); h.root.rotation.y = R.a; start('ride'); rideCam(1); hud();
   }
@@ -239,19 +275,26 @@ export function createWorld(THREE, canvas, api){
   function msg(m, kind){ api.hud({ msg:m, kind }); }
   function hud(){ const c = R.c, o = { time:R.t, pen:R.pen, gait:R.gait, stam:R.stam, kind:c.kind, count:R.go ? 0 : Math.ceil(R.count - .4) };
     if(c.kind === 'dressage'){ const m = c.moves[R.mi]; o.move = m ? m.txt : ''; o.want = m && m.g; o.mi = R.mi; o.mn = c.moves.length; o.notes = R.notes; }
-    else { o.next = R.next; o.nb = c.obs.length; o.opt = c.opt; const t = c.obs[R.next]; if(t){ const dx = t.x - R.x, dz = t.z - R.z; o.dist = Math.hypot(dx, dz); let d = Math.atan2(dx, dz) - R.a; while(d > Math.PI) d -= 6.2832; while(d < -Math.PI) d += 6.2832; o.dir = d; } }
+    else { o.next = R.next; o.nb = c.obs.length; o.opt = c.opt;
+      if(c.kind === 'course'){ o.place = place(); o.nb2 = c.rivals.length + 1; o.tour = Math.floor(R.next / OV.nb) + 1; o.tours = c.tours; }
+      if(c.kind === 'hunter') o.score = Math.max(0, R.style);
+      if(c.kind === 'western') o.pen = R.touches * 5; const t = c.obs[R.next]; if(t){ const dx = t.x - R.x, dz = t.z - R.z; o.dist = Math.hypot(dx, dz); let d = Math.atan2(dx, dz) - R.a; while(d > Math.PI) d -= 6.2832; while(d < -Math.PI) d += 6.2832; o.dir = d; } }
     o.map = { x:R.x, z:R.z, a:R.a, obs:c.obs.map((b, i) => [b.x, b.z, b.a, i < R.next ? 1 : i === R.next ? 2 : 0, b.w]), b:c.bounds, letters:c.kind === 'dressage' ? LET : null, path:c.kind === 'dressage' && c.moves[R.mi] ? c.moves[R.mi].d : null, halt:c.kind === 'dressage' && c.moves[R.mi] ? c.moves[R.mi].halt : null };
     api.hud(o); }
   function setGait(g){ if(!R || R.done) return; g = Math.max(0, Math.min(3, g)); if(g === 3 && R.stam < 8){ msg('Ton cheval est fatigué : laisse-le souffler au trot', 'warn'); g = 2; } if(g !== R.gait){ R.gait = g; api.sfx('tap'); } }
   function jump(){ if(!R || R.done || !R.go || R.y > 0) return; if(R.c.kind === 'dressage'){ msg('Pas de saut en dressage 🙂', 'warn'); return; } if(R.v < 2.2){ msg('Il faut de l\'élan : au trot ou au galop !', 'warn'); return; }
-    R.vy = Math.sqrt(2 * 9.8 * R.jumpH); R.y = .001; R.airT = 0; R.airLen = 2 * R.vy / 9.8; api.sfx('saut'); }
+    R.vy = Math.sqrt(2 * 9.8 * R.jumpH); R.y = .001; R.airT = 0; R.airLen = 2 * R.vy / 9.8; api.sfx('saut');
+    if(R.c.kind === 'hunter'){ const o = R.c.obs[R.next]; if(o){ const [nx, nz] = fwd(o.a), d = -((R.x - o.x) * nx + (R.z - o.z) * nz); if(d > 0 && d < 9){ const e = Math.abs(d - 3); if(e > .9){ R.style -= Math.min(8, e * 3); msg(d > 3 ? 'Un peu loin : rapproche-toi avant de sauter' : 'Un peu près de la barre', 'warn'); } } } } }
   function refuse(o, why){ const [fx, fz] = fwd(o.a), side = ((R.x - o.x) * fx + (R.z - o.z) * fz) < 0 ? -1 : 1; R.x = o.x + fx * 3.6 * side; R.z = o.z + fz * 3.6 * side; R.v = 0; R.gait = 1; R.y = 0; R.vy = 0; api.sfx('refus');
     if(why === 'ordre'){ msg('Ce n\'est pas le bon obstacle : cherche le n° ' + (R.next + 1), 'warn'); return; }
     if(why === 'envers'){ msg('À l\'envers ! Le fanion rouge doit être à ta droite', 'warn'); return; }
-    R.refus++; R.pen += R.c.kind === 'cso' ? 4 : 20; msg(R.c.kind === 'cso' ? 'Refus : 4 points' : 'Refus : 20 points', 'bad');
+    R.refus++; const k = R.c.kind; R.pen += k === 'cross' ? 20 : 4; if(k === 'hunter') R.style -= 15; msg(k === 'hunter' ? 'Refus : − 15 au style' : k === 'cross' ? 'Refus : 20 points' : 'Refus : 4 points', 'bad');
     if(R.refus >= 3) end(true); }
   function end(elim){ if(R.done) return; R.done = true; R.gait = Math.min(R.gait, 1); const c = R.c; let res = { kind:c.kind, time:R.t, elim:!!elim };
-    if(c.kind === 'dressage'){ const tot = R.notes.reduce((a, b) => a + b, 0), pct = R.notes.length ? tot / (R.notes.length * 10) * 100 : 0; res.notes = R.notes; res.pct = pct; res.rank = elim ? 3 : pct >= 70 ? 0 : pct >= 60 ? 1 : pct >= 50 ? 2 : 3; }
+    if(c.kind === 'course'){ res.place = elim ? c.rivals.length + 1 : 1 + c.rivals.filter(v => v.fini).length; res.nb = c.rivals.length + 1; res.rank = Math.min(3, res.place - 1); }
+    else if(c.kind === 'hunter'){ const over = Math.max(0, R.t - c.opt); res.pct = elim ? 0 : Math.max(0, Math.min(100, R.style - over / 2)); res.bars = R.bars; res.refus = R.refus; res.regul = R.sec < 4 ? 'oui 👍' : 'à travailler'; res.rank = elim ? 3 : res.pct >= 70 ? 0 : res.pct >= 60 ? 1 : res.pct >= 50 ? 2 : 3; }
+    else if(c.kind === 'western'){ res.touches = R.touches; res.total = R.t + R.touches * 5; const m = c.tmax; res.rank = elim ? 3 : res.total <= m[0] ? 0 : res.total <= m[1] ? 1 : res.total <= m[2] ? 2 : 3; }
+    else if(c.kind === 'dressage'){ const tot = R.notes.reduce((a, b) => a + b, 0), pct = R.notes.length ? tot / (R.notes.length * 10) * 100 : 0; res.notes = R.notes; res.pct = pct; res.rank = elim ? 3 : pct >= 70 ? 0 : pct >= 60 ? 1 : pct >= 50 ? 2 : 3; }
     else { const over = Math.max(0, R.t - c.opt), tp = c.kind === 'cso' ? Math.ceil(over / 4) : Math.round(over * .4 * 10) / 10; res.timePen = tp; res.jumpPen = R.pen; res.pen = R.pen + tp; res.bars = R.bars; res.refus = R.refus; res.opt = c.opt;
       res.rank = elim ? 3 : res.pen === 0 ? 0 : res.pen <= 4 ? 1 : res.pen <= (c.kind === 'cso' ? 8 : 20) ? 2 : 3; }
     api.sfx(res.rank < 3 ? 'bravo' : 'fin'); setTimeout(() => api.finish(res), 1400); }
@@ -261,24 +304,44 @@ export function createWorld(THREE, canvas, api){
     if(!R.done) R.t += dt;
     // l'allure et la vitesse
     const target = R.vmax[R.gait], acc = R.v < target ? 3.6 : 6; R.v += Math.max(-acc * dt, Math.min(acc * dt, target - R.v));
-    if(R.gait === 3 && !R.done){ R.stam -= dt * (7.5 - R.endu) * (c.kind === 'cross' ? 1 : .55); if(R.stam <= 0){ R.stam = 0; R.gait = 2; msg('Ton cheval est fatigué : il repasse au trot', 'warn'); } } else R.stam = Math.min(100, R.stam + dt * (R.gait === 2 ? 5 : 11));
+    if(R.gait === 3 && !R.done){ R.stam -= dt * (7.5 - R.endu) * (c.kind === 'cross' ? 1 : c.kind === 'course' ? .35 : .55); if(R.stam <= 0){ R.stam = 0; R.gait = 2; msg('Ton cheval est fatigué : il repasse au trot', 'warn'); } } else R.stam = Math.min(100, R.stam + dt * (R.gait === 2 ? 5 : 11));
     const turn = (R.v < .3 ? 1.3 : 1.9 - R.v * .07) * (R.y > 0 ? .25 : 1); R.a += R.steer * turn * dt;
     const [fx, fz] = fwd(R.a), px = R.x, pz = R.z; R.x += fx * R.v * dt; R.z += fz * R.v * dt;
+    if(c.kind === 'course'){ const t = Math.atan2(R.z / OV.b, R.x / OV.a), [cx, cz] = ovP(t), dx = R.x - cx, dz = R.z - cz, d = Math.hypot(dx, dz), lim = OV.lw / 2 - .6; if(d > lim){ R.x = cx + dx / d * lim; R.z = cz + dz / d * lim; R.v = Math.min(R.v, 3); } }
     const b = c.bounds; if(R.x < b[0] || R.x > b[1] || R.z < b[2] || R.z > b[3]){ R.x = Math.max(b[0], Math.min(b[1], R.x)); R.z = Math.max(b[2], Math.min(b[3], R.z)); if(c.kind === 'cso') R.v = Math.min(R.v, 2); }
     // le saut
     let air = null; if(R.y > 0){ R.airT += dt; R.vy -= 9.8 * dt; R.y += R.vy * dt; air = R.airT / R.airLen; if(R.y <= 0){ R.y = 0; R.vy = 0; api.sfx('pose'); } }
     // les obstacles
     for(let i = 0; i < c.obs.length && !R.done; i++){ const o = c.obs[i], [nx, nz] = fwd(o.a), d0 = (px - o.x) * nx + (pz - o.z) * nz, d1 = (R.x - o.x) * nx + (R.z - o.z) * nz; if((d0 < 0) === (d1 < 0)) continue;
       const lat = (R.x - o.x) * nz - (R.z - o.z) * nx; if(Math.abs(lat) > o.w / 2 + .55) continue; const forward = d0 < 0, isNext = i === R.next;
+      if(o.type === 'tonneau') continue;
+      if(o.type === 'balise' || o.type === 'fin'){ if(isNext && forward && Math.abs(lat) < o.w / 2){ R.next++; if(R.next >= c.obs.length) end(false); else if(c.kind === 'course' && R.next % OV.nb === 0){ msg(R.next / OV.nb === c.tours - 1 ? 'Dernier tour !' : 'Tour ' + (R.next / OV.nb + 1), 'good'); api.sfx('cloche'); } } continue; }
       if(o.type === 'gue'){ if(isNext && forward && Math.abs(lat) < o.w / 2){ R.next++; api.sfx('plouf'); msg('Splash ! Le gué est passé', 'good'); } continue; }
       if(Math.abs(lat) > o.w / 2){ refuse(o, isNext ? 'chandelier' : 'ordre'); break; }
       const need = o.h * (o.type === 'oxer' ? 1.08 : 1);
       if(R.y < need * .5){ refuse(o, isNext ? (forward ? 'refus' : 'envers') : 'ordre'); break; }
       if(!isNext){ continue; } if(!forward){ refuse(o, 'envers'); break; }
-      if(R.y < need - .04){ if(o.bars.length){ R.bars++; R.pen += 4; msg('Une barre tombe : 4 points', 'bad'); api.sfx('barre'); o.bars.forEach(bm => R.falls.push({ m:bm, vy:0 })); } else msg('Ouf, ça touche !', 'warn'); }
+      if(R.y < need - .04){ if(o.bars.length){ R.bars++; R.pen += 4; if(c.kind === 'hunter') R.style -= 10; msg('Une barre tombe : 4 points', 'bad'); api.sfx('barre'); o.bars.forEach(bm => R.falls.push({ m:bm, vy:0 })); } else msg('Ouf, ça touche !', 'warn'); }
       else { msg(['Sans faute !', 'Joli saut !', 'Bravo !'][Math.floor(Math.random() * 3)], 'good'); api.sfx('ok'); }
       if(o.num) o.num.material.opacity = .35; R.next++; if(R.next >= c.obs.length) end(false);
     }
+    // le western : faire le tour du tonneau (presque un tour complet), sans le toucher
+    if(c.kind === 'western' && !R.done){
+      c.obs.forEach((o, i) => { if(o.type !== 'tonneau' || o.touche) return; if(Math.hypot(R.x - o.x, R.z - o.z) < 1.15){ o.touche = true; R.touches++; o.bar.rotation.z = 1.3; o.bar.position.y = .45; o.bar.position.x = .5; msg('Tonneau touché : + 5 secondes', 'bad'); api.sfx('barre'); } });
+      const o = c.obs[R.next];
+      if(o && o.type === 'tonneau'){ const d = Math.hypot(R.x - o.x, R.z - o.z);
+        if(d < 8){ const ang = Math.atan2(R.x - o.x, R.z - o.z); if(R.prevAng != null){ let da = ang - R.prevAng; while(da > Math.PI) da -= 6.2832; while(da < -Math.PI) da += 6.2832; R.tourne += da; } R.prevAng = ang;
+          if(Math.abs(R.tourne) >= 5.5){ R.next++; R.tourne = 0; R.prevAng = null; if(o.num) o.num.material.opacity = .35; msg(R.next < 3 ? `Tonneau ${R.next} : au suivant !` : 'Les 3 tonneaux ! Fonce à l\'arrivée !', 'good'); api.sfx('ok'); } }
+        else { R.prevAng = null; R.tourne = 0; } } }
+    // le hunter : le galop doit rester régulier entre les obstacles
+    if(c.kind === 'hunter' && !R.done && R.next > 0 && R.y <= 0){ if(R.gait < 3){ R.style -= 2 * dt; R.sec += dt; if(!R.galW){ R.galW = 1; msg('Garde le galop : le jury regarde la régularité', 'warn'); } } else R.galW = 0; }
+    // la course : les adversaires galopent sur la piste
+    if(c.rivals) c.rivals.forEach((v, i) => { const fin = c.t0 + c.tours * 6.2832;
+      if(!v.fini){ const k = (v.t - c.t0) / (fin - c.t0), sprint = k > .8 ? 1.06 : 1, cible = R.go ? v.vb * sprint * (1 + .04 * Math.sin(R.t * .5 + i * 2)) : 0; v.v += Math.max(-4 * dt, Math.min(3.2 * dt, cible - v.v)); }
+      else v.v = Math.max(1.6, v.v - 2 * dt);
+      const sp = Math.hypot((OV.a + v.lane) * Math.sin(v.t), (OV.b + v.lane) * Math.cos(v.t)); v.t += v.v / sp * dt; if(!v.fini && v.t >= fin){ v.fini = true; }
+      v.prog = (v.t - c.t0) / (6.2832 / OV.nb);
+      const [x, z] = ovP(v.t, v.lane), [x2, z2] = ovP(v.t + .01, v.lane); v.h.root.position.set(x, 0, z); v.h.root.rotation.y = Math.atan2(x2 - x, z2 - z); v.h.update(dt, { gait:v.v < .2 ? 0 : v.v < 2.6 ? 1 : v.v < 5 ? 2 : 3, speedK:v.v / 7 }); });
     R.falls.forEach(f => { if(f.m.position.y > .06){ f.vy -= 9.8 * dt; f.m.position.y = Math.max(.06, f.m.position.y + f.vy * dt); f.m.position.z += dt * 1.2; } });
     // le dressage : on suit la figure dessinée au sol, à la bonne allure
     if(c.kind === 'dressage' && !R.done){ const m = c.moves[R.mi];
@@ -293,6 +356,8 @@ export function createWorld(THREE, canvas, api){
     const st = R.v < .2 ? 0 : R.v < 2.6 ? 1 : R.v < 5 ? 2 : 3; R.beat = (R.beat || 0) + dt * [0, 3, 5.2, 6.8][st]; if(st && R.y <= 0 && R.beat >= 1){ R.beat = 0; api.sfx('sabot' + st); }
     rideCam(Math.min(1, dt * 4.5)); hud();
   }
+  // la place pendant la course : les balises passées + la part du chemin vers la suivante
+  function place(){ const c = R.c, o = c.obs[R.next]; if(!o) return 1 + c.rivals.filter(v => v.fini).length; const D = 6.2832 / OV.nb, tp = Math.atan2(R.z / OV.b, R.x / OV.a); let f = ((tp - (o.t - D)) % 6.2832 + 6.2832) % 6.2832; f = f > D * 1.5 ? 0 : Math.min(1, f / D); const me = R.next + f; return 1 + c.rivals.filter(v => v.prog > me).length; }
   function note(n){ n = Math.round(Math.max(0, Math.min(10, n)) * 2) / 2; R.notes.push(n); msg('Note : ' + String(n).replace('.', ',') + ' / 10', n >= 7 ? 'good' : n >= 5 ? 'warn' : 'bad'); api.sfx(n >= 7 ? 'ok' : 'tap');
     R.mi++; R.idx = 0; R.dev = R.devN = R.gOK = R.gN = 0; R.haltT = 0; R.haltD = null; const m = R.c.moves[R.mi]; showPath(m); if(!m) end(false); }
 

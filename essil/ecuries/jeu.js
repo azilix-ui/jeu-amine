@@ -1,5 +1,6 @@
 /* Les Écuries d'Essil — l'interface : la cour, le club-house (cours et quiz), la sellerie, le marchand, l'écurie, les concours. */
-import { FILET, SELLE, ROBES, RACES, OUTILS, ORDRE, PANSAGE_QCM, HARNAIS_QCM, CHEVAUX, STATS, COULEURS, HEX, RAYONS, NOURRITURE, EPREUVES } from './data.js';
+import { FILET, SELLE, ROBES, RACES, OUTILS, ORDRE, PANSAGE_QCM, HARNAIS_QCM, CHEVAUX, STATS, COULEURS, HEX, RAYONS, NOURRITURE, EPREUVES, BROSSES, DEPART_BROSSES } from './data.js';
+import { GALOPS } from './galops.js';
 
 const $ = id => document.getElementById(id);
 const IMG = new URL('img/', import.meta.url).href;   // marche depuis essil/les-ecuries.html comme depuis jeux/les-ecuries.html
@@ -8,18 +9,24 @@ const shuffle = a => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ con
 const pick = (a, n) => shuffle(a).slice(0, n);
 const RACE_IMG = { 'Connemara':'r-connemara', 'Shetland':'r-shetland', 'Haflinger':'r-haflinger', 'Camargue':'r-camargue', 'Fjord':'r-fjord', 'Barbe':'r-barbe', 'Percheron':'r-percheron', 'Appaloosa':'c-tachete', 'Selle français':'r-sellefrancais', 'Frison':'r-frison', 'Pur-sang anglais':'r-pursang', 'Pur-sang arabe':'r-arabe', 'Pure race espagnole':'r-espagnol' };
 const DEF = Object.fromEntries(CHEVAUX.map(h => [h.id, h]));
+const photo = id => `${IMG}h-${id}.webp`;                      // la photo réaliste du cheval (ComfyUI, 15/11)
+const raceImg = r => r.h ? 'h-' + r.h : 'r-' + r.id;            // les nouvelles races : la photo du cheval de cette race
+// toutes les brosses (celles d'avant + celles à acheter)
+const BR = Object.fromEntries([...OUTILS.map(o => [o.id, o]), ...BROSSES.filter(b => b.n).map(b => [b.id, b])]);
 
 /* ---------- sauvegarde ---------- */
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 let player = null, S = null;
 const key = () => 'ecuries:' + player;
 const newHorse = eq => ({ eq:eq || {}, dirt:.6, faim:55, moral:60, t:Date.now(), gour:[] });
-const fresh = () => ({ v:1, t:0, coins:100, horses:{ noisette:newHorse({ licol:'marine', filet:'havane', selle:'havane' }) }, owned:{ 'licol:marine':1, 'filet:havane':1, 'selle:havane':1 }, cur:'noisette', best:{}, ecole:{}, n:{ quiz:0, pansages:0, concours:0 } });
+const fresh = () => ({ v:1, t:0, coins:100, horses:{ noisette:newHorse({ licol:'marine', filet:'havane', selle:'havane' }) }, owned:{ 'licol:marine':1, 'filet:havane':1, 'selle:havane':1 }, cur:'noisette', best:{}, ecole:{}, n:{ quiz:0, pansages:0, concours:0 }, brosses:Object.fromEntries(DEPART_BROSSES.map(b => [b, 1])), galops:{} });
 function save(){ S.t = Date.now(); store.set(key(), S); }
 function decay(){ const now = Date.now(); Object.values(S.horses).forEach(h => { const hrs = Math.max(0, (now - (h.t || now)) / 36e5); if(hrs < .02) return; h.dirt = Math.min(1, h.dirt + hrs / 9); h.faim = Math.max(0, h.faim - hrs * 11); h.moral = Math.max(20, h.moral - hrs * 2); h.t = now; }); }
 const tracked = new Set();
 async function setPlayer(name){
-  player = name; S = Object.assign(fresh(), store.get(key(), null) || {});
+  player = name; const old = store.get(key(), null); S = Object.assign(fresh(), old || {});
+  if(old && !old.brosses) S.brosses = Object.fromEntries(ORDRE.map(b => [b, 1]));   // une écurie d'avant le 15/11 garde toute sa trousse de pansage
+  S.galops = S.galops || {};
   if(window.Famille){ if(!tracked.has(name)){ tracked.add(name); Famille.track('ecuries', name, [key()]); }
     await sync(name); }
   if(!S.horses[S.cur]) S.cur = Object.keys(S.horses)[0]; decay(); renderWho(); coins(0);
@@ -34,6 +41,8 @@ function merge(d){
   Object.entries(d.best || {}).forEach(([k, v]) => { if(v != null && (S.best[k] == null || v < S.best[k])){ S.best[k] = v; ch = true; } });
   Object.entries(d.ecole || {}).forEach(([k, v]) => { if(v > (S.ecole[k] || 0)){ S.ecole[k] = v; ch = true; } });
   Object.entries(d.n || {}).forEach(([k, v]) => { if(v > (S.n[k] || 0)){ S.n[k] = v; ch = true; } });
+  Object.keys(d.brosses || {}).forEach(k => { S.brosses = S.brosses || {}; if(!S.brosses[k]){ S.brosses[k] = 1; ch = true; } });
+  Object.entries(d.galops || {}).forEach(([k, v]) => { const m = S.galops[k] = S.galops[k] || {}; ['theo', 'prat'].forEach(x => { if(v[x] && !m[x]){ m[x] = v[x]; ch = true; } }); if(v.date && !m.date){ m.date = v.date; ch = true; } });
   if(newer){ if(S.coins !== d.coins){ S.coins = d.coins; ch = true; } if(d.cur && S.horses[d.cur] && !syncedOnce) S.cur = d.cur; }
   return ch;
 }
@@ -48,7 +57,7 @@ async function sync(name){
       if(ch){ coins(0); if(Object.keys(S.horses).length > had && typeof refreshAfterSync === 'function') refreshAfterSync(); } } }catch(e){}
   syncing = false;
 }
-function refreshAfterSync(){ if(['hub', 'market', 'concours', 'shop'].includes(cur)) go(cur); }
+function refreshAfterSync(){ if(['hub', 'market', 'concours', 'shop', 'galops'].includes(cur)) go(cur); }
 // un onglet resté ouvert reprend ce qui a été fait ailleurs dès qu'on y revient, puis toutes les minutes
 document.addEventListener('visibilitychange', () => { if(!document.hidden && player) sync(player); });
 window.addEventListener('focus', () => { if(player) sync(player); });
@@ -104,7 +113,7 @@ function openCours(id, t){ cours = COURS.find(c => c.id === id); go('lecon'); $(
 function showTab(t){ tab = t; $('lTabs').innerHTML = cours.tabs.map(([k, n]) => `<button class="chip ${k === t ? 'on' : ''}" data-tab="${k}">${n}</button>`).join(''); const B = $('lBody'); B.parentElement.scrollTop = 0;
   if(t === 'filet' || t === 'selle') diagram(B, t, t === 'filet' ? FILET : SELLE);
   else if(t === 'robes') B.innerHTML = `<div class="cards">${ROBES.map(r => `<div class="card"><img src="${IMG}c-${r.id}.webp" alt="" loading="lazy"><b>${r.n}</b><small>${r.d}</small></div>`).join('')}</div>`;
-  else if(t === 'races') B.innerHTML = `<div class="cards">${RACES.map(r => `<div class="card"><img src="${IMG}r-${r.id}.webp" alt="" loading="lazy"><b>${r.n}</b><em>${r.o}</em><small>${r.d}</small></div>`).join('')}</div>`;
+  else if(t === 'races') B.innerHTML = `<div class="cards">${RACES.map(r => `<div class="card"><img ${r.h ? 'class="ph" ' : ''}src="${IMG}${raceImg(r)}.webp" alt="" loading="lazy"><b>${r.n}</b><em>${r.o}</em><small>${r.d}</small></div>`).join('')}</div>`;
   else if(t === 'outils') B.innerHTML = `<p style="margin:0 0 10px;color:var(--mist)">Dans l'ordre du pansage. Ensuite, va t'entraîner pour de vrai dans nos écuries !</p><div class="cards">${OUTILS.map((o, i) => `<div class="card sq"><img src="${IMG}o-${o.id}.webp" alt="" loading="lazy"><b>${i < 7 ? (i + 1) + '. ' : ''}${o.n}</b><em>${o.ou}</em><small>${o.d}</small></div>`).join('')}</div>`;
   else startQuiz(); }
 $('lTabs').onclick = e => { const b = e.target.closest('[data-tab]'); if(!b) return; sfx('tap'); showTab(b.dataset.tab); };
@@ -118,7 +127,8 @@ function buildQuiz(id){
   const qcm = x => ({ type:'qcm', q:x.q, opts:shuffle(x.o).map(t => ({ t })), a:x.a, why:x.w });
   if(id === 'harnais'){ const f = pick(FILET, 4).map(p => ({ type:'pin', img:'filet', parts:FILET, target:p })), s = pick(SELLE, 3).map(p => ({ type:'pin', img:'selle', parts:SELLE, target:p }));
     return shuffle([...f, ...s]).concat(pick(HARNAIS_QCM, 3).map(qcm)); }
-  if(id === 'robes'){ const one = (list, pre, x, quoi) => ({ type:'qcm', q:quoi, img:pre + x.id, opts:shuffle([x, ...pick(list.filter(y => y.id !== x.id), 3)]).map(y => ({ t:y.n })), a:x.n, why:x.n + ' : ' + x.d });
+  if(id.startsWith('galop')){ const g = GALOPS.find(x => 'galop' + x.n === id); return pick(g.q, 10).map(qcm); }
+  if(id === 'robes'){ const one = (list, pre, x, quoi) => ({ type:'qcm', q:quoi, img:pre === 'r-' ? raceImg(x) : pre + x.id, opts:shuffle([x, ...pick(list.filter(y => y.id !== x.id), 3)]).map(y => ({ t:y.n })), a:x.n, why:x.n + ' : ' + x.d });
     return shuffle([...pick(ROBES, 5).map(x => one(ROBES, 'c-', x, 'Quelle est cette robe ?')), ...pick(RACES, 5).map(x => one(RACES, 'r-', x, 'Quelle est cette race ?'))]); }
   const CLUE = { curepied:'Avec quel outil enlève-t-on la terre et les cailloux sous les sabots ?', etrille:'Quel outil en caoutchouc décolle la boue séchée quand on frotte en faisant des ronds ?', bouchon:'Quelle brosse aux poils durs chasse la poussière du corps et des jambes ?', brossedouce:'Quelle est la seule brosse qu\'on a le droit de passer sur la tête ?', eponge:'Avec quoi nettoie-t-on le coin des yeux et les naseaux ?', peigne:'Avec quoi démêle-t-on la crinière et la queue, mèche par mèche ?', graisse:'Que met-on au pinceau sur les sabots propres, tout à la fin ?', couteau:'Avec quoi racle-t-on l\'eau sur le corps après la douche ?' };
   const tool = x => ({ type:'qcm', q:CLUE[x.id], pics:true, opts:shuffle([x, ...pick(OUTILS.filter(y => y.id !== x.id), 3)]).map(y => ({ t:y.n, img:'o-' + y.id })), a:x.n, why:x.n + ' : ' + x.d });
@@ -146,6 +156,7 @@ function showQ(){
   $('qNext').onclick = () => { sfx('tap'); Q.i++; if(Q.i < Q.list.length) showQ(); else endQuiz(); };
 }
 function endQuiz(){
+  if(cours.galop) return endGalopTheo();
   const n = Q.good, perfect = n === Q.list.length, st = starsOf(n); if(perfect){ Q.gain += 25; coins(25); } S.ecole[cours.id] = Math.max(S.ecole[cours.id] || 0, n); S.n.quiz++; save(); if(st >= 2) party(); sfx(st ? 'bravo' : 'fin');
   $('lBody').innerHTML = `<div class="quiz" style="text-align:center;align-items:center"><div class="medal">${perfect ? '🏆' : st >= 2 ? '🥇' : st ? '🥈' : '📚'}</div><h2 style="font-size:34px;color:var(--navy2)">${n} / ${Q.list.length} du premier coup</h2><div class="stars" style="font-size:40px">${starTxt(st)}</div>
     <p style="margin:0;font-size:19px">Tu gagnes <b>${Q.gain} pièces</b> 🪙${perfect ? ' (dont 25 pour le sans-faute !)' : ''}</p><div class="row c"><button class="pill go" id="qAgain">🔁 Encore un quiz</button><button class="pill" id="qLearn">📖 Revoir la leçon</button><button class="pill sun" data-go="hub">🏠 La cour</button></div></div>`;
@@ -155,27 +166,35 @@ function endQuiz(){
 /* =====================================================================
    LA SELLERIE ET LE MARCHAND
    ===================================================================== */
-let rayon = 'tapis';
+let rayon = 'brosses';
 const owns = (r, c) => !!S.owned[r + ':' + c];
 function renderShop(){
-  $('shopTabs').innerHTML = RAYONS.map(r => `<button class="chip ${r.id === rayon ? 'on' : ''}" data-r="${r.id}">${r.ic} ${r.n}</button>`).join('');
+  $('shopTabs').innerHTML = `<button class="chip ${rayon === 'brosses' ? 'on' : ''}" data-r="brosses">🧽 Brosses</button>` + RAYONS.map(r => `<button class="chip ${r.id === rayon ? 'on' : ''}" data-r="${r.id}">${r.ic} ${r.n}</button>`).join('');
+  if(rayon === 'brosses') return renderBrosses();
   const r = RAYONS.find(x => x.id === rayon), cur = S.horses[S.cur], d = DEF[S.cur]; $('shopInfo').innerHTML = `${r.d} <b>${r.prix} 🪙</b> la couleur. Tu habilles : <b>${d.n}</b>.`;
   $('shopGrid').innerHTML = r.cols.map(c => { const col = COULEURS.find(x => x[0] === c), has = owns(r.id, c), on = cur.eq[r.id] === c;
     return `<div class="item"><div class="sw" style="background:${col[2]}">${r.ic}</div><b>${r.n} ${col[1].toLowerCase()}</b>${has ? `<button class="pill ${on ? 'go' : ''}" data-eq="${c}">${on ? '✔ Sur ' + d.n : 'Mettre à ' + d.n}</button>` : `<button class="pill sun" data-buy="${c}" ${S.coins < r.prix ? 'disabled' : ''}>${r.prix} 🪙</button>`}</div>`; }).join('');
 }
+// les brosses : on en a trois au départ (cure-pied, étrille, brosse douce), les autres s'achètent (15/11)
+function renderBrosses(){
+  $('shopInfo').innerHTML = 'Pour le pansage complet, il te faut toute la trousse. Les brosses servent pour tous tes chevaux.';
+  const tout = [...ORDRE.filter(id => !BROSSES.some(b => b.id === id)).map(id => ({ id, prix:0 })), ...BROSSES];
+  $('shopGrid').innerHTML = tout.map(b => { const o = BR[b.id], has = S.brosses[b.id];
+    return `<div class="item"><img src="${IMG}o-${b.id}.webp" alt="" style="width:92px;height:92px;border-radius:16px;object-fit:cover"><b>${o.n.replace(/^(Le |La |L')/, '')}</b><small style="color:var(--mist);font-size:13px;line-height:1.25">${esc(b.d || o.d)}</small>${has ? '<button class="pill go" disabled>✔ Dans ta trousse</button>' : `<button class="pill sun" data-buyb="${b.id}" ${S.coins < b.prix ? 'disabled' : ''}>${b.prix} 🪙</button>`}</div>`; }).join(''); }
 $('shopTabs').onclick = e => { const b = e.target.closest('[data-r]'); if(!b) return; sfx('tap'); rayon = b.dataset.r; renderShop(); };
-$('shopGrid').onclick = e => { const b = e.target.closest('[data-buy],[data-eq]'); if(!b) return; const r = RAYONS.find(x => x.id === rayon), cur = S.horses[S.cur];
+$('shopGrid').onclick = e => { const bb = e.target.closest('[data-buyb]'); if(bb){ const x = BROSSES.find(y => y.id === bb.dataset.buyb); if(S.coins < x.prix){ sfx('ko'); return; } S.brosses[x.id] = 1; coins(-x.prix); sfx('coin'); toast(`${BR[x.id].n} rejoint ta trousse de pansage !`); renderShop(); return; }
+  const b = e.target.closest('[data-buy],[data-eq]'); if(!b) return; const r = RAYONS.find(x => x.id === rayon), cur = S.horses[S.cur];
   if(b.dataset.buy){ if(S.coins < r.prix){ sfx('ko'); return; } S.owned[r.id + ':' + b.dataset.buy] = 1; cur.eq[r.id] = b.dataset.buy; coins(-r.prix); sfx('coin'); toast(`${r.n} acheté et mis à ${DEF[S.cur].n} !`); }
   else { cur.eq[r.id] = cur.eq[r.id] === b.dataset.eq && r.id !== 'filet' && r.id !== 'selle' ? null : b.dataset.eq; sfx('tap'); save(); }
   renderShop(); };
 function renderMarket(){
   $('marketGrid').innerHTML = CHEVAUX.map(h => { const has = !!S.horses[h.id];
-    return `<div class="horse"><img src="${IMG}${RACE_IMG[h.race]}.webp" alt="" loading="lazy"><div><h3>${h.n}</h3><small><b>${h.race}</b> · ${h.d}</small>${statBars(h.s)}${has ? `<button class="pill go" data-see="${h.id}">✔ Dans ton écurie</button>` : `<button class="pill sun" data-buyh="${h.id}" ${S.coins < h.prix ? 'disabled' : ''}>Acheter · ${h.prix} 🪙</button>`}</div></div>`; }).join('');
+    return `<div class="horse"><img class="ph" src="${photo(h.id)}" alt="" loading="lazy"><div><h3>${h.n}</h3><small><b>${h.race}</b> · ${h.d}</small>${statBars(h.s)}${has ? `<button class="pill go" data-see="${h.id}">✔ Dans ton écurie</button>` : `<button class="pill sun" data-buyh="${h.id}" ${S.coins < h.prix ? 'disabled' : ''}>Acheter · ${h.prix} 🪙</button>`}</div></div>`; }).join('');
 }
 $('marketGrid').onclick = e => { const b = e.target.closest('[data-buyh],[data-see]'); if(!b) return;
   if(b.dataset.see){ sfx('tap'); S.cur = b.dataset.see; save(); go('stable'); return; }
   const h = DEF[b.dataset.buyh]; if(S.coins < h.prix){ sfx('ko'); return; }
-  modal(`<h2>Acheter ${h.n} ?</h2><img src="${IMG}${RACE_IMG[h.race]}.webp" alt="" style="width:100%;border-radius:16px"><p style="margin:0;text-align:center">${h.race} · ${h.prix} 🪙</p><div class="row c"><button class="pill go" id="mYes">Oui, bienvenue ${h.n} !</button><button class="pill" id="mNo">Pas maintenant</button></div>`);
+  modal(`<h2>Acheter ${h.n} ?</h2><img src="${photo(h.id)}" alt="" style="width:100%;border-radius:16px;background:linear-gradient(#e9f3ff,#f7ead2)"><p style="margin:0;text-align:center">${h.race} · ${h.prix} 🪙</p><div class="row c"><button class="pill go" id="mYes">Oui, bienvenue ${h.n} !</button><button class="pill" id="mNo">Pas maintenant</button></div>`);
   $('mNo').onclick = () => { sfx('tap'); closeModal(); };
   $('mYes').onclick = () => { closeModal(); const first = Object.keys(S.owned).find(k => k.startsWith('licol:')); S.horses[h.id] = newHorse({ licol:first ? first.split(':')[1] : 'marine', filet:(Object.keys(S.owned).find(k => k.startsWith('filet:')) || 'filet:havane').split(':')[1], selle:(Object.keys(S.owned).find(k => k.startsWith('selle:')) || 'selle:havane').split(':')[1] }); S.horses[h.id].dirt = .3; S.horses[h.id].faim = 70; S.cur = h.id; coins(-h.prix); sfx('hennit'); party(); toast(`${h.n} arrive dans ton écurie !`); renderMarket(); };
 };
@@ -193,14 +212,15 @@ function loadWorld(){
 const ownedIds = () => CHEVAUX.filter(h => S.horses[h.id]).map(h => h.id);
 const formOf = id => { const h = S.horses[id]; return .82 + .1 * (1 - h.dirt) + .08 * Math.min(1, h.faim / 70) + .05 * (h.moral / 100); };
 
-/* ---------- l'écurie ---------- */
-let care = null, tool = null, feedOn = false;
-const TOOLS = OUTILS.filter(o => o.id !== 'couteau');
+/* ---------- l'écurie : en photos réalistes (15/11) ; le 3D ne sert plus qu'à voir le cheval harnaché ---------- */
+let care = null, tool = null, feedOn = false, ph = null, phP = null, equip3D = false;
+function loadPhoto(){ if(phP) return phP; phP = import('./photo.js').then(M => ph = M.createPhoto($('ph'), { sfx, pick:i => openCare(ownedIds()[i]), spot:onSpot }, IMG)); phP.catch(() => { phP = null; }); return phP; }
+const TRAY = () => [...ORDRE, 'couteau', 'brossecrins', 'gant', 'lustrant'];
 async function openStable(sel){
   decay(); save(); $('sHint').style.display = ''; $('sHint').textContent = 'J\'ouvre les écuries…'; ['sSide', 'sNavs', 'sTray', 'sBars'].forEach(id => $(id).style.display = 'none');
-  try{ await loadWorld(); }catch(e){ toast('La 3D ne démarre pas sur cet appareil.'); go('hub'); return; }
-  if(cur !== 'stable') return; document.body.classList.add('g3');
-  const ids = ownedIds(); world.openStable(ids.map(id => ({ def:DEF[id], eq:S.horses[id].eq, dirt:S.horses[id].dirt, id })), { at:Math.max(0, ids.indexOf(S.cur)) });
+  try{ await loadPhoto(); }catch(e){ toast('Les écuries ne s\'ouvrent pas sur cet appareil.'); go('hub'); return; }
+  if(cur !== 'stable') return; document.body.classList.add('ph'); equip3D = false;
+  const ids = ownedIds(); ph.openStable(ids.map(id => ({ def:DEF[id], eq:S.horses[id].eq, dirt:S.horses[id].dirt, sueur:S.horses[id].sueur, id })), { at:Math.max(0, ids.indexOf(S.cur)) });
   care = null; stableUI(); if(sel) openCare(sel);
 }
 function stableUI(){
@@ -211,40 +231,51 @@ function gauges(){ const h = S.horses[care]; $('sBars').innerHTML = [['🧼 Prop
 function tray(){
   const T = $('sTray');
   if(feedOn){ T.innerHTML = NOURRITURE.map(f => `<button class="tool" data-food="${f.id}" title="${esc(f.d)}"><span class="e">${f.ic}</span>${f.n}</button>`).join('') + `<button class="tool" data-brush="1"><span class="e">🧽</span>Les brosses</button>`; return; }
-  const left = world.spotsLeft();
-  T.innerHTML = TOOLS.map(o => `<button class="tool ${tool === o.id ? 'on' : ''}" data-tool="${o.id}"><img src="${IMG}o-${o.id}.webp" alt="">${o.n.replace(/^(Le |La |L')/, '')}${left[o.id] ? `<u>${left[o.id]}</u>` : ''}</button>`).join('');
+  const left = ph ? ph.spotsLeft() : {};
+  // les brosses qu'on a ; celles qui manquent mais dont on aurait besoin apparaissent avec un 🛒
+  T.innerHTML = TRAY().filter(id => S.brosses[id] || left[id]).map(id => { const o = BR[id], has = S.brosses[id], n = left[id] || (id === 'brossecrins' ? left.peigne : 0);
+    return `<button class="tool ${tool === id ? 'on' : ''} ${has ? '' : 'lock'}" data-tool="${id}"><img src="${IMG}o-${id}.webp" alt="">${o.n.replace(/^(Le |La |L')/, '')}${n ? `<u>${n}</u>` : ''}</button>`; }).join('');
 }
-function openCare(id){ if(!id) return; sfx('tap'); care = id; S.cur = id; save(); feedOn = false; world.select(ownedIds().indexOf(id)); world.harness(false); $('sEquip').textContent = '👗 Équiper'; tool = tool || 'curepied'; world.setTool(tool); stableUI(); if(Math.random() < .4) sfx('hennit');
-  const h = S.horses[id]; if(h.dirt > .05) toast('Choisis une brosse en bas, puis frotte les taches. On commence par le cure-pied !', 3600); else toast(`${DEF[id].n} est tout propre. Tu peux le caresser avec la brosse douce 💛`); }
+function openCare(id){ if(!id) return; sfx('tap'); care = id; S.cur = id; save(); feedOn = false; ph.select(ownedIds().indexOf(id)); $('sEquip').textContent = '👗 Équiper'; if(!tool || !S.brosses[tool]) tool = 'curepied'; ph.setTool(tool); stableUI(); if(Math.random() < .4) sfx('hennit');
+  const h = S.horses[id]; if(h.sueur) toast('Il a transpiré au concours : passe le couteau de chaleur pour racler la sueur.', 3800); else if(h.dirt > .05) toast('Choisis une brosse en bas, puis frotte les taches. On commence par le cure-pied !', 3600); else toast(`${DEF[id].n} est tout propre. Tu peux le caresser avec la brosse douce 💛`); }
 $('sTray').onclick = e => { const b = e.target.closest('[data-tool],[data-food],[data-brush]'); if(!b) return;
   if(b.dataset.brush){ sfx('tap'); feedOn = false; tray(); return; }
-  if(b.dataset.tool){ sfx('tap'); tool = b.dataset.tool; world.setTool(tool); world.harness(false); $('sEquip').textContent = '👗 Équiper'; tray(); const o = OUTILS.find(x => x.id === tool); toast(`${o.n} : ${o.ou.toLowerCase()}.`); return; }
+  if(b.dataset.tool){ const id = b.dataset.tool, o = BR[id];
+    if(!S.brosses[id]){ sfx('ko'); const x = BROSSES.find(y => y.id === id); modal(`<h2>${o.n}</h2><img src="${IMG}o-${id}.webp" alt="" style="width:160px;border-radius:18px;align-self:center"><p style="margin:0;text-align:center">Il te manque cet outil pour finir le pansage. Il est à la sellerie pour <b>${x ? x.prix : 30} 🪙</b>.</p><div class="row c"><button class="pill sun" id="mYes">🛒 La sellerie</button><button class="pill" id="mNo">Plus tard</button></div>`); $('mNo').onclick = () => { sfx('tap'); closeModal(); }; $('mYes').onclick = () => { sfx('tap'); closeModal(); rayon = 'brosses'; go('shop'); }; return; }
+    sfx('tap'); tool = id; ph.setTool(tool); tray(); toast(`${o.n} : ${o.ou.toLowerCase()}.`); return; }
   const f = NOURRITURE.find(x => x.id === b.dataset.food), h = S.horses[care], now = Date.now();
   if(f.gour){ h.gour = (h.gour || []).filter(t => now - t < 36e5); if(h.gour.length >= 3){ sfx('ko'); toast('Pas trop de friandises : c\'est très sucré ! Reviens plus tard.'); return; } h.gour.push(now); }
   else if(h.faim >= 98 && f.id !== 'eau'){ sfx('ko'); toast(`${DEF[care].n} n'a plus faim.`); return; }
-  h.faim = Math.min(100, h.faim + f.f); h.moral = Math.min(100, h.moral + f.m); h.t = now; save(); world.feed(); sfx('croque'); gauges(); toast(f.d, 3400); };
+  h.faim = Math.min(100, h.faim + f.f); h.moral = Math.min(100, h.moral + f.m); h.t = now; save(); ph.feed(); sfx('croque'); gauges(); toast(f.d, 3400); };
 function onSpot(ev){
-  if(ev.wrong){ const need = OUTILS.find(o => o.id === ev.need), txt = { boue:'De la boue séchée : il faut d\'abord la décoller avec l\'étrille.', poussiere:'De la poussière : c\'est le travail du bouchon.', terne:'Pour faire briller le poil (et pour la tête), prends la brosse douce.', yeux:'Les yeux et les naseaux, c\'est avec l\'éponge humide.', noeud:'Des nœuds dans les crins : prends le peigne.', pied:'Les pieds se curent avec le cure-pied.', corne:'Le sabot est propre : un coup de graisse à pieds !' }[ev.wrong]; sfx('ko'); toast(txt || ('Prends ' + need.n.toLowerCase())); return; }
+  if(ev.wrong){ const txt = { boue:'De la boue séchée : il faut d\'abord la décoller avec l\'étrille.', poussiere:'De la poussière : c\'est le travail du bouchon.', terne:'Pour faire briller le poil (et pour la tête), prends la brosse douce.', yeux:'Les yeux et les naseaux, c\'est avec l\'éponge humide.', noeud:'Des nœuds dans les crins : prends le peigne (ou la brosse à crins).', pied:'Les pieds se curent avec le cure-pied.', corne:'Le sabot est propre : un coup de graisse à pieds !', sueur:'De la sueur : on la racle avec le couteau de chaleur.' }[ev.wrong];
+    sfx('ko'); toast((txt || ('Prends ' + BR[ev.need].n.toLowerCase())) + (S.brosses[ev.need] ? '' : ' Tu ne l\'as pas encore : il est à la sellerie 🛒'), 3400); return; }
   const h = S.horses[care]; if(!h) return;
-  if(ev.pet){ h.moral = Math.min(100, h.moral + 2); gauges(); return; }
+  if(ev.pet){ h.moral = Math.min(100, h.moral + (ev.gant ? 4 : 2)); gauges(); return; }
+  if(ev.lustre){ coins(15); h.moral = Math.min(100, h.moral + 5); sfx('bravo'); gauges(); save(); toast(`${DEF[care].n} brille comme un sou neuf ! + 15 pièces ✨`, 3200); return; }
   if(ev.done){ sfx('ok'); const total = 16; h.dirt = Math.min(h.dirt, ev.left / total); tray(); gauges();
-    if(ev.left === 0){ h.dirt = 0; h.moral = Math.min(100, h.moral + 15); h.t = Date.now(); S.n.pansages++; const gain = 30; coins(gain); party(24); sfx('bravo'); gauges(); toast(`${DEF[care].n} brille ! Pansage complet : + ${gain} pièces 🪙`, 3600); }
+    if(ev.left === 0){ h.dirt = 0; h.sueur = false; h.moral = Math.min(100, h.moral + 15); h.t = Date.now(); S.n.pansages++; const gain = 30; coins(gain); party(24); sfx('bravo'); gauges(); toast(`${DEF[care].n} brille ! Pansage complet : + ${gain} pièces 🪙${S.brosses.lustrant ? ' Un coup de spray lustrant pour finir ?' : ''}`, 3800); }
     save(); }
 }
 $('sFeed').onclick = () => { sfx('tap'); feedOn = !feedOn; tray(); };
-$('sEquip').onclick = () => { sfx('tap'); world.harness(true); equipPanel(); };
+// Équiper : on montre le cheval harnaché en 3D (les couleurs achetées), puis on revient aux photos
+$('sEquip').onclick = async () => { sfx('tap');
+  try{ await loadWorld(); }catch(e){ equipPanel(); return; }
+  equip3D = true; document.body.classList.remove('ph'); document.body.classList.add('g3');
+  world.openStable([{ def:DEF[care], eq:S.horses[care].eq, dirt:0, id:care }], { at:0 }); world.select(0); world.harness(true); equipPanel(); };
+function leaveEquip(){ if(!equip3D) return; equip3D = false; world.stop(); document.body.classList.remove('g3'); document.body.classList.add('ph'); }
 function equipPanel(){
   const h = S.horses[care];
   modal(`<h2>Équiper ${DEF[care].n}</h2>${RAYONS.map(r => { const mine = r.cols.filter(c => owns(r.id, c)); return `<div class="eqrow"><span>${r.ic} ${r.n}</span><div class="row">${r.id !== 'filet' && r.id !== 'selle' ? `<button class="dot ${!h.eq[r.id] ? 'on' : ''}" data-r="${r.id}" data-c="" aria-label="Sans">✖</button>` : ''}${mine.map(c => `<button class="dot ${h.eq[r.id] === c ? 'on' : ''}" data-r="${r.id}" data-c="${c}" style="background:${HEX[c]}" aria-label="${c}"></button>`).join('')}${mine.length ? '' : '<small style="color:var(--mist)">pas encore acheté</small>'}</div></div>`; }).join('')}
     <div class="row c"><button class="pill go" id="eOk">✔ C'est bon</button><button class="pill sun" id="eShop">🛒 La sellerie</button></div>`);
-  $('mBox').onclick = e => { const b = e.target.closest('[data-r]'); if(!b) return; sfx('tap'); h.eq[b.dataset.r] = b.dataset.c || null; save(); world.refreshEquip(); equipPanel(); };
-  $('eOk').onclick = () => { sfx('tap'); closeModal(); $('mBox').onclick = null; $('sEquip').textContent = '👗 Équiper'; toast('Tu le vois harnaché. Touche une brosse pour le déseller.'); };
-  $('eShop').onclick = () => { sfx('tap'); closeModal(); $('mBox').onclick = null; go('shop'); };
+  $('mBox').onclick = e => { const b = e.target.closest('[data-r]'); if(!b) return; sfx('tap'); h.eq[b.dataset.r] = b.dataset.c || null; save(); if(equip3D) world.refreshEquip(); equipPanel(); };
+  $('eOk').onclick = () => { sfx('tap'); closeModal(); $('mBox').onclick = null; leaveEquip(); toast(`${DEF[care].n} est prêt pour le concours !`); };
+  $('eShop').onclick = () => { sfx('tap'); closeModal(); $('mBox').onclick = null; leaveEquip(); go('shop'); };
 }
-$('sInfo').onclick = () => { sfx('tap'); const d = DEF[care], r = RACES.find(x => d.race.startsWith(x.n.split(' ')[0]) || x.n === d.race); modal(`<h2>${d.n}</h2><img src="${IMG}${RACE_IMG[d.race]}.webp" alt="" style="width:100%;border-radius:16px"><p style="margin:0"><b>${d.race}</b> · ${d.d}</p>${r ? `<p style="margin:0;color:var(--mist);font-size:15px">${r.d}</p>` : ''}${statBars(d.s)}<div class="row c"><button class="pill go" id="mNo">Fermer</button></div>`); $('mNo').onclick = () => { sfx('tap'); closeModal(); }; };
+$('sInfo').onclick = () => { sfx('tap'); const d = DEF[care], r = RACES.find(x => x.n === d.race || x.h === d.id || d.race.startsWith(x.n.split(' ')[0])); modal(`<h2>${d.n}</h2><img src="${photo(d.id)}" alt="" style="width:100%;border-radius:16px;background:linear-gradient(#e9f3ff,#f7ead2)"><p style="margin:0"><b>${d.race}</b> · ${d.d}</p>${r ? `<p style="margin:0;color:var(--mist);font-size:15px">${r.d}</p>` : ''}${statBars(d.s)}<div class="row c"><button class="pill go" id="mNo">Fermer</button></div>`); $('mNo').onclick = () => { sfx('tap'); closeModal(); }; };
 const stepCare = d => { const ids = ownedIds(), i = (ids.indexOf(care) + d + ids.length) % ids.length; openCare(ids[i]); };
 $('sPrev').onclick = () => stepCare(-1); $('sNext').onclick = () => stepCare(1);
-$('sBack').onclick = () => { sfx('tap'); if(care){ care = null; world.harness(false); world.select(-1); stableUI(); } else go('hub'); };
+$('sBack').onclick = () => { sfx('tap'); if(equip3D){ closeModal(); leaveEquip(); return; } if(care){ care = null; ph.select(-1); stableUI(); } else go('hub'); };
 
 /* ---------- les concours ---------- */
 let rideEp = null;
@@ -264,16 +295,19 @@ $('cList').onclick = e => { const b = e.target.closest('[data-ep]'); if(!b) retu
 function briefing(ep){
   const txt = ep.k === 'cso' ? ['Saute les obstacles <b>dans l\'ordre des numéros</b>, le fanion rouge à ta droite.', 'Appuie sur 🐎 juste avant la barre : ni trop tôt, ni trop tard.', 'Barre tombée ou refus : 4 points. 3 refus : éliminée. Le temps compte aussi.']
     : ep.k === 'cross' ? ['Suis la piste claire et saute les obstacles naturels dans l\'ordre.', 'Le gué se traverse sans sauter, entre les deux piquets.', 'Refus : 20 points. Le galop fatigue ton cheval : surveille la barre verte et repasse au trot pour qu\'il souffle.']
+    : ep.k === 'course' ? [`Une course de galop : <b>${ep.tours} tour${ep.tours > 1 ? 's' : ''}</b> de piste contre ${ep.rivaux} chevaux. Passe toutes les balises dans l'ordre.`, 'Reste près de la corde (la lice blanche à l\'intérieur) : c\'est le chemin le plus court.', 'Le galop fatigue : si la barre verte baisse trop, repasse un peu au trot, et garde des forces pour le dernier tour !']
+    : ep.k === 'hunter' ? ['Comme un parcours d\'obstacles, mais <b>le jury note le style</b> : un galop régulier du début à la fin.', 'Ne repasse pas au trot entre les obstacles, et saute à la bonne distance (ni trop tôt, ni trop tard).', 'Barre tombée : − 10 ; refus : − 15. Il te faut 70 % pour la médaille d\'or.']
+    : ep.k === 'western' ? ['Le <b>barrel racing</b> : fais le tour des 3 tonneaux en trèfle, puis reviens vite à la ligne d\'arrivée.', 'Tonneau 1 par la droite, tonneaux 2 et 3 par la gauche : la flèche te montre le prochain.', 'Un tonneau touché : 5 secondes de pénalité. Tourne serré, mais pas trop près !']
     : ['Suis la figure dessinée au sol, <b>à l\'allure demandée</b> : bleu = pas, jaune = trot, rose = galop.', 'Le juge note chaque figure sur 10 : plus tu es précise, mieux c\'est.', 'Pour l\'arrêt en X : passe à l\'arrêt dans le rond et ne bouge plus pendant 3 secondes.'];
   modal(`<h2>${ep.ic} ${ep.n}</h2><p style="margin:0;text-align:center;color:var(--mist)">avec ${DEF[S.cur].n}</p><ul style="margin:0;padding-left:20px;line-height:1.5;font-size:16.5px">${txt.map(t => `<li>${t}</li>`).join('')}</ul>
-    <p style="margin:0;font-size:15px;color:var(--mist)">◀ ▶ pour tourner · ＋ － pour changer d'allure (pas, trot, galop)${ep.k !== 'dressage' ? ' · 🐎 pour sauter' : ''}. Au clavier : les flèches${ep.k !== 'dressage' ? ' et Espace' : ''}.</p><div class="row c"><button class="pill go" id="mYes">En selle !</button><button class="pill" id="mNo">Retour</button></div>`);
+    <p style="margin:0;font-size:15px;color:var(--mist)">◀ ▶ pour tourner · ＋ － pour changer d'allure (pas, trot, galop)${['cso', 'cross', 'hunter'].includes(ep.k) ? ' · 🐎 pour sauter' : ''}. Au clavier : les flèches${['cso', 'cross', 'hunter'].includes(ep.k) ? ' et Espace' : ''}.</p><div class="row c"><button class="pill go" id="mYes">En selle !</button><button class="pill" id="mNo">Retour</button></div>`);
   $('mNo').onclick = () => { sfx('tap'); closeModal(); }; $('mYes').onclick = () => { sfx('tap'); closeModal(); startRide(ep); };
 }
 async function startRide(ep){
   rideEp = ep; go('ride'); $('count').textContent = '…';
   try{ await loadWorld(); }catch(e){ toast('La 3D ne démarre pas sur cet appareil.'); go('concours'); return; }
-  if(cur !== 'ride') return; document.body.classList.add('g3'); const dres = ep.k === 'dressage';
-  $('bJ').style.visibility = dres ? 'hidden' : ''; $('rmove').style.display = dres ? 'block' : 'none'; $('arrow').style.display = dres ? 'none' : ''; $('rPen').style.display = dres ? 'none' : ''; hudC = {};
+  if(cur !== 'ride') return; document.body.classList.add('g3'); const dres = ep.k === 'dressage', saute = ['cso', 'cross', 'hunter'].includes(ep.k);
+  $('bJ').style.visibility = saute ? '' : 'hidden'; $('rmove').style.display = dres ? 'block' : 'none'; $('arrow').style.display = dres ? 'none' : ''; $('rPen').style.display = dres ? 'none' : ''; hudC = {};
   world.openRide({ def:DEF[S.cur], eq:S.horses[S.cur].eq }, ep, { form:formOf(S.cur) });
 }
 const GA = ['Arrêt', 'Pas', 'Trot', 'Galop']; let hudC = {}, msgT = null;
@@ -282,12 +316,13 @@ function rideHud(o){
   if(o.msg){ const m = $('rmsg'); m.textContent = o.msg; m.className = 'on ' + (o.kind || ''); clearTimeout(msgT); msgT = setTimeout(() => m.classList.remove('on'), 1700); return; }
   if(o.halt != null && o.time == null){ if(o.halt > 0) $('rNext').innerHTML = `${Math.min(3, o.halt * 3).toFixed(1).replace('.', ',')} s<small>immobile</small>`; return; }
   const set = (k, v, f) => { if(hudC[k] !== v){ hudC[k] = v; f(v); } };
-  set('t', o.time.toFixed(1), v => $('rTime').innerHTML = `${v.replace('.', ',')} s<small>${o.opt ? 'temps accordé : ' + Math.round(o.opt) + ' s' : 'temps'}</small>`);
+  set('t', o.time.toFixed(1), v => $('rTime').innerHTML = `${v.replace('.', ',')} s<small>${o.opt && o.opt < 900 ? 'temps accordé : ' + Math.round(o.opt) + ' s' : 'temps'}</small>`);
   set('c', o.count, v => $('count').textContent = v > 0 ? v : '');
   set('g', o.gait + '|' + (o.want || 0), () => { const l = $('gaitL'); l.textContent = GA[o.gait]; l.classList.toggle('ko', !!o.want && o.gait !== o.want); });
   set('s', Math.round(o.stam / 4), () => { const i = $('stam').firstElementChild; i.style.width = o.stam + '%'; i.style.background = o.stam < 25 ? 'var(--red)' : o.stam < 55 ? 'var(--gold)' : 'var(--ok)'; });
   if(o.kind === 'dressage'){ set('m', o.mi, () => { $('rmove').innerHTML = o.move ? `<b>${o.mi + 1} / ${o.mn}</b> · ${o.move}${o.want ? ` <span style="color:${['', '#1f6fd8', '#b98a00', '#d7266d'][o.want]}">(${GA[o.want].toLowerCase()})</span>` : ''}` : 'Terminé !'; $('rNext').innerHTML = (o.notes.length ? String(o.notes[o.notes.length - 1]).replace('.', ',') : '–') + '<small>dernière note</small>'; }); }
-  else { set('p', o.pen, v => $('rPen').innerHTML = `${v}<small>points</small>`); set('n', o.next, v => $('rNext').innerHTML = `${Math.min(v + 1, o.nb)} / ${o.nb}<small>obstacle</small>`);
+  else { set('p', o.kind + o.pen + '|' + (o.place || 0), () => $('rPen').innerHTML = o.kind === 'course' ? `${o.place}<sup>${o.place === 1 ? 'er' : 'e'}</sup><small>place / ${o.nb2}</small>` : o.kind === 'hunter' ? `${Math.round(o.score)} %<small>style</small>` : o.kind === 'western' ? `+ ${o.pen} s<small>tonneaux</small>` : `${o.pen}<small>points</small>`);
+    set('n', o.kind + o.next, v => $('rNext').innerHTML = o.kind === 'course' ? `${Math.min(o.tour, o.tours)} / ${o.tours}<small>tour</small>` : o.kind === 'western' ? `${Math.min(o.next + 1, 4)} / 4<small>${o.next < 3 ? 'tonneau' : 'arrivée'}</small>` : `${Math.min(o.next + 1, o.nb)} / ${o.nb}<small>obstacle</small>`);
     if(o.dir != null){ $('arrow').firstElementChild.style.transform = `rotate(${(-o.dir * 180 / Math.PI).toFixed(0)}deg)`; } }
   // la petite carte
   const g = mapX, m = o.map, b = m.b, Wm = 264, sc = Math.min(Wm / (b[1] - b[0]), Wm / (b[3] - b[2])) * .94, X = x => Wm / 2 - (x - (b[0] + b[1]) / 2) * sc, Y = z => Wm / 2 - (z - (b[2] + b[3]) / 2) * sc * -1;
@@ -298,13 +333,17 @@ function rideHud(o){
   g.save(); g.translate(X(m.x), Yf(m.z)); g.rotate(-m.a + Math.PI); g.fillStyle = '#1c2340'; g.beginPath(); g.moveTo(0, 12); g.lineTo(8, -8); g.lineTo(0, -3); g.lineTo(-8, -8); g.closePath(); g.fill(); g.restore();
 }
 function rideEnd(res){
+  if(rideEp.galop) return galopEnd(res);
   const ep = rideEp, h = S.horses[S.cur], d = DEF[S.cur], rank = res.rank, gain = ep.gain[rank], better = rank < rankOf(ep.id);
-  if(better) S.best[ep.id] = rank; S.n.concours++; h.dirt = Math.min(1, h.dirt + (ep.k === 'cross' ? .5 : .3)); h.faim = Math.max(0, h.faim - (ep.k === 'cross' ? 30 : 20)); h.moral = Math.min(100, h.moral + (rank < 3 ? 12 : 3)); h.t = Date.now(); coins(gain); if(rank < 3) party(); save();
+  if(better) S.best[ep.id] = rank; S.n.concours++; h.sueur = true; h.dirt = Math.min(1, h.dirt + (ep.k === 'cross' ? .5 : .3)); h.faim = Math.max(0, h.faim - (ep.k === 'cross' ? 30 : 20)); h.moral = Math.min(100, h.moral + (rank < 3 ? 12 : 3)); h.t = Date.now(); coins(gain); if(rank < 3) party(); save();
   const f = n => String(Math.round(n * 10) / 10).replace('.', ',');
   const lines = res.kind === 'dressage' ? `<span>Note finale</span><b>${f(res.pct)} %</b><span>Les figures</span><b>${res.notes.map(f).join(' · ')}</b>` :
+    res.kind === 'course' ? `<span>Ta place</span><b>${res.place}${res.place === 1 ? 're' : 'e'} sur ${res.nb}</b><span>Temps</span><b>${f(res.time)} s</b>` :
+    res.kind === 'hunter' ? `<span>Note de style</span><b>${f(res.pct)} %</b><span>Barres, refus</span><b>${res.bars} · ${res.refus}</b><span>Galop régulier</span><b>${res.regul}</b>` :
+    res.kind === 'western' ? `<span>Temps</span><b>${f(res.time)} s</b><span>Tonneaux touchés</span><b>${res.touches} (+ ${res.touches * 5} s)</b><span>Total</span><b>${f(res.total)} s</b>` :
     `<span>Fautes aux obstacles</span><b>${res.jumpPen} pt${res.jumpPen > 1 ? 's' : ''}</b><span>Temps (accordé : ${Math.round(res.opt)} s)</span><b>${f(res.time)} s</b><span>Temps dépassé</span><b>${f(res.timePen)} pt${res.timePen > 1 ? 's' : ''}</b><span>Total</span><b>${f(res.pen)} pt${res.pen > 1 ? 's' : ''}</b>`;
-  modal(`<div class="medal">${res.elim ? '🙈' : ['🥇', '🥈', '🥉', '🎗️'][rank]}</div><h2>${res.elim ? 'Éliminée… on réessaie !' : [res.kind === 'dressage' ? 'Première ! Quelle reprise !' : 'Première ! Sans faute !', 'Deuxième place !', 'Troisième place !', res.kind === 'dressage' ? 'Reprise terminée' : 'Parcours terminé'][rank]}</h2><p style="margin:0;text-align:center;color:var(--mist)">${ep.n} · ${d.n}</p><div class="res">${lines}<span>Gain</span><b>+ ${gain} 🪙</b></div>
-    <p style="margin:0;font-size:15px;color:var(--mist);text-align:center">${d.n} a bien travaillé : il mérite un pansage et un bon repas.</p><div class="row c"><button class="pill go" id="rAgain">🔁 Rejouer</button><button class="pill sun" id="rStable">🏠 À l'écurie</button><button class="pill" id="rList">🏆 Les concours</button></div>`);
+  modal(`<div class="medal">${res.elim ? '🙈' : ['🥇', '🥈', '🥉', '🎗️'][rank]}</div><h2>${res.elim ? 'Éliminée… on réessaie !' : [res.kind === 'dressage' ? 'Première ! Quelle reprise !' : res.kind === 'course' ? 'Première ! Quelle course !' : res.kind === 'hunter' ? 'Première ! Quel style !' : res.kind === 'western' ? 'Première ! Yee-haw !' : 'Première ! Sans faute !', 'Deuxième place !', 'Troisième place !', res.kind === 'dressage' ? 'Reprise terminée' : 'Parcours terminé'][rank]}</h2><p style="margin:0;text-align:center;color:var(--mist)">${ep.n} · ${d.n}</p><div class="res">${lines}<span>Gain</span><b>+ ${gain} 🪙</b></div>
+    <p style="margin:0;font-size:15px;color:var(--mist);text-align:center">${d.n} a bien travaillé : il a transpiré, il mérite un pansage (avec le couteau de chaleur) et un bon repas.</p><div class="row c"><button class="pill go" id="rAgain">🔁 Rejouer</button><button class="pill sun" id="rStable">🏠 À l'écurie</button><button class="pill" id="rList">🏆 Les concours</button></div>`);
   $('rAgain').onclick = () => { sfx('tap'); closeModal(); if(h.faim < 15){ toast(`${d.n} a trop faim : direction l'écurie.`); go('stable'); } else startRide(ep); };
   $('rStable').onclick = () => { sfx('tap'); closeModal(); go('stable'); }; $('rList').onclick = () => { sfx('tap'); closeModal(); go('concours'); };
 }
@@ -319,13 +358,61 @@ addEventListener('keyup', e => { if(e.key === 'ArrowLeft'){ sL = false; steer();
 $('rQuit').onclick = () => { sfx('tap'); go('concours'); };
 
 /* =====================================================================
+   LES GALOPS 1 À 7 (15/11) : une théorie (8 sur 10) puis une épreuve à cheval ; le diplôme reste dans S.galops
+   ===================================================================== */
+const galopOk = n => !!(S.galops[n] && S.galops[n].theo && S.galops[n].prat);
+const galopOuvert = n => n === 1 || galopOk(n - 1);
+function renderGalops(){
+  $('gList').innerHTML = GALOPS.map(g => { const st = S.galops[g.n] || {}, open = galopOuvert(g.n), fini = galopOk(g.n);
+    return `<div class="galop ${open ? '' : 'lock'}"><span>${open ? g.ic : '🔒'}</span><div><b>${g.titre}${fini ? ' ✔' : ''}</b><small>${g.theme}</small>
+      <small>📝 Théorie : ${st.theo ? '<b style="color:var(--ok)">réussie</b>' : 'à passer'} · 🐎 Épreuve : ${st.prat ? '<b style="color:var(--ok)">réussie</b>' : g.prat.d}</small>
+      ${open ? `<div class="row">${fini ? `<button class="pill sun" data-dip="${g.n}">🎓 Mon diplôme</button>` : `<button class="pill ${st.theo ? '' : 'go'}" data-theo="${g.n}">📝 Théorie</button><button class="pill ${st.theo && !st.prat ? 'go' : ''}" data-prat="${g.n}" ${st.theo ? '' : 'disabled'}>🐎 Épreuve</button>`}</div>` : `<small>Réussis d'abord le galop ${g.n - 1}.</small>`}</div></div>`; }).join(''); }
+$('gList').onclick = e => { const b = e.target.closest('[data-theo],[data-prat],[data-dip]'); if(!b) return; sfx('tap');
+  if(b.dataset.dip) return diplome(+b.dataset.dip);
+  const g = GALOPS.find(x => x.n === +(b.dataset.theo || b.dataset.prat));
+  if(b.dataset.theo){ cours = { id:'galop' + g.n, n:g.titre + ' · la théorie', galop:g, tabs:[['quiz', '📝 L\'examen']] }; go('lecon'); $('lTitle').textContent = cours.n; $('lecon').querySelector('[data-go]').dataset.go = 'galops'; showTab('quiz'); return; }
+  const h = S.horses[S.cur]; if(!h.eq.filet || !h.eq.selle){ sfx('ko'); toast('Il faut un filet et une selle pour monter !'); return; }
+  const base = g.prat.id ? EPREUVES.find(x => x.id === g.prat.id) : { id:'galop' + g.n, k:g.prat.k, h:g.prat.h, nb:g.prat.nb };
+  const ep = Object.assign({}, base, { n:g.titre + ' · ' + g.prat.n, ic:g.ic, gain:[0, 0, 0, 0], galop:g, need:null });
+  modal(`<h2>${g.ic} ${g.titre} : l'épreuve</h2><p style="margin:0;text-align:center">${g.prat.d}</p><p style="margin:0;text-align:center;color:var(--mist)">avec ${DEF[S.cur].n} (change de cheval dans « Les concours »)</p><div class="row c"><button class="pill go" id="mYes">En selle !</button><button class="pill" id="mNo">Retour</button></div>`);
+  $('mNo').onclick = () => { sfx('tap'); closeModal(); }; $('mYes').onclick = () => { sfx('tap'); closeModal(); briefing(ep); }; };
+function endGalopTheo(){
+  const g = cours.galop, n = Q.good, ok = n >= 8; S.n.quiz++;
+  if(ok){ S.galops[g.n] = Object.assign(S.galops[g.n] || {}, { theo:Date.now() }); party(); sfx('bravo'); } else sfx('fin'); save();
+  $('lBody').innerHTML = `<div class="quiz" style="text-align:center;align-items:center"><div class="medal">${ok ? '📜' : '📚'}</div><h2 style="font-size:32px;color:var(--navy2)">${n} / 10 du premier coup</h2>
+    <p style="margin:0;font-size:19px">${ok ? `Théorie du ${g.titre} <b>réussie</b> ! Maintenant, l'épreuve à cheval : ${g.prat.d.toLowerCase()}.` : 'Il faut 8 bonnes réponses sur 10. Relis les explications et réessaie : les questions changent !'}</p>
+    <div class="row c">${ok ? '<button class="pill go" id="gPrat">🐎 Passer l\'épreuve</button>' : '<button class="pill go" id="gAgain">🔁 Repasser la théorie</button>'}<button class="pill" data-go="galops">🎓 Les galops</button></div></div>`;
+  const a = $('gAgain'); if(a) a.onclick = () => { sfx('tap'); startQuiz(); };
+  const pr = $('gPrat'); if(pr) pr.onclick = () => { go('galops'); const b = document.querySelector(`[data-prat="${g.n}"]`); if(b) b.click(); };
+}
+function galopEnd(res){
+  const ep = rideEp, g = ep.galop, h = S.horses[S.cur], P = g.prat;
+  const ok = !res.elim && (P.pct != null ? res.pct >= P.pct : res.pen <= P.pen);
+  h.sueur = true; h.dirt = Math.min(1, h.dirt + .3); h.faim = Math.max(0, h.faim - 15); h.t = Date.now();
+  const f = n => String(Math.round(n * 10) / 10).replace('.', ',');
+  const detail = P.pct != null ? `Ta note : <b>${f(res.pct || 0)} %</b> (il fallait ${P.pct} %)` : `Tes points : <b>${f(res.pen || 0)}</b> (${P.pen} au plus)`;
+  if(ok){ S.galops[g.n] = Object.assign(S.galops[g.n] || {}, { prat:Date.now(), date:Date.now() }); coins(g.gain); party(60); save(); }
+  else save();
+  modal(`<div class="medal">${ok ? '🎓' : res.elim ? '🙈' : '💪'}</div><h2>${ok ? `Bravo, tu as ton ${g.titre} !` : 'Pas encore… on réessaie !'}</h2><p style="margin:0;text-align:center">${detail}${ok ? `<br>Tu gagnes <b>${g.gain} 🪙</b>` : ''}</p><div class="row c">${ok ? '<button class="pill sun" id="gDip">🎓 Voir mon diplôme</button>' : '<button class="pill go" id="gRe">🔁 Réessayer</button>'}<button class="pill" id="gList2">Les galops</button></div>`);
+  const d = $('gDip'); if(d) d.onclick = () => { sfx('tap'); closeModal(); go('galops'); diplome(g.n); };
+  const re = $('gRe'); if(re) re.onclick = () => { sfx('tap'); closeModal(); startRide(ep); };
+  $('gList2').onclick = () => { sfx('tap'); closeModal(); go('galops'); };
+}
+function diplome(n){
+  const g = GALOPS.find(x => x.n === n), st = S.galops[n] || {}, date = new Date(st.date || st.prat || Date.now()).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+  modal(`<div class="diplome"><div style="font-size:54px">${g.ic}</div><h2>Diplôme du ${g.titre}</h2><p style="margin:0">Le club des écuries certifie que</p><div class="nom">${esc(player)}</div><p style="margin:0">a réussi la théorie et l'épreuve à cheval<br><i>${g.theme}</i></p><p style="margin:0;color:var(--mist)">le ${date}</p></div><div class="row c"><button class="pill go" id="mNo">Fermer</button></div>`);
+  $('mNo').onclick = () => { sfx('tap'); closeModal(); }; sfx('bravo'); }
+
+/* =====================================================================
    NAVIGATION
    ===================================================================== */
 let cur = 'home';
 function go(name){
   if(world && name !== 'stable' && name !== 'ride'){ world.stop(); document.body.classList.remove('g3'); } if(name !== 'ride'){ sL = sR = false; }
+  if(name !== 'stable'){ if(ph) ph.stop(); document.body.classList.remove('ph'); equip3D = false; } if(name === 'ride') document.body.classList.remove('ph');
   cur = name; document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === name)); coins(0);
-  if(name === 'hub'){ decay(); const n = ownedIds().length, dirty = ownedIds().filter(id => S.horses[id].dirt > .5 || S.horses[id].faim < 40).length; $('hubStable').textContent = `${n} cheva${n > 1 ? 'ux' : 'l'} · ${dirty ? dirty + ' à soigner' : 'tous en pleine forme'}`; $('hubMarket').textContent = `${CHEVAUX.length - n} chevaux à adopter`; $('hubStars').textContent = COURS.map(c => starTxt(starsOf(S.ecole[c.id] || 0))).join('  '); }
+  if(name === 'hub'){ decay(); const n = ownedIds().length, dirty = ownedIds().filter(id => S.horses[id].dirt > .5 || S.horses[id].faim < 40).length; $('hubStable').textContent = `${n} cheva${n > 1 ? 'ux' : 'l'} · ${dirty ? dirty + ' à soigner' : 'tous en pleine forme'}`; $('hubMarket').textContent = `${CHEVAUX.length - n} chevaux à adopter`; $('hubStars').textContent = COURS.map(c => starTxt(starsOf(S.ecole[c.id] || 0))).join('  '); const ng = GALOPS.filter(g => galopOk(g.n)).length; $('hubGalops').textContent = ng ? `Tu as ${ng === 1 ? 'le galop 1' : 'les galops 1 à ' + ng}${ng < 7 ? ' · prochain : galop ' + (ng + 1) : ' : tous !'}` : 'Passe tes examens, du galop 1 au galop 7'; }
+  if(name === 'galops') renderGalops(); if(name === 'lecon' && !(cours && cours.galop)) $('lecon').querySelector('[data-go]').dataset.go = 'ecole';
   if(name === 'ecole') renderEcole(); if(name === 'shop') renderShop(); if(name === 'market') renderMarket(); if(name === 'concours') renderConcours(); if(name === 'stable') openStable();
 }
 document.addEventListener('click', e => { const s = e.target.closest('[data-snd]'); if(s){ setSnd(!sndOn); sfx('tap'); return; } const b = e.target.closest('[data-go]'); if(b){ audio(); sfx('tap'); go(b.dataset.go); } });

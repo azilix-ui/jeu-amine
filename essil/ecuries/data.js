@@ -37,7 +37,18 @@ export const RACES = [
   { id:'haflinger', n:'Haflinger', o:'Autriche', d:'Petit cheval de montagne alezan aux crins blonds presque blancs (crins lavés).' },
   { id:'fjord', n:'Fjord', o:'Norvège', d:'Robe isabelle claire, crinière en brosse à deux couleurs : noire au milieu, blanche sur les côtés.' },
   { id:'barbe', n:'Barbe', o:'Afrique du Nord', d:'Le cheval du Maghreb, celui de la Tunisie : solide, sobre, courageux, la queue attachée bas. Le cheval de la fantasia.' },
-  { id:'espagnol', n:'Pure race espagnole', o:'Espagne', d:'On l\'appelle aussi andalou. Encolure ronde, longue crinière ondulée : la star du dressage et des spectacles.' }
+  { id:'espagnol', n:'Pure race espagnole', o:'Espagne', d:'On l\'appelle aussi andalou. Encolure ronde, longue crinière ondulée : la star du dressage et des spectacles.' },
+  { id:'welsh', n:'Welsh', o:'Pays de Galles', d:'Poney élégant et vif, petite tête, grands yeux : un excellent poney de concours pour les enfants.', h:'grisou' },
+  { id:'islandais', n:'Islandais', o:'Islande', d:'Petit, très poilu, il a une cinquième allure : le tölt, très confortable.', h:'aurore' },
+  { id:'cob', n:'Irish Cob', o:'Irlande', d:'Trapu et calme, souvent pie, avec de longs fanons sur les pieds. On l\'appelle aussi Tinker.', h:'biscuit' },
+  { id:'merens', n:'Mérens', o:'France (Pyrénées)', d:'Toujours noir, rustique, il vit en montagne toute l\'année.', h:'reglisse' },
+  { id:'mustang', n:'Mustang', o:'États-Unis', d:'Cheval sauvage de l\'Ouest américain, descendant des chevaux espagnols. Très résistant.', h:'rodeo' },
+  { id:'quarter', n:'Quarter Horse', o:'États-Unis', d:'Musclé et explosif : le plus rapide sur un quart de mile. Le cheval du western.', h:'cannelle' },
+  { id:'paint', n:'Paint Horse', o:'États-Unis', d:'Un Quarter Horse à la robe pie : grandes taches blanches et colorées.', h:'patch' },
+  { id:'trotteur', n:'Trotteur français', o:'France', d:'Le cheval des courses de trot, attelé à un sulky ou monté.', h:'turbo' },
+  { id:'lusitanien', n:'Lusitanien', o:'Portugal', d:'Proche de l\'andalou : courageux, souple, champion de dressage et d\'équitation de travail.', h:'caramel' },
+  { id:'lipizzan', n:'Lipizzan', o:'Slovénie, Autriche', d:'Il naît noir et devient blanc. Célèbre à l\'École espagnole de Vienne.', h:'neige' },
+  { id:'akhalteke', n:'Akhal-Teke', o:'Turkménistan', d:'Très fin, endurant, avec une robe aux reflets métalliques : le « cheval doré ».', h:'pepite' }
 ];
 
 // Le pansage, dans l'ordre où on le fait.
@@ -50,6 +61,15 @@ export const OUTILS = [
   { id:'peigne', n:'Le peigne', ou:'La crinière et la queue', d:'On démêle mèche par mèche, en commençant par le bas, sans tirer, pour ne pas casser les crins.' },
   { id:'graisse', n:'La graisse à pieds', ou:'Les sabots', d:'À la fin, au pinceau, sur des sabots propres et secs : elle nourrit la corne et l\'empêche de se fendre.' },
   { id:'couteau', n:'Le couteau de chaleur', ou:'Le corps mouillé', d:'Après la douche ou quand le cheval a beaucoup transpiré, il sert à racler l\'eau pour qu\'il sèche vite.' }
+];
+// 15/11 : les brosses s'achètent à la sellerie. Au départ : cure-pied, étrille et brosse douce.
+// (une écurie qui avait déjà fait un pansage garde toute la trousse d'avant)
+export const DEPART_BROSSES = ['curepied', 'etrille', 'brossedouce'];
+export const BROSSES = [
+  { id:'bouchon', prix:40 }, { id:'eponge', prix:30 }, { id:'peigne', prix:30 }, { id:'graisse', prix:50 }, { id:'couteau', prix:40, d:'Indispensable après un concours : il racle la sueur.' },
+  { id:'gant', n:'Le gant de pansage', ou:'Tout le corps', prix:60, d:'Un gant à picots : il masse et fait plaisir. Tes caresses comptent double pour le moral.' },
+  { id:'brossecrins', n:'La brosse à crins', ou:'La crinière et la queue', prix:70, d:'Plus large que le peigne : elle démêle les nœuds deux fois plus vite.' },
+  { id:'lustrant', n:'Le spray lustrant', ou:'Le poil, à la fin', prix:90, d:'Un nuage sur le poil propre : il brille comme un sou neuf. + 15 pièces à chaque pansage complet.' }
 ];
 export const ORDRE = ['curepied', 'etrille', 'bouchon', 'brossedouce', 'eponge', 'peigne', 'graisse'];
 export const PANSAGE_QCM = [
@@ -77,7 +97,9 @@ export const COAT = {
   alezan:{ b:'#b4551f', m:'#a34a1a', l:'#a8501d' }, bai:{ b:'#7a4320', m:'#17120f', l:'#17120f' }, noir:{ b:'#1d1b1c', m:'#0e0d0e', l:'#151314' },
   gris:{ b:'#9fa3a8', m:'#d9dadc', l:'#5d6166', p:'pomme' }, blanc:{ b:'#e9e6df', m:'#f4f2ec', l:'#d6d2c9' }, isabelle:{ b:'#d9b56c', m:'#1b1612', l:'#1b1612' },
   palomino:{ b:'#e0a94a', m:'#f7efdc', l:'#d9a044' }, pie:{ b:'#f1ede4', m:'#f1ede4', l:'#f1ede4', p:'pie', c2:'#2a2321' }, tachete:{ b:'#eeeae2', m:'#e6e2da', l:'#ddd8ce', p:'taches', c2:'#2b2624' },
-  cremelave:{ b:'#c9762f', m:'#f6ecd4', l:'#c06f2b' }, dun:{ b:'#dcc38e', m:'#2a2420', l:'#3a312a' }
+  cremelave:{ b:'#c9762f', m:'#f6ecd4', l:'#c06f2b' }, dun:{ b:'#dcc38e', m:'#2a2420', l:'#3a312a' },
+  rouan:{ b:'#b8826e', m:'#4a2f22', l:'#4a2f22' }, grulla:{ b:'#8a8070', m:'#1f1b18', l:'#2a2622' }, baibrun:{ b:'#3e2414', m:'#141010', l:'#141010' },
+  piebai:{ b:'#f1ede4', m:'#2a1c14', l:'#f1ede4', p:'pie', c2:'#7a4320' }, dore:{ b:'#e3b04f', m:'#f2dfae', l:'#d9a044' }
 };
 // vitesse, saut, dressage, endurance : de 1 à 5
 export const CHEVAUX = [
@@ -93,7 +115,20 @@ export const CHEVAUX = [
   { id:'tonnerre', n:'Tonnerre', race:'Frison', robe:'noir', t:1.04, s:[2, 2, 5, 3], prix:1000, d:'Majestueux : les juges de dressage l\'adorent.' },
   { id:'tornade', n:'Tornade', race:'Pur-sang anglais', robe:'bai', t:1.06, s:[5, 4, 2, 3], prix:1200, d:'La plus rapide de l\'écurie : imbattable au chrono.' },
   { id:'jasmin', n:'Jasmin', race:'Pur-sang arabe', robe:'blanc', t:.94, s:[4, 3, 4, 5], prix:1300, d:'Fin, léger, endurant : le prince du désert.' },
-  { id:'duende', n:'Duende', race:'Pure race espagnole', robe:'gris', t:1.0, s:[3, 3, 5, 4], prix:1400, d:'L\'artiste : chaque pas est une danse.' }
+  { id:'duende', n:'Duende', race:'Pure race espagnole', robe:'gris', t:1.0, s:[3, 3, 5, 4], prix:1400, d:'L\'artiste : chaque pas est une danse.' },
+  // 15/11 : de nouvelles races et de nouvelles robes (photos ComfyUI)
+  { id:'grisou', n:'Grisou', race:'Welsh', robe:'gris', t:.8, s:[3, 3, 2, 3], prix:250, d:'Un poney gallois gris pommelé, vif et sauteur.' },
+  { id:'aurore', n:'Aurore', race:'Islandais', robe:'rouan', t:.82, s:[2, 2, 3, 5], prix:350, d:'Petite mais costaude, elle connaît une allure en plus : le tölt !' },
+  { id:'biscuit', n:'Biscuit', race:'Irish Cob', robe:'pie', t:.92, s:[2, 2, 3, 4], prix:420, bal:4, d:'Un gros nounours pie avec des fanons tout doux.' },
+  { id:'reglisse', n:'Réglisse', race:'Mérens', robe:'noir', t:.9, s:[2, 3, 3, 5], prix:480, d:'Le petit cheval noir des Pyrénées, sûr de son pied en montagne.' },
+  { id:'rodeo', n:'Rodéo', race:'Mustang', robe:'grulla', t:.93, s:[4, 3, 2, 5], prix:550, d:'Né libre dans les plaines d\'Amérique : un as du western.' },
+  { id:'cannelle', n:'Cannelle', race:'Quarter Horse', robe:'alezan', t:.95, s:[5, 2, 2, 3], prix:700, d:'La reine du barrel racing : démarre comme une flèche et tourne serré.' },
+  { id:'patch', n:'Patch', race:'Paint Horse', robe:'piebai', t:.95, s:[4, 3, 2, 3], prix:750, d:'Un cheval western bai et blanc, gentil comme tout.' },
+  { id:'turbo', n:'Turbo', race:'Trotteur français', robe:'bai', t:1.02, s:[4, 2, 2, 5], prix:850, d:'Il trotte plus vite que certains chevaux galopent.' },
+  { id:'moka', n:'Moka', race:'Selle français', robe:'baibrun', t:1.05, s:[4, 5, 3, 4], prix:1100, d:'Bai brun avec une petite étoile : fait pour le hunter et les grosses barres.' },
+  { id:'caramel', n:'Caramel', race:'Lusitanien', robe:'isabelle', t:1.0, s:[3, 3, 5, 4], prix:1250, d:'Le cousin portugais de l\'andalou : brillant en dressage.' },
+  { id:'neige', n:'Neige', race:'Lipizzan', robe:'blanc', t:1.0, s:[3, 3, 5, 4], prix:1350, d:'Le cheval blanc de l\'École espagnole de Vienne.' },
+  { id:'pepite', n:'Pépite', race:'Akhal-Teke', robe:'dore', t:1.02, s:[5, 4, 3, 5], prix:1600, d:'Sa robe brille comme de l\'or : le cheval le plus rare de l\'écurie.' }
 ];
 export const STATS = ['Vitesse', 'Saut', 'Dressage', 'Endurance'];
 
@@ -128,7 +163,17 @@ export const EPREUVES = [
   { id:'cross3', k:'cross', n:'Cross · Club Élite', ic:'🏅', h:.95, nb:13, d:'13 obstacles, chrono serré', gain:[420, 300, 180, 40], need:'cross2' },
   { id:'dres1', k:'dressage', n:'Dressage · Club 3', ic:'🎩', d:'Pas et trot, un cercle, deux arrêts', gain:[130, 90, 50, 20] },
   { id:'dres2', k:'dressage', n:'Dressage · Club 1', ic:'🎩', d:'Avec du galop et une diagonale', gain:[240, 160, 100, 30], need:'dres1' },
-  { id:'dres3', k:'dressage', n:'Dressage · Club Élite', ic:'🏅', d:'Serpentine, cercle au galop, transitions', gain:[400, 280, 170, 40], need:'dres2' }
+  { id:'dres3', k:'dressage', n:'Dressage · Club Élite', ic:'🏅', d:'Serpentine, cercle au galop, transitions', gain:[400, 280, 170, 40], need:'dres2' },
+  // 15/11 : la course, le hunter, le western
+  { id:'course1', k:'course', n:'Course · Club 3', ic:'🏇', tours:1, rivaux:4, niv:.82, d:'1 tour de piste contre 4 chevaux', gain:[140, 90, 60, 20] },
+  { id:'course2', k:'course', n:'Course · Club 1', ic:'🏇', tours:2, rivaux:5, niv:.92, d:'2 tours, 5 adversaires plus rapides', gain:[250, 170, 100, 30], need:'course1' },
+  { id:'course3', k:'course', n:'Course · Grand Prix', ic:'🏅', tours:3, rivaux:6, niv:1.0, d:'3 tours : garde des forces pour la fin !', gain:[420, 290, 180, 40], need:'course2' },
+  { id:'hunter1', k:'hunter', n:'Hunter · Club 3', ic:'🌿', h:.6, nb:6, d:'6 obstacles naturels de 60 cm, on note le style', gain:[140, 90, 60, 20] },
+  { id:'hunter2', k:'hunter', n:'Hunter · Club 1', ic:'🌿', h:.85, nb:8, d:'8 obstacles de 85 cm, galop régulier', gain:[250, 170, 100, 30], need:'hunter1' },
+  { id:'hunter3', k:'hunter', n:'Hunter · Club Élite', ic:'🏅', h:1.0, nb:10, d:'10 obstacles d\'1 m : rythme parfait exigé', gain:[420, 290, 180, 40], need:'hunter2' },
+  { id:'west1', k:'western', n:'Western · Barrel 1', ic:'🤠', tmax:[40, 46, 54], d:'Les 3 tonneaux en trèfle, au pas et au trot', gain:[140, 90, 60, 20] },
+  { id:'west2', k:'western', n:'Western · Barrel 2', ic:'🤠', tmax:[30, 35, 42], d:'Plus vite : tourne serré autour des tonneaux', gain:[250, 170, 100, 30], need:'west1' },
+  { id:'west3', k:'western', n:'Western · Barrel Pro', ic:'🏅', tmax:[24, 28, 34], d:'Au galop, sans toucher un tonneau', gain:[420, 290, 180, 40], need:'west2' }
 ];
 setSelle([
   { id:'pommeau', n:'Le pommeau', x:38, y:15, r:'L\'avant de la selle, relevé au-dessus du garrot. Il ne doit jamais toucher le garrot.' },
