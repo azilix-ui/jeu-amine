@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0f3d2e">
+<title>Chkobba</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%83%8F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* Chkobba (شكبة) : le jeu de cartes tunisien, seul contre l'ordinateur ou en ligne avec la famille et les amis (comme le Ludo).
+   D'après le cahier des charges du papa (15/11) : moteur pur (chkobba/regles.js), le serveur du site arbitre les parties en ligne
+   (api/chkobba.php : il distribue, vérifie chaque coup, ne montre à chacun que sa main), l'ordinateur joue sur le serveur.
+   Les adversaires de l'ordinateur sont les personnages du Jasmin Stage 2 attablés au café (photos ComfyUI) ; quatre mondes. */
+:root{ --vert:#0f3d2e; --or:#f2c14e; --ivoire:#fbf6ea; --rouge:#c0262d; --nuit:#14213d; --ombre:0 4px 0 rgba(0,0,0,.25); }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body{ margin:0; height:100%; overflow:hidden; font-family:Nunito, system-ui, sans-serif; color:var(--nuit); user-select:none; -webkit-user-select:none; }
+body{ background:#2a1d14 center/cover no-repeat; }
+body::before{ content:''; position:fixed; inset:0; background:radial-gradient(ellipse at center, rgba(0,0,0,.05) 30%, rgba(0,0,0,.55)); pointer-events:none; }
+button{ font:inherit; cursor:pointer; border:0; }
+.ecran{ position:fixed; inset:0; display:none; overflow:auto; z-index:3; }
+.ecran.on{ display:block; }
+.boite{ position:relative; max-width:820px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top)) 16px 30px; }
+.haut{ display:flex; align-items:center; gap:10px; }
+.pill{ background:#fff; color:var(--nuit); border-radius:999px; padding:10px 16px; font-weight:800; box-shadow:var(--ombre); min-height:48px; display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+.pill img{ width:32px; height:32px; border-radius:50%; object-fit:cover; }
+.titre{ display:block; width:min(300px, 56vw); margin:4px auto -6px; filter:drop-shadow(0 6px 12px rgba(0,0,0,.6)); }
+.nom{ text-align:center; font-family:'Baloo 2', sans-serif; color:#fff; font-size:38px; letter-spacing:4px; margin:0; text-shadow:0 3px 0 #7a4b12, 0 6px 16px rgba(0,0,0,.6); }
+.sous{ text-align:center; color:#fff; margin:0 0 14px; font-size:18px; text-shadow:0 2px 6px rgba(0,0,0,.7); }
+.carte-ui{ background:rgba(251,246,234,.96); border-radius:22px; padding:16px; box-shadow:0 6px 0 rgba(0,0,0,.2); margin-bottom:14px; }
+.carte-ui h2{ font-family:'Baloo 2', sans-serif; margin:0 0 10px; font-size:24px; }
+.grand{ display:block; width:100%; margin-top:10px; background:var(--vert); color:#fff; font-family:'Baloo 2', sans-serif; font-size:26px; border-radius:20px; padding:12px; box-shadow:0 6px 0 #062218; }
+.grand.or{ background:var(--or); color:#3a2600; box-shadow:0 6px 0 #a87b12; }
+.choix{ display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 12px; }
+.choix button{ background:#fff; border-radius:14px; padding:10px 14px; font-weight:800; box-shadow:inset 0 0 0 3px #e3d6b8; min-height:48px; }
+.choix button.on{ background:var(--vert); color:#fff; box-shadow:none; }
+.mondes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+.monde{ height:96px; border-radius:16px; background-size:cover; background-position:center; position:relative; box-shadow:inset 0 0 0 3px rgba(255,255,255,.4); overflow:hidden; }
+.monde span{ position:absolute; left:0; right:0; bottom:0; background:linear-gradient(transparent, rgba(0,0,0,.75)); color:#fff; font-weight:800; padding:14px 8px 6px; text-align:left; }
+.monde.on{ box-shadow:0 0 0 4px var(--or); }
+.persos{ display:flex; gap:8px; flex-wrap:wrap; }
+.persos img{ width:64px; height:64px; border-radius:50%; object-fit:cover; box-shadow:0 0 0 3px #fff; }
+.regles{ margin:0; padding-left:20px; line-height:1.5; font-size:16px; }
+.none{ color:#6b5a40; margin:0; }
+/* la table */
+#table{ position:fixed; inset:0; display:none; z-index:1; }
+body.jeu #table{ display:block; }
+#tapis{ position:absolute; left:50%; top:48%; transform:translate(-50%, -50%); width:min(86vw, 860px); height:min(44vh, 380px); border-radius:28px; background:#0f3d2e url(chkobba/img/tapis.webp) center/cover; box-shadow:0 18px 40px rgba(0,0,0,.55), inset 0 0 0 3px rgba(242,193,78,.6); }
+#centre{ position:absolute; inset:16px 96px 16px 16px; display:flex; flex-wrap:wrap; align-content:center; justify-content:center; gap:10px; }
+#paquet{ position:absolute; right:16px; top:50%; transform:translateY(-50%); text-align:center; color:#fff; font-weight:800; }
+.c{ width:var(--cw); height:calc(var(--cw) * 1.45); border-radius:calc(var(--cw) * .1); background:var(--ivoire); position:relative; box-shadow:0 3px 8px rgba(0,0,0,.4); flex:none; transition:transform .2s, box-shadow .2s; overflow:hidden; }
+.c .co{ position:absolute; left:6%; top:3%; font-family:'Baloo 2', sans-serif; font-weight:800; line-height:.85; text-align:center; font-size:calc(var(--cw) * .26); }
+.c .co i{ display:block; font-style:normal; font-size:calc(var(--cw) * .22); }
+.c .co.b{ left:auto; top:auto; right:6%; bottom:3%; transform:rotate(180deg); }
+.c .pips{ position:absolute; inset:22% 20%; display:grid; place-items:center; font-size:calc(var(--cw) * .25); line-height:1; }
+.c .fig{ position:absolute; inset:16% 13% 16%; background-size:cover; background-position:center top; border-radius:6px; box-shadow:inset 0 0 0 2px rgba(0,0,0,.15); }
+.c.rouge{ color:var(--rouge); } .c.noir{ color:#1a1a1a; }
+.c.dos{ background:#1c3f9e url(chkobba/img/dos.webp) center/cover; box-shadow:0 2px 5px rgba(0,0,0,.4), inset 0 0 0 3px #fff; }
+.c.haya::after{ content:'⭐'; position:absolute; right:4%; top:3%; font-size:calc(var(--cw) * .16); }
+.c.cible{ box-shadow:0 0 0 4px var(--or), 0 0 18px var(--or); transform:translateY(-6px); }
+#main{ position:absolute; left:50%; bottom:calc(10px + env(safe-area-inset-bottom)); transform:translateX(-50%); display:flex; gap:12px; --cw:clamp(70px, 10vw, 104px); }
+#main .c.sel{ transform:translateY(-22px); box-shadow:0 0 0 4px var(--or), 0 10px 18px rgba(0,0,0,.5); }
+#main.mon-tour .c{ cursor:pointer; } #main:not(.mon-tour) .c{ filter:brightness(.82); }
+#centre{ --cw:clamp(52px, 7.2vw, 80px); }
+#options{ position:absolute; left:50%; bottom:calc(var(--mh, 170px) + 20px); transform:translateX(-50%); display:flex; gap:8px; flex-wrap:wrap; justify-content:center; width:min(96vw, 760px); }
+#options button{ background:var(--or); color:#3a2600; font-weight:800; font-size:18px; border-radius:16px; padding:10px 16px; box-shadow:0 4px 0 #a87b12; min-height:52px; }
+#options button.pose{ background:#fff; color:var(--nuit); box-shadow:0 4px 0 #9a8a6a; }
+.siege{ position:absolute; display:flex; align-items:center; gap:8px; color:#fff; --cw:28px; }
+.siege .av{ width:72px; height:72px; border-radius:50%; background:#334 center/cover; box-shadow:0 0 0 3px #fff, 0 6px 14px rgba(0,0,0,.5); flex:none; transition:box-shadow .3s; }
+.siege.tour .av{ box-shadow:0 0 0 4px var(--or), 0 0 22px var(--or); }
+.siege .info{ background:rgba(10,20,15,.72); border-radius:14px; padding:6px 10px; min-width:120px; }
+.siege .info b{ display:block; font-size:16px; }
+.siege .info small{ display:block; font-size:13px; opacity:.9; }
+.siege .dos-m{ display:flex; margin-top:4px; } .siege .dos-m .c{ margin-right:-14px; }
+.s-haut{ left:50%; top:calc(10px + env(safe-area-inset-top)); transform:translateX(-50%); }
+.s-gauche{ left:calc(10px + env(safe-area-inset-left)); top:42%; flex-direction:column; text-align:center; }
+.s-droite{ right:calc(10px + env(safe-area-inset-right)); top:42%; flex-direction:column; text-align:center; }
+.s-hg{ left:max(10%, 76px); top:calc(10px + env(safe-area-inset-top)); } .s-hd{ right:max(18%, 185px); top:calc(10px + env(safe-area-inset-top)); }
+.s-moi{ left:calc(10px + env(safe-area-inset-left)); bottom:calc(14px + env(safe-area-inset-bottom)); --cw:24px; }
+.s-moi .av{ width:60px; height:60px; }
+.bulle{ position:absolute; z-index:6; background:#fff; color:var(--nuit); border-radius:18px; padding:8px 14px; font-weight:800; font-size:18px; box-shadow:0 6px 16px rgba(0,0,0,.35); white-space:nowrap; animation:bul 2.6s forwards; pointer-events:none; }
+@keyframes bul{ 0%{ opacity:0; transform:scale(.6); } 10%{ opacity:1; transform:scale(1.05); } 15%{ transform:scale(1); } 85%{ opacity:1; } 100%{ opacity:0; } }
+#scores{ position:absolute; right:calc(10px + env(safe-area-inset-right)); top:calc(10px + env(safe-area-inset-top)); background:rgba(10,20,15,.78); color:#fff; border-radius:16px; padding:8px 12px; font-size:15px; min-width:150px; }
+#scores b{ color:var(--or); }
+#quit{ position:absolute; left:calc(10px + env(safe-area-inset-left)); top:calc(10px + env(safe-area-inset-top)); width:52px; height:52px; border-radius:50%; background:#fff; font-size:22px; box-shadow:var(--ombre); z-index:4; }
+#banniere{ position:fixed; left:50%; top:40%; transform:translate(-50%, -50%) scale(.5); font-family:'Baloo 2', sans-serif; font-weight:800; font-size:clamp(48px, 11vw, 110px); color:var(--or); text-shadow:0 6px 0 #7a4b12, 0 0 30px rgba(0,0,0,.6); opacity:0; pointer-events:none; z-index:7; transition:opacity .25s, transform .35s cubic-bezier(.2,1.6,.4,1); white-space:nowrap; }
+#banniere.on{ opacity:1; transform:translate(-50%, -50%) scale(1); }
+#volant{ position:fixed; z-index:5; pointer-events:none; transition:transform .45s cubic-bezier(.3,.8,.3,1), opacity .45s; }
+#modal{ position:fixed; inset:0; background:rgba(5,15,10,.6); display:none; align-items:center; justify-content:center; padding:16px; z-index:8; }
+#modal.on{ display:flex; }
+#modal .carte-ui{ max-width:520px; width:100%; text-align:center; max-height:92vh; overflow:auto; }
+#modal h2{ font-size:30px; }
+.points{ width:100%; border-collapse:collapse; margin:8px 0; font-size:16px; }
+.points th, .points td{ padding:6px 4px; border-bottom:1px solid #e6dcc4; }
+.points td:first-child{ text-align:left; font-weight:800; }
+.points tr.tot td{ font-size:20px; font-weight:800; border:0; }
+.rang{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+.rang .go{ background:var(--vert); color:#fff; }
+.gens{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+.gens button{ background:#fff; border-radius:16px; padding:10px; box-shadow:inset 0 0 0 3px #e3d6b8; display:flex; align-items:center; gap:8px; font-weight:800; min-height:64px; text-align:left; }
+.gens button:disabled{ opacity:1; color:inherit; cursor:default; }
+.gens button img{ width:44px; height:44px; border-radius:50%; object-fit:cover; }
+.gens button small{ display:block; font-weight:700; color:#7a6a50; font-size:12px; }
+.code{ font-family:'Baloo 2', sans-serif; font-size:44px; letter-spacing:6px; color:var(--vert); }
+#invit{ position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:9; display:none; }
+#invit.on{ display:block; }
+@media (max-width:700px), (max-height:520px){ .siege .av{ width:54px; height:54px; } .siege .info{ min-width:0; padding:4px 8px; } .siege .info small{ font-size:11px; } #scores{ font-size:13px; min-width:0; } }
+@media (orientation:portrait){ #tapis{ height:min(36vh, 360px); width:94vw; } #centre{ inset:12px 74px 12px 12px; } }
+</style>
+</head>
+<body>
+<section class="ecran on" id="menu"><div class="boite">
+  <div class="haut"><a class="pill" href="../" aria-label="Retour à l'accueil">←</a><button class="pill" id="who">Qui joue ?</button></div>
+  <img class="titre" src="chkobba/img/titre.webp" alt="شكبة" onerror="this.style.display='none'">
+  <p class="nom">CHKOBBA</p>
+  <p class="sous">Le jeu de cartes de chez nous, au café, avec toute la famille !</p>
+  <div class="carte-ui">
+    <h2>🃏 Jouer contre l'ordi</h2>
+    <div class="persos" id="persos"></div>
+    <p style="margin:10px 0 2px;font-weight:800">Combien de joueurs ?</p>
+    <div class="choix" id="cNb"><button data-v="2" class="on">1 contre 1</button><button data-v="4">2 contre 2 (avec un équipier)</button><button data-v="3">À 3, chacun pour soi</button></div>
+    <p style="margin:2px 0;font-weight:800">L'ordi est…</p>
+    <div class="choix" id="cNiv"><button data-v="facile">🐣 gentil</button><button data-v="moyen" class="on">😏 malin</button><button data-v="malin">🦊 très rusé</button></div>
+    <p style="margin:2px 0;font-weight:800">La partie en…</p>
+    <div class="choix" id="cCible"><button data-v="11" class="on">11 points</button><button data-v="21">21 points</button><button data-v="31">31 points</button></div>
+    <button class="grand" id="solo">▶ Jouer</button>
+    <button class="grand or" id="ligne">🌍 Jouer en ligne avec la famille et les amis</button>
+  </div>
+  <div class="carte-ui"><h2>🌴 Où on joue ?</h2><div class="mondes" id="mondes"></div></div>
+  <div class="carte-ui"><h2>Les règles</h2><ul class="regles">
+    <li>Chacun a 3 cartes ; il y en a 4 sur la table. À ton tour, tu poses une carte.</li>
+    <li><b>Manger</b> : ta carte prend une carte de la table de même valeur, ou plusieurs cartes dont la somme fait sa valeur (le 8 prend 5 + 3). Si tu peux manger, tu dois manger.</li>
+    <li><b>Chkobba</b> : tu vides toute la table : 1 point !</li>
+    <li>À la fin de la manche : 1 point pour le plus de cartes (karta), 1 pour le plus de carreaux (dinari), 1 pour le 7 de carreau (la haya ⭐), 1 pour le plus de 7 (bermila), + les chkobbas.</li>
+    <li>Dame = 8, valet = 9, roi = 10. Le premier à 11 (ou 21, 31) points gagne.</li>
+  </ul></div>
+  <div class="carte-ui"><h2>🏆 Records de la famille</h2><ol id="records" style="margin:0;padding-left:22px;line-height:1.6"><p class="none">…</p></ol></div>
+</div></section>
+
+<section class="ecran" id="salon"><div class="boite">
+  <div class="haut"><button class="pill" id="salonRetour">←</button><b style="font-family:'Baloo 2';font-size:28px;color:#fff;text-shadow:0 2px 6px #000">Jouer en ligne</b></div>
+  <div class="carte-ui" id="salonCorps"></div>
+</div></section>
+
+<div id="table">
+  <button id="quit" aria-label="Menu">☰</button>
+  <div id="tapis"><div id="centre"></div><div id="paquet"></div></div>
+  <div id="sieges"></div>
+  <div id="scores"></div>
+  <div id="options"></div>
+  <div id="main"></div>
+</div>
+<div id="banniere"></div>
+<div id="modal"></div>
+<div id="invit"></div>
+
+<script src="../famille.js"></script>
+<script type="module" src="chkobba/jeu.js?v=1"></script>
+</body>
+</html>
