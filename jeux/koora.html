@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#1f5fbf">
+<title>Koora</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%9A%BD%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* Koora (كرة, « le ballon ») : l'enfant pousse son ballon dans une rue de la médina. Le ballon porte un nombre :
+   il mange les nombres plus petits ou égaux (valeur + nombre), évite les plus grands, passe des portes (+, −, ×)
+   et casse au bout de la rue les portes de la médina (bab) avec ce qu'il a gagné.
+   D'après le cahier des charges du papa (15/11, « Number Fusion Run 3D »), adapté au site : Three.js du site, sans compilation,
+   deux modes (Tranquille pour Amine, Champion), les corps « en vrai » de Médina Express, images ComfyUI, bruitages ElevenLabs.
+   Code : koora/regles.js (les règles et les 30 niveaux, testés en Node : docs/koora/), koora/jeu.js (la 3D, les menus). */
+:root{ --bleu:#1f5fbf; --bleuF:#0b3a82; --or:#f2b632; --nuit:#14213d; --sable:#f7efe0; --ombre:0 4px 0 rgba(0,0,0,.18); }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body{ margin:0; height:100%; overflow:hidden; background:#cfe6ff; font-family:Nunito, system-ui, sans-serif; color:var(--nuit); touch-action:none; user-select:none; -webkit-user-select:none; }
+button{ font:inherit; cursor:pointer; border:0; }
+#cv{ position:fixed; inset:0; width:100%; height:100%; display:block; }
+.ecran{ position:fixed; inset:0; display:none; overflow:auto; touch-action:pan-y; z-index:2; }
+.ecran.on{ display:block; }
+#menu{ background:#20406e url(koora/img/menu.webp) center/cover; }
+#menu::before{ content:''; position:fixed; inset:0; background:linear-gradient(180deg, rgba(10,25,50,.05), rgba(10,25,50,.55)); pointer-events:none; }
+.boite{ position:relative; max-width:780px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top)) 16px 30px; }
+.haut{ display:flex; align-items:center; gap:10px; }
+.pill{ background:#fff; color:var(--nuit); border-radius:999px; padding:10px 16px; font-weight:800; box-shadow:var(--ombre); min-height:48px; display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+.pill img{ width:32px; height:32px; border-radius:50%; object-fit:cover; }
+.titre{ display:block; width:min(300px, 52vw); margin:6px auto 0; filter:drop-shadow(0 6px 10px rgba(0,0,0,.45)); }
+.nom{ text-align:center; font-family:'Baloo 2', sans-serif; color:#fff; font-size:34px; margin:-6px 0 2px; letter-spacing:3px; text-shadow:0 3px 0 var(--bleuF), 0 6px 14px rgba(0,0,0,.4); }
+.sous{ text-align:center; color:#fff; font-size:18px; margin:0 0 14px; text-shadow:0 2px 6px rgba(0,0,0,.6); }
+.carte{ background:rgba(255,255,255,.95); border-radius:22px; padding:16px; box-shadow:0 6px 0 rgba(0,0,0,.15); margin-bottom:14px; }
+.carte h2{ font-family:'Baloo 2', sans-serif; margin:0 0 10px; font-size:24px; }
+.modes{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.mode{ background:#fff; border-radius:18px; padding:12px 14px; text-align:left; box-shadow:inset 0 0 0 3px #dbe6f5; min-height:96px; }
+.mode b{ display:block; font-family:'Baloo 2', sans-serif; font-size:22px; }
+.mode span{ font-size:14px; color:#4b5b75; }
+.mode.on{ box-shadow:inset 0 0 0 4px var(--bleu); background:#eef5ff; }
+.niveaux{ display:grid; grid-template-columns:repeat(auto-fill, minmax(62px, 1fr)); gap:8px; }
+.niv{ height:64px; border-radius:16px; background:var(--bleu); color:#fff; font-family:'Baloo 2', sans-serif; font-size:24px; line-height:1; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 0 var(--bleuF); }
+.niv small{ font-size:12px; letter-spacing:1px; color:var(--or); min-height:13px; }
+.niv.ferme{ background:#c9d3e2; color:#8392a8; box-shadow:0 4px 0 #a8b5c9; }
+.niv.suivant{ background:var(--or); color:#3a2600; box-shadow:0 4px 0 #b57f00; animation:pulse 1.2s infinite; }
+@keyframes pulse{ 50%{ transform:scale(1.06); } }
+.boutique{ display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px; }
+.skin{ background:#fff; border-radius:16px; padding:10px; box-shadow:inset 0 0 0 3px #dbe6f5; text-align:center; font-weight:800; }
+.skin i{ display:block; width:64px; height:64px; margin:0 auto 6px; border-radius:50%; background-size:cover; box-shadow:inset -8px -10px 14px rgba(0,0,0,.35), 0 3px 6px rgba(0,0,0,.25); }
+.skin.on{ box-shadow:inset 0 0 0 4px var(--bleu); }
+.skin small{ display:block; color:#4b5b75; font-weight:700; }
+.records{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.records ol{ margin:0; padding-left:22px; font-size:16px; line-height:1.6; }
+.records h3{ margin:0 0 4px; font-size:16px; }
+.none{ color:#6b7a90; margin:0; }
+.regles{ margin:0; padding-left:20px; line-height:1.5; font-size:17px; }
+/* pendant la partie */
+#hud{ position:fixed; inset:0; pointer-events:none; display:none; z-index:1; }
+body.jeu #hud{ display:block; }
+#barre{ position:absolute; left:50%; top:calc(12px + env(safe-area-inset-top)); transform:translateX(-50%); width:min(420px, 60vw); display:flex; align-items:center; gap:8px; }
+#barre b{ background:rgba(20,33,61,.8); color:#fff; border-radius:12px; padding:4px 10px; font-family:'Baloo 2'; font-size:18px; white-space:nowrap; }
+#prog{ flex:1; height:14px; border-radius:8px; background:rgba(20,33,61,.35); overflow:hidden; border:2px solid rgba(255,255,255,.8); }
+#prog i{ display:block; height:100%; width:0; background:linear-gradient(90deg, #ffd34d, #ff9d2e); }
+#pause{ position:absolute; left:calc(10px + env(safe-area-inset-left)); top:calc(10px + env(safe-area-inset-top)); pointer-events:auto; width:52px; height:52px; border-radius:50%; background:#fff; box-shadow:var(--ombre); font-size:22px; }
+#valeur{ position:absolute; right:calc(12px + env(safe-area-inset-right)); top:calc(10px + env(safe-area-inset-top)); background:#fff; border-radius:18px; padding:4px 16px; font-family:'Baloo 2'; font-size:34px; box-shadow:var(--ombre); min-width:84px; text-align:center; }
+#calc{ position:absolute; left:50%; top:22%; transform:translateX(-50%); font-family:'Baloo 2'; font-size:44px; color:#fff; text-shadow:0 3px 0 rgba(0,0,0,.35), 0 0 18px rgba(0,0,0,.35); opacity:0; transition:opacity .2s; white-space:nowrap; }
+#calc.on{ opacity:1; }
+#calc.bad{ color:#ffd0d0; }
+#aide{ position:absolute; left:50%; bottom:calc(20px + env(safe-area-inset-bottom)); transform:translateX(-50%); background:rgba(20,33,61,.75); color:#fff; padding:10px 18px; border-radius:16px; font-size:18px; text-align:center; transition:opacity .5s; max-width:86vw; }
+#modal{ position:fixed; inset:0; background:rgba(10,20,40,.5); display:none; align-items:center; justify-content:center; padding:16px; z-index:5; }
+#modal.on{ display:flex; }
+#modal .carte{ max-width:440px; width:100%; text-align:center; }
+#modal h2{ font-size:32px; }
+.etoiles{ font-size:46px; letter-spacing:6px; }
+.etoiles .off{ filter:grayscale(1); opacity:.35; }
+.res{ display:grid; grid-template-columns:auto auto; gap:6px 18px; justify-content:center; font-size:18px; margin:8px 0; text-align:left; }
+.res b{ text-align:right; }
+.rang{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+.rang .go{ background:var(--bleu); color:#fff; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<section class="ecran on" id="menu"><div class="boite">
+  <div class="haut"><a class="pill" href="../" aria-label="Retour à l'accueil">←</a><button class="pill" id="who">Qui joue ?</button><span class="pill" id="pieces" style="margin-left:auto">🪙 0</span></div>
+  <img class="titre" src="koora/img/titre.webp" alt="كرة">
+  <div class="nom">KOORA</div>
+  <p class="sous">Mange les petits nombres, évite les grands, casse les portes de la médina !</p>
+  <div class="carte">
+    <div class="modes">
+      <button class="mode" data-m="tranquille"><b>🐢 Tranquille</b><span>De petites additions, une voix dit ton nombre. Si un nombre est trop grand, ton ballon rebondit.</span></button>
+      <button class="mode" data-m="champion"><b>🐆 Champion</b><span>Portes +, −, ×, obstacles et trous. Un nombre trop grand : perdu !</span></button>
+    </div>
+    <h2 id="nivTitre">Les niveaux</h2>
+    <div class="niveaux" id="niveaux"></div>
+  </div>
+  <div class="carte"><h2>⚽ Mes ballons</h2><div class="boutique" id="boutique"></div></div>
+  <div class="carte"><h2>Comment jouer</h2><ul class="regles">
+    <li>Ton ballon avance tout seul. <b>Glisse le doigt</b> (ou la souris, ou les flèches ← →) pour aller à gauche ou à droite.</li>
+    <li>Un nombre <b>plus petit ou égal</b> au tien : ton ballon le mange et grossit (6 + 3 = 9).</li>
+    <li>Un nombre <b>plus grand</b> : évite-le !</li>
+    <li>Les portes : <b style="color:#1f9e4b">+</b> ajoute, <b style="color:#d63b3b">−</b> enlève, <b style="color:#1f5fbf">×</b> multiplie. Choisis la meilleure.</li>
+    <li>Au bout de la rue, les <b>portes de la médina</b> : si ton nombre est assez grand, tu les casses ! Une, deux… jusqu'à trois étoiles.</li>
+  </ul></div>
+  <div class="carte"><h2>🏆 Records de la famille</h2><div class="records"><div><h3>🐆 Champion</h3><ol id="recC"><p class="none">…</p></ol></div><div><h3>🐢 Tranquille</h3><ol id="recT"><p class="none">…</p></ol></div></div></div>
+</div></section>
+
+<div id="hud">
+  <button id="pause" aria-label="Pause">⏸</button>
+  <div id="barre"><b id="nivHud">Niveau 1</b><div id="prog"><i></i></div></div>
+  <div id="valeur">3</div>
+  <div id="calc"></div>
+  <div id="aide">Glisse le doigt pour diriger ton ballon ⚽</div>
+</div>
+<div id="modal"></div>
+
+<script src="../famille.js"></script>
+<script type="module" src="koora/jeu.js?v=1"></script>
+</body>
+</html>
