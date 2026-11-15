@@ -77,7 +77,7 @@ function menu(){
   const t = joueur ? teteDe(joueur) : null;
   $('who').innerHTML = joueur ? (t ? `<img src="${t}" alt="">` : '🙂') + esc(joueur) + (sv.best.champion || sv.best.tranquille ? ` · 🏆 ${fmt(Math.max(sv.best.champion, sv.best.tranquille))}` : '') : 'Qui joue ?';
   document.querySelectorAll('.mode').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
-  const col = sv ? sv.couleur : COULEURS[0], mot = sv ? sv.motif : 1;
+  const col = (sv && sv.couleur) || COULEURS[1], mot = (sv && sv.motif) || 4;
   $('couleurs').innerHTML = COULEURS.map(c => `<button data-c="${c}" class="${c === col ? 'on' : ''}" style="background:${c}" aria-label="couleur"></button>`).join('');
   $('motifs').innerHTML = Array.from({ length:NMOTIFS }, (_, i) => i + 1).map(k => `<button data-mo="${k}" class="${k === mot ? 'on' : ''}" style="background-image:url(${apercu(col, k)})" aria-label="motif ${k}"></button>`).join('');
   records();
