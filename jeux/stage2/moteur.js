@@ -209,7 +209,8 @@ function pas(dt){
   h.coyote = h.sol ? PH.coyote : Math.max(0, h.coyote - dt);
   if(h.tampon > 0 && h.coyote > 0 && !plafondBas){ h.vy = -PH.saut * (lourd ? PH.sautLourd : 1) * (sable ? .84 : 1); h.sol = false; h.coyote = 0; h.tampon = 0; h.tenu = true; h.bas = false; son('saut'); }
   if(!haut) h.tenu = false;
-  h.vy = Math.min(PH.chuteMax, h.vy + (h.vy < 0 ? (h.tenu ? PH.gTenu : PH.gCoupe) : PH.gChute) * dt);
+  if(h.vy >= 0 || h.sol) h.ressort = false;
+  h.vy = Math.min(PH.chuteMax, h.vy + (h.vy < 0 ? (h.tenu || h.ressort ? PH.gTenu : PH.gCoupe) : PH.gChute) * dt);
   if(h.sur){ h.x += h.sur.dx; h.y += h.sur.dy; }
   // ----- horizontal -----
   const hh = h.bas ? HHbas : HH;
@@ -237,7 +238,7 @@ function pas(dt){
   h.vyAv = h.vy || h.vyAv;
   // ----- ce qui est sous les pieds maintenant -----
   if(h.sol && !h.sur){ const xs = [Math.floor((h.x - HW + 3) / T), Math.floor((h.x + HW - 3) / T)], y = Math.floor((h.y + 2) / T);
-    if(xs.some(x => tile(x, y) === 'U')){ h.vy = -(haut ? PH.rebondFort : PH.rebond); h.sol = false; h.tenu = true; h.ecrase = .4; son('ressort'); }   // l'auvent fait rebondir
+    if(xs.some(x => tile(x, y) === 'U')){ h.vy = -(haut ? PH.rebondFort : PH.rebond); h.sol = false; h.tenu = true; h.ressort = true; h.coyote = 0; h.tampon = 0; saut = false; h.ecrase = .4; son('ressort'); }   // l'auvent fait rebondir
     xs.forEach(x => { if(tile(x, y) === 'X' && !g.eff.has(x + ',' + y)) g.eff.set(x + ',' + y, { etat:'tremble', t:.5 }); });
     if(h.sol && xs.every(x => solide(x, y) && tile(x, y) !== 'X') && !g.ens.some(e => Math.abs(e.x - h.x) < 3 * T && Math.abs(e.y - h.y) < T)) h.sauf = { x:h.x, y:h.y }; }
   h.phase += Math.abs(h.vx) * dt * .07;

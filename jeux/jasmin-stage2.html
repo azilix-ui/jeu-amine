@@ -125,7 +125,7 @@ body.touch.joue #tactile{display:block}
 
 <script src="../famille.js"></script>
 <script src="sons/sons.js"></script>
-<script src="stage2/niveaux.js?v=2"></script>
+<script src="stage2/niveaux.js?v=3"></script>
 <script src="stage2/cartes/m1.js?v=2"></script>
 <script src="stage2/cartes/m2.js?v=2"></script>
 <script src="stage2/cartes/m3.js?v=2"></script>
@@ -136,8 +136,8 @@ body.touch.joue #tactile{display:block}
 <script src="stage2/cartes/m8.js?v=2"></script>
 <script src="stage2/cartes/m9.js?v=2"></script>
 <script src="stage2/cartes/m10.js?v=2"></script>
-<script src="stage2/heros/heros.js?v=2"></script>
-<script src="stage2/moteur.js?v=3"></script>
+<script src="stage2/heros/heros.js?v=3"></script>
+<script src="stage2/moteur.js?v=4"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -197,7 +197,7 @@ S2J.surFin = ({ perdu, g }) => {
     const suivant = S2.MONDES.find(x => x.n === g.n + 1);
     $('finBox').innerHTML = `<h2>Bravo ${joueur} ! 🎉</h2><p>Tu as traversé « ${m.nom} ».</p><p style="font-size:34px">${'🌼'.repeat(j)}${'⚪'.repeat(3 - j)}</p><p>🪙 ${g.dinars} dinars${typeof js.bourse === 'number' ? ' (ajoutés à ta bourse du Jasmin)' : ''} · ⏱ ${Math.floor(g.t / 60)} min ${String(Math.round(g.t % 60)).padStart(2, '0')} s · ${g.chasses || 0} ennemis chassés</p>
       ${j < 3 ? `<p style="color:var(--mist)">Il reste ${3 - j} jasmin${3 - j > 1 ? 's' : ''} d’or caché${3 - j > 1 ? 's' : ''} : cherche les passages secrets !</p>` : ''}
-      <div class="rang">${suivant && suivant.pret ? `<button class="btn" id="fSuite">Monde ${suivant.n} ▶</button>` : `<p style="color:var(--gold);font-weight:800">Le monde ${g.n + 1} arrive bientôt !</p>`}<button class="btn bleu" id="fRe">↺ Rejouer</button><button class="btn gris" id="fMenu">Menu</button></div>`;
+      <div class="rang">${suivant && suivant.pret ? `<button class="btn" id="fSuite">Monde ${suivant.n} ▶</button>` : (g.n === 10 ? `<p style="color:var(--gold);font-weight:800">🏆 Tu as fini tout le Stage 2 ! Le Scorpion d’Or s’est enfui et la Tunisie a retrouvé ses jasmins.</p>` : `<p style="color:var(--gold);font-weight:800">Le monde ${g.n + 1} arrive bientôt !</p>`)}<button class="btn bleu" id="fRe">↺ Rejouer</button><button class="btn gris" id="fMenu">Menu</button></div>`;
     dire(`Bravo ${joueur} ! Tu as trouvé ${j} jasmin${j > 1 ? 's' : ''} d'or.`); if(window.Famille && Famille.score) try{ Famille.score('jasmin', joueur, g.dinars * 10 + j * 500); }catch(e){} }
   montre('fin');
   const re = $('fRe'), mn = $('fMenu'), su = $('fSuite');

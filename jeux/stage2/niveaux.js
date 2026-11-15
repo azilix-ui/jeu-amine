@@ -24,7 +24,7 @@
 window.S2 = {
   // la physique (pixels et secondes). Le saut monte d'environ 3,5 cases : un mur de 4 cases demande une caisse ou une échelle.
   PH: { marche:190, course:250, acc:1500, accAir:1000, frein:1800, g:1200, gTenu:1150, gCoupe:2600, gChute:1700, saut:505, chuteMax:650,
-        coyote:.1, tampon:.14, echelle:130, rampe:85, lourd:.7, sautLourd:.88, pousse:75, rebond:720, rebondFort:880,
+        coyote:.1, tampon:.14, echelle:130, rampe:85, lourd:.7, sautLourd:.88, pousse:75, rebond:790, rebondFort:900,
         scooter:300, tapis:230, passage:.6 },
   T: 32, HW: 10, HH: 40, HHbas: 22,
 
