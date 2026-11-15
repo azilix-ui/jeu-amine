@@ -39,7 +39,9 @@ fetch(BRUIT_URL + '?liste=1').then(r => r.json()).then(async l => { const a = ac
   l.forEach(n => { const k = n.slice(0, -1); (par[k] = par[k] || []).push(n); });
   for(const k in par){ const n = par[k][Math.floor(Math.random() * par[k].length)];
     try{ const b = await fetch(BRUIT_URL + '?n=' + n).then(r => r.arrayBuffer()); BRUIT[k] = await new Promise((ok, ko) => a.decodeAudioData(b, ok, ko)); }catch(e){} } }).catch(() => {});
-function bruit(k, v = .8){ const a = ac(), b = BRUIT[k]; if(!a || !b) return false; const s = a.createBufferSource(), g = a.createGain(); g.gain.value = v; s.buffer = b; s.connect(g); g.connect(a.destination); s.start(); return true; }
+const MAXD = { capture:1.8, nait:1.1, perdu:2.4, invite:2.2, coupe:1, tap:.4 };   // on coupe en douceur les sons trop longs (une capture arrive souvent)
+function bruit(k, v = .8){ const a = ac(), b = BRUIT[k]; if(!a || !b) return false; const s = a.createBufferSource(), g = a.createGain(), t = a.currentTime, m = Math.min(b.duration, MAXD[k] || 9);
+  g.gain.setValueAtTime(v, t); g.gain.setValueAtTime(v, t + Math.max(0, m - .3)); g.gain.linearRampToValueAtTime(0, t + m); s.buffer = b; s.connect(g); g.connect(a.destination); s.start(t); s.stop(t + m + .05); return true; }
 const SON = {
   capture(n){ if(bruit(n > 300 ? 'grande' : 'capture', n > 300 ? .8 : .6)) return; const k = Math.min(5, 1 + Math.floor(n / 80)); [523, 659, 784, 988, 1175].slice(0, k).forEach((f, i) => ton(f, .22, 'triangle', .11, 0, i * .07)); },
   coupe(){ if(bruit('coupe', .9)) return; ton(1800, .08, 'square', .06, 600); ton(900, .18, 'sawtooth', .05, 200, .05); },
