@@ -147,9 +147,9 @@ function construit(n, md){
   const sol = new THREE.Mesh(new THREE.PlaneGeometry(14, lg), new THREE.MeshLambertMaterial({ map:TX.sol })); sol.rotation.x = -Math.PI / 2; sol.position.set(0, 0, -lg / 2 + 12); sol.receiveShadow = true;
   TX.sol.repeat.set(14 / 3.5, lg / 3.5); monde.add(sol);
   for(const s of [-1, 1]){ const b = new THREE.Mesh(new THREE.BoxGeometry(.25, .18, lg), new THREE.MeshLambertMaterial({ color:'#e9e1cf' })); b.position.set(s * 5.12, .09, -lg / 2 + 12); monde.add(b); }
-  const W = 6 * 1280 / 533;
+  const HM = 8.5, W = HM * 1280 / 533;   // les murs des maisons, assez hauts pour cacher le ciel vide en portrait
   for(let z = 12, k = 0; z > -lg; z -= W, k++) for(const s of [-1, 1]){
-    const m = plan((k + (s > 0 ? 1 : 0)) % 2 ? TX.facade2 : TX.facade, W, 6); m.position.set(s * 7, 3, z - W / 2); m.rotation.y = -s * Math.PI / 2; monde.add(m); }
+    const m = plan((k + (s > 0 ? 1 : 0)) % 2 ? TX.facade2 : TX.facade, W, HM); m.position.set(s * 7, HM / 2, z - W / 2); m.rotation.y = -s * Math.PI / 2; monde.add(m); }
   const fond = plan(TX.fond, 28, 14); fond.material.fog = false; fond.position.set(0, 6, -lg + 10); monde.add(fond);
   // les objets
   const objs = [];
@@ -256,7 +256,7 @@ function dessine(dt){
   balle.position.set(G.x, y, -G.z); balle.rotation.set(-G.rot, 0, 0); balle.scale.setScalar(r * (1 + G.choc * .25));
   anneau.position.set(G.x, .03, -G.z); anneau.visible = G.etat !== 'chute';
   etiq.position.set(G.x, y + r + .55 + r * .25, -G.z);
-  if(enfant.visible){ enfant.position.set(G.x + r * .9 + .45, 0, -G.z + r * .4 + .5);   // l'enfant court à côté de son ballon, un peu en arrière const k = G.etat === 'course' ? Math.floor(G.z * 1.6) % 12 : 0; enfant.material.map.offset.set((k % 6) / 6, 1 - (Math.floor(k / 6) + 1) / 4); }
+  if(enfant.visible){ enfant.position.set(G.x + r * .9 + .45, 0, -G.z + r * .4 + .5); const k = G.etat === 'course' ? Math.floor(G.z * 1.6) % 12 : 0; enfant.material.map.offset.set((k % 6) / 6, 1 - (Math.floor(k / 6) + 1) / 4); }
   placeCam(Math.min(1, dt * 5));
   for(let i = fx.length - 1; i >= 0; i--){ const f = fx[i]; f.t += dt; f.v.y -= 18 * dt; f.m.position.addScaledVector(f.v, dt); f.m.rotation.x += dt * 5; if(f.m.position.y < .15){ f.m.position.y = .15; f.v.multiplyScalar(.5); } if(f.t > 2.2){ scene.remove(f.m); f.m.geometry.dispose(); fx.splice(i, 1); } }
   R3.render(scene, cam);
