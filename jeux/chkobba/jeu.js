@@ -31,7 +31,7 @@ async function chargeSon(url, k){ const a = ac(); if(!a) return; try{ const b = 
 function chargeListe(base, noms){ fetch(base + '?liste=1').then(r => r.json()).then(l => { const par = {}; l.forEach(n => { const k = n.slice(0, -1); (par[k] = par[k] || []).push(n); });
   for(const k of Object.keys(par)) if(!noms || noms.includes(k)) chargeSon(base + '?n=' + par[k][Math.floor(Math.random() * par[k].length)], k); }).catch(() => {}); }
 let sonsCharges = false; function sons(){ if(sonsCharges) return; sonsCharges = true; chargeListe(SON_URL); chargeListe(ZSON, ['victoire', 'tap']); }
-const MAXD = { carte:.8, prise:1.2, distrib:2, chkobba:3, haya:2, tap:.4 };
+const MAXD = { carte:.8, prise:1.8, distrib:2.5, chkobba:3, haya:2, tap:.4 };
 function bruit(k, v = .8){ const a = ac(), b = BRUIT[k]; if(!a || !b) return false; const s = a.createBufferSource(), g = a.createGain(), t = a.currentTime, m = Math.min(b.duration, MAXD[k] || 9);
   g.gain.setValueAtTime(v, t); g.gain.setValueAtTime(v, t + Math.max(0, m - .3)); g.gain.linearRampToValueAtTime(0, t + m); s.buffer = b; s.connect(g); g.connect(a.destination); s.start(t); s.stop(t + m + .05); return true; }
 const SON = {
