@@ -5,7 +5,7 @@ Planche 12 × 5 : ligne 0 grimper (2 images : la pose et son miroir), 1 ramper (
 Les poses n'ont pas la même échelle (FLUX recadre) : chaque ligne est ramenée à une hauteur connue par rapport au héros debout (RAPPORT).
 Usage : python3 docs/stage2/gestes.py <dossier g2> <id> [<id>…]"""
 import sys, os, json, re
-from PIL import Image, ImageChops, ImageStat, ImageOps
+from PIL import Image, ImageChops, ImageStat, ImageOps, ImageFilter
 from scipy import ndimage as nd
 import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'houma')); from detoure import cut
@@ -29,9 +29,15 @@ def boucle(fichiers):
             if best is None or d < best[0]: best = (d, i, j)
     _, i, j = best; return [fichiers[i + round(k * (j - i) / 12)] for k in range(12)]
 
+def cut_magenta(path):
+    a = np.array(Image.open(path).convert('RGB')).astype(np.int16); r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    m = np.clip(((np.minimum(r, b) - g) - 40) * 4, 0, 255)          # 255 = fond magenta
+    al = (255 - m).astype(np.uint8); al = np.array(Image.fromarray(al).filter(ImageFilter.MinFilter(3)))
+    out = a.copy(); spill = np.minimum(r, b) > g + 20; out[..., 0][spill] = np.minimum(r, g + 20)[spill]; out[..., 2][spill] = np.minimum(b, g + 20)[spill]
+    im = Image.fromarray(out.astype(np.uint8)).convert('RGBA'); im.putalpha(Image.fromarray(al)); return im
+
 def planche(dos, id):
-    fond = 'blue' if 'plage' in id else 'green'   # le short de plage est vert : ces images-là sont faites sur fond bleu
-    cut_ = lambda f: cut(f, fond)
+    cut_ = cut_magenta if 'plage' in id else cut   # la tenue de plage est bleue et turquoise : ces images-là sont faites sur fond magenta
     s = lambda k: os.path.join(dos, f'{id}_{k}_00001_.png')
     anim = lambda k: [os.path.join(dos, f'anim_{id}_{k}_{n:05d}_.png') for n in range(1, 34)]
     rampe3 = s('rampe3') if os.path.exists(s('rampe3')) else None
