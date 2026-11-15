@@ -558,7 +558,7 @@ function perdVie(){ const g = G, h = g.h; if(h.mort) return; h.mort = true; h.mo
 function reprise(gratuit){ const g = G; if(!gratuit && g.vies <= 0){ etat = 'fin'; S2J.surFin && S2J.surFin({ perdu:true, g }); return; }
   const n = g.n, d = g.diff; charger(n, d, true); G.vies = g.vies; G.dinars = g.dinars; G.coeurs = G.D.coeurs; if(!G.check) { G.h.x = G.depart.x; G.h.y = G.depart.y; } G.h.inv = 1.5; }
 function gagne(){ const g = G; if(g.fini) return; g.fini = true; g.h.vx = 0; if(g.h.vehicule){ g.h.vehicule = null; } son('victoire'); eclat(g.h.x, g.h.y - 40, '#ffe066', 30);
-  setTimeout(() => { etat = 'fin'; S2J.surFin && S2J.surFin({ perdu:false, g }); }, 1600); }
+  setTimeout(() => { if(G !== g) return; etat = 'fin'; S2J.surFin && S2J.surFin({ perdu:false, g }); }, 1600); }
 
 /* ---------- effets ---------- */
 function texte(s, x, y, c = '#ffffff', taille = 18){ G.textes.push({ s, x, y, c, taille, vie:1.6 }); }
@@ -604,7 +604,7 @@ function dessineHeros(t){
     let fait = false;
     if(h.monte) fait = geste('grimpe', Math.floor((h.pm || 0) / 22) % 2, false);
     else if(h.vehicule && h.vehicule.k === 'A') fait = geste('accroupi', 0, fl);
-    else if(h.lance > 0 && h.lance < .3 && !h.porte) fait = geste('lance', 0, fl);
+    else if(h.lance > 0 && h.lance < .3 && !h.porte) fait = geste('porte', 3, fl);   // on lance par-dessus la tête (l'image « lancer » de ComfyUI garde une balle dans la main)
     else if(h.bas && h.sol) fait = run > .05 ? geste('rampe', Math.floor(h.phase * 1.6), fl) : geste('accroupi', 0, fl);
     else if(h.porte && !h.porte.O.petit) fait = geste('porte', h.sol && run > .05 ? Math.floor(h.phase * 1.9) : 0, fl);
     if(fait){ ctx.restore(); return; } }
