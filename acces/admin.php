@@ -6,6 +6,7 @@
  *   invitation_cree(nom, lien, duree, usages) · invitation_supprime(id) · mdp(ancien, nouveau) · sortir
  *   sauvegarde (en faire une maintenant) · alertes(email, email_on, ntfy_on) · alerte_essai · ntfy_nouveau
  *   GET ?telecharger=sauvegarde-AAAA-MM-JJ.zip : télécharge une sauvegarde
+ *   voix(cle?, max?) : la clé API ElevenLabs des voix des cours (jamais renvoyée) et le plafond de caractères par mois
  *   demande_accepte(id, duree) · demande_ignore(id) : les appareils inconnus qui ont frappé à la porte (cookie mf_demande)
  */
 declare(strict_types=1);
@@ -32,6 +33,8 @@ function ga_etat_admin(): array {
             'alertes' => ['email' => (string)ga_reglage('alerte_email'), 'email_on' => ga_reglage('alerte_email_on') !== '0', 'ntfy' => ga_canal_ntfy(), 'ntfy_on' => ga_reglage('alerte_ntfy_on') !== '0'],
             'demandes' => $db->query("SELECT id, nom, statut, duree, cree, vu, ip, ua, page, pages FROM demandes WHERE statut IN ('vu', 'attente', 'accepte') AND vu > " . ($t - 30 * 86400) . " ORDER BY (statut = 'attente') DESC, vu DESC LIMIT 60")->fetchAll(),
             'refus' => $db->query('SELECT ts, ip, page, ua FROM refus ORDER BY ts DESC LIMIT 80')->fetchAll(),
+            'voix' => (function(){ [$m, $n] = array_pad(explode(':', (string)ga_reglage('voix_compteur')), 2, '0'); $d = ga_donnees() . '/voix-cache'; $nb = 0; if (is_dir($d)) foreach (glob($d . '/*/*.mp3') ?: [] as $x) $nb++;
+                return ['cle' => (string)ga_reglage('elevenlabs_cle') !== '', 'max' => (int)(ga_reglage('voix_max') ?: 15000), 'mois' => $m === date('Y-m') ? (int)$n : 0, 'phrases' => $nb, 'erreur' => (string)ga_reglage('voix_erreur')]; })(),
         ];
 }
 function rep(int $code, array $d): void { http_response_code($code); header('Content-Type: application/json; charset=utf-8'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; }
@@ -73,6 +76,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         } elseif ($a === 'alerte_essai') {
             $r = ga_alerte('🛎️ Essai : quelqu\'un frappe à la porte', "Ceci est un essai depuis l'administration du site. Les vraies alertes arrivent quand un appareil inconnu écrit son prénom et frappe à la porte.", true);
             $e0 = ga_etat_admin(); $e0['essai'] = $r; rep(200, $e0);
+        } elseif ($a === 'voix') {
+            $c = trim((string)($in['cle'] ?? ''));
+            if ($c !== '') { if (!preg_match('/^[A-Za-z0-9_\-]{20,120}$/', $c)) rep(400, ['error' => "Cette clé ne ressemble pas à une clé ElevenLabs."]); ga_reglage('elevenlabs_cle', $c); ga_reglage('voix_erreur', ''); }
+            if (!empty($in['oublie'])) ga_reglage('elevenlabs_cle', '');
+            if (isset($in['max'])) ga_reglage('voix_max', (string)max(0, min(200000, (int)$in['max'])));
         } elseif ($a === 'ntfy_nouveau') {
             ga_reglage('alerte_ntfy', 'missaoui-' . bin2hex(random_bytes(8)));
         } elseif ($a === 'demande_accepte') {
@@ -210,6 +218,15 @@ details summary{cursor:pointer;font-weight:800;color:var(--soft)}
   </section>
 
   <section class="carte">
+    <h2>🔊 Les voix des cours (ElevenLabs)</h2>
+    <p>Ollie parle avec de vraies voix ElevenLabs (Céline en français, Alice en anglais) au lieu de la voix de la tablette. Chaque phrase est fabriquée une seule fois, puis gardée sur le site : elle ne coûte des crédits que la première fois.</p>
+    <p id="vxEtat"></p>
+    <label>Clé API ElevenLabs <small>(sur elevenlabs.io › Developers › API Keys : « Create Key », droit « Text to Speech »)</small><input id="vxCle" type="password" autocomplete="off" placeholder="colle ta clé ici (elle ne sera plus jamais affichée)"></label>
+    <label>Plafond par mois (caractères ; 1 caractère ≈ 1 crédit)<input id="vxMax" type="number" min="0" max="200000" step="1000"></label>
+    <div class="lienbox"><button class="petit vert" type="button" id="vxOk">Enregistrer</button><button class="petit" type="button" id="vxEssai">🔊 Écouter un essai</button><button class="petit rouge" type="button" id="vxOublie">Effacer la clé</button></div>
+  </section>
+
+  <section class="carte">
     <h2>💾 Les sauvegardes</h2>
     <p>Chaque semaine, le site garde tout seul une copie des progrès des enfants, des scores, des voix de Nahki et des accès (les 8 dernières semaines). Télécharge-en une de temps en temps sur ton PC ou sur OneDrive : c'est ta copie de secours si le serveur avait un problème.</p>
     <div class="liste" id="sauv"></div>
@@ -279,6 +296,7 @@ function dessine(){
       <small>Vu le ${quand(a.vu)} · ${esc(a.ip)} · accès jusqu'au ${jour(a.expire)}</small></span>
       <button class="petit" data-ren="${a.id}" data-nom="${esc(a.nom)}">Renommer</button>${a.id === E.moi ? '' : `<button class="petit rouge" data-appdel="${a.id}">Retirer</button>`}</div>`).join('') : '<p class="vide">Aucun appareil pour l\'instant.</p>';
   $('refus').innerHTML = E.refus.length ? E.refus.map(r => `<div class="ligne"><span class="q"><b>${esc(r.ip)} <span class="badge">${nav(r.ua)}</span></b><small>${quand(r.ts)} · ${esc(r.page)}</small></span></div>`).join('') : '<p class="vide">Aucune visite refusée.</p>';
+  const vx = E.voix; $('vxEtat').innerHTML = (vx.cle ? '✅ Clé enregistrée.' : '⚠️ Pas encore de clé : les cours prennent la voix de la tablette.') + ` Ce mois-ci : <b>${vx.mois}</b> caractères sur ${vx.max} · ${vx.phrases} phrases gardées.` + (vx.erreur ? ` <br>Dernière erreur : ${esc(vx.erreur)}` : ''); if(document.activeElement !== $('vxMax')) $('vxMax').value = vx.max;
   $('adminId').textContent = E.admin;
   $('brut').textContent = 'REMOTE_ADDR ' + E.brut.remote + ' · X-Forwarded-For ' + (E.brut.xff || '—') + ' · CF ' + (E.brut.cf || '—') + ' · X-Real-IP ' + (E.brut.real || '—');
 }
@@ -296,6 +314,9 @@ $('alOk').onclick = async () => { await charge('alertes', { email:$('alMail').va
 $('alEssai').onclick = async () => { const r = await api('alerte_essai'); E = r; dessine(); const e = r.essai || {}; toast(['e-mail ' + (e.email === null ? 'non réglé' : e.email ? 'envoyé' : 'pas parti'), 'ntfy ' + (e.ntfy === null ? 'éteint' : e.ntfy ? 'envoyé' : 'pas parti')].join(' · ')); };
 $('alCopie').onclick = async () => { try { await navigator.clipboard.writeText(E.alertes.ntfy); toast('Nom du canal copié'); } catch(e){} };
 $('alNouveau').onclick = async () => { if(confirm('Changer de canal ? Il faudra te réabonner dans l\'appli ntfy avec le nouveau nom.')) await charge('ntfy_nouveau'); };
+$('vxOk').onclick = async () => { await charge('voix', { cle:$('vxCle').value.trim(), max:+$('vxMax').value }); $('vxCle').value = ''; toast('Voix enregistrées 🔊'); };
+$('vxOublie').onclick = async () => { if(confirm('Effacer la clé ElevenLabs du site ?')) { await charge('voix', { oublie:1 }); toast('Clé effacée'); } };
+$('vxEssai').onclick = async () => { const a = new Audio('/api/voix.php?l=fr&t=' + encodeURIComponent('Bonjour Salma ! Je suis Ollie, ta maîtresse.') ); a.onerror = () => toast('Pas de son : vérifie la clé (voir la dernière erreur).'); try { await a.play(); setTimeout(() => { const b = new Audio('/api/voix.php?l=en&t=' + encodeURIComponent('Hello Salma! The cat is under the table.')); b.play().catch(() => {}); }, 3500); } catch(e){ toast('Pas de son : vérifie la clé.'); } setTimeout(() => charge(), 9000); };
 $('sauvOk').onclick = async () => { $('sauvOk').disabled = true; $('sauvOk').textContent = '💾 Sauvegarde en cours…'; try { await charge('sauvegarde'); toast('Sauvegarde faite 💾'); } finally { $('sauvOk').disabled = false; $('sauvOk').textContent = '💾 Faire une sauvegarde maintenant'; } };
 $('mdpOk').onclick = async () => { await charge('mdp', { ancien:$('mdpA').value, nouveau:$('mdpN').value }); $('mdpA').value = $('mdpN').value = ''; toast('Mot de passe changé'); };
 $('sortir').onclick = async () => { await api('sortir'); location.href = '/acces/?sortie=1'; };

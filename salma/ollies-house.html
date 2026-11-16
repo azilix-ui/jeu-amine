@@ -125,15 +125,15 @@ window.COURS = {
   confetti:['🏠','🐈','⭐','🎟️','🛋️'], revoir:'Mots à revoir',
   CH:[
     { id:'rooms', name:'The rooms', sub:'Les pièces de la maison', icon:'🏠', edge:'#2a7fb4', make:() => noDup(qRoom, 8),
-      rule:`Les pièces de la maison : <b>kitchen</b> (la cuisine), <b>bedroom</b> (la chambre), <b>bathroom</b> (la salle de bain), <b>living room</b> (le salon), <b>garden</b> (le jardin).` },
+      rule:`Les pièces de la maison : <b><i lang="en">kitchen</i></b> (la cuisine), <b><i lang="en">bedroom</i></b> (la chambre), <b><i lang="en">bathroom</i></b> (la salle de bain), <b><i lang="en">living room</i></b> (le salon), <b><i lang="en">garden</i></b> (le jardin).` },
     { id:'things', name:'The furniture', sub:'Les meubles et les objets', icon:'🛋️', edge:'#c8473a', make:() => noDup(() => qThing(), 10),
-      rule:`Pour un objet on dit <b>a</b> : <b>a bed</b> (un lit), <b>a chair</b> (une chaise), <b>a sofa</b> (un canapé), <b>a lamp</b> (une lampe), <b>a fridge</b> (un frigo)…` },
+      rule:`Pour un objet, on met un petit mot devant : <b><i lang="en">a bed</i></b> (un lit), <b><i lang="en">a chair</i></b> (une chaise), <b><i lang="en">a sofa</i></b> (un canapé), <b><i lang="en">a lamp</i></b> (une lampe), <b><i lang="en">a fridge</i></b> (un frigo)…` },
     { id:'place', name:'Everything in its place', sub:'Chaque meuble dans sa pièce', icon:'🧺', edge:'#147a66', make:() => noDup(qPlace, 7) },
     { id:'where', name:'Where is the cat?', sub:'in, on, under, next to, behind', icon:'🐈', edge:'#7a4fe0', make:() => noDup(qPrep, 10),
-      rule:`<b>in</b> = dans · <b>on</b> = sur · <b>under</b> = sous · <b>next to</b> = à côté de · <b>behind</b> = derrière.<br>On dit : <b>The cat is under the table.</b>` },
+      rule:`<b><i lang="en">in</i></b> = dans · <b><i lang="en">on</i></b> = sur · <b><i lang="en">under</i></b> = sous · <b><i lang="en">next to</i></b> = à côté de · <b><i lang="en">behind</i></b> = derrière.<br>On dit : <b><i lang="en">The cat is under the table.</i></b>` },
     { id:'listen', name:'Listen and find', sub:'Écoute Ollie et trouve la bonne image', icon:'👂', edge:'#e0a100', make:() => noDup(qListen, 8) },
     { id:'there', name:'There is, there are', sub:'Il y a un… il y a des…', icon:'🔢', edge:'#2a7fb4', make:() => many(qThere, 10),
-      rule:`<b>There is</b> + une seule chose : <b>There is a lamp.</b><br><b>There are</b> + plusieurs choses : <b>There are three chairs.</b> (avec un <b>s</b> au bout du mot !)` },
+      rule:`<b><i lang="en">There is</i></b>, pour une seule chose : <b><i lang="en">There is a lamp.</i></b><br><b><i lang="en">There are</i></b>, pour plusieurs choses : <b><i lang="en">There are three chairs.</i></b> (avec un <b>s</b> au bout du mot !)` },
     { id:'spell', name:'Spell it!', sub:'Écrire les mots, lettre par lettre', icon:'✏️', edge:'#c8473a', make:() => noDup(qSpell, 8) },
     { id:'tour', name:"The big tour", sub:'Toute la maison, pour la grande visite', icon:'🏆', edge:'#147a66', make:() => shuffle([...noDup(qRoom, 2), ...noDup(() => qThing(), 2), qPlace(), ...noDup(qPrep, 2), qListen(), ...many(qThere, 2), qSpell()]) },
   ],
@@ -152,5 +152,5 @@ window.COURS = {
 /* les réponses en petites scènes : 3 colonnes */
 COURS.ask.choix = q => { OLLIE.ASK.choix(q); if(q.cls) document.querySelector('.answers').classList.add(q.cls); };
 </script>
-<script src="ollie/cours.js?v=2"></script>
+<script src="ollie/cours.js?v=3"></script>
 </body></html>

@@ -1,0 +1,55 @@
+<?php
+/* Les voix ElevenLabs des cours (16/11) : api/voix.php?l=fr|en&t=<phrase>
+   Rend un MP3 de la phrase, dite par la voix française (Céline) ou anglaise (Alice) d'Ollie.
+   Chaque phrase n'est fabriquée qu'une fois : elle est gardée dans famille-data/voix-cache/<voix>/<empreinte>.mp3
+   et resservie ensuite sans dépenser de crédits. La clé API ElevenLabs est tapée par le papa dans l'administration
+   (acces/admin.php › Les voix) : elle est rangée dans la base de la porte, jamais dans le dépôt GitHub.
+   Garde-fou : un plafond de caractères par mois (réglable dans l'administration). Sans clé ou au-delà du plafond : 404,
+   la page prend alors la voix de la tablette. */
+declare(strict_types=1);
+require dirname(__DIR__) . '/acces/garde.php';
+ga_garde_api();
+
+const VX_VOIX = ['fr' => '3fxbs2pB9bs8S6Z1N38A', 'en' => 'Xb7hH8MSUJpSbSDYk0k2'];   // Céline | Chaleureuse et immersive · Alice - Clear, Engaging Educator
+const VX_MODELE = 'eleven_multilingual_v2';
+function vx_fin(int $code, string $msg = ''): void { http_response_code($code); header('Content-Type: text/plain; charset=utf-8'); header('Cache-Control: no-store'); echo $msg; exit; }
+function vx_voix(string $l): string { $v = ga_reglage('voix_' . $l); return $v && preg_match('/^[A-Za-z0-9]{10,40}$/', $v) ? $v : VX_VOIX[$l]; }
+
+$l = (string)($_GET['l'] ?? 'fr'); if (!isset(VX_VOIX[$l])) vx_fin(400);
+$t = trim(preg_replace('/\s+/u', ' ', (string)($_GET['t'] ?? '')));
+if ($t === '' || mb_strlen($t) > 400) vx_fin(400);
+$voix = vx_voix($l);
+$dir = ga_donnees() . '/voix-cache/' . $voix;
+$f = $dir . '/' . sha1(VX_MODELE . '|' . $t) . '.mp3';
+
+if (!is_file($f)) {
+    $cle = (string)ga_reglage('elevenlabs_cle');
+    if ($cle === '') vx_fin(404, 'pas de clé');
+    // le plafond du mois
+    $mois = date('Y-m'); [$m, $n] = array_pad(explode(':', (string)ga_reglage('voix_compteur')), 2, '0');
+    $n = $m === $mois ? (int)$n : 0; $max = (int)(ga_reglage('voix_max') ?: 15000);
+    if ($n + mb_strlen($t) > $max) vx_fin(429, 'plafond du mois');
+    if (!is_dir($dir) && !@mkdir($dir, 0750, true)) vx_fin(500);
+    $verrou = fopen($f . '.lock', 'c'); if ($verrou) flock($verrou, LOCK_EX);
+    if (!is_file($f)) {   // pas fabriquée entre-temps par une autre tablette
+        $ch = curl_init('https://api.elevenlabs.io/v1/text-to-speech/' . $voix . '?output_format=mp3_44100_64');
+        curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTPHEADER => ['xi-api-key: ' . $cle, 'Content-Type: application/json', 'Accept: audio/mpeg'],
+            CURLOPT_POSTFIELDS => json_encode(['text' => $t, 'model_id' => VX_MODELE, 'language_code' => $l,
+                'voice_settings' => ['stability' => 0.5, 'similarity_boost' => 0.75, 'style' => 0.2, 'speed' => $l === 'en' ? 0.9 : 0.95]], JSON_UNESCAPED_UNICODE)]);
+        $mp3 = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+        if ($code !== 200 || !is_string($mp3) || strlen($mp3) < 300) {
+            if ($verrou) { flock($verrou, LOCK_UN); fclose($verrou); }
+            error_log('voix ElevenLabs : HTTP ' . $code . ' ' . substr(is_string($mp3) ? $mp3 : '', 0, 200));
+            ga_reglage('voix_erreur', date('d/m H:i') . ' — HTTP ' . $code);
+            vx_fin(502, 'ElevenLabs : ' . $code);
+        }
+        file_put_contents($f, $mp3, LOCK_EX);
+        ga_reglage('voix_compteur', $mois . ':' . ($n + mb_strlen($t)));
+    }
+    if ($verrou) { flock($verrou, LOCK_UN); fclose($verrou); @unlink($f . '.lock'); }
+}
+header('Content-Type: audio/mpeg');
+header('Content-Length: ' . filesize($f));
+header('Cache-Control: private, max-age=31536000, immutable');
+readfile($f);

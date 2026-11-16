@@ -51,6 +51,10 @@ function segments(html){ const out = [], re = /<(\w+)[^>]*\blang="?en"?[^>]*>([\
 const cle = t => String(t).toLowerCase().replace(/é/g, 'ee').replace(/œ/g, 'oe').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
 const DISPO = (window.LIRE_VOIX || {})[C.voix || ''] || null, SONS = DISPO ? new Set(DISPO.k) : new Set();
 const fichier = t => { const k = cle(t); return SONS.has(k) ? `../amine/lire/son.php?v=${C.voix}&k=${k}&r=${DISPO.r}` : null; };
+// Le reste passe par les voix ElevenLabs du site (api/voix.php : Céline en français, Alice en anglais, gardées après la 1re fois).
+// Si le site ne peut pas (pas de clé, plafond du mois), la voix de la tablette prend le relais.
+const enLigne = (t, l) => `/api/voix.php?l=${l}&t=${encodeURIComponent(t)}`;
+const morceaux = (t, n = 330) => { if(t.length <= n) return [t]; const out = []; let cur = ''; for(const p of t.split(/(?<=[.!?:;])\s+/)){ if((cur + ' ' + p).trim().length > n && cur){ out.push(cur.trim()); cur = p; } else cur = (cur + ' ' + p).trim(); } if(cur) out.push(cur); return out; };
 const tampons = {};
 function actx(){ try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.state === 'suspended') ac.resume(); }catch(e){} return ac; }
 function tampon(f){ if(tampons[f]) return tampons[f]; const a = actx(); if(!a) return Promise.reject();
@@ -58,10 +62,11 @@ function tampon(f){ if(tampons[f]) return tampons[f]; const a = actx(); if(!a) r
 let jeton = 0, joueur = null;
 function speak(html){
   talk(); hush(); if(muted) return;
-  const segs = segments(html), j = jeton;
-  segs.forEach(([t, l]) => { const f = l === 'en' && fichier(t); if(f) tampon(f).catch(() => {}); });
-  (async () => { for(const [t, l] of segs){ if(j !== jeton) return; const f = l === 'en' && fichier(t);
-    if(f){ try{ const b = await tampon(f); if(j !== jeton) return; await new Promise(res => { const a = actx(), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); joueur = s; s.onended = res; setTimeout(res, b.duration * 1000 + 400); s.start(); }); continue; }catch(e){} }
+  const j = jeton, segs = [];
+  for(const [t, l] of segments(html)) for(const m of (l === 'en' && fichier(t) ? [t] : morceaux(t))) segs.push([m, l, (l === 'en' && fichier(m)) || enLigne(m, l)]);
+  segs.forEach(([, , f]) => tampon(f).catch(() => {}));   // tout se charge en même temps, puis se joue dans l'ordre
+  (async () => { for(const [t, l, f] of segs){ if(j !== jeton) return;
+    try{ const b = await tampon(f); if(j !== jeton) return; await new Promise(res => { const a = actx(), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); joueur = s; s.onended = res; setTimeout(res, b.duration * 1000 + 400); s.start(); }); continue; }catch(e){}
     await dire(t, l, j); } })();
 }
 function dire(t, l, j){ return new Promise(res => { if(!('speechSynthesis' in window) || j !== jeton) return res();

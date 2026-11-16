@@ -171,3 +171,11 @@ Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de co
 ## Temps passé sur chaque page (16/11)
 
 `site.js` compte le temps où la page est **visible** et l'envoie chaque minute (`POST action=temps page player sec`, et ce qui reste quand on quitte la page). Table `temps (player, page, h, sec)` de `famille.sqlite` : secondes par joueur, par page et par heure (60 jours, comme le journal des visites ; rien n'est noté pour Essil, Salma ou Amine en mode explorateur). L'action `visits` renvoie aussi `temps`. Dans Progression › Vue d'ensemble, survoler (ou toucher) une barre de couleur ouvre une bulle : les coins du site ouverts par cet enfant ce jour-là (ou à cette heure-là), combien de fois et le temps passé. Avant le 16/11, seules les ouvertures sont connues.
+
+
+## Les voix ElevenLabs des cours (`api/voix.php`, 16/11)
+- `GET api/voix.php?l=fr|en&t=<phrase>` (derrière la porte) rend le MP3 de la phrase : français = **Céline | Chaleureuse et immersive** (`3fxbs2pB9bs8S6Z1N38A`), anglais = **Alice - Clear, Engaging Educator** (`Xb7hH8MSUJpSbSDYk0k2`), modèle `eleven_multilingual_v2`. Changeables par les réglages `voix_fr` / `voix_en` de la base de la porte.
+- Chaque phrase est fabriquée **une seule fois** puis gardée dans `famille-data/voix-cache/<voix>/<sha1>.mp3` (hors du dépôt, une sauvegarde ne la perd pas au redéploiement).
+- La **clé API** ElevenLabs est tapée par le papa dans l'administration (`acces/admin.php` › 🔊 Les voix des cours) : rangée dans la base de la porte (`reglages.elevenlabs_cle`), jamais renvoyée à la page, jamais dans le dépôt. Plafond de caractères par mois (`voix_max`, 15 000 par défaut ; compteur `voix_compteur`) ; dernière erreur dans `voix_erreur`.
+- Sans clé, au-delà du plafond ou si ElevenLabs refuse : 404 / 429 / 502, et la page prend la voix de la tablette.
+- Utilisé par le moteur des cours d'Ollie (`salma/ollie/cours.js`) : les sons déjà enregistrés d'abord (`famille-data/lire-voix/ollie/`), sinon `api/voix.php`, sinon la tablette.
