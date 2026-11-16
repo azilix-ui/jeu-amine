@@ -91,7 +91,7 @@ body.jeu #hud{ display:block; }
   <div class="carte">
     <div class="modes">
       <button class="mode on" data-m="tir"><b>🎯 Le tir</b><span>Vise avec le doigt, lâche : toutes tes balles partent et rebondissent.</span></button>
-      <button class="mode" data-m="raquette" disabled><b>🏓 La raquette</b><span>Bientôt ! Renvoie la balle avec ta raquette.</span></button>
+      <button class="mode" data-m="raquette"><b>🏓 La raquette</b><span>Glisse le doigt pour bouger la raquette et renvoie la balle. Ne la laisse pas tomber !</span></button>
     </div>
     <div class="choix" id="diff"><button data-d="facile">🐢 Tranquille (les carreaux descendent moins vite)</button><button data-d="normal">🐆 Normal</button></div>
     <div id="niveaux"></div>
@@ -102,6 +102,7 @@ body.jeu #hud{ display:block; }
     <li>Après chaque tir, tu as <b>une balle de plus</b>, et les carreaux <b>descendent</b>. S'ils arrivent en bas, c'est perdu.</li>
     <li>La <b>boule d'or</b> donne une balle en plus, la <b>jarre</b> explose, la <b>pierre grise</b> ne se casse pas.</li>
     <li>Moins de tirs = plus d'étoiles ⭐⭐⭐</li>
+    <li><b>Mode raquette</b> : bouge la raquette avec le doigt, touche l'écran pour lancer la balle, et renvoie-la ! La boule d'or lance une balle de plus. Sans perdre de balle = ⭐⭐⭐</li>
   </ul></div>
   <div class="carte"><h2>🏆 Records de la famille</h2><ol class="rec" id="records"><p class="none">…</p></ol></div>
 </div></section>
@@ -115,6 +116,6 @@ body.jeu #hud{ display:block; }
 <div id="modal"></div>
 
 <script src="../famille.js"></script>
-<script type="module" src="kassar/jeu.js?v=2"></script>
+<script type="module" src="kassar/jeu.js?v=3"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // Kassar : les règles (node docs/kassar/test-regles.mjs) — vérification des niveaux, physique, et un robot qui joue chaque niveau.
-import { nouvellePartie, tire, pas, verifie, NIVEAUX, yDe, visible, CW, CH, LIGNE, R, W, suivant, etoiles, reste, guide } from '../../jeux/kassar/regles.js';
+import { nouvellePartieR, bougeR, lanceR, pasR, etoilesR, RQ, DT, nouvellePartie, tire, pas, verifie, NIVEAUX, yDe, visible, CW, CH, LIGNE, R, W, suivant, etoiles, reste, guide } from '../../jeux/kassar/regles.js';
 let ok = 0, ko = 0; const t = (n, c, i = '') => { if(c) ok++; else { ko++; console.log('ÉCHEC', n, i); } };
 NIVEAUX.forEach((n, i) => { const e = verifie(n); t('niveau ' + (i + 1) + ' vérifié', !e.length, e.join(' ; ')); });
 // physique : une balle tirée tout droit vers un carreau 1 le casse et revient
@@ -25,4 +25,18 @@ for(const [mode, facile] of [['normal', false], ['facile', true]]){ const res = 
       if(s.phase === 'gagne'){ g++; tours += s.tour; if(etoiles(s) === 3) e3++; } }
     res.push(`${i + 1}:${g}/20${g ? ' (' + (tours / g).toFixed(1) + ' tirs, ★★★ ' + e3 + ')' : ''}`); t(mode + ' niveau ' + (i + 1) + ' gagnable par le robot', g > 0); });
   console.log(mode, res.join('  ')); }
+// le mode raquette : un robot qui suit la balle (avec un peu de retard et d'erreur), 10 parties par niveau, 4 minutes au plus
+{ const s = nouvellePartieR({ rangs:['1111111'], balles:1, par:1 }); t('raquette : la balle attend sur la raquette', s.phase === 'colle' && s.bs[0].colle); bougeR(s, 50); t('raquette : la balle suit la raquette', s.bs[0].x === 50); lanceR(s); t('raquette : lancée', s.phase === 'jeu' && s.bs[0].vy < 0);
+  bougeR(s, 300); let k = 0; while(s.phase === 'jeu' && k++ < 120 * 30) pasR(s); t('raquette : balle perdue = une vie de moins', s.vies === 2 || s.phase === 'gagne', s.vies); }
+for(const facile of [false, true]){ const res = [];
+  NIVEAUX.forEach((niv, i) => { let g = 0, tm = 0, e3 = 0;
+    for(let p = 0; p < 10; p++){ const s = nouvellePartieR(niv, { facile }); let n = 0, cible = W / 2;
+      while((s.phase === 'colle' || s.phase === 'jeu') && n++ < 120 * 240){
+        if(s.phase === 'colle'){ bougeR(s, 40 + rnd() * (W - 80)); lanceR(s); }
+        const b = s.bs.filter(b => b.vy > 0).sort((a, b) => b.y - a.y)[0] || s.bs[0];
+        if(b && n % 6 === 0) cible = b.x + (rnd() - .5) * s.pl * .7;
+        bougeR(s, s.px + Math.max(-7, Math.min(7, cible - s.px))); pasR(s); }
+      if(s.phase === 'gagne'){ g++; tm += s.t; if(etoilesR(s) === 3) e3++; } }
+    res.push(`${i + 1}:${g}/10${g ? ' (' + Math.round(tm / g) + ' s, ★★★ ' + e3 + ')' : ''}`); t('raquette ' + (facile ? 'facile' : 'normal') + ' niveau ' + (i + 1) + ' gagnable', g > 0); });
+  console.log('raquette', facile ? 'facile' : 'normal', res.join('  ')); }
 console.log(ok + ' tests réussis, ' + ko + ' échecs'); process.exit(ko ? 1 : 0);

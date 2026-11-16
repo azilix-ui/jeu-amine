@@ -1,5 +1,5 @@
 /* Kassar : le dessin (canvas 2D), les menus, les sons, la sauvegarde. Les règles et la physique sont dans regles.js. */
-import { W, H, COLS, CW, CH, TOP, LIGNE, R, DT, RANGS, nouvellePartie, tire, pas, rappelle, guide, yDe, visible, reste, etoiles, scoreFinal, NIVEAUX, MONDES } from './regles.js';
+import { W, H, COLS, CW, CH, TOP, LIGNE, R, DT, RANGS, nouvellePartie, tire, pas, rappelle, guide, yDe, visible, reste, etoiles, scoreFinal, NIVEAUX, MONDES, RQ, nouvellePartieR, bougeR, lanceR, pasR, etoilesR, scoreFinalR } from './regles.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -30,15 +30,20 @@ const SON = {
   descend(){ joue('descend', .45, 1.2) || bip(160, .2, 'sine', .06, 110); },
   gagne(){ joue('victoire', .8, 4) || [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => bip(f, .25, 'triangle', .09), i * 110)); },
   perdu(){ joue('perdu', .7, 2.5) || [392, 330, 262].forEach((f, i) => setTimeout(() => bip(f, .3, 'sine', .08), i * 160)); },
+  raquette(){ bip(420, .06, 'triangle', .07, 620); },
+  bord(){ bip(700, .03, 'sine', .025); },
 };
 const parle = t => { try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t.replace(/[^\p{L}\p{N} ,.!?'’:-]/gu, '')); u.lang = 'fr-FR'; u.rate = .95; speechSynthesis.speak(u); }catch(e){} };
 
 /* ---------- la sauvegarde ---------- */
 let joueur = null, sv = null;
-const neuf = () => ({ niv:{}, diff:'normal', t:0 });
+const neuf = () => ({ niv:{}, nivR:{}, diff:'normal', t:0 });
+let MODE = store.get('kassar-mode', 'tir');   // le mode choisi (tir ou raquette), gardé sur la tablette
+const modeR = () => MODE === 'raquette';
+const progres = () => { const s = sv || neuf(); return modeR() ? (s.nivR || (s.nivR = {})) : s.niv; };
 const cle = () => 'kassar:' + joueur;
 function sauve(){ if(!joueur) return; sv.t = Date.now(); store.set(cle(), sv); }
-const totalEtoiles = () => Object.values((sv || neuf()).niv).reduce((a, n) => a + (n.e || 0), 0);
+const totalEtoiles = () => [...Object.values((sv || neuf()).niv), ...Object.values((sv || neuf()).nivR || {})].reduce((a, n) => a + (n.e || 0), 0);
 async function setJoueur(n){ joueur = n; sv = Object.assign(neuf(), store.get(cle(), {}) || {});
   if(window.Famille && Famille.track){ Famille.track('kassar', n, [cle()]); try{ const r = await Famille.load('kassar', n), d = r && r[cle()]; if(d && joueur === n && (d.t || 0) > (sv.t || 0)){ sv = Object.assign(neuf(), d); store.set(cle(), sv); } }catch(e){} }
   menu(); }
@@ -56,9 +61,10 @@ function menu(){
   $('who').innerHTML = joueur ? (tete(joueur) ? `<img src="${tete(joueur)}" alt="">` : '🙂') + esc(joueur) : 'Qui joue ?';
   $('total').textContent = '⭐ ' + totalEtoiles();
   $('diff').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.d === s.diff));
-  const ouvert = i => i === 0 || (s.niv[i - 1] && s.niv[i - 1].e > 0), suivant = NIVEAUX.findIndex((_, i) => ouvert(i) && !(s.niv[i] && s.niv[i].e));
+  document.querySelectorAll('.mode').forEach(b => b.classList.toggle('on', b.dataset.m === MODE));
+  const nv = progres(), ouvert = i => i === 0 || (nv[i - 1] && nv[i - 1].e > 0), suivant = NIVEAUX.findIndex((_, i) => ouvert(i) && !(nv[i] && nv[i].e));
   $('niveaux').innerHTML = MONDES.map((m, mi) => { const L = NIVEAUX.map((n, i) => [n, i]).filter(([n]) => n.m === mi);
-    return `<div class="monde">${mi + 1} · ${m.nom}</div><div class="niveaux">${L.length ? L.map(([n, i]) => { const e = s.niv[i] && s.niv[i].e || 0;
+    return `<div class="monde">${mi + 1} · ${m.nom}</div><div class="niveaux">${L.length ? L.map(([n, i]) => { const e = nv[i] && nv[i].e || 0;
       return `<button class="niv ${!ouvert(i) ? 'ferme' : i === suivant ? 'suivant' : ''}" data-i="${i}" title="${esc(n.nom)}" ${ouvert(i) ? '' : 'disabled'}>${ouvert(i) ? i + 1 : '🔒'}<small>${'★'.repeat(e)}</small></button>`; }).join('')
       : '<div class="niv bientot">bientôt</div>'.repeat(3)}</div>`; }).join('');
   records();
@@ -68,6 +74,7 @@ async function records(){ const rows = window.Famille ? await Famille.highscores
 $('diff').onclick = e => { const b = e.target.closest('button'); if(!b) return; if(!sv) sv = neuf(); sv.diff = b.dataset.d; sauve(); menu(); };
 $('niveaux').onclick = async e => { const b = e.target.closest('[data-i]'); if(!b || b.disabled) return; ac(); sons(); if(!joueur && !(await choisirJoueur())) return; partie(+b.dataset.i); };
 $('who').onclick = () => choisirJoueur();
+document.querySelectorAll('.mode').forEach(b => b.onclick = () => { MODE = b.dataset.m; store.set('kassar-mode', MODE); menu(); });
 
 /* ---------- la partie ---------- */
 const cv = $('cv'), ctx = cv.getContext('2d');
@@ -76,22 +83,28 @@ function taille(){ const dpr = Math.min(2, devicePixelRatio || 1); cv.width = in
   const k = Math.min(innerWidth / W, innerHeight / (H + 20)); vue = { k:k * dpr, ox:(innerWidth - W * k) / 2 * dpr, oy:(innerHeight - H * k) / 2 * dpr, dpr }; }
 addEventListener('resize', taille); taille();
 function partie(i){
-  const niv = NIVEAUX[i], s = nouvellePartie(niv, { facile:(sv || neuf()).diff === 'facile' });
+  const niv = NIVEAUX[i], facile = (sv || neuf()).diff === 'facile', s = modeR() ? nouvellePartieR(niv, { facile }) : nouvellePartie(niv, { facile });
   P = { i, niv, s, monde:MONDES[niv.m], t0:performance.now(), vol:0, fini:false };
   teteIm = null; const t = tete(joueur); if(t){ teteIm = new Image(); teteIm.src = t; }
   montre('-'); document.body.classList.add('jeu'); $('modal').classList.remove('on'); vitesse = 1; parts = [];
-  const a = $('aide'); a.textContent = '« ' + niv.nom + ' » — ' + niv.aide; a.classList.remove('off'); parle(niv.aide);
+  const aide = s.mode === 'raquette' ? 'Glisse ton doigt pour bouger la raquette, et touche l’écran pour lancer la balle. Ne la laisse pas tomber !' : niv.aide;
+  const a = $('aide'); a.textContent = '« ' + niv.nom + ' » — ' + aide; a.classList.remove('off'); parle(aide);
   clearTimeout(a._t); a._t = setTimeout(() => a.classList.add('off'), 7000);
 }
 $('aide').onclick = () => $('aide').classList.add('off');
 // viser : on pose le doigt, on glisse, on lâche
 const versMonde = e => { const r = cv.getBoundingClientRect(), d = vue.dpr; return [((e.clientX - r.left) * d - vue.ox) / vue.k, ((e.clientY - r.top) * d - vue.oy) / vue.k]; };
 const angle = ([x, y]) => P && y < LIGNE - 8 ? Math.atan2(LIGNE - R - y, x - P.s.lx) : null;
-cv.addEventListener('pointerdown', e => { if(!P || P.s.phase !== 'vise' || $('modal').classList.contains('on')) return; ac(); sons(); $('aide').classList.add('off'); appui = true; vise = angle(versMonde(e)); try{ cv.setPointerCapture(e.pointerId); }catch(x){} });
-cv.addEventListener('pointermove', e => { if(!appui || !P) return; vise = angle(versMonde(e)); });
-cv.addEventListener('pointerup', e => { if(!appui || !P) return; appui = false; const a = vise; vise = null; if(a !== null && tire(P.s, a)){ P.vol = 0; vitesse = 1; } });
+const enR = () => P && P.s.mode === 'raquette';
+cv.addEventListener('pointerdown', e => { if(enR() && !P.pause && !$('modal').classList.contains('on')){ ac(); sons(); $('aide').classList.add('off'); appui = true; bougeR(P.s, versMonde(e)[0]); try{ cv.setPointerCapture(e.pointerId); }catch(x){} return; }
+  if(!P || P.s.phase !== 'vise' || $('modal').classList.contains('on')) return; ac(); sons(); $('aide').classList.add('off'); appui = true; vise = angle(versMonde(e)); try{ cv.setPointerCapture(e.pointerId); }catch(x){} });
+cv.addEventListener('pointermove', e => { if(enR() && !P.pause){ if(appui || e.pointerType === 'mouse') bougeR(P.s, versMonde(e)[0]); return; }
+  if(!appui || !P) return; vise = angle(versMonde(e)); });
+cv.addEventListener('pointerup', e => { if(enR()){ appui = false; if(!P.pause) lanceR(P.s); return; }
+  if(!appui || !P) return; appui = false; const a = vise; vise = null; if(a !== null && tire(P.s, a)){ P.vol = 0; vitesse = 1; } });
 cv.addEventListener('pointercancel', () => { appui = false; vise = null; });
-addEventListener('keydown', e => { if(!P) return; if(e.code === 'Escape' || e.code === 'KeyP') pause(); });
+const touches = {}; addEventListener('keyup', e => { touches[e.code] = false; });
+addEventListener('keydown', e => { if(!P) return; touches[e.code] = true; if(e.code === 'Escape' || e.code === 'KeyP') pause(); if(enR() && (e.code === 'Space' || e.code === 'ArrowUp')){ e.preventDefault(); lanceR(P.s); } });
 $('pause').onclick = () => pause();
 $('vite').onclick = () => { vitesse = vitesse === 1 ? 2.5 : 1; $('vite').textContent = vitesse > 1 ? '▶' : '⏩'; };
 $('rappel').onclick = () => { if(P) rappelle(P.s); };
@@ -112,22 +125,26 @@ function evenements(){ const s = P.s;
     else if(e.k === 'boum'){ SON.boum(); eclats(e.b, 24); secousse = .35; }
     else if(e.k === 'bonus'){ SON.bonus(); parts.push({ x:e.b.c * CW + CW / 2, y:yDe(s, e.b) + CH / 2, vx:0, vy:-60, t:0, txt:'+1' }); }
     else if(e.k === 'descend') SON.descend();
+    else if(e.k === 'raquette') SON.raquette();
+    else if(e.k === 'bord') SON.bord();
+    else if(e.k === 'vie' && s.phase !== 'perdu'){ SON.descend(); secousse = .25; parts.push({ x:s.px, y:RQ.y - 30, vx:0, vy:-40, t:0, txt:'💔' }); }
     else if(e.k === 'gagne') fin(true);
     else if(e.k === 'perdu') fin(false);
   } }
 function fin(gagne){ const s = P.s, i = P.i; P.fini = true;
   setTimeout(() => {
     if(!P || P.s !== s) return;
-    if(gagne){ SON.gagne(); const e = etoiles(s), sc = scoreFinal(s); if(!sv) sv = neuf(); const o = sv.niv[i] || {}; sv.niv[i] = { e:Math.max(o.e || 0, e), sc:Math.max(o.sc || 0, sc) }; sauve();
+    const rq = s.mode === 'raquette';
+    if(gagne){ SON.gagne(); const e = rq ? etoilesR(s) : etoiles(s), sc = rq ? scoreFinalR(s) : scoreFinal(s); if(!sv) sv = neuf(); const nv = rq ? (sv.nivR || (sv.nivR = {})) : sv.niv, o = nv[i] || {}; nv[i] = { e:Math.max(o.e || 0, e), sc:Math.max(o.sc || 0, sc) }; sauve();
       if(window.Famille && joueur) Famille.score('kassar', 'etoiles', totalEtoiles(), joueur).catch(() => {});
       parle(e === 3 ? 'Bravo ! Trois étoiles !' : 'Bravo, tu as tout cassé !');
       const suivant = i + 1 < NIVEAUX.length;
       modal(`<h2>🎉 Bravo${joueur ? ', ' + esc(joueur) : ''} !</h2><div class="etoiles">${[1, 2, 3].map(k => `<span class="${k <= e ? '' : 'off'}">⭐</span>`).join('')}</div>
-        <p style="font-size:18px">Tout cassé en <b>${s.tour}</b> tir${s.tour > 1 ? 's' : ''} (3 étoiles en ${s.niv.par} tirs ou moins) · ${s.casses} carreaux · score <b>${sc}</b></p>
+        <p style="font-size:18px">${rq ? `Tout cassé en <b>${Math.round(s.t)}</b> secondes, ${s.viesPerdues ? `en perdant ${s.viesPerdues} balle${s.viesPerdues > 1 ? 's' : ''}` : 'sans perdre une seule balle'} (3 étoiles sans en perdre)` : `Tout cassé en <b>${s.tour}</b> tir${s.tour > 1 ? 's' : ''} (3 étoiles en ${s.niv.par} tirs ou moins)`} · ${s.casses} carreaux · score <b>${sc}</b></p>
         <div class="rang">${suivant ? '<button class="pill go" id="mSuite">▶ Niveau suivant</button>' : ''}<button class="pill" id="mRe">🔁 Rejouer</button><button class="pill" id="mMenu">🏠 Niveaux</button></div>`);
       if($('mSuite')) $('mSuite').onclick = () => partie(i + 1); }
-    else { SON.perdu(); parle('Oh, les carreaux sont arrivés en bas. On réessaie ?');
-      modal(`<h2>Oh non !</h2><p style="font-size:18px">Les carreaux sont arrivés en bas. Il en restait ${reste(s)}.<br>Astuce : vise les trous pour que tes balles rebondissent derrière !</p>
+    else { SON.perdu(); parle(rq ? 'Oh, plus de balles ! On réessaie ?' : 'Oh, les carreaux sont arrivés en bas. On réessaie ?');
+      modal(`<h2>Oh non !</h2><p style="font-size:18px">${rq ? `Plus de balles ! Il restait ${reste(s)} carreaux.<br>Astuce : touche la balle avec le bord de la raquette pour l'envoyer de côté.` : `Les carreaux sont arrivés en bas. Il en restait ${reste(s)}.<br>Astuce : vise les trous pour que tes balles rebondissent derrière !`}</p>
         <div class="rang"><button class="pill go" id="mRe">🔁 Réessayer</button><button class="pill" id="mMenu">🏠 Niveaux</button></div>`); }
     $('mRe').onclick = () => partie(i); $('mMenu').onclick = () => menu();
   }, gagne ? 700 : 900); }
@@ -136,7 +153,11 @@ function fin(gagne){ const s = P.s, i = P.i; P.fini = true;
 let avant = performance.now(), reste_ = 0;
 function boucle(t){
   const dt = Math.min(.1, (t - avant) / 1000); avant = t;
-  if(P && !P.pause){ const s = P.s;
+  if(P && !P.pause && P.s.mode === 'raquette'){ const s = P.s;
+    const dx = (touches.ArrowRight || touches.KeyD ? 1 : 0) - (touches.ArrowLeft || touches.KeyA ? 1 : 0); if(dx) bougeR(s, s.px + dx * 420 * dt);
+    if(s.phase === 'jeu'){ reste_ += dt; let n = 0; while(reste_ >= DT && n++ < 60){ pasR(s); reste_ -= DT; } } else reste_ = 0;
+    evenements(); $('vite').style.display = 'none'; $('rappel').style.display = 'none'; }
+  else if(P && !P.pause){ const s = P.s;
     if(s.phase === 'vol'){ P.vol += dt; reste_ += dt * vitesse; let n = 0; while(reste_ >= DT && n++ < 60){ pas(s); reste_ -= DT; } if(P.vol > 40) rappelle(s); }
     else { reste_ = 0; P.vol = 0; if(vitesse !== 1){ vitesse = 1; $('vite').textContent = '⏩'; } }
     evenements();
@@ -163,7 +184,7 @@ function dessine(t){
   ctx.fillStyle = 'rgba(10,18,36,.45)'; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 0, W, TOP);
   // la ligne de danger (où les carreaux ne doivent pas arriver)
-  const lim = TOP + RANGS * CH; ctx.strokeStyle = 'rgba(255,90,90,.45)'; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(0, lim); ctx.lineTo(W, lim); ctx.stroke(); ctx.setLineDash([]);
+  const lim = TOP + RANGS * CH; if(s.mode !== 'raquette'){ ctx.strokeStyle = 'rgba(255,90,90,.45)'; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(0, lim); ctx.lineTo(W, lim); ctx.stroke(); ctx.setLineDash([]); }
   ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(0, LIGNE, W, 2);
   // les carreaux
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -184,11 +205,13 @@ function dessine(t){
     if(g.fin){ ctx.strokeStyle = '#ffd34d'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(g.fin[0], g.fin[1], 6, 0, 7); ctx.stroke(); } }
   // les balles
   for(const b of s.bs){ if(!b.ok) continue; if(ok(IM.balle)) ctx.drawImage(IM.balle, b.x - R - 1, b.y - R - 1, R * 2 + 2, R * 2 + 2); else { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, R, 0, 7); ctx.fill(); } }
+  if(s.mode === 'raquette') dessineRaquette(s); else {
   // le lanceur : l'avatar, et ses balles
   const lx = s.phase === 'vol' && s.premier !== null ? s.premier : s.lx;
   if(s.phase !== 'vol' || s.aLancer > 0){ if(ok(IM.balle)) ctx.drawImage(IM.balle, s.lx - R - 1, LIGNE - 2 * R - 1, R * 2 + 2, R * 2 + 2); }
   ctx.save(); ctx.beginPath(); ctx.arc(lx, LIGNE + 22, 19, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.clip(); if(ok(teteIm)) ctx.drawImage(teteIm, lx - 19, LIGNE + 3, 38, 38); else { ctx.font = '26px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🙂', lx, LIGNE + 24); } ctx.restore();
   ctx.font = '800 14px "Baloo 2", sans-serif'; ctx.fillStyle = '#fff'; ctx.fillText('×' + (s.phase === 'vol' ? s.aLancer : s.balles), lx + (lx > W - 50 ? -36 : 36), LIGNE + 22);
+  }
   // les éclats
   for(const p of parts){ ctx.globalAlpha = Math.max(0, 1 - p.t / (p.txt ? 1 : .9));
     if(p.txt){ ctx.font = '800 20px "Baloo 2", sans-serif'; ctx.fillStyle = '#ffd34d'; ctx.fillText(p.txt, p.x, p.y); } else { ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.w, p.w * .7); } }
@@ -196,8 +219,19 @@ function dessine(t){
   // le bandeau du haut
   ctx.font = '800 17px "Baloo 2", sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
   ctx.fillText(`${P.i + 1} · ${P.niv.nom}`, W / 2, 20);
-  ctx.font = '700 14px Nunito, sans-serif'; ctx.fillText(`Tir ${s.tour} · ⭐⭐⭐ en ${s.niv.par} · reste ${reste(s)} carreaux · ${s.score} pts`, W / 2, 44);
+  ctx.font = '700 14px Nunito, sans-serif'; ctx.fillText(s.mode === 'raquette' ? `${'❤️'.repeat(Math.max(0, s.vies))} · reste ${reste(s)} carreaux · ${s.score} pts` : `Tir ${s.tour} · ⭐⭐⭐ en ${s.niv.par} · reste ${reste(s)} carreaux · ${s.score} pts`, W / 2, 44);
   ctx.restore();
+}
+
+/* la raquette : une planche de zellige doré, l'avatar du joueur dessous, et « Touche pour lancer » quand la balle attend */
+function dessineRaquette(s){
+  const x = s.px - s.pl / 2, y = RQ.y, w = s.pl, h = RQ.h;
+  ctx.save(); ctx.shadowColor = 'rgba(255,211,77,.55)'; ctx.shadowBlur = 10; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, 6) : ctx.rect(x, y, w, h); ctx.fillStyle = '#f2b632'; ctx.fill(); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, 6) : ctx.rect(x, y, w, h); ctx.clip(); const im = IM.tuiles.jaune; if(ok(im)) ctx.drawImage(im, x, y - 6, w, h + 12); ctx.restore();
+  ctx.strokeStyle = '#7a4b12'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, 6) : ctx.rect(x, y, w, h); ctx.stroke();
+  ctx.save(); ctx.beginPath(); ctx.arc(s.px, y + h + 20, 16, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.clip(); if(ok(teteIm)) ctx.drawImage(teteIm, s.px - 16, y + h + 4, 32, 32); else { ctx.font = '22px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🙂', s.px, y + h + 22); } ctx.restore();
+  for(const b of s.bs) if(b.colle){ if(ok(IM.balle)) ctx.drawImage(IM.balle, b.x - R - 1, b.y - R - 1, R * 2 + 2, R * 2 + 2); else { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, R, 0, 7); ctx.fill(); } }
+  if(s.phase === 'colle'){ ctx.font = '800 18px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,255,255,' + (.6 + Math.sin(performance.now() / 250) * .3) + ')'; ctx.fillText('Touche pour lancer la balle', W / 2, RQ.y - 60); }
 }
 
 /* ---------- au démarrage ---------- */

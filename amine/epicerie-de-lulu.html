@@ -119,6 +119,7 @@ const P = {
   pain:{ s:'pain', p:'pains', syl:['PAIN'], g:'m' }, raisin:{ s:'raisin', p:'raisins', syl:['RAI','SIN'], g:'m' }, datte:{ s:'datte', p:'dattes', syl:['DAT','TE'], g:'f' },
 };
 const KS = Object.keys(P), LIRE = KS.filter(k => !P[k].pasLire);
+const de = k => /^[aeiouyœ]/.test(P[k].p) ? "d'" : 'de ';   // « d'oranges », « de pommes »
 const nb = (n, k) => `${n} ${n > 1 ? P[k].p : P[k].s}`;
 const unune = k => P[k].g === 'f' ? 'une' : 'un';
 
@@ -149,14 +150,17 @@ function audio(){ if(!AC){ try{ AC = new (window.AudioContext || window.webkitAu
 const cache = {};
 function charge(f){ if(cache[f]) return cache[f]; const ac = audio(); if(!ac) return Promise.reject();
   return cache[f] = fetch(f).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); }).then(ab => new Promise((ok, ko) => { const p = ac.decodeAudioData(ab, ok, ko); if(p && p.catch) p.catch(ko); })).catch(e => { delete cache[f]; throw e; }); }
-const fichier = t => { if(typeof t === 'number') return `nombres/voix/${t}.mp3`; const k = cle(t); return LULU.has(k) ? `lire/son.php?v=lulu&k=${k}&r=${DISPO.lulu.r}` : null; };
+// un nombre : Lulu le dit (sons n1…n10) ; sinon la voix des nombres de la Planète des Nombres
+const fichier = t => { const k = typeof t === 'number' ? 'n' + t : cle(t); if(LULU.has(k)) return `lire/son.php?v=lulu&k=${k}&r=${DISPO.lulu.r}`; return typeof t === 'number' ? `nombres/voix/${t}.mp3` : null; };
+const dit = (n, k) => n === 1 ? (P[k].g === 'f' ? 'une' : 'un') : n;   // « une pomme », « un citron », « 3 pommes »
+const mot = (n, k) => n > 1 ? P[k].p : P[k].s;
 let file = [], jeton = 0, joueur = null, dernier = [];
 function stop(){ jeton++; file = []; if(joueur){ try{ joueur.onended = null; joueur.stop(); }catch(e){} joueur = null; } try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
 function parle(liste, garde){ if(garde !== false) dernier = liste.slice(); stop(); audio(); file = liste.slice(); const j = jeton; file.forEach(t => { const f = fichier(t); if(f) charge(f).catch(() => {}); }); setTimeout(() => suivant(j), 80); }
 function suivant(j){
   if(j !== jeton) return; const t = file.shift(); if(t === undefined) return;
   const fin = () => { if(j === jeton) setTimeout(() => suivant(j), 120); }, f = fichier(t);
-  if(!f) return tts(String(t), fin);
+  if(!f) return tts(String(t).replace(/^syl-/, ''), fin);
   let fini = false; const g = setTimeout(() => { if(!fini){ fini = true; tts(String(t), fin); } }, 3500);
   charge(f).then(b => { if(fini || j !== jeton) return; fini = true; clearTimeout(g); const ac = audio(), src = ac.createBufferSource(); src.buffer = b; src.connect(ac.destination); joueur = src;
     let fait = false; const ok = () => { if(fait) return; fait = true; if(joueur === src) joueur = null; fin(); }; src.onended = ok; setTimeout(ok, b.duration * 1000 + 600); src.start(); })
@@ -165,7 +169,7 @@ function suivant(j){
 function tts(t, fin){ if(!window.speechSynthesis){ fin(); return; }
   try{ const u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; if(VTAB) u.voice = VTAB; u.rate = .9; u.pitch = 1.1; let fait = false; const ok = () => { if(fait) return; fait = true; clearTimeout(g); fin(); };
     const g = setTimeout(ok, 1500 + t.length * 110); u.onend = ok; u.onerror = ok; speechSynthesis.speak(u); if(speechSynthesis.paused) speechSynthesis.resume(); }catch(e){ fin(); } }
-function nombre(n){ stop(); audio(); const f = fichier(n); charge(f).then(b => { const ac = audio(), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(); }).catch(() => tts(String(n), () => {})); }
+function nombre(n){ stop(); audio(); const f = fichier(n); if(!f) return tts(String(n), () => {}); charge(f).then(b => { const ac = audio(), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(); }).catch(() => tts(String(n), () => {})); }
 function ton(f, d = .15, type = 'triangle', vol = .14, when = 0){ if(!audio()) return; const t = AC.currentTime + when, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + .02); }
 const sfx = { oui(){ [523, 659, 784].forEach((f, k) => ton(f, .2, 'triangle', .14, k * .08)); }, non(){ ton(220, .22, 'sawtooth', .06); }, tape(){ ton(660, .06, 'triangle', .08); } };
 const BRAVO = ['Bravo !', 'Super !', 'Oui, c\'est ça !', 'Génial !', 'Bien joué, Amine !'];
@@ -203,9 +207,9 @@ function question(){
   R.faute = false; barre(); const T = $('tableau'), id = R.a.id;
   if(id === 'compte'){
     const q = nouveau(() => { const k = pick(KS), n = rnd(1, R.k < 3 ? 6 : 10); return { id:k + n, k, n }; });
-    T.innerHTML = consigne(`Combien de <b>${P[q.k].p}</b> ?`) + `<div class="etal">${etal(q.k, q.n)}</div>` +
+    T.innerHTML = consigne(`Combien ${de(q.k)}<b>${P[q.k].p}</b> ?`) + `<div class="etal">${etal(q.k, q.n)}</div>` +
       `<div class="choixs">${chiffres(q.n, 10).map(v => `<button class="choix" data-v="${v}">${v}<span class="pts">${pts(v)}</span></button>`).join('')}</div>`;
-    parle([`Combien de ${P[q.k].p} ?`]);
+    parle([`Combien ${de(q.k)}${P[q.k].p} ?`]);
     T.querySelectorAll('.etal img').forEach((im, i) => im.onclick = () => { sfx.tape(); im.style.transform = 'scale(1.15)'; nombre(i + 1); });
     T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === q.n ? bonne(b) : rate(b, ['Touche chaque fruit pour compter.']));
   }
@@ -214,7 +218,7 @@ function question(){
     const phr = `Mets ${nb(q.n, q.k)} dans le panier.`;
     T.innerHTML = consigne(`Mets <b>${nb(q.n, q.k)}</b> dans le panier.`) + `<div class="etal">${Array.from({ length:10 }, (_, i) => `<button data-i="${i}"><img src="${IMG(q.k)}" alt=""></button>`).join('')}</div>` +
       `<div class="calc"><div class="panier"><div class="dedans" id="dedans"></div></div><div class="compteur" id="cpt">0</div></div><button class="go" id="fait">C'est fait ✔</button>`;
-    parle([phr]); let dans = [];
+    parle(['Mets', dit(q.n, q.k), mot(q.n, q.k) + ' dans le panier.']); let dans = [];
     const maj = () => { $('dedans').innerHTML = dans.map(i => `<img src="${IMG(q.k)}" alt="" data-i="${i}">`).join(''); $('cpt').textContent = dans.length;
       $('dedans').querySelectorAll('img').forEach(im => im.onclick = () => { sfx.tape(); dans = dans.filter(x => x !== +im.dataset.i); T.querySelector(`.etal button[data-i="${im.dataset.i}"]`).disabled = false; maj(); }); };
     T.querySelectorAll('.etal button').forEach(b => b.onclick = () => { if(b.disabled) return; b.disabled = true; dans.push(+b.dataset.i); maj(); nombre(dans.length); });
@@ -225,7 +229,7 @@ function question(){
     T.innerHTML = consigne(`Lis le mot. Quel fruit est écrit ?`) + `<div class="mot">${P[q.k].syl.map((s, i) => `<button class="s${i % 3}" data-s="${s}">${s}</button>`).join('')}</div>` +
       `<div class="choixs">${opts.map(k => `<button class="choix img" data-v="${k}"><img src="${IMG(k)}" alt=""></button>`).join('')}</div>`;
     parle(['Lis le mot.', 'Quel fruit est écrit ?']);
-    T.querySelectorAll('.mot button').forEach(b => b.onclick = () => { sfx.tape(); parle([b.dataset.s.toLowerCase()], false); });
+    T.querySelectorAll('.mot button').forEach(b => b.onclick = () => { sfx.tape(); parle(['syl-' + b.dataset.s.toLowerCase()], false); });
     T.querySelectorAll('.choix').forEach(b => b.onclick = () => b.dataset.v === q.k ? (bonne(b), setTimeout(() => parle([P[q.k].s], false), 700)) : rate(b, ['Touche les syllabes pour les entendre.']));
   }
   else if(id === 'etiquette'){
@@ -235,14 +239,14 @@ function question(){
     T.innerHTML = consigne(`Lis l'étiquette, et trouve le bon panier.`) + `<div class="etiquette">${q.n} ${P[q.k].syl.join('')}${q.n > 1 ? 'S' : ''}</div>` +
       `<div class="choixs">${opts.map(([k, n]) => `<button class="choix tas" data-v="${k + n}">${etal(k, n)}</button>`).join('')}</div>`;
     parle(['Lis l\'étiquette, et trouve le bon panier.']);
-    T.querySelector('.etiquette').onclick = () => parle([String(q.n), nb(q.n, q.k)], false);
+    T.querySelector('.etiquette').onclick = () => parle([dit(q.n, q.k), mot(q.n, q.k)], false);
     T.querySelectorAll('.choix').forEach(b => b.onclick = () => b.dataset.v === q.k + q.n ? bonne(b) : rate(b, ['Regarde bien le fruit, et compte.']));
   }
   else if(id === 'plus'){
     const moins = R.k >= 3 && Math.random() < .5;
     const q = nouveau(() => { const k = pick(KS), a = rnd(1, 9); let b; do b = rnd(1, 9); while(Math.abs(a - b) < (R.k < 3 ? 3 : 1)); return { id:k + a + '-' + b + moins, k, a, b }; });
-    const good = moins ? Math.min(q.a, q.b) : Math.max(q.a, q.b), phr = moins ? `Où y a-t-il le moins de ${P[q.k].p} ?` : `Où y a-t-il le plus de ${P[q.k].p} ?`;
-    T.innerHTML = consigne(moins ? `Où y a-t-il le <b>moins</b> de ${P[q.k].p} ?` : `Où y a-t-il le <b>plus</b> de ${P[q.k].p} ?`) +
+    const good = moins ? Math.min(q.a, q.b) : Math.max(q.a, q.b), phr = moins ? `Où y a-t-il le moins ${de(q.k)}${P[q.k].p} ?` : `Où y a-t-il le plus ${de(q.k)}${P[q.k].p} ?`;
+    T.innerHTML = consigne(moins ? `Où y a-t-il le <b>moins</b> ${de(q.k)}${P[q.k].p} ?` : `Où y a-t-il le <b>plus</b> ${de(q.k)}${P[q.k].p} ?`) +
       `<div class="choixs">${[q.a, q.b].map(n => `<button class="choix tas" data-v="${n}">${etal(q.k, n)}</button>`).join('')}</div>`;
     parle([phr]);
     T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === good ? bonne(b) : rate(b, ['Compte les deux paniers.']));
@@ -252,7 +256,7 @@ function question(){
     T.innerHTML = consigne(`${nb(q.a, q.k)}, et encore ${q.b}. Ça fait combien ?`) +
       `<div class="calc"><div class="etal">${etal(q.k, q.a)}</div><span class="op">+</span><div class="etal">${etal(q.k, q.b)}</div></div>` +
       `<div class="choixs">${chiffres(s, 10).map(v => `<button class="choix" data-v="${v}">${v}<span class="pts">${pts(v)}</span></button>`).join('')}</div>`;
-    parle([`${nb(q.a, q.k)}, et encore ${q.b}.`, 'Ça fait combien ?']);
+    parle([dit(q.a, q.k), mot(q.a, q.k), 'et encore', dit(q.b, q.k), 'Ça fait combien ?']);
     let c = 0; T.querySelectorAll('.etal img').forEach(im => im.onclick = () => { if(im.dataset.c) return; im.dataset.c = 1; im.style.opacity = .55; nombre(++c); });
     T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === s ? bonne(b) : rate(b, ['Touche tous les fruits pour les compter.']));
   }
@@ -266,10 +270,16 @@ function fin(){
   parle(gagne ? ['Bravo, Amine !', 'Tu gagnes une étoile !'] : ['Bien travaillé !', 'On recommence ?']);
 }
 
-/* les phrases que Lulu peut enregistrer (liste pour ElevenLabs) */
-window.EPICERIE_PHRASES = () => { const s = new Set(['Bienvenue dans mon épicerie, Amine !', 'Choisis un atelier.', 'Lis le mot.', 'Quel fruit est écrit ?', 'Lis l\'étiquette, et trouve le bon panier.', 'Ça fait combien ?', ENCORE, ...BRAVO,
-  'Touche chaque fruit pour compter.', 'Il y en a trop. Enlève-en en touchant le panier.', 'Il en manque. Ajoute-en !', 'Touche les syllabes pour les entendre.', 'Regarde bien le fruit, et compte.', 'Compte les deux paniers.', 'Touche tous les fruits pour les compter.', 'Bravo, Amine !', 'Tu gagnes une étoile !', 'Bien travaillé !', 'On recommence ?']);
-  for(const k of KS){ s.add(`Combien de ${P[k].p} ?`); s.add(`Où y a-t-il le plus de ${P[k].p} ?`); s.add(`Où y a-t-il le moins de ${P[k].p} ?`); s.add(P[k].s); } return [...s]; };
+/* les sons que Lulu enregistre (ElevenLabs) : [texte dit, clé]. Dans la console : EPICERIE_SONS() */
+const SYL_DIT = { ne:'neu', me:'meu', te:'teu', re:'reu', se:'zeu', ge:'jeu', sin:'sain', frai:'frè', rai:'rè', dat:'datte', pom:'pomme', rot:'rotte' };
+window.EPICERIE_SONS = () => { const L = [], add = t => L.push([t, cle(t)]);
+  ['Bienvenue dans mon épicerie, Amine !', 'Choisis un atelier.', 'Lis le mot.', 'Quel fruit est écrit ?', 'Lis l\'étiquette, et trouve le bon panier.', 'Ça fait combien ?', ENCORE, ...BRAVO,
+   'Touche chaque fruit pour compter.', 'Il y en a trop. Enlève-en en touchant le panier.', 'Il en manque. Ajoute-en !', 'Touche les syllabes pour les entendre.', 'Regarde bien le fruit, et compte.', 'Compte les deux paniers.', 'Touche tous les fruits pour les compter.',
+   'Bravo, Amine !', 'Tu gagnes une étoile !', 'Bien travaillé !', 'On recommence ?', 'Mets', 'et encore', 'un', 'une'].forEach(add);
+  for(const k of KS){ add(`Combien ${de(k)}${P[k].p} ?`); add(`Où y a-t-il le plus ${de(k)}${P[k].p} ?`); add(`Où y a-t-il le moins ${de(k)}${P[k].p} ?`); add(P[k].s); add(P[k].p); add(P[k].s + ' dans le panier.'); add(P[k].p + ' dans le panier.');
+    for(const sy of P[k].syl){ const x = sy.toLowerCase(); if(!L.some(l => l[1] === 'syl-' + cle(x))) L.push([SYL_DIT[x] || x, 'syl-' + cle(x)]); } }
+  for(let n = 1; n <= 10; n++) L.push([['un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix'][n - 1], 'n' + n]);
+  const vu = new Set(); return L.filter(([, k]) => !vu.has(k) && vu.add(k)); };
 
 menu(false);
 document.addEventListener('pointerdown', function premier(){ document.removeEventListener('pointerdown', premier); if(document.getElementById('menu').classList.contains('on')) parle(['Bienvenue dans mon épicerie, Amine !', 'Choisis un atelier.']); }, { once:true });
