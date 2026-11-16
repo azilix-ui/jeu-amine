@@ -46,13 +46,29 @@ const clean = t => String(t).replace(/<small>.*?<\/small>/g,'').replace(/<[^>]+>
 function segments(html){ const out = [], re = /<(\w+)[^>]*\blang="?en"?[^>]*>([\s\S]*?)<\/\1>/g; let m, last = 0; html = String(html);
   while((m = re.exec(html))){ if(m.index > last) out.push([html.slice(last, m.index), 'fr']); out.push([m[2], 'en']); last = re.lastIndex; }
   if(last < html.length) out.push([html.slice(last), 'fr']); return out.map(([t, l]) => [clean(t), l]).filter(([t]) => t && /[\p{L}\p{N}]/u.test(t)); }
+/* Les voix enregistrées (ElevenLabs) : C.voix = 'ollie' → sons famille-data/lire-voix/ollie/<clé>.mp3 (liste window.LIRE_VOIX, servis par
+   ../amine/lire/son.php). Une phrase anglaise enregistrée est jouée telle quelle ; le reste est dit par la voix de la tablette, à la suite. */
+const cle = t => String(t).toLowerCase().replace(/é/g, 'ee').replace(/œ/g, 'oe').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
+const DISPO = (window.LIRE_VOIX || {})[C.voix || ''] || null, SONS = DISPO ? new Set(DISPO.k) : new Set();
+const fichier = t => { const k = cle(t); return SONS.has(k) ? `../amine/lire/son.php?v=${C.voix}&k=${k}&r=${DISPO.r}` : null; };
+const tampons = {};
+function actx(){ try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.state === 'suspended') ac.resume(); }catch(e){} return ac; }
+function tampon(f){ if(tampons[f]) return tampons[f]; const a = actx(); if(!a) return Promise.reject();
+  return tampons[f] = fetch(f).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); }).then(b => new Promise((ok, ko) => { const p = a.decodeAudioData(b, ok, ko); if(p && p.catch) p.catch(ko); })).catch(e => { delete tampons[f]; throw e; }); }
+let jeton = 0, joueur = null;
 function speak(html){
-  talk(); if(muted || !('speechSynthesis' in window)) return;
-  try{ speechSynthesis.cancel(); for(const [t, l] of segments(html)){ const u = new SpeechSynthesisUtterance(t);
-    if(l === 'en'){ u.lang = 'en-GB'; if(VE) u.voice = VE; u.rate = .82; } else { u.lang = 'fr-FR'; if(VF) u.voice = VF; u.rate = .95; } u.pitch = 1.1; speechSynthesis.speak(u); } }catch(e){}
+  talk(); hush(); if(muted) return;
+  const segs = segments(html), j = jeton;
+  segs.forEach(([t, l]) => { const f = l === 'en' && fichier(t); if(f) tampon(f).catch(() => {}); });
+  (async () => { for(const [t, l] of segs){ if(j !== jeton) return; const f = l === 'en' && fichier(t);
+    if(f){ try{ const b = await tampon(f); if(j !== jeton) return; await new Promise(res => { const a = actx(), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); joueur = s; s.onended = res; setTimeout(res, b.duration * 1000 + 400); s.start(); }); continue; }catch(e){} }
+    await dire(t, l, j); } })();
 }
+function dire(t, l, j){ return new Promise(res => { if(!('speechSynthesis' in window) || j !== jeton) return res();
+  try{ const u = new SpeechSynthesisUtterance(t); if(l === 'en'){ u.lang = 'en-GB'; if(VE) u.voice = VE; u.rate = .82; } else { u.lang = 'fr-FR'; if(VF) u.voice = VF; u.rate = .95; } u.pitch = 1.1;
+    let fait = false; const fin = () => { if(!fait){ fait = true; res(); } }; u.onend = fin; u.onerror = fin; setTimeout(fin, 1500 + t.length * 120); speechSynthesis.speak(u); }catch(e){ res(); } }); }
 const en = t => speak(`<i lang="en">${t}</i>`);
-function hush(){ try{ speechSynthesis.cancel(); }catch(e){} }
+function hush(){ jeton++; try{ speechSynthesis.cancel(); }catch(e){} if(joueur){ try{ joueur.onended = null; joueur.stop(); }catch(e){} joueur = null; } }
 function talk(){ document.querySelectorAll('.owl').forEach(o => { o.classList.remove('talk'); void o.offsetWidth; o.classList.add('talk'); }); }
 function confetti(){ for(let i=0;i<10;i++){ const s=document.createElement('span'); s.className='float'; s.textContent=pick(C.confetti || ['⭐','🎟️','🌷','🍀','🎉']); s.style.left=rnd(5,90)+'vw'; s.style.top=rnd(55,90)+'vh'; s.style.animationDelay=(i*60)+'ms'; document.body.appendChild(s); setTimeout(()=>s.remove(),1800); } }
 function topbar(back){
@@ -220,7 +236,7 @@ function carnet(){
   wireTop(); speak(document.getElementById('say').innerHTML);
 }
 
-window.OLLIE = { rnd, pick, shuffle, esc, speak, en, hush, say, frame, answered, sfx, ASK, get S(){ return S; } };
+window.OLLIE = { segments, rnd, pick, shuffle, esc, speak, en, hush, say, frame, answered, sfx, ASK, get S(){ return S; } };
 home(false);
 if(window.Famille){
   Famille.track(C.track, 'Salma', [KEY]);

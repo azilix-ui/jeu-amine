@@ -39,6 +39,7 @@
 <body>
 <main class="wrap" id="app"></main>
 <script src="../famille.js"></script>
+<script src="../amine/lire/voix.php"></script>
 <script>
 'use strict';
 const IMG = n => `ollie/img/${n}.webp`;
@@ -119,7 +120,7 @@ const many = (f, n) => Array.from({ length:n }, f);
 function noDup(f, n){ const out = [], seen = new Set(); let guard = 0; while(out.length < n && guard++ < 200){ const q = f(); const k = (q.q || '') + '|' + q.good + '|' + (q.word || '') + '|' + (q.body || ''); if(!seen.has(k)){ seen.add(k); out.push(q); } } return out; }
 
 window.COURS = {
-  key:'salma-house', track:'salma-house', retour:"La maison", titre:"Ollie's House", sous:'La maison, les meubles, et où se cache le chat (anglais)',
+  voix:'ollie', key:'salma-house', track:'salma-house', retour:"La maison", titre:"Ollie's House", sous:'La maison, les meubles, et où se cache le chat (anglais)',
   bonjour:`<i lang="en">Welcome to my house, Salma!</i> Bienvenue dans ma maison ! On va visiter les pièces, apprendre les meubles, et retrouver mon chat qui se cache partout. Chaque bonne réponse te donne un <b>ticket 🎟️</b> pour Serpent Légendes !`,
   confetti:['🏠','🐈','⭐','🎟️','🛋️'], revoir:'Mots à revoir',
   CH:[
@@ -151,5 +152,5 @@ window.COURS = {
 /* les réponses en petites scènes : 3 colonnes */
 COURS.ask.choix = q => { OLLIE.ASK.choix(q); if(q.cls) document.querySelector('.answers').classList.add(q.cls); };
 </script>
-<script src="ollie/cours.js?v=1"></script>
+<script src="ollie/cours.js?v=2"></script>
 </body></html>
