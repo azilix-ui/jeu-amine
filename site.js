@@ -1,6 +1,7 @@
 /* Famille Missaoui : chargé par toutes les pages.
    1. installe le site comme une application (service worker) et prépare le bouton « Installer » ;
-   2. note chaque ouverture de page dans le journal des visites (vu seulement par les parents, gardé 60 jours). */
+   2. note chaque ouverture de page dans le journal des visites (vu seulement par les parents, gardé 60 jours) ;
+   3. (16/11) compte le temps passé sur la page (seulement quand elle est visible) et l'envoie chaque minute : bulles de Progression. */
 (function(){
   'use strict';
   var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
@@ -30,5 +31,17 @@
       var url = '/api/famille.php';
       if(!(navigator.sendBeacon && navigator.sendBeacon(url, f))) fetch(url, { method:'POST', body:f, keepalive:true }).catch(function(){});
     }
+  }catch(e){}
+  // temps passé sur la page : compté seulement quand la page est visible, envoyé par minute (et ce qui reste quand on la quitte)
+  try{
+    var vu = 0, depuis = document.hidden ? 0 : Date.now();
+    var joueur = function(){ try{ return String(JSON.parse(localStorage.getItem('famille-joueur') || 'null') || '').slice(0, 20); }catch(e){ return ''; } };
+    var compte = function(){ if(depuis){ vu += (Date.now() - depuis) / 1000; depuis = Date.now(); } };
+    var envoie = function(fin){ compte(); var s = Math.round(vu), p = joueur(); if(s < (fin ? 5 : 60) || !p) return; vu = 0;
+      var g = new FormData(); g.append('action', 'temps'); g.append('page', location.pathname.slice(0, 120)); g.append('player', p); g.append('sec', String(Math.min(120, s)));
+      if(!(navigator.sendBeacon && navigator.sendBeacon('/api/famille.php', g))) fetch('/api/famille.php', { method:'POST', body:g, keepalive:true }).catch(function(){}); };
+    document.addEventListener('visibilitychange', function(){ if(document.hidden){ envoie(true); depuis = 0; } else depuis = Date.now(); });
+    addEventListener('pagehide', function(){ envoie(true); });
+    setInterval(function(){ envoie(false); }, 60000);
   }catch(e){}
 })();

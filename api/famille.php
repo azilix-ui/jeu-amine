@@ -18,6 +18,7 @@
  *   POST action=setup  newpass                          -> crée le mot de passe (une seule fois)
  *   POST action=summary pass                            -> tout pour la page Progression
  *   POST action=visits  pass days                       -> journal des visites (IP, pays, ville, page, appareil), 60 jours au plus
+ *   POST action=temps   page player sec                 -> (site.js, chaque minute) secondes passées sur une page, par heure ; renvoyées avec « visits » (champ temps)
  *   POST action=reset   pass player course [history] [scores] -> remet un cours à zéro, ou à l'état d'un instantané (history = id)
  * Remise à zéro : la table resets garde la date et l'état voulu ; chaque tablette l'applique à sa prochaine visite
  *   GET  ?action=resets&player=P&course=C               -> {ts, data} de la dernière remise à zéro (ts = 0 s'il n'y en a pas)
@@ -93,6 +94,7 @@ function db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS writes (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS visits (id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, ip TEXT NOT NULL, cc TEXT, page TEXT NOT NULL, player TEXT, ua TEXT, app INTEGER, screen TEXT, ref TEXT)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS visits_ts ON visits (ts)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS temps (player TEXT NOT NULL COLLATE NOCASE, page TEXT NOT NULL, h INTEGER NOT NULL, sec INTEGER NOT NULL, PRIMARY KEY (player, page, h))');   // 16/11 : secondes passées sur chaque page, par heure
     $pdo->exec('CREATE TABLE IF NOT EXISTS geo (ip TEXT PRIMARY KEY, cc TEXT, country TEXT, region TEXT, city TEXT, isp TEXT, ts INTEGER)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS reglages (k TEXT PRIMARY KEY, v TEXT)');                                              // réglages des parents (temps d'écran…)
     $pdo->exec('CREATE TABLE IF NOT EXISTS ecran (player TEXT NOT NULL COLLATE NOCASE, jour TEXT NOT NULL, sec INTEGER NOT NULL, PRIMARY KEY (player, jour))');   // temps de jeu par jour
@@ -343,9 +345,17 @@ try {
 
     // Mode explorateur (14/11) : papa, maman ou un invité essaient les cours des enfants (profil choisi sur l'accueil).
     // explorateur.js pose le cookie famille_explo : rien de ce qui concerne Essil, Salma ou Amine n'est enregistré.
-    if (!empty($_COOKIE['famille_explo']) && in_array($action, ['score', 'progress', 'ecran', 'demande'], true)) {
+    if (!empty($_COOKIE['famille_explo']) && in_array($action, ['score', 'progress', 'ecran', 'demande', 'temps'], true)) {
         $q = mb_convert_case(trim((string)($_POST['player'] ?? '')), MB_CASE_TITLE, 'UTF-8');
         if (in_array($q, ENFANTS, true)) out(200, ['ok' => true, 'explorateur' => true, 'libre' => true, 'personalBest' => false, 'best' => 0, 'rank' => 0]);
+    }
+    if ($action === 'temps') {   // 16/11 : temps passé sur une page (site.js, par minute, page visible)
+        $page = (string)($_POST['page'] ?? ''); $pl = trim((string)($_POST['player'] ?? '')); $sec = (int)($_POST['sec'] ?? 0);
+        if (!preg_match('~^/[\w\-./%]{0,119}$~u', $page) || $pl === '' || mb_strlen($pl) > 20 || !preg_match("/^[\p{L}][\p{L}\p{M} '\-]*$/u", $pl) || $sec < 1) out(200, ['ok' => false]);
+        $h = intdiv(time(), 3600) * 3600;
+        db()->prepare('INSERT INTO temps (player, page, h, sec) VALUES (?, ?, ?, ?) ON CONFLICT(player, page, h) DO UPDATE SET sec = MIN(3600, sec + excluded.sec)')->execute([$pl, $page, $h, min(120, $sec)]);
+        if (mt_rand(1, 60) === 1) db()->prepare('DELETE FROM temps WHERE h < ?')->execute([time() - VISIT_DAYS * 86400]);
+        out(200, ['ok' => true]);
     }
     if ($action === 'visit') {
         $pdo = db();
@@ -382,7 +392,9 @@ try {
         $st->execute([time() - $days * 86400]);
         $rows = $st->fetchAll(PDO::FETCH_ASSOC);
         foreach ($rows as &$r) { $r['ts'] = (int)$r['ts']; $r['app'] = (int)$r['app']; } unset($r);
-        out(200, ['days' => $days, 'keep' => VISIT_DAYS, 'visits' => $rows]);
+        $st = $pdo->prepare('SELECT player, page, h, sec FROM temps WHERE h >= ?'); $st->execute([time() - $days * 86400 - 3600]);
+        $tps = array_map(fn($r) => ['player' => $r['player'], 'page' => $r['page'], 'h' => (int)$r['h'], 'sec' => (int)$r['sec']], $st->fetchAll(PDO::FETCH_ASSOC));
+        out(200, ['days' => $days, 'keep' => VISIT_DAYS, 'visits' => $rows, 'temps' => $tps]);
     }
 
     if ($action === 'score') {

@@ -109,6 +109,14 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
 .chart .gl{stroke:var(--line);stroke-width:1}
 .chart .ax{fill:var(--soft);font-size:12px;font-family:var(--body);font-weight:700}
 .chart .tot{fill:var(--ink)}
+.chart rect[data-k]{cursor:pointer}
+.chart rect[data-k]:hover{filter:brightness(1.12)}
+#cbulle{position:fixed;z-index:50;max-width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:2px solid var(--line);border-left:6px solid var(--t);border-radius:16px;padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.18);pointer-events:none;font-size:14px;line-height:1.35}
+#cbulle h4{margin:0 0 6px;font-size:15px}
+#cbulle ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+#cbulle li{display:flex;justify-content:space-between;gap:14px}
+#cbulle li span{color:var(--soft);white-space:nowrap;font-weight:700}
+#cbulle .note{margin:6px 0 0;color:var(--soft);font-size:12px}
 .kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:16px}
 .kcard{background:var(--surface);border:2px solid var(--line);border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0;border-top:8px solid var(--t)}
 .kcard header{display:flex;gap:12px;align-items:center}
@@ -467,7 +475,7 @@ const FAM = ['essil', 'salma', 'amine', 'anis', 'imen'];
 const TABS = [['vue', '📊', 'Vue d\'ensemble'], ['activite', '📅', 'Activités'], ['enfants', '🎓', 'Cours et jeux'], ['suivi', '🧭', 'Suivi'], ['records', '🏆', 'Records'], ['journal', '🌍', 'Journal'], ['houma', '💬', 'Houma en ligne'], ['reglages', '⚙️', 'Réglages']];
 const mem = { get(k, d){ try{ return sessionStorage.getItem(k) || d; }catch(e){ return d; } }, set(k, v){ try{ sessionStorage.setItem(k, v); }catch(e){} } };
 let tab = mem.get('prog-tab', 'vue'), kid = mem.get('prog-kid', 'Salma'), aKid = 'Tous', vdays = +mem.get('prog-days', 7) || 7;
-let VIS = null, VERR = '', VKEEP = 60, vLoaded = 0, vBusy = false, jFilter = 'tous', jQuery = '';
+let TPS = [], CH = null, VIS = null, VERR = '', VKEEP = 60, vLoaded = 0, vBusy = false, jFilter = 'tous', jQuery = '';
 const dayKey = t => new Date(t * 1000).toLocaleDateString('fr-CA', { timeZone:'Europe/Paris' });
 const dayLabel = k => new Date(k + 'T12:00:00').toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
 const hm = t => new Date(t * 1000).toLocaleTimeString('fr-FR', { timeZone:'Europe/Paris', hour:'2-digit', minute:'2-digit' });
@@ -488,20 +496,45 @@ const tile = (n, label, sub, col) => '<div class="tile"' + (col ? ' style="--t:'
 const waitV = () => VERR ? '<p class="none">' + esc(VERR) + '</p>' : '<p class="none">Chargement du journal des visites…</p>';
 
 /* --- 📊 Vue d'ensemble --- */
+// 16/11 : la bulle d'une barre du graphique : les coins du site ouverts par l'enfant, combien de fois, et le temps passé
+const duree = s => s < 60 ? (s ? 'moins d\'1 min' : '') : s < 3600 ? Math.round(s / 60) + ' min' : Math.floor(s / 3600) + ' h ' + String(Math.round(s % 3600 / 60)).padStart(2, '0');
+function bulleHTML(i, k){
+  const sl = CH && CH.slots[i]; if(!sl || !sl.d || !sl.d[k]) return '';
+  const L = Object.entries(sl.d[k]).sort((a, b) => b[1].sec - a[1].sec || b[1].n - a[1].n), tot = L.reduce((a, [, o]) => a + o.sec, 0);
+  const quand = CH.hourly ? 'vers ' + sl.lab.replace(/\s/g, '') : new Date(sl.t * 1000).toLocaleDateString('fr-FR', { timeZone:'Europe/Paris', weekday:'long', day:'numeric', month:'long' });
+  return '<h4>' + k + ' · ' + esc(quand) + (tot ? ' · ' + duree(tot) : '') + '</h4><ul>' + L.slice(0, 10).map(([pg, o]) => '<li>' + esc(pageName(pg)) + '<span>' + [o.n ? (o.n > 1 ? o.n + ' fois' : 'ouvert') : '', duree(o.sec)].filter(Boolean).join(' · ') + '</span></li>').join('') + '</ul>' +
+    (L.length > 10 ? '<p class="note">et ' + (L.length - 10) + ' autres pages</p>' : '') + (tot ? '' : '<p class="note">Le temps passé est compté depuis le 16/11.</p>');
+}
+(function(){
+  let b = null, fixe = null;
+  const montre = (r, ev) => { const h = bulleHTML(+r.dataset.s, r.dataset.k); if(!h) return cache(); if(!b){ b = document.createElement('div'); b.id = 'cbulle'; document.body.appendChild(b); }
+    b.innerHTML = h; b.style.setProperty('--t', KCOL[r.dataset.k]); b.style.display = 'block';
+    const q = r.getBoundingClientRect(), w = b.offsetWidth, hh = b.offsetHeight; let x = q.left + q.width / 2 - w / 2, y = q.top - hh - 10;
+    if(y < 8) y = q.bottom + 10; b.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px'; b.style.top = Math.max(8, y) + 'px'; };
+  const cache = () => { if(b) b.style.display = 'none'; fixe = null; };
+  document.addEventListener('mouseover', e => { const r = e.target.closest && e.target.closest('.chart rect[data-k]'); if(r) montre(r, e); else if(!fixe) cache(); });
+  document.addEventListener('click', e => { const r = e.target.closest && e.target.closest('.chart rect[data-k]'); if(r){ fixe = r; montre(r, e); } else cache(); });   // au doigt sur la tablette
+  addEventListener('scroll', () => { if(b && b.style.display === 'block') cache(); }, { passive:true });
+})();
 function chartHTML(V){
   const hourly = vdays === 1, N = hourly ? 24 : Math.min(vdays, 30), now = Date.now() / 1000, slots = [];
   for(let i = N - 1; i >= 0; i--){ const t = now - i * (hourly ? 3600 : 86400); slots.push({ k:hourly ? dayKey(t) + ' ' + new Date(t * 1000).toLocaleTimeString('fr-FR', { timeZone:'Europe/Paris', hour:'2-digit' }) : dayKey(t), t, n:{ Essil:0, Salma:0, Amine:0 } }); }
   const idx = Object.fromEntries(slots.map((s, i) => [s.k, i]));
-  V.forEach(v => { const k = kidOf(v.player); if(!k) return; const key = hourly ? dayKey(v.ts) + ' ' + new Date(v.ts * 1000).toLocaleTimeString('fr-FR', { timeZone:'Europe/Paris', hour:'2-digit' }) : dayKey(v.ts); if(idx[key] !== undefined) slots[idx[key]].n[k]++; });
+  const cle = t => hourly ? dayKey(t) + ' ' + new Date(t * 1000).toLocaleTimeString('fr-FR', { timeZone:'Europe/Paris', hour:'2-digit' }) : dayKey(t);
+  const det = (s, k, pg) => { s.d = s.d || {}; const kk = s.d[k] = s.d[k] || {}; return kk[pg] = kk[pg] || { n:0, sec:0 }; };
+  V.forEach(v => { const k = kidOf(v.player); if(!k) return; const i = idx[cle(v.ts)]; if(i !== undefined){ slots[i].n[k]++; det(slots[i], k, v.page).n++; } });
+  // 16/11 : le temps passé sur chaque page (site.js l'envoie chaque minute, rangé par heure)
+  TPS.forEach(x => { const k = kidOf(x.player); if(!k) return; const i = idx[cle(x.h + 1800)]; if(i !== undefined) det(slots[i], k, x.page).sec += x.sec; });
   const max = Math.max(4, ...slots.map(s => s.n.Essil + s.n.Salma + s.n.Amine)), W = 720, H = 210, L = 30, B = 26, T = 14, bw = (W - L - 6) / N, ph = H - B - T;
   const step = Math.ceil(max / 4), ticks = [0, 1, 2, 3, 4].map(i => i * step).filter(v => v <= max + step - 1);
   const top = ticks[ticks.length - 1] || max, y = v => T + ph - v / top * ph;
   let g = ticks.map(v => '<line x1="' + L + '" x2="' + W + '" y1="' + y(v) + '" y2="' + y(v) + '" class="gl"/><text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" class="ax" text-anchor="end">' + v + '</text>').join('');
   slots.forEach((s, i) => { let acc = 0; const x = L + i * bw + bw * .14, w = bw * .72, tot = s.n.Essil + s.n.Salma + s.n.Amine;
     const lab = hourly ? s.k.slice(-4).trim() : new Date(s.t * 1000).toLocaleDateString('fr-FR', { timeZone:'Europe/Paris', day:'numeric', month:N > 10 ? 'numeric' : 'short' });
-    KIDS.forEach(k => { const n = s.n[k]; if(!n) return; const h = n / top * ph; acc += n; g += '<rect x="' + x.toFixed(1) + '" y="' + (y(acc)).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + Math.max(1, h - 1.5).toFixed(1) + '" rx="3" fill="' + KCOL[k] + '"><title>' + k + ' : ' + n + ' · ' + lab + '</title></rect>'; });
+    KIDS.forEach(k => { const n = s.n[k]; if(!n) return; const h = n / top * ph; acc += n; g += '<rect x="' + x.toFixed(1) + '" y="' + (y(acc)).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + Math.max(1, h - 1.5).toFixed(1) + '" rx="3" fill="' + KCOL[k] + '" data-s="' + i + '" data-k="' + k + '"></rect>'; s.lab = lab; });
     if(tot && N <= 16) g += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (y(tot) - 4).toFixed(1) + '" class="ax tot" text-anchor="middle">' + tot + '</text>';
     if(N <= 10 || i % Math.ceil(N / 8) === 0 || i === N - 1) g += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (H - 8) + '" class="ax" text-anchor="middle">' + lab + '</text>'; });
+  CH = { slots, hourly };
   return '<div class="legend">' + KIDS.map(k => '<span><i style="background:' + KCOL[k] + '"></i>' + k + '</span>').join('') + '</div><svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Pages ouvertes par les enfants, ' + (hourly ? 'heure par heure' : 'jour par jour') + '">' + g + '</svg>';
 }
 function vueHTML(S){
@@ -604,7 +637,7 @@ function journalHTML(){
 
 async function fetchVisits(){
   const need = vdays > 30 ? 60 : 30; if(vBusy || (VIS && vLoaded >= need)) return; vBusy = true;
-  try{ const R = await post({ action:'visits', pass, days:need }); VIS = R.visits || []; VKEEP = R.keep || 60; vLoaded = need; VERR = ''; }catch(e){ VERR = e.message; }
+  try{ const R = await post({ action:'visits', pass, days:need }); VIS = R.visits || []; TPS = R.temps || []; VKEEP = R.keep || 60; vLoaded = need; VERR = ''; }catch(e){ VERR = e.message; }
   vBusy = false; draw();
 }
 function draw(){
