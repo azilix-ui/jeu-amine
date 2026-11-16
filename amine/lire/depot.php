@@ -5,7 +5,7 @@ require __DIR__ . '/_commun.php';
 header('Access-Control-Allow-Origin: https://elevenlabs.io');
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
-const LV_EMPREINTE = '67c33c24f21ac2ff13972c5c2c316fe4ed3817bad0b8bb8c278e4540d60c3062';
+const LV_EMPREINTE = '1ed6b431528fc24a7d236da2f577751f748dba3518ce24bb93fb0211ca24ec56';   // jeton du 16/11 (Épicerie de Lulu)
 function lv_fin(int $code, array $r): void { http_response_code($code); echo json_encode($r); exit; }
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') lv_fin(405, ['ok' => false]);
 $d = json_decode((string)file_get_contents('php://input', false, null, 0, 600000), true);
