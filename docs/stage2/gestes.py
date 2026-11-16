@@ -61,7 +61,7 @@ def planche(dos, id):
     for r, k in enumerate(ordre):
         for i, c in enumerate(cases[k]): out.paste(c, (i * cw + (cw - c.width) // 2, r * ch + ch - c.height), c)
     os.makedirs(SORTIE, exist_ok=True); out.save(os.path.join(SORTIE, f'{id}.webp'), quality=84, method=6)
-    return { 'cw':cw, 'ch':ch, 'ref':REF, 'n':[len(cases[k]) for k in ordre], 'v':2 }
+    return { 'cw':cw, 'ch':ch, 'ref':REF, 'n':[len(cases[k]) for k in ordre], 'v':3 }   # 3 : planches avec la danse (16/11)
 
 if __name__ == '__main__':
     dos, ids = sys.argv[1], sys.argv[2:]
