@@ -483,7 +483,7 @@ function voice(){for(const p of C.voiceLangs){const l=voices.filter(v=>v.lang.re
 const VX_L="de",vxBuf={};let vxJeton=0,vxSrc=null;
 function vxCharge(t){const k=t;if(vxBuf[k])return vxBuf[k];const a=actx();if(!a)return Promise.reject();return vxBuf[k]=fetch("/api/voix.php?l="+VX_L+"&t="+encodeURIComponent(t)).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(b=>new Promise((ok,ko)=>{const p=a.decodeAudioData(b,ok,ko);if(p&&p.catch)p.catch(ko)})).catch(e=>{delete vxBuf[k];throw e})}
 function speakTablette(t,rate){if(!synth)return;synth.cancel();const u=new SpeechSynthesisUtterance(t);const v=voice();if(v)u.voice=v;u.lang=C.voiceLangs[0];u.rate=rate||C.rate;synth.speak(u)}
-function speak(t,rate){if(!audioOn||!t)return;hush();const j=vxJeton;t=String(t).trim();vxCharge(t).then(b=>{if(j!==vxJeton)return;const a=actx(),s=a.createBufferSource();s.buffer=b;s.connect(a.destination);vxSrc=s;s.start()}).catch(()=>{if(j===vxJeton)speakTablette(t,rate)})}
+function speak(t,rate){if(!audioOn||!t||(window.FamilleVoix&&!FamilleVoix.on()))return;hush();const j=vxJeton;t=String(t).trim();vxCharge(t).then(b=>{if(j!==vxJeton)return;const a=actx(),s=a.createBufferSource();s.buffer=b;s.connect(a.destination);vxSrc=s;s.start()}).catch(()=>{if(j===vxJeton)speakTablette(t,rate)})}
 function hush(){vxJeton++;if(synth)synth.cancel();if(vxSrc){try{vxSrc.stop()}catch(e){}vxSrc=null}}
 let ac;
 function actx(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==="suspended")ac.resume();return ac}

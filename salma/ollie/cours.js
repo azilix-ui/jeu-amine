@@ -63,7 +63,7 @@ function tampon(f){ if(tampons[f]) return tampons[f]; const a = actx(); if(!a) r
   return tampons[f] = fetch(f).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); }).then(b => new Promise((ok, ko) => { const p = a.decodeAudioData(b, ok, ko); if(p && p.catch) p.catch(ko); })).catch(e => { delete tampons[f]; throw e; }); }
 let jeton = 0, joueur = null;
 function speak(html){
-  talk(); hush(); if(muted) return;
+  talk(); hush(); if(muted || (window.FamilleVoix && !FamilleVoix.on())) return;   // touche V : consignes orales coupées
   const j = jeton, segs = [];
   for(const [t, l] of segments(html)) for(const m of (l === 'en' && fichier(t) ? [t] : morceaux(t))) segs.push([m, l, (l === 'en' && fichier(m)) || enLigne(m, l)]);
   segs.forEach(([, , f]) => tampon(f).catch(() => {}));   // tout se charge en même temps, puis se joue dans l'ordre

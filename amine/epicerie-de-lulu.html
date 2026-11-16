@@ -156,7 +156,7 @@ const dit = (n, k) => n === 1 ? (P[k].g === 'f' ? 'une' : 'un') : n;   // « une
 const mot = (n, k) => n > 1 ? P[k].p : P[k].s;
 let file = [], jeton = 0, joueur = null, dernier = [];
 function stop(){ jeton++; file = []; if(joueur){ try{ joueur.onended = null; joueur.stop(); }catch(e){} joueur = null; } try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
-function parle(liste, garde){ if(garde !== false) dernier = liste.slice(); stop(); audio(); file = liste.slice(); const j = jeton; file.forEach(t => { const f = fichier(t); if(f) charge(f).catch(() => {}); }); setTimeout(() => suivant(j), 80); }
+function parle(liste, garde){ if(garde !== false) dernier = liste.slice(); stop(); if(window.FamilleVoix && !FamilleVoix.on()) return; audio(); file = liste.slice(); const j = jeton; file.forEach(t => { const f = fichier(t); if(f) charge(f).catch(() => {}); }); setTimeout(() => suivant(j), 80); }
 function suivant(j){
   if(j !== jeton) return; const t = file.shift(); if(t === undefined) return;
   const fin = () => { if(j === jeton) setTimeout(() => suivant(j), 120); }, f = fichier(t);

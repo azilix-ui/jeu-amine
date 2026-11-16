@@ -67,6 +67,62 @@
   }catch(e){}
 
 
+  /* ---------- la voix des consignes (16/11, demandé par le papa) ----------
+     Toutes les pages qui parlent avec la voix de la tablette (speechSynthesis) parlent désormais avec les voix ElevenLabs
+     du site (api/voix.php, la clé API du papa ; chaque phrase n'est fabriquée qu'une fois puis gardée sur le serveur) :
+     Céline en français, Alice en anglais, Toni en allemand ; pour Amine (ou dans son espace), la voix « dessin animé » de Lulu.
+     Si le serveur ne répond pas : la voix de la tablette, comme avant.
+     On coupe ou remet les consignes orales avec la touche V (P sert déjà de pause dans les jeux), le bouton 🗣️ de l'étiquette
+     « Explorateur », ou FamilleVoix.basculer() depuis une page (ex. le menu du Jasmin · Stage 2). Réglage gardé sur l'appareil. */
+  (function(){
+    var NAT = window.speechSynthesis || null, natSpeak = NAT ? NAT.speak.bind(NAT) : null, natCancel = NAT ? NAT.cancel.bind(NAT) : null;
+    var off = false; try{ off = VRAI && VRAI.getItem('famille-voix') === 'off'; }catch(e){}
+    var file = [], cur = null, jeton = 0, ecoute = [];
+    if(!window.SpeechSynthesisUtterance){   // tablette sans voix : une phrase toute simple qui sait dire « fini »
+      window.SpeechSynthesisUtterance = function(t){ var et = document.createElement('span'); et.text = t || ''; et.lang = 'fr-FR'; et.rate = 1; et.volume = 1; return et; };
+    }
+    function fire(u, type){ try{ u.dispatchEvent(new Event(type)); }catch(e){} }
+    function pourAmine(){ var m = ''; try{ m = moi(); }catch(e){} return m === 'Amine' || (m !== 'Anis' && m !== 'Imen' && /^\/amine\//.test(location.pathname)); }
+    function morceaux(t){ var out = [], c = ''; String(t).split(/(?<=[.!?;:])\s+/).forEach(function(p){ while(p.length > 330){ out.push(p.slice(0, 330)); p = p.slice(330); } if((c + ' ' + p).trim().length > 330){ if(c) out.push(c.trim()); c = p; } else c = (c + ' ' + p).trim(); }); if(c.trim()) out.push(c.trim()); return out; }
+    function nettoie(t){ return String(t || '').replace(/<[^>]+>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}☀-➿️◀▶▲▼←→↑↓]/gu, ' ').replace(/\s+/g, ' ').trim(); }
+    function prepare(it){ var l = it.l, a = pourAmine() && l === 'fr' ? '&p=amine' : '';
+      it.audios = morceaux(it.t).map(function(m){ var x = new Audio('/api/voix.php?l=' + l + '&t=' + encodeURIComponent(m) + a); x.preload = 'auto'; x.volume = Math.max(0, Math.min(1, it.u.volume == null ? 1 : +it.u.volume)); return x; }); }
+    function suivant(){ cur = file.shift() || null; if(!cur) return; var it = cur, j = jeton, i = 0;
+      var secours = function(){ if(j !== jeton) return; it.audios.forEach(function(x){ try{ x.pause(); }catch(e){} });   // le serveur n'a pas pu : la voix de la tablette
+        if(natSpeak){ it.u.addEventListener('end', function(){ if(j === jeton && cur === it) suivant(); }, { once:true }); it.u.addEventListener('error', function(){ if(j === jeton && cur === it) suivant(); }, { once:true }); try{ natSpeak(it.u); }catch(e){ suivant(); } }
+        else { suivant(); fire(it.u, 'end'); } };
+      var joue = function(){ if(j !== jeton) return; if(i >= it.audios.length){ suivant(); fire(it.u, 'end'); return; }
+        var x = it.audios[i++]; x.onended = joue; x.onerror = function(){ if(i === 1) secours(); else joue(); };
+        var p = x.play(); if(p && p.then) p.then(function(){ if(i === 1) fire(it.u, 'start'); }, function(err){ if(err && err.name === 'NotAllowedError'){ suivant(); fire(it.u, 'end'); } else if(i === 1) secours(); else joue(); }); };
+      joue(); }
+    var api = {
+      speak: function(u){ if(!u) return; var t = nettoie(u.text), l = String(u.lang || 'fr').slice(0, 2).toLowerCase();
+        if(off || !t){ setTimeout(function(){ fire(u, 'end'); }, 0); return; }
+        if(['fr', 'en', 'de'].indexOf(l) < 0){ if(natSpeak) natSpeak(u); else setTimeout(function(){ fire(u, 'end'); }, 0); return; }   // l'arabe, la derja… : la tablette
+        var it = { u:u, t:t, l:l }; prepare(it); file.push(it); if(!cur) suivant(); },
+      cancel: function(){ jeton++; if(cur && cur.audios) cur.audios.forEach(function(x){ try{ x.pause(); }catch(e){} }); file.forEach(function(it){ it.audios.forEach(function(x){ x.src = ''; }); }); file = []; cur = null; if(natCancel) try{ natCancel(); }catch(e){} },
+      pause: function(){ if(cur) cur.audios.forEach(function(x){ try{ x.pause(); }catch(e){} }); if(NAT) try{ NAT.pause(); }catch(e){} },
+      resume: function(){ if(cur){ var x = cur.audios.filter(function(a){ return a.currentTime > 0 && !a.ended; })[0]; if(x) x.play().catch(function(){}); } if(NAT) try{ NAT.resume(); }catch(e){} },
+      getVoices: function(){ return NAT ? NAT.getVoices() : []; }
+    };
+    if(NAT){ ['speak', 'cancel', 'pause', 'resume'].forEach(function(k){ try{ NAT[k] = api[k]; }catch(e){} });
+      try{ Object.defineProperty(NAT, 'speaking', { configurable:true, get:function(){ return !!cur; } }); Object.defineProperty(NAT, 'pending', { configurable:true, get:function(){ return file.length > 0; } }); }catch(e){} }
+    else { try{ window.speechSynthesis = { speak:api.speak, cancel:api.cancel, pause:api.pause, resume:api.resume, getVoices:api.getVoices, get speaking(){ return !!cur; }, get pending(){ return file.length > 0; }, addEventListener:function(){}, onvoiceschanged:null }; }catch(e){} }
+
+    function bulleVoix(){ var d = document.getElementById('famVoixBulle'); if(d) d.remove(); d = document.createElement('div'); d.id = 'famVoixBulle';
+      d.textContent = off ? '🔇 Consignes orales coupées · touche V pour les remettre' : '🗣️ Consignes orales remises · touche V pour les couper';
+      d.style.cssText = 'position:fixed;z-index:2147483003;left:50%;top:14px;transform:translateX(-50%);background:#18202e;color:#fff;border-radius:999px;padding:10px 18px;font:800 15px Nunito,system-ui,sans-serif;box-shadow:0 8px 24px #0005;pointer-events:none;max-width:calc(100vw - 24px);text-align:center';
+      (document.body || document.documentElement).appendChild(d); setTimeout(function(){ d.remove(); }, 2600); }
+    window.FamilleVoix = {
+      on: function(){ return !off; },
+      regler: function(oui){ off = !oui; try{ VRAI && VRAI.setItem('famille-voix', off ? 'off' : 'on'); }catch(e){} if(off) api.cancel(); ecoute.forEach(function(f){ try{ f(!off); }catch(e){} }); },
+      basculer: function(){ this.regler(off); bulleVoix(); return !off; },
+      change: function(f){ ecoute.push(f); }
+    };
+    addEventListener('keydown', function(e){ if(e.code !== 'KeyV' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return; var t = e.target;
+      if(t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return; FamilleVoix.basculer(); }, true);
+  })();
+
   /* ---------- le salon du site ---------- */
   var API = '/api/houma.php', FAMILLE = ['anis', 'imen', 'essil', 'salma', 'amine'];
   var cap = function(s){ s = String(s || '').trim(); return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; };
@@ -165,9 +221,10 @@
       (O.length ? O.map(function(p){ var n = nonLus(p.nom); return '<div class="qui"><img alt="" src="' + tete(p.nom, p.av) + '"><span><b>' + esc(p.nom) + '</b><small>' + (p.page ? 'sur ' + esc(p.page) : 'sur le site') + '</small></span><button type="button" data-a="' + esc(p.nom) + '">💬 Écrire' + (n ? '<i>' + n + '</i>' : '') + '</button></div>'; }).join('')
         : '<p class="vide">Personne d\'autre n\'est sur le site pour l\'instant.</p>') +
       (anciens.length ? '<p class="vide" style="padding:6px 0 0;text-align:left">Discussions de tout à l\'heure</p>' + anciens.map(function(q){ var n = nonLus(q); return '<div class="qui"><img alt="" src="' + tete(q) + '"><span><b>' + esc(q) + '</b><small>n\'est plus là</small></span><button type="button" data-a="' + esc(q) + '">💬 Relire' + (n ? '<i>' + n + '</i>' : '') + '</button></div>'; }).join('') : '') +
-      '</div><div class="pied">' + (explo ? '<a href="/?profil">⇄ Changer d\'avatar</a>' : '<span></span>') + '<button type="button" class="g" data-f>Fermer</button></div>';
+      '</div><div class="pied">' + (explo ? '<a href="/?profil">⇄ Changer d\'avatar</a>' : '<span></span>') + '<button type="button" class="g" data-voix title="Touche V">' + (FamilleVoix.on() ? '🗣️ Voix' : '🔇 Muet') + '</button><button type="button" class="g" data-f>Fermer</button></div>';
   }
   function clicPanneau(e){ var t = e.target.closest('button,a'); if(!t) return;
+    if(t.hasAttribute('data-voix')){ FamilleVoix.basculer(); t.textContent = FamilleVoix.on() ? '🗣️ Voix' : '🔇 Muet'; return; }
     if(t.hasAttribute('data-f')){ P.classList.remove('on'); return; }
     if(t.hasAttribute('data-r')){ S.avec = null; S.vue = 'liste'; dessine(); place(); return; }
     if(t.dataset.a){ S.avec = t.dataset.a; S.vue = 'conv'; dessine(); place(); var i = P.querySelector('input'); if(i && !('ontouchstart' in window)) i.focus(); return; }

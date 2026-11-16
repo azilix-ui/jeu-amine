@@ -1,5 +1,6 @@
 <?php
-/* Les voix ElevenLabs des cours (16/11) : api/voix.php?l=fr|en&t=<phrase>
+/* Les voix ElevenLabs des cours et des jeux (16/11) : api/voix.php?l=fr|en|de|la&t=<phrase>[&p=amine]
+   p=amine : en français, la voix « dessin animé » de Lulu (créée pour Amine) au lieu de Céline.
    Rend un MP3 de la phrase, dite par la voix française (Céline) ou anglaise (Alice) d'Ollie.
    Chaque phrase n'est fabriquée qu'une fois : elle est gardée dans famille-data/voix-cache/<voix>/<empreinte>.mp3
    et resservie ensuite sans dépenser de crédits. La clé API ElevenLabs est tapée par le papa dans l'administration
@@ -12,6 +13,7 @@ ga_garde_api();
 
 const VX_VOIX = ['fr' => '3fxbs2pB9bs8S6Z1N38A', 'en' => 'Xb7hH8MSUJpSbSDYk0k2', 'de' => 'tR9bEXIX9ixlxSis0fqv', 'la' => '3fxbs2pB9bs8S6Z1N38A'];
 // Céline | Chaleureuse et immersive · Alice - Clear, Engaging Educator · Toni - Klar & Engagiert (allemand) · le latin : Céline, sans langue imposée
+const VX_LULU = '0c3jkkHzeXchq2gHGH2z';   // Lulu - Je lis (Amine), Voice Design du papa
 const VX_MODELE = 'eleven_multilingual_v2';
 function vx_fin(int $code, string $msg = ''): void { http_response_code($code); header('Content-Type: text/plain; charset=utf-8'); header('Cache-Control: no-store'); echo $msg; exit; }
 function vx_voix(string $l): string { $v = ga_reglage('voix_' . $l); return $v && preg_match('/^[A-Za-z0-9]{10,40}$/', $v) ? $v : VX_VOIX[$l]; }
@@ -19,7 +21,8 @@ function vx_voix(string $l): string { $v = ga_reglage('voix_' . $l); return $v &
 $l = (string)($_GET['l'] ?? 'fr'); if (!isset(VX_VOIX[$l])) vx_fin(400);
 $t = trim(preg_replace('/\s+/u', ' ', (string)($_GET['t'] ?? '')));
 if ($t === '' || mb_strlen($t) > 400) vx_fin(400);
-$voix = vx_voix($l);
+$lulu = $l === 'fr' && ($_GET['p'] ?? '') === 'amine';
+$voix = $lulu ? VX_LULU : vx_voix($l);
 $dir = ga_donnees() . '/voix-cache/' . $voix;
 $f = $dir . '/' . sha1(VX_MODELE . '|' . (in_array($l, ['fr', 'en'], true) ? '' : ($l === 'la' ? 'la-lent|' : $l . '|')) . $t) . '.mp3';   // fr/en : les clés d'avant restent valables
 
@@ -37,7 +40,7 @@ if (!is_file($f)) {
         curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTPHEADER => ['xi-api-key: ' . $cle, 'Content-Type: application/json', 'Accept: audio/mpeg'],
             CURLOPT_POSTFIELDS => json_encode(array_merge(['text' => $t, 'model_id' => VX_MODELE], $l === 'la' ? [] : ['language_code' => $l]) + [
-                'voice_settings' => ['stability' => $l === 'la' ? 0.65 : 0.5, 'similarity_boost' => 0.75, 'style' => 0.2, 'speed' => $l === 'la' ? 0.8 : ($l === 'en' ? 0.9 : 0.95)]], JSON_UNESCAPED_UNICODE)]);
+                'voice_settings' => ['stability' => $l === 'la' ? 0.65 : 0.5, 'similarity_boost' => 0.75, 'style' => 0.2, 'speed' => $l === 'la' ? 0.8 : ($l === 'en' || $lulu ? 0.9 : 0.95)]], JSON_UNESCAPED_UNICODE)]);
         $mp3 = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
         if ($code !== 200 || !is_string($mp3) || strlen($mp3) < 300) {
             if ($verrou) { flock($verrou, LOCK_UN); fclose($verrou); }

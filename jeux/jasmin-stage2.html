@@ -84,7 +84,7 @@ body.touch.joue #tactile{display:block}
   </div>
   <div class="mondes" id="mondes"></div>
   <div class="rang"><button class="btn" id="jouer">▶ Jouer</button><button class="btn gris" id="aide">🎮 Les commandes</button></div>
-  <div class="rang"><a class="btn gris" style="display:grid;place-items:center;text-decoration:none" href="legende-du-jasmin-3.html">← Le Jasmin</a><a class="btn gris" style="display:grid;place-items:center;text-decoration:none" href="/">🏠 Accueil</a><button class="btn gris" id="sonB">🔊 Son</button></div>
+  <div class="rang"><a class="btn gris" style="display:grid;place-items:center;text-decoration:none" href="legende-du-jasmin-3.html">← Le Jasmin</a><a class="btn gris" style="display:grid;place-items:center;text-decoration:none" href="/">🏠 Accueil</a><button class="btn gris" id="sonB">🔊 Son</button><button class="btn gris" id="voixB" title="Touche V">🗣️ Consignes</button></div>
 </div></div>
 
 <div class="screen" id="intro"><div class="box" style="max-width:640px">
@@ -188,6 +188,8 @@ $('jouer').onclick = async () => { if(!joueur && !(await qui())) return; const m
 $('go').onclick = () => { try{ speechSynthesis.cancel(); }catch(e){} if(S2J.lancer(choisi, diff)) montre(null); };
 $('aide').onclick = () => montre('aideS');
 document.querySelectorAll('[data-ferme]').forEach(b => b.onclick = () => menu());
+const voixTxt = () => { $('voixB').textContent = !window.FamilleVoix || FamilleVoix.on() ? '🗣️ Consignes : oui' : '🔇 Consignes : non'; };
+voixTxt(); if(window.FamilleVoix){ FamilleVoix.change(voixTxt); $('voixB').onclick = () => { FamilleVoix.basculer(); voixTxt(); }; } else $('voixB').hidden = true;
 $('sonB').onclick = () => { S2J.son = !S2J.son; S2J.voix = S2J.son; $('sonB').textContent = S2J.son ? '🔊 Son' : '🔇 Muet'; S2J.sonChange && S2J.sonChange(); };
 $('pauseB').onclick = () => { if(S2J.pause()) montre('pause'); };
 S2J.surPause = () => montre('pause');

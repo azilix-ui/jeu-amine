@@ -197,7 +197,7 @@ function precharge(liste){ liste.forEach(t => { const f = fichier(t); if(f) char
 function stop(){ jeton++; file = []; if(joueur){ try{ joueur.onended = null; joueur.onerror = null; joueur.stop ? joueur.stop() : joueur.pause(); }catch(e){} joueur = null; } try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
 function parle(liste, garde){
   if(garde !== false) dernier = liste.slice();
-  stop(); audio(); file = liste.slice(); precharge(file); const j = jeton;
+  stop(); if(window.FamilleVoix && !FamilleVoix.on()) return; audio(); file = liste.slice(); precharge(file); const j = jeton;
   setTimeout(() => { if(j === jeton) suivant(j); }, 80);   // laisser la voix précédente s'arrêter vraiment (sinon la suivante était coupée)
 }
 function suivant(j){
