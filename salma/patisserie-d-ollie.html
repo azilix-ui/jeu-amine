@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>La Pâtisserie d'Ollie</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A5%A7%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="ollie/cours.css?v=1">
+<style>
+/* La Pâtisserie d'Ollie (16/11) : maths CE1 de Salma. Les fractions (parts égales, demi, tiers, quart, colorier, lire, la moitié d'un nombre)
+   et la soustraction (en sautant sur la droite, posée, petits problèmes). La tarte est une photo ComfyUI (ollie/img/pat-tarte.webp) découpée en parts en SVG. */
+body{background:linear-gradient(#ffe3ec 0%,#fff1e4 62%,#f5c9a8 62%,#e8b088 100%) fixed;background-color:#ffe3ec}
+h1{color:#a8325c;text-shadow:0 3px 0 #fff}.lead,.help{color:#7a2547;text-shadow:0 1px 0 #fff8}
+.vitrine{width:100%;aspect-ratio:7/2;border-radius:22px;background:url(ollie/img/pat-fond.webp) center/cover;box-shadow:0 6px 0 #0002}
+.tarte{width:min(68vw,260px);height:auto;display:block}
+.tarte.mini{width:110px}
+.tarte .part{cursor:pointer}
+.barre{width:min(86vw,440px);height:auto;display:block}
+.fr{display:inline-flex;flex-direction:column;align-items:center;font-family:var(--display);font-weight:800;line-height:1;vertical-align:middle;margin:0 4px}
+.fr i{display:block;width:1.3em;height:4px;background:currentColor;border-radius:2px;margin:3px 0}
+.ans .fr{font-size:1.15em}
+.big-fr{font-size:64px;color:var(--pen)}
+.droite{width:min(100%,620px);height:auto}
+.pose{display:grid;grid-template-columns:repeat(3,56px);font-family:var(--display);font-weight:800;font-size:52px;color:var(--pen);text-align:center;line-height:1.1;background:var(--paper);border-radius:12px;padding:10px 18px;box-shadow:0 6px 16px -8px #0006}
+.pose .bar{grid-column:1/-1;height:4px;background:var(--pen);border-radius:2px;margin:4px 0}
+.gateaux{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:520px;font-size:38px}
+.colore-info{font-family:var(--display);font-weight:800;font-size:24px}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1)), pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const many = (f, n) => Array.from({ length:n }, f);
+function noDup(f, n){ const out = [], seen = new Set(); let g = 0; while(out.length < n && g++ < 300){ const q = f(); const k = JSON.stringify([q.q, q.good, q.body && q.body.length, q.n, q.k]); if(!seen.has(k)){ seen.add(k); out.push(q); } } return out; }
+
+/* ---------- les fractions en mots ---------- */
+const NB = ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix'];
+const DEN = { 2:['demi','demis'], 3:['tiers','tiers'], 4:['quart','quarts'], 5:['cinquième','cinquièmes'], 6:['sixième','sixièmes'], 8:['huitième','huitièmes'], 10:['dixième','dixièmes'] };
+const nom = (k, n) => `${NB[k]} ${DEN[n][k > 1 ? 1 : 0]}`;
+const FR = (k, n) => `<span class="fr"><b>${k}</b><i></i><b>${n}</b></span>`;
+
+/* ---------- la tarte et la barre, en SVG ---------- */
+let uid = 0;
+function tarte(n, on, opts = {}){      // on : liste des parts « avec fraises » ; opts.angles : parts inégales ; opts.click
+  const id = 'c' + (++uid), R = 96, C = 100;
+  let ang = opts.angles || Array.from({ length:n }, () => 360 / n), a0 = -90, parts = '', clips = '';
+  ang.forEach((a, i) => {
+    const s = a0 * Math.PI / 180, e = (a0 + a) * Math.PI / 180, big = a > 180 ? 1 : 0;
+    const d = n === 1 ? `M${C} ${C - R} A${R} ${R} 0 1 1 ${C - .01} ${C - R} Z` : `M${C} ${C} L${C + R * Math.cos(s)} ${C + R * Math.sin(s)} A${R} ${R} 0 ${big} 1 ${C + R * Math.cos(e)} ${C + R * Math.sin(e)} Z`;
+    clips += `<clipPath id="${id}-${i}"><path d="${d}"/></clipPath>`;
+    parts += `<g class="part" data-p="${i}"><path d="${d}" fill="#f3d6a4" stroke="#b9853f" stroke-width="2"/>${on.includes(i) ? `<image href="ollie/img/pat-tarte.webp" x="0" y="0" width="200" height="200" clip-path="url(#${id}-${i})" preserveAspectRatio="xMidYMid slice"/>` : ''}<path d="${d}" fill="${opts.click ? '#fff0' : 'none'}" stroke="#7a4b1e" stroke-width="3"/></g>`;
+    a0 += a;
+  });
+  return `<svg class="tarte${opts.mini ? ' mini' : ''}" viewBox="0 0 200 200" role="img" aria-label="tarte en ${n} parts"><defs>${clips}</defs><circle cx="100" cy="100" r="99" fill="#e2b46f"/>${parts}</svg>`;
+}
+function barre(n, on, widths){       // une barre de chocolat en n parts (largeurs inégales possibles)
+  widths = widths || Array.from({ length:n }, () => 1 / n); let x = 4, r = '';
+  widths.forEach((w, i) => { const W = w * 392; r += `<rect x="${x}" y="4" width="${W}" height="92" rx="6" fill="${on.includes(i) ? '#6b3a1f' : '#f3e2c8'}" stroke="#3d2010" stroke-width="3"/>`; x += W; });
+  return `<svg class="barre" viewBox="0 0 400 100" role="img" aria-label="barre en ${n} parts">${r}</svg>`;
+}
+function inegales(n){ let w = Array.from({ length:n }, () => .5 + Math.random()); const s = w.reduce((a, b) => a + b); w = w.map(x => x / s);
+  if(Math.max(...w) - Math.min(...w) < .12){ w[0] += .12; w[1] -= .12; } return w; }
+
+/* ---------- les questions : fractions ---------- */
+function qEgal(){
+  const n = pick([2,3,4,4,6,8]), eq = Math.random() < .5, shape = n <= 4 && Math.random() < .45 ? 'barre' : 'tarte';
+  const w = eq ? null : inegales(n);
+  const body = shape === 'barre' ? barre(n, [], w) : tarte(n, [], { angles:w && w.map(x => x * 360) });
+  return { t:'choix', q:`Ollie a coupé ${shape === 'barre' ? 'sa barre de chocolat' : 'sa tarte'} en ${n} parts. Est-ce que les parts sont <b>égales</b> ?`, body, opts:[{ v:'oui', html:'Oui, toutes pareilles' }, { v:'non', html:'Non, pas pareilles' }], cols:1, good:eq ? 'oui' : 'non', item:'parts égales',
+    expl:eq ? `Toutes les parts ont la même taille : on peut parler de fraction.` : `Les parts n'ont pas la même taille : ce n'est pas une vraie fraction. Il faut des parts <b>égales</b>.` };
+}
+function qNom(){
+  const n = pick([2,3,4]);
+  return { t:'choix', q:`Ollie a coupé la tarte en ${n} parts égales. Elle en a mis une avec des fraises. Comment s'appelle cette part ?`, body:tarte(n, [rnd(0, n - 1)]),
+    opts:[2,3,4].map(d => ({ v:d, html:`${FR(1, d)} ${nom(1, d)}` })), cols:1, good:n, item:nom(1, n),
+    expl:`En ${n} parts égales, une part, c'est <b>${nom(1, n)}</b> ${FR(1, n)}.${n === 2 ? ' On dit aussi la moitié.' : ''}` };
+}
+function qLire(){
+  const n = pick([2,3,4,5,6,8,10]), k = rnd(1, n - 1), on = shuffle([...Array(n).keys()]).slice(0, k);
+  const bad = shuffle([[n, k], [k, n + 1 > 10 ? n - 1 : n + 1], [n - k, n]].filter(([a, b]) => !(a === k && b === n) && a !== 0 && DEN[b] !== undefined)).slice(0, 2);
+  if(Math.random() < .5){
+    return { t:'choix', q:`Quelle fraction de la tarte a des fraises ?`, body:tarte(n, on), opts:shuffle([[k, n], ...bad]).map(([a, b]) => ({ v:a + '/' + b, html:FR(a, b) })), cols:3, good:k + '/' + n, item:nom(k, n),
+      expl:`${k} part${k > 1 ? 's' : ''} sur ${n} : ${FR(k, n)}, <b>${nom(k, n)}</b>. En bas, le nombre de parts ; en haut, les parts avec des fraises.` };
+  }
+  const opts = shuffle([[k, n], ...bad]).filter(([a, b]) => DEN[b]);
+  return { t:'choix', q:`Comment se lit ${FR(k, n)} ?`, voice:`Comment se lit cette fraction ? ${k} sur ${n}.`, body:`<div class="big-fr">${FR(k, n)}</div>`, opts:opts.map(([a, b]) => ({ v:a + '/' + b, html:nom(a, b) })), cols:1, good:k + '/' + n, item:nom(k, n), expl:`${FR(k, n)} se lit <b>${nom(k, n)}</b>.` };
+}
+function qColorie(){ const n = pick([2,3,4,4,5,6,8]), k = rnd(1, n - 1); return { t:'colorie', n, k, q:`Mets des fraises sur <b>${nom(k, n)}</b> ${FR(k, n)} de la tarte. Touche les parts !`, item:nom(k, n) }; }
+function qMoitie(){
+  const t = pick(['moitié','moitié','quart','tiers']), d = { moitié:2, quart:4, tiers:3 }[t], tot = d * rnd(t === 'moitié' ? 2 : 1, t === 'moitié' ? 10 : 5), em = pick(['🧁','🍪','🥐','🍩','🍓']);
+  return { t:'nombre', q:`Ollie a ${tot} ${({ '🧁':'cupcakes', '🍪':'biscuits', '🥐':'croissants', '🍩':'beignets', '🍓':'fraises' })[em]}. Combien font ${t === 'moitié' ? 'la moitié' : t === 'quart' ? 'le quart' : 'le tiers'} ?`,
+    body:`<div class="gateaux" aria-hidden="true">${em.repeat(tot)}</div>`, good:tot / d, item:(t === 'moitié' ? 'la moitié' : t === 'quart' ? 'le quart' : 'le tiers') + ' de ' + tot,
+    expl:`On partage ${tot} en ${d} parts égales : ${Array(d).fill(tot / d).join(' + ')} = ${tot}. ${t === 'moitié' ? 'La moitié' : t === 'quart' ? 'Le quart' : 'Le tiers'} de ${tot}, c'est <b>${tot / d}</b>.` };
+}
+
+/* ---------- les questions : soustraction ---------- */
+function droite(a, b){   // a − b en deux sauts : d'abord jusqu'à la dizaine, puis le reste
+  const u = a % 10, s1 = Math.min(u, b), s2 = b - s1, lo = a - b - 1, hi = a + 1, L = hi - lo, X = v => 20 + (v - lo) / L * 580;
+  let t = ''; for(let v = lo; v <= hi; v++){ const big = v % 10 === 0 || v === a; t += `<line x1="${X(v)}" y1="${big ? 92 : 98}" x2="${X(v)}" y2="${big ? 116 : 110}" stroke="#24407e" stroke-width="${big ? 3 : 2}"/>`;
+    if(v === a || v % 10 === 0 && v !== a - b) t += `<text x="${X(v)}" y="140" text-anchor="middle" font-size="22" font-weight="800" fill="#24407e">${v}</text>`; }
+  const hop = (f, g, lab, col) => `<path d="M${X(f)} 98 Q${(X(f) + X(g)) / 2} ${98 - Math.min(80, 16 + (X(f) - X(g)) * .45)} ${X(g) + 4} 96" fill="none" stroke="${col}" stroke-width="4" marker-end="url(#fl)"/><text x="${(X(f) + X(g)) / 2}" y="${98 - Math.min(80, 16 + (X(f) - X(g)) * .45) / 2 - 8}" text-anchor="middle" font-size="22" font-weight="800" fill="${col}">−${lab}</text>`;
+  return `<svg class="droite" viewBox="0 0 620 150"><defs><marker id="fl" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="10" refY="8" orient="auto"><path d="M0 0 L16 8 L0 16 Z" fill="#24407e"/></marker></defs><line x1="10" y1="104" x2="610" y2="104" stroke="#24407e" stroke-width="3"/>${t}${s1 ? hop(a, a - s1, s1, '#c8473a') : ''}${s2 ? hop(a - s1, a - b, s2, '#7a4fe0') : ''}<text x="${X(a - b)}" y="140" text-anchor="middle" font-size="26" font-weight="800" fill="#e0a100">?</text></svg>`;
+}
+function qSaut(){
+  if(Math.random() < .25){ const a = rnd(3, 9) * 10 + rnd(0, 9), b = rnd(1, Math.floor(a / 10) - 1) * 10;
+    return { t:'nombre', q:`Calcule <b>${a} − ${b}</b>. Enlève ${b / 10} dizaine${b > 10 ? 's' : ''} !`, voice:`Calcule ${a} moins ${b}.`, body:`<div class="big-q">${a} − ${b} = ?</div>`, good:a - b, item:`${a} − ${b}`, expl:`${a} − ${b} : les dizaines ${Math.floor(a / 10)} − ${b / 10} = ${Math.floor(a / 10) - b / 10}, les unités ne bougent pas. <b>${a - b}</b>.` }; }
+  let a, b; do{ a = rnd(21, 98); b = rnd(3, 9); }while(a % 10 >= b || a % 10 === 0);
+  const u = a % 10;
+  return { t:'nombre', q:`Calcule <b>${a} − ${b}</b> en deux sauts : d'abord jusqu'à ${a - u}, puis encore ${b - u}.`, voice:`Calcule ${a} moins ${b} en deux sauts : d'abord jusqu'à ${a - u}, puis encore ${b - u}.`, body:droite(a, b), good:a - b, item:`${a} − ${b}`,
+    expl:`${a} − ${u} = ${a - u}, puis ${a - u} − ${b - u} = <b>${a - b}</b>.` };
+}
+function qPose(){
+  const ret = Math.random() < .5; let a, b;
+  do{ a = rnd(30, 99); b = rnd(11, a - 10); }while(((a % 10) < (b % 10)) !== ret);
+  const [a1, a0] = [Math.floor(a / 10), a % 10], [b1, b0] = [Math.floor(b / 10), b % 10];
+  const expl = ret ? `${a0} − ${b0}, on ne peut pas : on prend une dizaine. ${a0 + 10} − ${b0} = ${a0 + 10 - b0}. On n'oublie pas la retenue en bas : ${b1} + 1 = ${b1 + 1}, et ${a1} − ${b1 + 1} = ${a1 - b1 - 1}. Résultat : <b>${a - b}</b>.`
+    : `Les unités : ${a0} − ${b0} = ${a0 - b0}. Les dizaines : ${a1} − ${b1} = ${a1 - b1}. Résultat : <b>${a - b}</b>.`;
+  return { t:'nombre', q:`Pose et calcule la soustraction. Commence par les <b>unités</b> !`, body:`<div class="pose"><span></span><span>${a1}</span><span>${a0}</span><span>−</span><span>${b1}</span><span>${b0}</span><i class="bar"></i></div>`, good:a - b, item:ret ? 'soustraction avec retenue' : 'soustraction sans retenue', expl };
+}
+const PROB = [
+  () => { const a = rnd(25, 60), b = rnd(8, 19); return { t:'nombre', q:`Ollie a fait <b>${a} croissants</b> ce matin. Elle en a vendu <b>${b}</b>. Combien lui en reste-t-il ?`, good:a - b, item:'problème : il reste', expl:`Il en reste : ${a} − ${b} = <b>${a - b}</b> croissants.` }; },
+  () => { const a = rnd(30, 70), b = rnd(10, a - 12); return { t:'nombre', q:`Dans la vitrine, il y a <b>${a} gâteaux</b>. Après la visite de Salma, il en reste <b>${b}</b>. Combien de gâteaux sont partis ?`, good:a - b, item:'problème : combien sont partis', expl:`On cherche l'écart : ${a} − ${b} = <b>${a - b}</b> gâteaux.` }; },
+  () => { const p = rnd(12, 40), d = pick([50, 50, 100]); return { t:'nombre', q:`Un gâteau coûte <b>${p} dinars</b>. Papa paie avec un billet de <b>${d} dinars</b>. Combien Ollie lui rend-elle ?`, good:d - p, item:'problème : la monnaie', expl:`Elle rend ${d} − ${p} = <b>${d - p} dinars</b>.` }; },
+  () => { const n = pick([4, 6, 8]), k = rnd(1, n - 2); return { t:'choix', q:`Ollie coupe une tarte en <b>${n} parts égales</b>. Les enfants en mangent <b>${k}</b>. Quelle fraction de la tarte reste-t-il ?`, body:tarte(n, [...Array(n - k).keys()]), opts:shuffle([[n - k, n], [k, n], [n - k, k]]).map(([a, b]) => ({ v:a + '/' + b, html:FR(a, b) })), cols:3, good:(n - k) + '/' + n, item:'problème : fraction qui reste', expl:`Il reste ${n - k} parts sur ${n} : ${FR(n - k, n)}, ${nom(n - k, n)}.` }; },
+  () => { const t = 2 * rnd(5, 15); return { t:'nombre', q:`Salma a <b>${t} macarons</b>. Elle en donne la <b>moitié</b> à Amine. Combien en donne-t-elle ?`, good:t / 2, item:'problème : la moitié', expl:`La moitié de ${t}, c'est ${t / 2}, car ${t / 2} + ${t / 2} = ${t}.` }; },
+  () => { const a = rnd(40, 90), b = rnd(11, 29); return { t:'nombre', q:`Ollie veut <b>${a} œufs</b> pour ses gâteaux. Elle en a déjà <b>${b}</b>. Combien doit-elle encore en acheter ?`, good:a - b, item:'problème : combien manque-t-il', expl:`Il manque ${a} − ${b} = <b>${a - b}</b> œufs.` }; },
+];
+const qProb = () => pick(PROB)();
+
+/* ---------- colorier une fraction (question à part) ---------- */
+const ask = {
+  colorie(q){
+    const U = OLLIE, on = new Set();
+    const draw = () => tarte(q.n, [...on], { click:1 });
+    const card = U.frame(q.q, `<div id="tz">${draw()}</div><div class="colore-info" id="ci">0 part sur ${q.n}</div><div class="choices"><button class="btn go" id="okc" data-lock data-test>Valider ✔</button></div>`, 'Touche une part encore une fois pour enlever les fraises');
+    const wire = () => card.querySelectorAll('.part').forEach(g => g.onclick = () => { if(card.querySelector('#nx')) return; U.sfx.tap(); const i = +g.dataset.p; on.has(i) ? on.delete(i) : on.add(i);
+      card.querySelector('#tz').innerHTML = draw(); card.querySelector('#ci').textContent = `${on.size} part${on.size > 1 ? 's' : ''} sur ${q.n}`; wire(); });
+    wire();
+    card.querySelector('#okc').onclick = () => { const ok = on.size === q.k;
+      U.answered(ok, q.item, ok ? `${q.k} parts sur ${q.n}, c'est bien ${FR(q.k, q.n)}.` : `Il fallait <b>${q.k}</b> part${q.k > 1 ? 's' : ''} sur ${q.n} : en bas le nombre de parts (${q.n}), en haut celles qu'on colorie (${q.k}).`); };
+  },
+};
+
+window.COURS = {
+  key:'salma-patisserie', track:'salma-patisserie', retour:'La pâtisserie', titre:"La Pâtisserie d'Ollie", sous:'Les fractions et la soustraction (CE1)', bandeau:'<div class="vitrine" role="img" aria-label="La vitrine de la pâtisserie"></div>',
+  bonjour:`Bienvenue dans ma pâtisserie, Salma ! Ici on coupe des tartes en parts égales pour apprendre les <b>fractions</b>, et on compte ce qui reste pour la <b>soustraction</b>. Chaque bonne réponse te donne un <b>ticket 🎟️</b> pour Serpent Légendes !`,
+  confetti:['🧁','🍓','🥐','⭐','🎟️'], revoir:'À revoir',
+  CH:[
+    { id:'egal', name:'Des parts égales', sub:'Pour une fraction, toutes les parts sont pareilles', icon:'🔪', edge:'#c2577a', make:() => noDup(qEgal, 8),
+      rule:`Une <b>fraction</b>, c'est quand on partage en <b>parts égales</b> : toutes les parts ont exactement la même taille.` },
+    { id:'nom', name:'Demi, tiers, quart', sub:'Le nom des parts', icon:'🥧', edge:'#e0a100', make:() => many(qNom, 8),
+      rule:`En <b>2</b> parts égales : une part = <b>un demi</b> (la moitié), ½.<br>En <b>3</b> parts égales : une part = <b>un tiers</b>, ⅓.<br>En <b>4</b> parts égales : une part = <b>un quart</b>, ¼.` },
+    { id:'colorie', name:'Je mets les fraises', sub:'Colorier une fraction', icon:'🍓', edge:'#d32f2f', make:() => noDup(qColorie, 6),
+      rule:`Dans ¾ : le nombre <b>en bas</b> dit en combien de parts on coupe (4). Le nombre <b>en haut</b> dit combien de parts on prend (3).` },
+    { id:'lire', name:'Lire une fraction', sub:'¾ se lit « trois quarts »', icon:'📖', edge:'#7a4fe0', make:() => noDup(qLire, 8),
+      rule:`On lit le nombre du haut, puis le nom des parts : ⅔ <b>deux tiers</b>, ¾ <b>trois quarts</b>, ⅖ <b>deux cinquièmes</b>, ⅝ <b>cinq huitièmes</b>.` },
+    { id:'moitie', name:'La moitié, le quart', sub:'Partager des gâteaux', icon:'🧁', edge:'#147a66', make:() => noDup(qMoitie, 8),
+      rule:`<b>La moitié</b> de 10, c'est 5, car 5 + 5 = 10.<br><b>Le quart</b>, c'est partager en 4 : le quart de 12, c'est 3, car 3 + 3 + 3 + 3 = 12.` },
+    { id:'saut', name:'Soustraire en sautant', sub:'Sur la droite des nombres', icon:'🦘', edge:'#2a7fb4', make:() => noDup(qSaut, 8),
+      rule:`Pour 43 − 7 : on saute d'abord jusqu'à la dizaine, 43 − 3 = 40, puis on enlève le reste, 40 − 4 = <b>36</b>.` },
+    { id:'pose', name:'La soustraction posée', sub:'Unités d\'abord, et la retenue', icon:'✏️', edge:'#c8473a', make:() => noDup(qPose, 8),
+      rule:`On commence toujours par les <b>unités</b>. Si on ne peut pas, on prend une dizaine : 10 de plus en haut, et 1 de plus en bas, chez les dizaines (la <b>retenue</b>).` },
+    { id:'prob', name:'Les problèmes de la pâtisserie', sub:'Ce qui reste, ce qui manque', icon:'🧺', edge:'#147a66', make:() => shuffle([...PROB.map(f => f()), qProb(), qProb()]),
+      rule:`Pour savoir ce qui <b>reste</b>, ce qui est <b>parti</b> ou ce qui <b>manque</b>, on fait une <b>soustraction</b> : le grand nombre moins le petit.` },
+  ],
+  ask,
+  fiche:[
+    { h:'Les fractions', tag:'parts égales', html:`<p>On partage en <b>parts égales</b>. En bas : en combien de parts on coupe. En haut : combien on en prend.</p>
+      <div class="choices">${[[1,2],[1,3],[1,4],[3,4],[2,3]].map(([k, n]) => `<div style="text-align:center">${tarte(n, [...Array(k).keys()], { mini:1 })}<div class="colore-info">${FR(k, n)} ${nom(k, n)}</div></div>`).join('')}</div>`,
+      lire:`On partage en parts égales. Le nombre du bas dit en combien de parts on coupe, le nombre du haut combien on en prend. Un demi, un tiers, un quart, trois quarts, deux tiers. La moitié de 10, c'est 5. Le quart de 12, c'est 3.` },
+    { h:'La soustraction', tag:'deux façons', html:`<p><b>En sautant</b> : 43 − 7 = 43 − 3 − 4 = 40 − 4 = <b>36</b>.</p><p><b>Posée</b> : on commence par les unités. Si on ne peut pas, on ajoute 10 aux unités du haut et 1 aux dizaines du bas (la retenue).</p>${droite(43, 7).replace('>?<', '>36<')}`,
+      lire:`Pour soustraire en sautant : 43 moins 7, on saute d'abord jusqu'à 40, puis on enlève encore 4 : 36. Pour la soustraction posée, on commence par les unités. Si on ne peut pas, on ajoute 10 aux unités du haut, et 1 aux dizaines du bas : c'est la retenue.` },
+  ],
+};
+</script>
+<script src="ollie/cours.js?v=1"></script>
+</body></html>

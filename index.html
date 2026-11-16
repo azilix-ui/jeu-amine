@@ -338,7 +338,10 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
         <div class="who"><img class="av" src="jeux/avatars/salma.webp" width="320" height="320" alt=""><h2><a href="salma/">Salma</a></h2><span class="lvl">CE2</span></div>
         <p class="what">Anglais, français, maths et son exposé</p>
         <ul>
-          <li><a href="salma/weather-station.html"><span>⛅</span>Weather Station<em>Nouveau</em></a></li>
+          <li><a href="salma/ollies-house.html"><span>🏠</span>Ollie's House<em>Nouveau</em></a></li>
+          <li><a href="salma/patisserie-d-ollie.html"><span>🥧</span>La Pâtisserie d'Ollie<em>Nouveau</em></a></li>
+          <li><a href="salma/fabrique-des-phrases.html"><span>🧩</span>La Fabrique des Phrases<em>Nouveau</em></a></li>
+          <li><a href="salma/weather-station.html"><span>⛅</span>Weather Station</a></li>
           <li><a href="salma/english-garden.html"><span>🦉</span>English Garden</a></li>
           <li><a href="salma/jardin-des-nombres.html"><span>➖</span>Le Jardin des Nombres</a></li>
           <li><a href="salma/marche-d-ollie.html"><span>🪙</span>Le Marché d'Ollie</a></li>
@@ -366,6 +369,7 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
         <div class="who"><img class="av" src="jeux/avatars/amine.webp" width="320" height="320" alt=""><h2><a href="amine/">Amine</a></h2></div>
         <p class="what">Jeux de grande section et derja</p>
         <ul>
+          <li><a href="amine/epicerie-de-lulu.html"><span>🧺</span>L'Épicerie de Lulu<em>Nouveau</em></a></li>
           <li><a href="amine/je-lis.html"><span>📖</span>Je lis !<em>Nouveau</em></a></li>
           <li><a href="amine/planete-des-nombres.html"><span>👽</span>La Planète des Nombres</a></li>
           <li><a href="amine/ardoise-magique.html"><span>✏️</span>L'Ardoise magique</a></li>
@@ -423,6 +427,10 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
 <script>
 // Le mur des nouveautés (14/11) : à compléter ici à chaque nouveauté (la plus récente en premier). « pour » : tous, explo, ou des prénoms.
 const NOUVEAUTES = [
+  { d:'16/11', e:'🏠', t:"Ollie's House", x:"Nouveau cours d'anglais : la maison d'Ollie, les meubles, et où se cache le chat.", l:'salma/ollies-house.html', p:'#e3f1ff', pin:'#1f6b44', pour:['Salma', 'explo'] },
+  { d:'16/11', e:'🥧', t:"La Pâtisserie d'Ollie", x:'Les fractions avec des tartes, et la soustraction.', l:'salma/patisserie-d-ollie.html', p:'#ffe3ec', pin:'#1f6b44', pour:['Salma', 'explo'] },
+  { d:'16/11', e:'🧩', t:'La Fabrique des Phrases', x:'La phrase, nom, verbe, adjectif, les accords, a/à et et/est.', l:'salma/fabrique-des-phrases.html', p:'#dff7e8', pin:'#1f6b44', pour:['Salma', 'explo'] },
+  { d:'16/11', e:'🧺', t:"L'Épicerie de Lulu", x:'Compte et lis en faisant les courses chez Lulu.', l:'amine/epicerie-de-lulu.html', p:'#fff1dc', pin:'#ff8c1a', pour:['Amine', 'explo'] },
   { d:'15/11', e:'🐺', t:'Monsieur Loup chez Amine', x:'Le week-end de la mascotte de sa classe : son histoire et des dessins imaginés.', l:'amine/monsieur-loup.html', p:'#fff1bf', pin:'#ff8c1a' },
   { d:'16/11', e:'🧱', t:'Kassar (كسّار) : nouveau jeu !', x:'Vise, tire une rafale de balles et casse les carreaux de zellige de la médina. Chaque carreau porte un nombre : compte avec lui ! 10 niveaux pour commencer.', l:'jeux/kassar.html', p:'#e6f0ff', pin:'#d7263d' },
   { d:'16/11', e:'🌼', t:'Jasmin · Stage 2 : 10 mondes de plus !', x:'Chott el Jérid, Tozeur, El Jem, Aïn Draham sous la neige, Guellala, le Lézard rouge, Matmata, le ksar, Ichkeul et le fort de Kélibia, avec leurs bruits. Et maintenant on attrape les ennemis par derrière pour les lancer !', l:'jeux/jasmin-stage2.html', p:'#fff4d6', pin:'#1f5fbf' },

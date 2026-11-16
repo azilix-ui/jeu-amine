@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#5b3a1e">
+<title>L'Épicerie de Lulu</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%BA%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@700&family=Baloo+2:wght@800&family=Nunito:wght@800&display=swap">
+<style>
+/* L'Épicerie de Lulu (16/11) : compter et lire pour Amine (grande section), dans le hanout de Lulu.
+   6 ateliers de 6 questions : compter les fruits, mettre N fruits dans le panier, lire le mot, lire l'étiquette puis compter,
+   où il y en a le plus, et les petites additions des courses. Photos ComfyUI (epicerie/img/), voix : Lulu (sons de « Je lis ! »,
+   lire/voix.php, pour chaque phrase déjà enregistrée), les nombres de la Planète des Nombres (nombres/voix/N.mp3) quand Amine compte,
+   et la voix de la tablette pour le reste. Une étoile et 2 tickets 🎟️ par atelier réussi (5 bonnes réponses du premier coup sur 6).
+   Sauvegarde « amine-epicerie » { stars:{atelier:n}, tickets, rounds, t }. */
+:root{ --ink:#2b1a0e; --panel:rgba(255,255,255,.96); --gold:#ffd23f; --mint:#3ddc97; --shadow:0 7px 0 rgba(0,0,0,.25); --lettre:'Andika','Baloo 2',Nunito,sans-serif }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;color:#fff;font-family:Nunito,system-ui,sans-serif;font-weight:800;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+body{background:#5b3a1e url(epicerie/img/fond.webp) center/cover}
+body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(40,20,5,.35),rgba(40,20,5,.7))}
+button{font:inherit;color:inherit;border:0;cursor:pointer;padding:0;background:none}
+h1,h2{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-height:1.05}
+.scr{position:fixed;inset:0;display:none;flex-direction:column;padding:max(12px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));gap:12px;z-index:1}
+.scr.on{display:flex}
+.haut{display:flex;align-items:center;gap:10px}
+.rond{width:60px;height:60px;border-radius:50%;background:rgba(0,0,0,.35);border:3px solid #fff6;font-size:26px;display:grid;place-items:center;box-shadow:var(--shadow);flex:none;text-decoration:none;color:#fff}
+.rond:active,.carte:active,.choix:active,.go:active{transform:translateY(4px);box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.etoiles{margin-left:auto;background:rgba(0,0,0,.35);border-radius:999px;padding:8px 16px;font-size:22px}
+#menu h1{font-size:clamp(42px,9vw,76px);text-align:center;text-shadow:0 5px 0 rgba(0,0,0,.35)}
+#menu h1 span{color:var(--gold)}
+#menu .sous{text-align:center;margin:-4px 0 0;font-size:20px;color:#ffe9c9}
+.cartes{flex:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-content:center;max-width:900px;width:100%;margin:0 auto}
+@media (max-width:560px){.cartes{grid-template-columns:1fr}}
+@media (orientation:landscape) and (min-width:900px){.cartes{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.carte{background:var(--c);border-radius:28px;padding:14px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow);text-align:left;min-height:104px}
+.carte .ic{width:80px;height:80px;border-radius:22px;background:#fff;display:grid;place-items:center;flex:none;font-size:42px;color:var(--c);font-family:var(--lettre)}
+.carte .ic img{width:66px;height:66px;object-fit:contain}
+.carte b{font-size:23px;display:block;line-height:1.1}.carte small{font-size:17px;opacity:.95}
+.carte .st{display:block;margin-top:4px;font-size:18px;letter-spacing:2px}
+#jeu .barre{flex:1;display:flex;gap:6px}.barre i{flex:1;height:14px;border-radius:7px;background:rgba(255,255,255,.3)}.barre i.ok{background:var(--mint)}.barre i.la{background:var(--gold)}
+.tableau{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2.4vh,22px);min-height:0}
+.consigne{background:var(--panel);color:var(--ink);border-radius:26px;padding:12px 20px;font-size:clamp(20px,4vw,28px);text-align:center;box-shadow:var(--shadow);max-width:780px;display:flex;align-items:center;gap:12px}
+.consigne .lulu{font-size:40px;flex:none}
+.etal{background:rgba(255,248,232,.95);border-radius:26px;padding:12px;box-shadow:var(--shadow);display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;max-width:min(92vw,760px);min-height:120px}
+.etal img,.fr{width:clamp(56px,11vw,96px);height:clamp(56px,11vw,96px);object-fit:contain;filter:drop-shadow(0 4px 2px rgba(0,0,0,.25))}
+.etal button{border-radius:18px;transition:transform .15s}
+.etal button:disabled{opacity:.15}
+.panier{position:relative;width:min(80vw,380px,44vh);aspect-ratio:1.12;background:url(epicerie/img/panier.webp) center bottom/contain no-repeat}
+.panier .dedans{position:absolute;left:14%;right:14%;top:8%;bottom:42%;display:flex;flex-wrap:wrap-reverse;gap:2px;justify-content:center;align-content:flex-start}
+.panier .dedans img{width:clamp(36px,7vw,58px);height:clamp(36px,7vw,58px);object-fit:contain}
+.compteur{font-family:var(--lettre);font-size:clamp(40px,8vw,64px);background:#fff;color:var(--ink);border-radius:20px;padding:0 20px;box-shadow:var(--shadow);min-width:90px;text-align:center}
+.mot{font-family:var(--lettre);font-weight:700;font-size:clamp(50px,12vw,100px);letter-spacing:2px;display:flex;gap:6px;align-items:baseline;background:rgba(0,0,0,.3);border-radius:24px;padding:4px 14px}
+.mot button{padding:0 8px;border-radius:16px}
+.mot .s0{color:#ffd23f}.mot .s1{color:#7fe3ff}.mot .s2{color:#ffa3cf}
+.etiquette{font-family:var(--lettre);font-weight:700;font-size:clamp(40px,9vw,72px);background:#fff8e1;color:var(--ink);border:6px dashed #c48a3a;border-radius:20px;padding:6px 24px;box-shadow:var(--shadow);transform:rotate(-2deg)}
+.choixs{display:flex;gap:clamp(10px,2.4vw,18px);flex-wrap:wrap;justify-content:center;max-width:960px}
+.choix{background:#fff;color:var(--ink);border-radius:26px;min-width:clamp(110px,22vw,170px);min-height:clamp(100px,17vh,150px);padding:10px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:var(--lettre);font-weight:700;font-size:clamp(46px,10vw,80px);line-height:1}
+.choix .pts{font-size:16px;letter-spacing:2px;color:#c48a3a;max-width:120px;line-height:1.1}
+.choix.img img{width:clamp(80px,17vw,130px);height:clamp(80px,17vw,130px);object-fit:contain}
+.choix.tas{flex-direction:row;flex-wrap:wrap;max-width:clamp(150px,28vw,260px);gap:2px;padding:12px}
+.choix.tas img{width:clamp(34px,6.5vw,50px);height:clamp(34px,6.5vw,50px);object-fit:contain}
+.choix.non{background:#ffd3d3;animation:non .4s}.choix.oui{background:#bff5d6;transform:scale(1.06)}
+@keyframes non{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.calc{display:flex;align-items:center;gap:clamp(8px,2vw,18px);flex-wrap:wrap;justify-content:center}
+.calc .op{font-family:var(--lettre);font-size:clamp(46px,9vw,74px);color:var(--gold)}
+.calc .etal{min-height:0}
+.go{background:var(--mint);color:#0d2a1d;border-radius:24px;padding:14px 34px;font-size:28px;box-shadow:0 7px 0 #1f9e66}
+#fin{align-items:center;justify-content:center;text-align:center}
+#fin .gros{font-size:110px;line-height:1}
+#fin h2{font-size:clamp(40px,9vw,64px)}
+#fin p{font-size:24px;margin:0;color:#ffe9c9}
+#fete{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+#fete i{position:absolute;top:-60px;font-style:normal;animation:tombe 2.2s ease-in forwards}
+@keyframes tombe{to{transform:translateY(115vh) rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#fete i{animation:none;display:none}}
+</style>
+</head>
+<body>
+<section class="scr on" id="menu">
+  <div class="haut"><a class="rond" href="./" aria-label="Retour à l'espace d'Amine">←</a><button class="rond" id="redit" aria-label="Écouter Lulu">🔊</button><div class="etoiles" id="tot">⭐ 0 · 🎟️ 0</div></div>
+  <h1>L'Épicerie <span>de Lulu</span></h1>
+  <p class="sous">Compter et lire en faisant les courses</p>
+  <div class="cartes" id="cartes"></div>
+</section>
+<section class="scr" id="jeu">
+  <div class="haut"><button class="rond" id="retour" aria-label="Retour au menu">←</button><button class="rond" id="ecoute" aria-label="Réécouter">🔊</button><div class="barre" id="barre"></div></div>
+  <div class="tableau" id="tableau"></div>
+</section>
+<section class="scr" id="fin">
+  <div class="gros" id="fGros">⭐</div><h2 id="fTitre">Bravo !</h2><p id="fTexte"></p>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:10px"><button class="go" id="encore">↻ Encore</button><button class="go" id="menuB" style="background:#ffd23f;box-shadow:0 7px 0 #c49a00;color:#3a2600">Les ateliers</button></div>
+</section>
+<div id="fete"></div>
+<script src="../famille.js"></script>
+<script src="lire/voix.php"></script>
+<script>
+'use strict';
+const KEY = 'amine-epicerie', PLAYER = 'Amine', TOUR = 6;
+const $ = id => document.getElementById(id);
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1)), pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = [...a]; for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const IMG = k => `epicerie/img/${k}.webp`;
+
+/* les produits du hanout : nom, pluriel, syllabes à lire, masculin/féminin */
+const P = {
+  pomme:{ s:'pomme', p:'pommes', syl:['POM','ME'], g:'f' }, banane:{ s:'banane', p:'bananes', syl:['BA','NA','NE'], g:'f' }, tomate:{ s:'tomate', p:'tomates', syl:['TO','MA','TE'], g:'f' },
+  orange:{ s:'orange', p:'oranges', syl:['O','RAN','GE'], g:'f' }, carotte:{ s:'carotte', p:'carottes', syl:['CA','ROT','TE'], g:'f' }, citron:{ s:'citron', p:'citrons', syl:['CI','TRON'], g:'m' },
+  fraise:{ s:'fraise', p:'fraises', syl:['FRAI','SE'], g:'f' }, poire:{ s:'poire', p:'poires', syl:['POI','RE'], g:'f' }, oeuf:{ s:'œuf', p:'œufs', syl:['ŒUF'], g:'m', pasLire:1 },
+  pain:{ s:'pain', p:'pains', syl:['PAIN'], g:'m' }, raisin:{ s:'raisin', p:'raisins', syl:['RAI','SIN'], g:'m' }, datte:{ s:'datte', p:'dattes', syl:['DAT','TE'], g:'f' },
+};
+const KS = Object.keys(P), LIRE = KS.filter(k => !P[k].pasLire);
+const nb = (n, k) => `${n} ${n > 1 ? P[k].p : P[k].s}`;
+const unune = k => P[k].g === 'f' ? 'une' : 'un';
+
+const ATELIERS = [
+  { id:'compte', nom:'Je compte', sub:'Combien y en a-t-il ?', c:'#e8743b', ic:'🔢', dit:'Je compte les fruits' },
+  { id:'panier', nom:'Le panier', sub:'Mets-en juste ce qu\'il faut', c:'#3d9a5b', ic:'img:panier', dit:'Je remplis le panier' },
+  { id:'lis', nom:'Je lis le mot', sub:'Quel fruit est écrit ?', c:'#2f7fc1', ic:'Aa', dit:'Je lis le mot' },
+  { id:'etiquette', nom:'L\'étiquette', sub:'Lis, puis compte', c:'#9a4fd1', ic:'🏷️', dit:'Je lis l\'étiquette' },
+  { id:'plus', nom:'Le plus, le moins', sub:'Où y en a-t-il le plus ?', c:'#d1415f', ic:'⚖️', dit:'Où y en a-t-il le plus ?' },
+  { id:'courses', nom:'Les courses', sub:'Un peu, et encore un peu', c:'#c48a00', ic:'➕', dit:'Les petites additions' },
+];
+
+/* ---------- sauvegarde ---------- */
+let S = { v:1, t:0, stars:{}, tickets:0, rounds:0 };
+try{ const d = JSON.parse(localStorage.getItem(KEY)); if(d && typeof d === 'object') S = Object.assign(S, d); }catch(e){}
+function save(){ S.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+const total = () => Object.values(S.stars).reduce((a, b) => a + (+b || 0), 0);
+
+/* ---------- la voix : Lulu (sons de « Je lis ! ») pour toute phrase déjà enregistrée, sinon la tablette ---------- */
+const cle = t => String(t).toLowerCase().replace(/é/g, 'ee').replace(/œ/g, 'oe').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
+const DISPO = window.LIRE_VOIX || {};
+const LULU = DISPO.lulu && DISPO.lulu.k ? new Set(DISPO.lulu.k) : new Set();
+let VTAB = null;
+function choisitVoix(){ const v = (window.speechSynthesis && speechSynthesis.getVoices && speechSynthesis.getVoices()) || []; const fr = v.filter(x => /^fr/i.test(x.lang)); VTAB = fr.find(x => /Amélie|Audrey|Marie|Google français|Denise|Thomas/i.test(x.name)) || fr.find(x => /FR/.test(x.lang)) || fr[0] || null; }
+if(window.speechSynthesis){ choisitVoix(); speechSynthesis.onvoiceschanged = choisitVoix; }
+let AC = null;
+function audio(){ if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state === 'suspended') AC.resume(); return AC; }
+const cache = {};
+function charge(f){ if(cache[f]) return cache[f]; const ac = audio(); if(!ac) return Promise.reject();
+  return cache[f] = fetch(f).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); }).then(ab => new Promise((ok, ko) => { const p = ac.decodeAudioData(ab, ok, ko); if(p && p.catch) p.catch(ko); })).catch(e => { delete cache[f]; throw e; }); }
+const fichier = t => { if(typeof t === 'number') return `nombres/voix/${t}.mp3`; const k = cle(t); return LULU.has(k) ? `lire/son.php?v=lulu&k=${k}&r=${DISPO.lulu.r}` : null; };
+let file = [], jeton = 0, joueur = null, dernier = [];
+function stop(){ jeton++; file = []; if(joueur){ try{ joueur.onended = null; joueur.stop(); }catch(e){} joueur = null; } try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){} }
+function parle(liste, garde){ if(garde !== false) dernier = liste.slice(); stop(); audio(); file = liste.slice(); const j = jeton; file.forEach(t => { const f = fichier(t); if(f) charge(f).catch(() => {}); }); setTimeout(() => suivant(j), 80); }
+function suivant(j){
+  if(j !== jeton) return; const t = file.shift(); if(t === undefined) return;
+  const fin = () => { if(j === jeton) setTimeout(() => suivant(j), 120); }, f = fichier(t);
+  if(!f) return tts(String(t), fin);
+  let fini = false; const g = setTimeout(() => { if(!fini){ fini = true; tts(String(t), fin); } }, 3500);
+  charge(f).then(b => { if(fini || j !== jeton) return; fini = true; clearTimeout(g); const ac = audio(), src = ac.createBufferSource(); src.buffer = b; src.connect(ac.destination); joueur = src;
+    let fait = false; const ok = () => { if(fait) return; fait = true; if(joueur === src) joueur = null; fin(); }; src.onended = ok; setTimeout(ok, b.duration * 1000 + 600); src.start(); })
+    .catch(() => { if(fini || j !== jeton) return; fini = true; clearTimeout(g); tts(String(t), fin); });
+}
+function tts(t, fin){ if(!window.speechSynthesis){ fin(); return; }
+  try{ const u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; if(VTAB) u.voice = VTAB; u.rate = .9; u.pitch = 1.1; let fait = false; const ok = () => { if(fait) return; fait = true; clearTimeout(g); fin(); };
+    const g = setTimeout(ok, 1500 + t.length * 110); u.onend = ok; u.onerror = ok; speechSynthesis.speak(u); if(speechSynthesis.paused) speechSynthesis.resume(); }catch(e){ fin(); } }
+function nombre(n){ stop(); audio(); const f = fichier(n); charge(f).then(b => { const ac = audio(), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(); }).catch(() => tts(String(n), () => {})); }
+function ton(f, d = .15, type = 'triangle', vol = .14, when = 0){ if(!audio()) return; const t = AC.currentTime + when, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + .02); }
+const sfx = { oui(){ [523, 659, 784].forEach((f, k) => ton(f, .2, 'triangle', .14, k * .08)); }, non(){ ton(220, .22, 'sawtooth', .06); }, tape(){ ton(660, .06, 'triangle', .08); } };
+const BRAVO = ['Bravo !', 'Super !', 'Oui, c\'est ça !', 'Génial !', 'Bien joué, Amine !'];
+const ENCORE = 'Essaie encore !';
+
+/* ---------- les écrans ---------- */
+function ecran(id){ document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === id)); }
+function fete(){ const F = $('fete'); for(let i = 0; i < 26; i++){ const s = document.createElement('i'); s.textContent = pick(['⭐', '🍎', '🍌', '🧺', '🎉', '🍓']); s.style.left = Math.random() * 100 + 'vw'; s.style.fontSize = 24 + Math.random() * 30 + 'px'; s.style.animationDelay = Math.random() * .6 + 's'; F.appendChild(s); setTimeout(() => s.remove(), 3200); } }
+function menu(voix){
+  stop(); ecran('menu'); $('tot').textContent = `⭐ ${total()} · 🎟️ ${S.tickets || 0}`;
+  $('cartes').innerHTML = ATELIERS.map((a, i) => `<button class="carte" style="--c:${a.c}" data-i="${i}"><span class="ic">${a.ic.startsWith('img:') ? `<img src="${IMG(a.ic.slice(4))}" alt="">` : a.ic}</span><span><b>${a.nom}</b><small>${a.sub}</small><span class="st">${'⭐'.repeat(Math.min(5, S.stars[a.id] || 0)) || '☆'}</span></span></button>`).join('');
+  $('cartes').querySelectorAll('.carte').forEach(b => b.onclick = () => { sfx.tape(); joue(+b.dataset.i); });
+  if(voix) parle(['Bienvenue dans mon épicerie, Amine !', 'Choisis un atelier.']);
+}
+$('redit').onclick = () => parle(['Bienvenue dans mon épicerie, Amine !', 'Choisis un atelier.']);
+$('ecoute').onclick = () => parle(dernier, false);
+$('retour').onclick = () => { sfx.tape(); menu(false); };
+$('encore').onclick = () => { sfx.tape(); joue(R.ai); };
+$('menuB').onclick = () => { sfx.tape(); menu(false); };
+
+/* ---------- une partie : 6 questions ---------- */
+let R = null;
+function joue(ai){ R = { ai, a:ATELIERS[ai], k:0, bons:0, faute:false, vus:new Set() }; ecran('jeu'); question(); }
+function barre(){ $('barre').innerHTML = Array.from({ length:TOUR }, (_, i) => `<i class="${i < R.k ? 'ok' : i === R.k ? 'la' : ''}"></i>`).join(''); }
+function consigne(html){ return `<div class="consigne"><span class="lulu">🧚</span><span>${html}</span></div>`; }
+function bonne(b){ if(!R.faute) R.bons++; sfx.oui(); if(b) b.classList.add('oui'); $('tableau').querySelectorAll('.choix').forEach(x => x.disabled = true);
+  parle([pick(BRAVO)], false); setTimeout(() => { R.k++; R.k >= TOUR ? fin() : question(); }, 1500); }
+function rate(b, aide){ R.faute = true; sfx.non(); if(b){ b.classList.add('non'); setTimeout(() => b.classList.remove('non'), 450); } parle(aide ? [ENCORE, ...aide] : [ENCORE], false); }
+function nouveau(f){ let q, g = 0; do q = f(); while(R.vus.has(q.id) && g++ < 30); R.vus.add(q.id); return q; }
+function pts(n){ return '●'.repeat(n); }
+function etal(k, n, cls){ return Array.from({ length:n }, () => `<img src="${IMG(k)}" alt="" class="${cls || ''}">`).join(''); }
+function chiffres(good, max){ const s = new Set([good]); while(s.size < 3){ const v = good + pick([-2, -1, 1, 2]); if(v >= 1 && v <= max) s.add(v); } return shuffle([...s]); }
+
+function question(){
+  R.faute = false; barre(); const T = $('tableau'), id = R.a.id;
+  if(id === 'compte'){
+    const q = nouveau(() => { const k = pick(KS), n = rnd(1, R.k < 3 ? 6 : 10); return { id:k + n, k, n }; });
+    T.innerHTML = consigne(`Combien de <b>${P[q.k].p}</b> ?`) + `<div class="etal">${etal(q.k, q.n)}</div>` +
+      `<div class="choixs">${chiffres(q.n, 10).map(v => `<button class="choix" data-v="${v}">${v}<span class="pts">${pts(v)}</span></button>`).join('')}</div>`;
+    parle([`Combien de ${P[q.k].p} ?`]);
+    T.querySelectorAll('.etal img').forEach((im, i) => im.onclick = () => { sfx.tape(); im.style.transform = 'scale(1.15)'; nombre(i + 1); });
+    T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === q.n ? bonne(b) : rate(b, ['Touche chaque fruit pour compter.']));
+  }
+  else if(id === 'panier'){
+    const q = nouveau(() => { const k = pick(KS), n = rnd(1, R.k < 3 ? 5 : 9); return { id:k + n, k, n }; });
+    const phr = `Mets ${nb(q.n, q.k)} dans le panier.`;
+    T.innerHTML = consigne(`Mets <b>${nb(q.n, q.k)}</b> dans le panier.`) + `<div class="etal">${Array.from({ length:10 }, (_, i) => `<button data-i="${i}"><img src="${IMG(q.k)}" alt=""></button>`).join('')}</div>` +
+      `<div class="calc"><div class="panier"><div class="dedans" id="dedans"></div></div><div class="compteur" id="cpt">0</div></div><button class="go" id="fait">C'est fait ✔</button>`;
+    parle([phr]); let dans = [];
+    const maj = () => { $('dedans').innerHTML = dans.map(i => `<img src="${IMG(q.k)}" alt="" data-i="${i}">`).join(''); $('cpt').textContent = dans.length;
+      $('dedans').querySelectorAll('img').forEach(im => im.onclick = () => { sfx.tape(); dans = dans.filter(x => x !== +im.dataset.i); T.querySelector(`.etal button[data-i="${im.dataset.i}"]`).disabled = false; maj(); }); };
+    T.querySelectorAll('.etal button').forEach(b => b.onclick = () => { if(b.disabled) return; b.disabled = true; dans.push(+b.dataset.i); maj(); nombre(dans.length); });
+    $('fait').onclick = () => { if(dans.length === q.n) bonne($('fait')); else rate(null, dans.length > q.n ? ['Il y en a trop. Enlève-en en touchant le panier.'] : ['Il en manque. Ajoute-en !']); };
+  }
+  else if(id === 'lis'){
+    const q = nouveau(() => { const k = pick(LIRE); return { id:k, k }; }), opts = shuffle([q.k, ...shuffle(LIRE.filter(x => x !== q.k)).slice(0, 2)]);
+    T.innerHTML = consigne(`Lis le mot. Quel fruit est écrit ?`) + `<div class="mot">${P[q.k].syl.map((s, i) => `<button class="s${i % 3}" data-s="${s}">${s}</button>`).join('')}</div>` +
+      `<div class="choixs">${opts.map(k => `<button class="choix img" data-v="${k}"><img src="${IMG(k)}" alt=""></button>`).join('')}</div>`;
+    parle(['Lis le mot.', 'Quel fruit est écrit ?']);
+    T.querySelectorAll('.mot button').forEach(b => b.onclick = () => { sfx.tape(); parle([b.dataset.s.toLowerCase()], false); });
+    T.querySelectorAll('.choix').forEach(b => b.onclick = () => b.dataset.v === q.k ? (bonne(b), setTimeout(() => parle([P[q.k].s], false), 700)) : rate(b, ['Touche les syllabes pour les entendre.']));
+  }
+  else if(id === 'etiquette'){
+    const q = nouveau(() => { const k = pick(LIRE), n = rnd(1, 6); return { id:k + n, k, n }; });
+    const k2 = pick(LIRE.filter(x => x !== q.k)), n2 = pick([1,2,3,4,5,6].filter(x => x !== q.n));
+    const opts = shuffle([[q.k, q.n], [q.k, n2], [k2, q.n]]);
+    T.innerHTML = consigne(`Lis l'étiquette, et trouve le bon panier.`) + `<div class="etiquette">${q.n} ${P[q.k].syl.join('')}${q.n > 1 ? 'S' : ''}</div>` +
+      `<div class="choixs">${opts.map(([k, n]) => `<button class="choix tas" data-v="${k + n}">${etal(k, n)}</button>`).join('')}</div>`;
+    parle(['Lis l\'étiquette, et trouve le bon panier.']);
+    T.querySelector('.etiquette').onclick = () => parle([String(q.n), nb(q.n, q.k)], false);
+    T.querySelectorAll('.choix').forEach(b => b.onclick = () => b.dataset.v === q.k + q.n ? bonne(b) : rate(b, ['Regarde bien le fruit, et compte.']));
+  }
+  else if(id === 'plus'){
+    const moins = R.k >= 3 && Math.random() < .5;
+    const q = nouveau(() => { const k = pick(KS), a = rnd(1, 9); let b; do b = rnd(1, 9); while(Math.abs(a - b) < (R.k < 3 ? 3 : 1)); return { id:k + a + '-' + b + moins, k, a, b }; });
+    const good = moins ? Math.min(q.a, q.b) : Math.max(q.a, q.b), phr = moins ? `Où y a-t-il le moins de ${P[q.k].p} ?` : `Où y a-t-il le plus de ${P[q.k].p} ?`;
+    T.innerHTML = consigne(moins ? `Où y a-t-il le <b>moins</b> de ${P[q.k].p} ?` : `Où y a-t-il le <b>plus</b> de ${P[q.k].p} ?`) +
+      `<div class="choixs">${[q.a, q.b].map(n => `<button class="choix tas" data-v="${n}">${etal(q.k, n)}</button>`).join('')}</div>`;
+    parle([phr]);
+    T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === good ? bonne(b) : rate(b, ['Compte les deux paniers.']));
+  }
+  else if(id === 'courses'){
+    const q = nouveau(() => { const k = pick(KS), a = rnd(1, 4), b = rnd(1, R.k < 3 ? 2 : 4); return { id:k + a + '+' + b, k, a, b }; }), s = q.a + q.b;
+    T.innerHTML = consigne(`${nb(q.a, q.k)}, et encore ${q.b}. Ça fait combien ?`) +
+      `<div class="calc"><div class="etal">${etal(q.k, q.a)}</div><span class="op">+</span><div class="etal">${etal(q.k, q.b)}</div></div>` +
+      `<div class="choixs">${chiffres(s, 10).map(v => `<button class="choix" data-v="${v}">${v}<span class="pts">${pts(v)}</span></button>`).join('')}</div>`;
+    parle([`${nb(q.a, q.k)}, et encore ${q.b}.`, 'Ça fait combien ?']);
+    let c = 0; T.querySelectorAll('.etal img').forEach(im => im.onclick = () => { if(im.dataset.c) return; im.dataset.c = 1; im.style.opacity = .55; nombre(++c); });
+    T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === s ? bonne(b) : rate(b, ['Touche tous les fruits pour les compter.']));
+  }
+}
+function fin(){
+  const gagne = R.bons >= TOUR - 1; S.rounds = (S.rounds || 0) + 1;
+  if(gagne){ S.stars[R.a.id] = (S.stars[R.a.id] || 0) + 1; S.tickets = (S.tickets || 0) + 2; fete(); } else S.tickets = (S.tickets || 0) + 1;
+  save(); ecran('fin');
+  $('fGros').textContent = gagne ? '⭐' : '🧺'; $('fTitre').textContent = gagne ? 'Bravo, Amine !' : 'Bien travaillé !';
+  $('fTexte').textContent = R.bons + ' bonnes réponses sur ' + TOUR + (gagne ? ' du premier coup : une étoile ⭐ et 2 tickets 🎟️ !' : '. Un ticket 🎟️ pour toi ! Encore une fois pour gagner l\'étoile ?');
+  parle(gagne ? ['Bravo, Amine !', 'Tu gagnes une étoile !'] : ['Bien travaillé !', 'On recommence ?']);
+}
+
+/* les phrases que Lulu peut enregistrer (liste pour ElevenLabs) */
+window.EPICERIE_PHRASES = () => { const s = new Set(['Bienvenue dans mon épicerie, Amine !', 'Choisis un atelier.', 'Lis le mot.', 'Quel fruit est écrit ?', 'Lis l\'étiquette, et trouve le bon panier.', 'Ça fait combien ?', ENCORE, ...BRAVO,
+  'Touche chaque fruit pour compter.', 'Il y en a trop. Enlève-en en touchant le panier.', 'Il en manque. Ajoute-en !', 'Touche les syllabes pour les entendre.', 'Regarde bien le fruit, et compte.', 'Compte les deux paniers.', 'Touche tous les fruits pour les compter.', 'Bravo, Amine !', 'Tu gagnes une étoile !', 'Bien travaillé !', 'On recommence ?']);
+  for(const k of KS){ s.add(`Combien de ${P[k].p} ?`); s.add(`Où y a-t-il le plus de ${P[k].p} ?`); s.add(`Où y a-t-il le moins de ${P[k].p} ?`); s.add(P[k].s); } return [...s]; };
+
+menu(false);
+document.addEventListener('pointerdown', function premier(){ document.removeEventListener('pointerdown', premier); if(document.getElementById('menu').classList.contains('on')) parle(['Bienvenue dans mon épicerie, Amine !', 'Choisis un atelier.']); }, { once:true });
+if(window.Famille){
+  Famille.load('amine-epicerie', PLAYER).then(d => { const r = d && d[KEY]; if(r && (r.t || 0) > (S.t || 0)){ S = Object.assign(S, r); save(); if(!R) menu(false); } });
+  Famille.track('amine-epicerie', PLAYER, [KEY]);
+}
+</script>
+</body>
+</html>

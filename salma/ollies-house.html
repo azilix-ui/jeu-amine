@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ollie's House</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="ollie/cours.css?v=1">
+<style>
+/* Ollie's House (16/11) : la suite d'English Garden et de Weather Station. La maison d'Ollie : les pièces, les meubles,
+   où est le chat (in, on, under, next to, behind), There is / There are, épeler. Photos ComfyUI (salma/ollie/img/), voix anglaise du navigateur. */
+.scene{position:relative;width:min(100%,520px);aspect-ratio:4/3;border-radius:18px;overflow:hidden;box-shadow:0 6px 0 #0002;
+  background:linear-gradient(#f6e7cf 0 64%,#c79a6b 64% 66%,#b98656 66% 100%)}
+.scene::after{content:"";position:absolute;inset:66% 0 0;background:repeating-linear-gradient(90deg,transparent 0 14%,#0000000d 14% 14.4%)}
+.scene img{position:absolute;display:block;height:auto;filter:drop-shadow(0 4px 3px #0003)}
+.scene.mini{width:100%;border-radius:12px;box-shadow:none}
+.answers.scenes{grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+.card.ex>img:not(.photo){max-height:230px;width:auto!important;max-width:min(60vw,280px)!important}
+@media (max-width:620px){.answers.scenes{grid-template-columns:1fr}}
+.answers.scenes .ans{padding:6px}
+.row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:620px}
+.row img{width:clamp(70px,13vw,110px);aspect-ratio:1;object-fit:contain}
+.voc{display:flex;flex-wrap:wrap;gap:8px}
+.voc button{background:#eef7ff;border-radius:999px;padding:6px 14px;font-weight:800;min-height:44px;display:inline-flex;align-items:center;gap:6px}
+.voc button img{width:34px;height:34px;object-fit:contain}
+.preps{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.preps div{text-align:center;font-weight:800}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const IMG = n => `ollie/img/${n}.webp`;
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1)), pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const others = (all, good, k) => shuffle(all.filter(x => x !== good)).slice(0, k);
+
+/* le vocabulaire */
+const ROOMS = { kitchen:'la cuisine', bedroom:'la chambre', bathroom:'la salle de bain', livingroom:'le salon', garden:'le jardin' };
+const RW = { kitchen:'kitchen', bedroom:'bedroom', bathroom:'bathroom', livingroom:'living room', garden:'garden' };
+const THINGS = { bed:'le lit', table:'la table', chair:'la chaise', sofa:'le canapé', lamp:'la lampe', bath:'la baignoire', fridge:'le frigo', wardrobe:"l'armoire", tv:'la télé', door:'la porte', window:'la fenêtre', cat:'le chat', box:'la boîte', ball:'le ballon' };
+const TW = { tv:'TV' }, tw = k => TW[k] || k;
+const PLACE = { bed:'bedroom', wardrobe:'bedroom', fridge:'kitchen', bath:'bathroom', sofa:'livingroom', tv:'livingroom', lamp:'livingroom' };
+const NUM = ['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+const PLUR = { box:'boxes' }, pl = k => PLUR[k] || tw(k) + 's';
+const PREP = { in:'dans', on:'sur', under:'sous', 'next to':'à côté de', behind:'derrière' };
+
+/* la petite scène : un meuble au milieu, le chat ou le ballon placé selon le mot.
+   A = hauteur / largeur de chaque image détourée ; S = où l'on pose quelque chose « on » (fraction de la hauteur). */
+const A = { table:.69, chair:1.7, sofa:.58, bed:.74, box:.77, cat:2.05, ball:1.03 };
+const S = { table:.98, chair:.5, sofa:.55, bed:.62, box:.9 };
+const OBJ = { on:['table','chair','sofa','bed','box'], under:['table','chair'], 'next to':['table','chair','sofa','bed','box'], behind:['sofa','bed','chair','table'], in:['box'] };
+function scene(sub, prep, obj, mini){
+  const W = obj === 'chair' ? 26 : obj === 'box' ? 30 : 46, x0 = 50 - W / 2, b = 6, H = W * A[obj] / .75;       // en % de la scène (4:3)
+  const sw = (sub === 'cat' ? 15 : 12) * (prep === 'under' ? (obj === 'chair' ? .6 : .8) : 1), sh = sw * A[sub] / .75; let x = 50 - sw / 2, y = b, z = 3;
+  if(prep === 'on'){ y = b + H * S[obj] - 1; }
+  else if(prep === 'under'){ y = b + 1; z = 1; x = 50 - sw / 2 + (obj === 'chair' ? 0 : 6); }
+  else if(prep === 'next to'){ x = x0 + W + 3; }
+  else if(prep === 'behind'){ y = b + H * .45; z = 1; x = 50 - sw / 2 + 8; }
+  else if(prep === 'in'){ y = b + H * .22; z = 1; }
+  const ob = `<img src="${IMG(obj)}" alt="" style="left:${x0}%;width:${W}%;bottom:${b}%;z-index:2">`;
+  const su = `<img src="${IMG(sub)}" alt="" style="left:${x}%;width:${sw}%;bottom:${y}%;z-index:${z}">`;
+  return `<div class="scene${mini ? ' mini' : ''}" role="img" aria-label="${sub} ${prep} ${obj}">${ob}${su}</div>`;
+}
+const frPlace = (p, o) => (PREP[p] + ' ' + THINGS[o]).replace(/de le /, 'du ');
+const phrase = (sub, prep, obj) => `The ${sub} is ${prep} the ${obj}.`;
+function randScene(sub){ const prep = pick(Object.keys(OBJ)); return { sub: sub || pick(['cat','cat','ball']), prep, obj: pick(OBJ[prep]) }; }
+
+/* les questions */
+const imgOpt = (k, cls) => ({ v:k, html:`<img src="${IMG(cls === 'room' ? 'r-' + k : k)}" alt=""${cls ? ` class="${cls}"` : ''}>` });
+function qRoom(){
+  const k = pick(Object.keys(ROOMS));
+  if(Math.random() < .5) return { t:'choix', q:`Écoute, et touche la bonne pièce : <i lang="en">${RW[k]}</i>`, opts:shuffle([k, ...others(Object.keys(ROOMS), k, 3)]).map(r => imgOpt(r, 'room')), imgs:1, good:k, item:RW[k], expl:`<i lang="en">${RW[k]}</i>, c'est ${ROOMS[k]}.`, help:'Touche 🔊 pour réécouter', en:RW[k] };
+  return { t:'choix', q:`Quelle pièce de la maison d'Ollie est-ce ?`, body:`<img class="photo" src="${IMG('r-' + k)}" alt="">`, opts:shuffle([k, ...others(Object.keys(ROOMS), k, 2)]).map(r => ({ v:r, html:RW[r] })), cols:1, good:k, item:RW[k], expl:`C'est <i lang="en">the ${RW[k]}</i> : ${ROOMS[k]}.` };
+}
+function qThing(pool){
+  const keys = pool || Object.keys(THINGS), k = pick(keys);
+  if(Math.random() < .5) return { t:'choix', q:`Écoute, et touche la bonne image : <i lang="en">${tw(k)}</i>`, opts:shuffle([k, ...others(keys, k, 3)]).map(r => imgOpt(r)), imgs:1, good:k, item:tw(k), expl:`<i lang="en">a ${tw(k)}</i>, c'est ${THINGS[k]}.`, en:tw(k) };
+  return { t:'choix', q:`Comment dit-on ${THINGS[k]} en anglais ?`, body:`<img src="${IMG(k)}" alt="" style="width:min(60vw,220px)">`, opts:shuffle([k, ...others(keys, k, 3)]).map(r => ({ v:r, html:'a ' + tw(r) })), good:k, item:tw(k), expl:`${THINGS[k]} se dit <i lang="en">a ${tw(k)}</i>.` };
+}
+function qPlace(){
+  const k = pick(Object.keys(PLACE)), r = PLACE[k];
+  return { t:'choix', q:`Complète : <i lang="en">The ${tw(k)} is in the …</i>`, body:`<img src="${IMG(k)}" alt="" style="width:min(50vw,180px)">`, opts:shuffle([r, ...others(Object.keys(ROOMS), r, 3)]).map(x => ({ v:x, html:`<img src="${IMG('r-' + x)}" alt="" class="room">${RW[x]}` })), imgs:1, good:r, item:tw(k) + ' → ' + RW[r], expl:`<i lang="en">The ${tw(k)} is in the ${RW[r]}.</i>` };
+}
+function qPrep(){
+  const s = randScene('cat'), opts = shuffle(Object.keys(PREP));
+  return { t:'choix', q:`<i lang="en">Where is the cat?</i> Où est le chat ?`, body:scene(s.sub, s.prep, s.obj), opts:opts.map(p => ({ v:p, html:`The cat is <b>${p}</b> the ${s.obj}.` })), cols:1, good:s.prep, item:s.prep, expl:`<i lang="en">${phrase(s.sub, s.prep, s.obj)}</i> Le chat est ${frPlace(s.prep, s.obj)}.` };
+}
+function qListen(){
+  const s = randScene(), seen = new Set([s.sub + s.prep + s.obj]), alts = [];
+  while(alts.length < 2){ const o = Math.random() < .5 ? { ...s, prep:pick(Object.keys(OBJ).filter(p => OBJ[p].includes(s.obj))) } : randScene(s.sub); const k = o.sub + o.prep + o.obj; if(!seen.has(k)){ seen.add(k); alts.push(o); } }
+  const all = shuffle([s, ...alts]); const ph = phrase(s.sub, s.prep, s.obj);
+  return { t:'choix', q:`Écoute Ollie et touche la bonne image.`, opts:all.map(o => ({ v:o.sub + o.prep + o.obj, html:scene(o.sub, o.prep, o.obj, 1) })), good:s.sub + s.prep + s.obj, item:s.prep, expl:`<i lang="en">${ph}</i>`, en:ph, help:'Touche 🔊 pour réécouter', cls:'scenes' };
+}
+function qThere(){
+  const k = pick(['bed','chair','lamp','sofa','ball','box','cat','table']), n = Math.random() < .3 ? 1 : rnd(2, 6);
+  const row = `<div class="row">${Array.from({ length:n }, () => `<img src="${IMG(k)}" alt="">`).join('')}</div>`;
+  if(Math.random() < .5) return { t:'choix', q:`Complète la phrase : <b>There … ${n === 1 ? 'a ' + tw(k) : NUM[n] + ' ' + pl(k)}</b>.`, voice:`Complète la phrase.`, body:row, opts:['is','are'].map(v => ({ v, html:`There <b>${v}</b>` })), good:n === 1 ? 'is' : 'are', item:n === 1 ? 'There is' : 'There are', expl:n === 1 ? `Une seule chose : <i lang="en">There is a ${tw(k)}.</i>` : `Plusieurs choses : <i lang="en">There are ${NUM[n]} ${pl(k)}.</i>` };
+  const say = c => c === 1 ? `There is one ${tw(k)}.` : `There are ${NUM[c]} ${pl(k)}.`, cs = shuffle([n, ...others([1,2,3,4,5,6], n, 2)]);
+  return { t:'choix', q:`<i lang="en">How many ${pl(k)}?</i> Compte, et choisis la bonne phrase.`, body:row, opts:cs.map(c => ({ v:c, html:say(c) })), cols:1, good:n, item:NUM[n], expl:`<i lang="en">${say(n)}</i>` };
+}
+const SPELL = ['bed','sofa','lamp','door','table','chair','bath','fridge','window','cat','box','ball','kitchen','garden','bedroom'];
+function qSpell(){
+  const k = pick(SPELL), room = ROOMS[k] !== undefined;
+  return { t:'epelle', q:`Écoute et écris le mot en anglais, lettre par lettre.`, body:`<img src="${IMG(room ? 'r-' + k : k)}" alt="" style="width:min(56vw,${room ? 300 : 190}px);border-radius:14px">`, word:k, en:k, item:k, expl:`<i lang="en">${k}</i> : ${[...k].join(' - ')}.` };
+}
+const many = (f, n) => Array.from({ length:n }, f);
+function noDup(f, n){ const out = [], seen = new Set(); let guard = 0; while(out.length < n && guard++ < 200){ const q = f(); const k = (q.q || '') + '|' + q.good + '|' + (q.word || '') + '|' + (q.body || ''); if(!seen.has(k)){ seen.add(k); out.push(q); } } return out; }
+
+window.COURS = {
+  key:'salma-house', track:'salma-house', retour:"La maison", titre:"Ollie's House", sous:'La maison, les meubles, et où se cache le chat (anglais)',
+  bonjour:`<i lang="en">Welcome to my house, Salma!</i> Bienvenue dans ma maison ! On va visiter les pièces, apprendre les meubles, et retrouver mon chat qui se cache partout. Chaque bonne réponse te donne un <b>ticket 🎟️</b> pour Serpent Légendes !`,
+  confetti:['🏠','🐈','⭐','🎟️','🛋️'], revoir:'Mots à revoir',
+  CH:[
+    { id:'rooms', name:'The rooms', sub:'Les pièces de la maison', icon:'🏠', edge:'#2a7fb4', make:() => noDup(qRoom, 8),
+      rule:`Les pièces de la maison : <b>kitchen</b> (la cuisine), <b>bedroom</b> (la chambre), <b>bathroom</b> (la salle de bain), <b>living room</b> (le salon), <b>garden</b> (le jardin).` },
+    { id:'things', name:'The furniture', sub:'Les meubles et les objets', icon:'🛋️', edge:'#c8473a', make:() => noDup(() => qThing(), 10),
+      rule:`Pour un objet on dit <b>a</b> : <b>a bed</b> (un lit), <b>a chair</b> (une chaise), <b>a sofa</b> (un canapé), <b>a lamp</b> (une lampe), <b>a fridge</b> (un frigo)…` },
+    { id:'place', name:'Everything in its place', sub:'Chaque meuble dans sa pièce', icon:'🧺', edge:'#147a66', make:() => noDup(qPlace, 7) },
+    { id:'where', name:'Where is the cat?', sub:'in, on, under, next to, behind', icon:'🐈', edge:'#7a4fe0', make:() => noDup(qPrep, 10),
+      rule:`<b>in</b> = dans · <b>on</b> = sur · <b>under</b> = sous · <b>next to</b> = à côté de · <b>behind</b> = derrière.<br>On dit : <b>The cat is under the table.</b>` },
+    { id:'listen', name:'Listen and find', sub:'Écoute Ollie et trouve la bonne image', icon:'👂', edge:'#e0a100', make:() => noDup(qListen, 8) },
+    { id:'there', name:'There is, there are', sub:'Il y a un… il y a des…', icon:'🔢', edge:'#2a7fb4', make:() => many(qThere, 10),
+      rule:`<b>There is</b> + une seule chose : <b>There is a lamp.</b><br><b>There are</b> + plusieurs choses : <b>There are three chairs.</b> (avec un <b>s</b> au bout du mot !)` },
+    { id:'spell', name:'Spell it!', sub:'Écrire les mots, lettre par lettre', icon:'✏️', edge:'#c8473a', make:() => noDup(qSpell, 8) },
+    { id:'tour', name:"The big tour", sub:'Toute la maison, pour la grande visite', icon:'🏆', edge:'#147a66', make:() => shuffle([...noDup(qRoom, 2), ...noDup(() => qThing(), 2), qPlace(), ...noDup(qPrep, 2), qListen(), ...many(qThere, 2), qSpell()]) },
+  ],
+  ask:{},
+  fiche:[
+    { h:'The rooms', tag:'les pièces', html:`<div class="voc">${Object.keys(ROOMS).map(k => `<button data-en="${RW[k]}"><img src="${IMG('r-' + k)}" alt="" style="object-fit:cover;border-radius:8px">🔊 ${RW[k]} <small>${ROOMS[k]}</small></button>`).join('')}</div>`,
+      lire:`Les pièces de la maison. ${Object.keys(ROOMS).map(k => `<i lang="en">${RW[k]}</i> : ${ROOMS[k]}.`).join(' ')}` },
+    { h:'The furniture', tag:'les meubles', html:`<div class="voc">${Object.keys(THINGS).map(k => `<button data-en="a ${tw(k)}"><img src="${IMG(k)}" alt="">🔊 a ${tw(k)} <small>${THINGS[k]}</small></button>`).join('')}</div>`,
+      lire:`Les meubles. ${Object.keys(THINGS).map(k => `<i lang="en">a ${tw(k)}</i> : ${THINGS[k]}.`).join(' ')}` },
+    { h:'Where is the cat?', tag:'les petits mots de place', html:`<div class="preps">${Object.keys(PREP).map(p => { const o = OBJ[p][0]; return `<div>${scene('cat', p, o, 1)}<button class="btn" data-en="${phrase('cat', p, o)}">🔊 ${p}</button><br><small>${PREP[p]}</small></div>`; }).join('')}</div>`,
+      lire:`Les petits mots de place. ${Object.keys(PREP).map(p => `<i lang="en">${p}</i> : ${PREP[p]}.`).join(' ')}` },
+    { h:'There is / There are', tag:'il y a', html:`<p><b>There is</b> + une seule chose : <b>There is a lamp.</b> (Il y a une lampe.)</p><p><b>There are</b> + plusieurs : <b>There are three chairs.</b> (Il y a trois chaises.) Le mot prend un <b>s</b> : chair → chair<b>s</b>, box → box<b>es</b>.</p>`,
+      lire:`<i lang="en">There is</i> avec une seule chose : <i lang="en">There is a lamp.</i> <i lang="en">There are</i> avec plusieurs choses : <i lang="en">There are three chairs.</i> Au pluriel, le mot prend un s.` },
+  ],
+};
+/* les réponses en petites scènes : 3 colonnes */
+COURS.ask.choix = q => { OLLIE.ASK.choix(q); if(q.cls) document.querySelector('.answers').classList.add(q.cls); };
+</script>
+<script src="ollie/cours.js?v=1"></script>
+</body></html>

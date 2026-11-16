@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>La Fabrique des Phrases</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%A9%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="ollie/cours.css?v=1">
+<style>
+/* La Fabrique des Phrases (16/11) : le français de Salma (CE1-CE2). La phrase (majuscule, point, ordre des mots), la nature des mots
+   (nom, verbe, adjectif, déterminant), le, la, les, singulier et pluriel, masculin et féminin, et les homophones a/à, et/est. */
+.nat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:620px){.nat{grid-template-columns:1fr}}
+.nat div{border-radius:16px;padding:10px 14px;font-weight:700}
+.nat b{font-family:var(--display);font-size:20px;display:block}
+.c-nom{background:#e4f3fd;color:#1d5c84}.c-verbe{background:#ffe9e5;color:#9a3328}.c-adj{background:#dff5ee;color:#0f5c4c}.c-det{background:#f1e8ff;color:#5b34b0}
+.trou{display:inline-block;min-width:2.4em;border-bottom:5px dotted var(--sun);text-align:center;color:var(--mint-deep)}
+.astuce{background:#fff8de;border:3px solid var(--sun);border-radius:16px;padding:10px 14px;font-weight:800}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1)), pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const take = (arr, n) => shuffle(arr).slice(0, n);
+const T = '<span class="trou">…</span>';
+
+/* ---------- 1. La phrase : majuscule, point, sens ---------- */
+const PHRASES = ['Le chat dort sur le canapé.', 'Salma monte sur son poney.', 'Amine mange une grosse pomme.', 'Ollie prépare une tarte aux fraises.', 'Les enfants jouent dans le jardin.',
+  'Maman lit une histoire le soir.', 'Le soleil brille sur la mer.', 'Essil écrit une lettre en allemand.', 'Papa répare le vélo rouge.', 'La chouette vole dans la nuit.', 'Mon frère aime les dinosaures.', 'Le boulanger vend du pain chaud.'];
+function qPhrase(){
+  const p = pick(PHRASES), w = p.slice(0, -1).split(' '), kind = pick(['ok','ok','maj','point','ordre']);
+  let txt = p;
+  if(kind === 'maj') txt = p[0].toLowerCase() + p.slice(1);
+  if(kind === 'point') txt = p.slice(0, -1);
+  if(kind === 'ordre'){ let m; do m = shuffle(w); while(m.join(' ') === w.join(' ')); txt = m.join(' '); txt = txt[0].toUpperCase() + txt.slice(1) + '.'; }
+  return { t:'choix', q:`Est-ce une phrase bien écrite ?`, body:`<div class="big-q">${txt}</div>`, cols:1, item:{ ok:'phrase correcte', maj:'la majuscule', point:'le point', ordre:"l'ordre des mots" }[kind],
+    opts:[{ v:'ok', html:'Oui, elle est bien écrite' }, { v:'maj', html:'Non : il manque la majuscule' }, { v:'point', html:'Non : il manque le point' }, { v:'ordre', html:'Non : les mots sont mélangés' }], good:kind,
+    expl:{ ok:`Elle commence par une majuscule, finit par un point, et elle a du sens.`, maj:`Une phrase commence toujours par une <b>majuscule</b> : « ${p} »`, point:`Une phrase finit par un <b>point</b> : « ${p} »`, ordre:`Les mots doivent être dans le bon ordre pour avoir du sens : « ${p} »` }[kind] };
+}
+function qOrdre(){ const p = pick(PHRASES), w = p.slice(0, -1).split(' '); return { t:'ordre', q:`Remets les mots dans l'ordre pour faire une phrase. Commence par le mot qui a une majuscule !`, words:w, fin:'.', item:"l'ordre des mots", expl:`« ${p} »` }; }
+
+/* ---------- 2. La nature des mots ---------- */
+const NAT = [   // [phrase, mot souligné (index), nature]
+  ['Le petit chien court vite.', 1, 'adj'], ['Le petit chien court vite.', 2, 'nom'], ['Le petit chien court vite.', 3, 'verbe'], ['Le petit chien court vite.', 0, 'det'],
+  ['Salma dessine une jolie maison.', 1, 'verbe'], ['Salma dessine une jolie maison.', 3, 'adj'], ['Salma dessine une jolie maison.', 4, 'nom'], ['Salma dessine une jolie maison.', 2, 'det'],
+  ['Les oiseaux chantent le matin.', 1, 'nom'], ['Les oiseaux chantent le matin.', 2, 'verbe'], ['Les oiseaux chantent le matin.', 0, 'det'],
+  ['Ollie porte un grand chapeau noir.', 1, 'verbe'], ['Ollie porte un grand chapeau noir.', 3, 'adj'], ['Ollie porte un grand chapeau noir.', 4, 'nom'], ['Ollie porte un grand chapeau noir.', 5, 'adj'],
+  ['Amine boit du lait froid.', 1, 'verbe'], ['Amine boit du lait froid.', 3, 'nom'], ['Amine boit du lait froid.', 4, 'adj'],
+  ['La reine habite un château blanc.', 1, 'nom'], ['La reine habite un château blanc.', 2, 'verbe'], ['La reine habite un château blanc.', 5, 'adj'], ['La reine habite un château blanc.', 3, 'det'],
+  ['Mon cheval galope dans le pré.', 1, 'nom'], ['Mon cheval galope dans le pré.', 2, 'verbe'], ['Mon cheval galope dans le pré.', 0, 'det'],
+  ['Une belle fleur pousse au jardin.', 1, 'adj'], ['Une belle fleur pousse au jardin.', 3, 'verbe'], ['Une belle fleur pousse au jardin.', 2, 'nom'],
+];
+const NN = { nom:'Nom', verbe:'Verbe', adj:'Adjectif', det:'Déterminant' };
+const NWHY = { nom:'c\'est le nom d\'une chose, d\'un animal ou d\'une personne : on peut mettre « le » ou « un » devant.', verbe:'c\'est ce que l\'on fait : il change avec le temps (hier…, demain…).', adj:'il dit comment est le nom : il le décrit.', det:'c\'est le petit mot devant le nom : le, la, les, un, une, des, mon…' };
+function qNat(){ const [p, i, n] = pick(NAT), w = p.slice(0, -1).split(' ');
+  return { t:'choix', q:`Quelle est la nature du mot <b>${w[i]}</b> ?`, body:`<div class="big-q">${w.map((x, j) => j === i ? `<u>${x}</u>` : x).join(' ')}.</div>`, opts:Object.keys(NN).map(k => ({ v:k, html:NN[k] })), good:n, item:NN[n] + ' : ' + w[i],
+    expl:`<b>${w[i]}</b> est un <b>${NN[n].toLowerCase()}</b> : ${NWHY[n]}` }; }
+
+/* ---------- 3. Les déterminants ---------- */
+const NOMS = [['girafe','f'],['cheval','m'],['étoile','f'],['arbre','m'],['maison','f'],['crayon','m'],['école','f'],['oiseau','m'],['tortue','f'],['ananas','m'],['lune','f'],['hibou','m'],['fleur','f'],['jardin','m'],['orange','f'],['éléphant','m'],['chaussures','p'],['bonbons','p'],['lunettes','p'],['enfants','p']];
+const voy = w => /^[aeiouyéèêh]/i.test(w) && !/^h(ibou)/.test(w);
+function qDet(){ const [w, g] = pick(NOMS), def = Math.random() < .55;
+  let good, opts;
+  if(def){ good = g === 'p' ? 'les' : voy(w) ? "l'" : g === 'm' ? 'le' : 'la'; opts = ['le','la',"l'",'les']; }
+  else { good = g === 'p' ? 'des' : g === 'm' ? 'un' : 'une'; opts = ['un','une','des']; }
+  return { t:'choix', q:`Quel petit mot va devant <b>${w}</b> ?`, body:`<div class="big-q">${T} ${w}</div>`, opts, cols:opts.length === 3 ? 3 : 2, good, item:w,
+    expl:`On dit « <b>${good === "l'" ? "l'" + w : good + ' ' + w}</b> » : ${g === 'p' ? 'il y en a plusieurs (pluriel).' : `le mot est ${g === 'm' ? 'masculin' : 'féminin'}${good === "l'" ? ', et il commence par une voyelle, donc l\'' : ''}.`}` }; }
+
+/* ---------- 4. Singulier, pluriel ---------- */
+const PLU = [['chat','chats'],['cheval','chevaux'],['gâteau','gâteaux'],['jeu','jeux'],['journal','journaux'],['bateau','bateaux'],['cheveu','cheveux'],['bijou','bijoux'],['caillou','cailloux'],['clou','clous'],['ballon','ballons'],['animal','animaux'],['oiseau','oiseaux'],['genou','genoux'],['fille','filles'],['nez','nez'],['souris','souris'],['feu','feux'],['hibou','hiboux'],['bal','bals'],['tapis','tapis']];
+function fausses(s, p){ const f = new Set([s + 's', s + 'x', s.replace(/al$/, 'aux'), s.replace(/(au|eu)$/, '$1s'), s.replace(/ou$/, 'oux'), s.replace(/ou$/, 'ous')]); f.delete(p); f.delete(s); return take([...f], 2); }
+function qPlu(){ const [s, p] = pick(PLU), opts = shuffle([p, ...fausses(s, p)]);
+  const why = p === s ? `Un mot qui finit déjà par -s, -x ou -z ne change pas au pluriel.` : p.endsWith('aux') ? `Les mots en <b>-al</b> font souvent <b>-aux</b> au pluriel.` : /(eau|eu)x$/.test(p) ? `Les mots en <b>-eau</b> et <b>-eu</b> prennent un <b>x</b>.` : /oux$/.test(p) ? `Attention, ${s} fait partie des 7 mots en -ou qui prennent un <b>x</b> : bijou, caillou, chou, genou, hibou, joujou, pou.` : `En général, on ajoute un <b>s</b> au pluriel.`;
+  return { t:'choix', q:`Un <b>${s}</b>, des … ?`, body:`<div class="big-q">un ${s} → des ${T}</div>`, opts, cols:opts.length, good:p, item:s + ' → ' + p, expl:`Des <b>${p}</b>. ${why}` }; }
+
+/* ---------- 5. Masculin, féminin ---------- */
+const ADJ = [['vert','verte'],['petit','petite'],['grand','grande'],['blanc','blanche'],['gentil','gentille'],['heureux','heureuse'],['beau','belle'],['rouge','rouge'],['joli','jolie'],['nouveau','nouvelle'],['gros','grosse'],['sportif','sportive'],['brun','brune'],['long','longue']];
+const NF = [['une robe','un pull'],['une maison','un château'],['une souris','un chat'],['une fille','un garçon'],['une voiture','un vélo'],['une fleur','un arbre']];
+function qGenre(){ const [m, f] = pick(ADJ), [nf, nm] = pick(NF), fem = Math.random() < .6, plur = !fem && Math.random() < .3;
+  const nom = fem ? nf : plur ? nm.replace(/^un /, 'des ') + (/[sx]$/.test(nm) ? '' : nm.endsWith('eau') ? 'x' : 's') : nm, good = fem ? f : plur ? (/[sx]$/.test(m) ? m : m.endsWith('eau') ? m + 'x' : m + 's') : m;
+  const opts = [...new Set(shuffle([good, m, f, f + 's']).filter(x => x !== m + 's' || x === good))].slice(0, 3); if(!opts.includes(good)) opts[0] = good;
+  return { t:'choix', q:`Complète avec le bon adjectif (<b>${m}</b>).`, body:`<div class="big-q">${nom} ${T}</div>`, opts:shuffle(opts), cols:3, good, item:m + ' / ' + f,
+    expl:`${nom} <b>${good}</b> : ${fem ? `le nom est féminin, l'adjectif aussi${m === f ? ' (rouge ne change pas : il finit déjà par -e)' : ''}.` : plur ? `le nom est au pluriel, l'adjectif aussi.` : `le nom est masculin.`}` }; }
+
+/* ---------- 6. a ou à, et ou est ---------- */
+const AA = [['Salma _ un poney.','a'],['Amine va _ l\'école.','à'],['Ollie _ préparé une tarte.','a'],['Je joue _ la marelle.','à'],['Papa _ une voiture bleue.','a'],['Nous allons _ Tunis.','à'],['Le chat _ faim.','a'],['C\'est _ toi de jouer.','à'],['Essil _ fini ses devoirs.','a'],['Une glace _ la fraise.','à'],['Mamie _ cueilli des fleurs.','a'],['Il pense _ son ami.','à']];
+const EE = [['Le ciel _ bleu.','est'],['Salma _ Amine jouent.','et'],['Le gâteau _ délicieux.','est'],['J\'aime les pommes _ les poires.','et'],['Ollie _ une chouette.','est'],['Il pleut _ il fait froid.','et'],['Mon cheval _ rapide.','est'],['Papa _ Maman sont là.','et'],['La tarte _ prête.','est'],['Du pain _ du fromage.','et'],['Essil _ au collège.','est'],['Un chat noir _ blanc.','et']];
+function qAA(){ const [p, g] = pick(AA); return { t:'choix', q:`<b>a</b> ou <b>à</b> ?`, voice:`a sans accent, ou à avec accent ?`, body:`<div class="big-q">${p.replace('_', T)}</div>`, opts:[{ v:'a', html:'a (sans accent)' }, { v:'à', html:'à (avec accent)' }], good:g, item:p.replace('_', g),
+  expl:`« ${p.replace('_', '<b>' + g + '</b>')} » ${g === 'a' ? `: on peut dire « avait » (${p.replace('_', 'avait')}), c'est le verbe avoir, sans accent.` : `: on ne peut pas dire « avait », c'est le petit mot <b>à</b> avec un accent.`}` }; }
+function qEE(){ const [p, g] = pick(EE); return { t:'choix', q:`<b>et</b> ou <b>est</b> ?`, voice:`e t, ou e s t ?`, body:`<div class="big-q">${p.replace('_', T)}</div>`, opts:[{ v:'et', html:'et' }, { v:'est', html:'est' }], good:g, item:p.replace('_', g),
+  expl:`« ${p.replace('_', '<b>' + g + '</b>')} » ${g === 'est' ? `: on peut dire « était » (${p.replace('_', 'était')}), c'est le verbe être.` : `: on peut dire « et puis », c'est le mot qui relie, <b>et</b>.`}` }; }
+
+function noDup(f, n){ const out = [], seen = new Set(); let g = 0; while(out.length < n && g++ < 300){ const q = f(); const k = (q.body || '') + q.good + (q.words || ''); if(!seen.has(k)){ seen.add(k); out.push(q); } } return out; }
+
+window.COURS = {
+  key:'salma-phrases', track:'salma-phrases', retour:'La fabrique', titre:'La Fabrique des Phrases', sous:'La phrase, la nature des mots, les accords et les homophones',
+  bonjour:`Bienvenue dans ma fabrique, Salma ! Ici on fabrique des <b>phrases</b> : on range les mots, on reconnaît les noms et les verbes, on accorde, et on ne se trompe plus entre a et à. Chaque bonne réponse te donne un <b>ticket 🎟️</b> pour Serpent Légendes !`,
+  confetti:['🧩','✏️','📖','⭐','🎟️'], revoir:'À revoir',
+  CH:[
+    { id:'phrase', name:"C'est une phrase ?", sub:'Une majuscule, un point, et du sens', icon:'✒️', edge:'#2a7fb4', make:() => noDup(qPhrase, 8),
+      rule:`Une <b>phrase</b> commence par une <b>majuscule</b> et finit par un <b>point</b>. Ses mots sont dans un ordre qui a du <b>sens</b>.` },
+    { id:'ordre', name:'Les mots dans l\'ordre', sub:'Remettre la phrase en ordre', icon:'🧩', edge:'#c8473a', make:() => noDup(qOrdre, 7) },
+    { id:'nature', name:'Nom, verbe, adjectif', sub:'La nature des mots', icon:'🏷️', edge:'#147a66', make:() => noDup(qNat, 10),
+      rule:`Le <b>nom</b> : une personne, un animal, une chose (le chien). Le <b>verbe</b> : ce que l'on fait (court). L'<b>adjectif</b> : comment est le nom (petit). Le <b>déterminant</b> : le petit mot devant le nom (le, un).` },
+    { id:'det', name:'Le, la, les, un, une', sub:'Le petit mot devant le nom', icon:'👆', edge:'#7a4fe0', make:() => noDup(qDet, 10),
+      rule:`Masculin : <b>le</b>, <b>un</b>. Féminin : <b>la</b>, <b>une</b>. Devant une voyelle : <b>l'</b> (l'arbre). Pluriel : <b>les</b>, <b>des</b>.` },
+    { id:'pluriel', name:'Un ou plusieurs ?', sub:'Le pluriel des noms : -s ou -x', icon:'🐎', edge:'#e0a100', make:() => noDup(qPlu, 10),
+      rule:`Au pluriel on ajoute un <b>s</b> : un chat, des chat<b>s</b>.<br>-eau, -eu → <b>x</b> : des gâteau<b>x</b>, des jeu<b>x</b>. -al → <b>aux</b> : des chev<b>aux</b>.<br>7 mots en -ou prennent un x : bijou, caillou, chou, genou, hibou, joujou, pou.` },
+    { id:'genre', name:'Masculin, féminin', sub:'Accorder l\'adjectif', icon:'👗', edge:'#c2577a', make:() => noDup(qGenre, 8),
+      rule:`L'adjectif s'accorde avec le nom. Au féminin, il prend souvent un <b>e</b> : un pull vert, une robe vert<b>e</b>. Attention : blanc → blanche, beau → belle, gentil → gentille, heureux → heureuse.` },
+    { id:'aa', name:'a ou à ?', sub:'Le truc d\'Ollie : « avait »', icon:'🅰️', edge:'#2a7fb4', make:() => noDup(qAA, 10),
+      rule:`Si on peut dire <b>avait</b>, on écrit <b>a</b> sans accent (le verbe avoir) : Salma a (avait) un poney.<br>Sinon, on écrit <b>à</b> avec un accent : Amine va à l'école.` },
+    { id:'ee', name:'et ou est ?', sub:'Le truc d\'Ollie : « était »', icon:'🔗', edge:'#147a66', make:() => noDup(qEE, 10),
+      rule:`Si on peut dire <b>était</b>, on écrit <b>est</b> (le verbe être) : le ciel est (était) bleu.<br>Si on peut dire <b>et puis</b>, on écrit <b>et</b> : Salma et Amine jouent.` },
+  ],
+  fiche:[
+    { h:'La phrase', tag:'P', html:`<p>Une phrase commence par une <b>majuscule</b> et se termine par un <b>point</b> (. ! ?). Les mots sont rangés pour avoir du <b>sens</b>.</p><div class="astuce">Le chat dort sur le canapé.</div>`,
+      lire:`Une phrase commence par une majuscule et se termine par un point. Les mots sont rangés dans un ordre qui a du sens.` },
+    { h:'La nature des mots', tag:'G', html:`<div class="nat"><div class="c-det"><b>Déterminant</b>le, la, les, un, une, des, mon, ma…</div><div class="c-nom"><b>Nom</b>une personne, un animal, une chose : chien, Salma, maison</div><div class="c-verbe"><b>Verbe</b>ce que l'on fait, ce qui se passe : court, mange, est</div><div class="c-adj"><b>Adjectif</b>comment est le nom : petit, jolie, noir</div></div><div class="astuce"><span class="c-det">Le</span> <span class="c-adj">petit</span> <span class="c-nom">chien</span> <span class="c-verbe">court</span> vite.</div>`,
+      lire:`Le déterminant est le petit mot devant le nom : le, la, les, un, une. Le nom désigne une personne, un animal ou une chose. Le verbe dit ce que l'on fait. L'adjectif dit comment est le nom.` },
+    { h:'Les accords', tag:'O', html:`<p><b>Pluriel</b> : on ajoute <b>s</b> (des chats). -eau, -eu → <b>x</b> (des gâteaux, des jeux). -al → <b>aux</b> (des chevaux). bijou, caillou, chou, genou, hibou, joujou, pou → <b>x</b>.</p><p><b>Féminin</b> : on ajoute souvent <b>e</b> (vert → verte). blanc → blanche, beau → belle, gentil → gentille, heureux → heureuse.</p>`,
+      lire:`Au pluriel, on ajoute un s. Les mots en e a u et en e u prennent un x. Les mots en a l font a u x. Au féminin, l'adjectif prend souvent un e.` },
+    { h:'Les homophones', tag:'O', html:`<div class="nat"><div class="c-verbe"><b>a</b>verbe avoir : je peux dire <b>avait</b>.<br>Salma a un poney.</div><div class="c-nom"><b>à</b>sinon, avec un accent.<br>Amine va à l'école.</div><div class="c-verbe"><b>est</b>verbe être : je peux dire <b>était</b>.<br>Le ciel est bleu.</div><div class="c-adj"><b>et</b>je peux dire <b>et puis</b>.<br>Salma et Amine jouent.</div></div>`,
+      lire:`a sans accent, c'est le verbe avoir : on peut dire avait. à avec un accent, sinon. e s t, c'est le verbe être : on peut dire était. e t, on peut dire et puis.` },
+  ],
+};
+</script>
+<script src="ollie/cours.js?v=1"></script>
+</body></html>
