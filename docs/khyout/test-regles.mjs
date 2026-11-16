@@ -1,10 +1,10 @@
 /* Tests des règles de Khyout : node docs/khyout/test-regles.mjs */
 import { lire, bilan, debut, pas, fin, relie, resoudre, cheminSolution, poseSolution, empreinte, chemin } from '../../jeux/khyout/regles.js';
-import { PETITS, NIVEAUX } from '../../jeux/khyout/niveaux.js';
+import { PETITS, NIVEAUX, PONTS } from '../../jeux/khyout/niveaux.js';
 let ok = 0, ko = 0; const t = (nom, v) => { if(v) ok++; else { ko++; console.log('ÉCHEC :', nom); } };
 
 // 1. tous les niveaux : une seule solution, la solution relie bien chaque paire et couvre tout, pas de doublon
-const tous = [...PETITS.map((l, i) => ['petit ' + (i + 1), l]), ...NIVEAUX.map((l, i) => ['niveau ' + (i + 1), l])];
+const tous = [...PETITS.map((l, i) => ['petit ' + (i + 1), l]), ...NIVEAUX.map((l, i) => ['niveau ' + (i + 1), l]), ...PONTS.map((l, i) => ['pont ' + (i + 1), l])];
 const vus = new Set();
 for(const [nom, l] of tous){
   const r = resoudre(l, 2, 3e6); t(nom + ' : une seule solution', r.n === 1);
@@ -15,7 +15,19 @@ for(const [nom, l] of tous){
 // tailles demandées par le cahier des charges
 const tailles = [[0, 30, 5], [30, 70, 6], [70, 110, 7], [110, 150, 8], [150, 180, 9], [180, 200, 10]];
 for(const [a, b, n] of tailles) t(`niveaux ${a + 1}-${b} en ${n}×${n}`, NIVEAUX.slice(a, b).every(l => l.n === n));
-t('200 niveaux', NIVEAUX.length === 200); t('30 petits', PETITS.length === 30);
+t('200 niveaux', NIVEAUX.length === 200); t('30 petits', PETITS.length === 30); t('40 niveaux à ponts', PONTS.length === 40);
+t('chaque niveau du monde des ponts a au moins un pont', PONTS.every(l => l.p.indexOf('+') >= 0));
+// les ponts au doigt : un fil horizontal et un fil vertical se croisent sur le pont, sans se couper
+{ const l = PONTS.find(x => x.n === 6), P = lire(l), N = 36, q = l.p.indexOf('+'), k = [...l.p].filter(c => c === '+').length;
+  const coulH = 'abcdefghijklmnop'.indexOf(l.s[N]), coulV = 'abcdefghijklmnop'.indexOf(l.s[N + 1]);
+  for(const c of [coulH, coulV]){ const s = cheminSolution(P, c), cases = s.map(x => P.G.cell[x]); const G = debut(P, cases[0]); for(let t2 = 1; t2 < cases.length; t2++) pas(P, G, cases[t2]); fin(P, G); }
+  t('pont : le fil horizontal est relié', relie(P, coulH)); t('pont : le fil vertical est relié aussi (pas coupé)', relie(P, coulV));
+  P.pel.forEach((_, c) => { if(c !== coulH && c !== coulV){ const s = cheminSolution(P, c), cases = s.map(x => P.G.cell[x]); const G = debut(P, cases[0]); for(let t2 = 1; t2 < cases.length; t2++) pas(P, G, cases[t2]); fin(P, G); } });
+  t('pont : la grille rejouée au doigt gagne', bilan(P).gagne);
+  // tourner sur un pont est interdit
+  const P2 = lire(l), x = q % 6, y = (q / 6) | 0, G2 = { k:0, regle:'couper', photo:P2.ch.map(c => c.slice()) };
+  P2.ch[0] = [P2.pel[0][0]]; t('le graphe : une voie de pont n\'a que 2 voisins', P2.G.V[N].length === 2 && P2.G.V[N + 1].length === 2);
+}
 
 // 2. le tracé, en rejouant la solution avec le « doigt »
 for(const l of [PETITS[0], NIVEAUX[0], NIVEAUX[120], NIVEAUX[199]]){

@@ -70,7 +70,7 @@
   /* ---------- la voix des consignes (16/11, demandé par le papa) ----------
      Toutes les pages qui parlent avec la voix de la tablette (speechSynthesis) parlent désormais avec les voix ElevenLabs
      du site (api/voix.php, la clé API du papa ; chaque phrase n'est fabriquée qu'une fois puis gardée sur le serveur) :
-     Céline en français, Alice en anglais, Toni en allemand ; pour Amine (ou dans son espace), la voix « dessin animé » de Lulu.
+     Céline en français, Alice en anglais, Toni en allemand, Mohammad en arabe (17/11) ; pour Amine (ou dans son espace), la voix « dessin animé » de Lulu.
      Si le serveur ne répond pas : la voix de la tablette, comme avant.
      On coupe ou remet les consignes orales avec la touche V (P sert déjà de pause dans les jeux), le bouton 🗣️ de l'étiquette
      « Explorateur », ou FamilleVoix.basculer() depuis une page (ex. le menu du Jasmin · Stage 2). Réglage gardé sur l'appareil. */
@@ -98,7 +98,7 @@
     var api = {
       speak: function(u){ if(!u) return; var t = nettoie(u.text), l = String(u.lang || 'fr').slice(0, 2).toLowerCase();
         if(off || !t){ setTimeout(function(){ fire(u, 'end'); }, 0); return; }
-        if(['fr', 'en', 'de'].indexOf(l) < 0){ if(natSpeak) natSpeak(u); else setTimeout(function(){ fire(u, 'end'); }, 0); return; }   // l'arabe, la derja… : la tablette
+        if(['fr', 'en', 'de', 'ar'].indexOf(l) < 0){ if(natSpeak) natSpeak(u); else setTimeout(function(){ fire(u, 'end'); }, 0); return; }   // l'arabe, la derja… : la tablette
         var it = { u:u, t:t, l:l }; prepare(it); file.push(it); if(!cur) suivant(); },
       cancel: function(){ jeton++; if(cur && cur.audios) cur.audios.forEach(function(x){ try{ x.pause(); }catch(e){} }); file.forEach(function(it){ it.audios.forEach(function(x){ x.src = ''; }); }); file = []; cur = null; if(natCancel) try{ natCancel(); }catch(e){} },
       pause: function(){ if(cur) cur.audios.forEach(function(x){ try{ x.pause(); }catch(e){} }); if(NAT) try{ NAT.pause(); }catch(e){} },

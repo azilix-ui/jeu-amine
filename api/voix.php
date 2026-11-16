@@ -1,5 +1,5 @@
 <?php
-/* Les voix ElevenLabs des cours et des jeux (16/11) : api/voix.php?l=fr|en|de|la&t=<phrase>[&p=amine]
+/* Les voix ElevenLabs des cours et des jeux (16/11) : api/voix.php?l=fr|en|de|la|ar&t=<phrase>[&p=amine]
    p=amine : en français, la voix « dessin animé » de Lulu (créée pour Amine) au lieu de Céline.
    Rend un MP3 de la phrase, dite par la voix française (Céline) ou anglaise (Alice) d'Ollie.
    Chaque phrase n'est fabriquée qu'une fois : elle est gardée dans famille-data/voix-cache/<voix>/<empreinte>.mp3
@@ -11,8 +11,9 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/acces/garde.php';
 ga_garde_api();
 
-const VX_VOIX = ['fr' => '3fxbs2pB9bs8S6Z1N38A', 'en' => 'Xb7hH8MSUJpSbSDYk0k2', 'de' => 'tR9bEXIX9ixlxSis0fqv', 'la' => '3fxbs2pB9bs8S6Z1N38A'];
+const VX_VOIX = ['fr' => '3fxbs2pB9bs8S6Z1N38A', 'en' => 'Xb7hH8MSUJpSbSDYk0k2', 'de' => 'tR9bEXIX9ixlxSis0fqv', 'la' => '3fxbs2pB9bs8S6Z1N38A', 'ar' => 'Hzk6QBi3fCYSXbJEkzKR'];
 // Céline | Chaleureuse et immersive · Alice - Clear, Engaging Educator · Toni - Klar & Engagiert (allemand) · le latin : Céline, sans langue imposée
+// arabe (17/11, choisie par le papa) : Mohammad - Warm Arabic, arabe standard, ajoutée à « Mes voix »
 const VX_LULU = '0c3jkkHzeXchq2gHGH2z';   // Lulu - Je lis (Amine), Voice Design du papa
 const VX_MODELE = 'eleven_multilingual_v2';
 function vx_fin(int $code, string $msg = ''): void { http_response_code($code); header('Content-Type: text/plain; charset=utf-8'); header('Cache-Control: no-store'); echo $msg; exit; }
