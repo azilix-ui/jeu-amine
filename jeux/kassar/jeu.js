@@ -187,7 +187,7 @@ function dessine(t){
   // le lanceur : l'avatar, et ses balles
   const lx = s.phase === 'vol' && s.premier !== null ? s.premier : s.lx;
   if(s.phase !== 'vol' || s.aLancer > 0){ if(ok(IM.balle)) ctx.drawImage(IM.balle, s.lx - R - 1, LIGNE - 2 * R - 1, R * 2 + 2, R * 2 + 2); }
-  ctx.save(); ctx.beginPath(); ctx.arc(lx, LIGNE + 22, 19, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.clip(); if(ok(teteIm)) ctx.drawImage(teteIm, lx - 19, LIGNE + 3, 38, 38); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.arc(lx, LIGNE + 22, 19, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.clip(); if(ok(teteIm)) ctx.drawImage(teteIm, lx - 19, LIGNE + 3, 38, 38); else { ctx.font = '26px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🙂', lx, LIGNE + 24); } ctx.restore();
   ctx.font = '800 14px "Baloo 2", sans-serif'; ctx.fillStyle = '#fff'; ctx.fillText('×' + (s.phase === 'vol' ? s.aLancer : s.balles), lx + (lx > W - 50 ? -36 : 36), LIGNE + 22);
   // les éclats
   for(const p of parts){ ctx.globalAlpha = Math.max(0, 1 - p.t / (p.txt ? 1 : .9));

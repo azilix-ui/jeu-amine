@@ -67,7 +67,7 @@ body.jeu #hud{ display:block; }
 #pause{ left:calc(10px + env(safe-area-inset-left)); top:calc(10px + env(safe-area-inset-top)); }
 #vite{ right:calc(10px + env(safe-area-inset-right)); bottom:calc(14px + env(safe-area-inset-bottom)); display:none; }
 #rappel{ right:calc(70px + env(safe-area-inset-right)); bottom:calc(14px + env(safe-area-inset-bottom)); display:none; }
-#aide{ position:absolute; left:50%; top:calc(130px + env(safe-area-inset-top)); transform:translateX(-50%); width:min(440px, 88vw); background:rgba(20,33,61,.86); color:#fff; padding:12px 18px; border-radius:16px; font-size:18px; text-align:center; transition:opacity .4s; pointer-events:auto; }
+#aide{ position:absolute; left:50%; bottom:calc(110px + env(safe-area-inset-bottom)); transform:translateX(-50%); width:min(440px, 88vw); background:rgba(20,33,61,.86); color:#fff; padding:12px 18px; border-radius:16px; font-size:18px; text-align:center; transition:opacity .4s; pointer-events:auto; }
 #aide.off{ opacity:0; pointer-events:none; }
 #modal{ position:fixed; inset:0; background:rgba(10,20,40,.55); display:none; align-items:center; justify-content:center; padding:16px; z-index:5; }
 #modal.on{ display:flex; }
@@ -115,6 +115,6 @@ body.jeu #hud{ display:block; }
 <div id="modal"></div>
 
 <script src="../famille.js"></script>
-<script type="module" src="kassar/jeu.js?v=1"></script>
+<script type="module" src="kassar/jeu.js?v=2"></script>
 </body>
 </html>

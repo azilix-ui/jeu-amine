@@ -216,6 +216,15 @@ Demandé par Essil : réviser les parties du filet et de la selle, apprendre les
 - **Les galops 1 à 7** (`galops.js`, écran `#galops`, tuile « Les galops ») : chaque galop = théorie (12 questions, 8 bonnes sur 10 tirées) + épreuve à cheval (G1 dressage 55 %, G2 CSO 50 cm, G3 CSO 65 cm, G4 cross, G5 dressage 60 %, G6 hunter 70 %, G7 CSO 1 m ; 4 points au plus) ; diplôme et 100 à 500 pièces ; le suivant se débloque. Sauvegarde : `brosses`, `galops` dans `ecuries:<Prénom>` (fusionnés par `merge`).
 - Test : `world.ride()` donne `R` (next, style, touches, tourne…) ; un pilote automatique Playwright a fini course1, hunter1 et west1.
 
+## Kassar (كسّار) — `jeux/kassar.html` (casse-carreaux, mode tir) (16/11)
+
+D'après le cahier des charges du papa (« Brick Out – Shoot the ball », 16/11), adapté au site : pas de TypeScript/Vite/Phaser, du canvas 2D sans compilation ; d'abord le **mode tir** (le vrai cœur du jeu), la raquette viendra ensuite.
+- **Règles** (`jeux/kassar/regles.js`, testées : `docs/kassar/test-regles.mjs`, 37 tests, dont un robot qui joue 20 parties par niveau en Normal et en Tranquille) : monde 360 × 640, pas fixe 1/120 s, collisions cercle/rectangle (point le plus proche, réflexion, jamais presque à plat). On vise (pointillés jusqu'au premier carreau), on lâche : les balles partent toutes les 65 ms ; la première revenue fixe le prochain point de tir. Après chaque tir : une balle de plus, et les carreaux descendent d'une rangée (en Tranquille, un tir sur deux) ; un carreau sur la ligne rouge = perdu. Carreaux : nombre = coups à donner (1-9 puis a-z), `#` pierre incassable, `J` jarre qui explose (−3 aux 8 voisins, en chaîne), `+` boule d'or (+1 balle). Étoiles : 3 si tirs ≤ par, 2 si ≤ par + 3. `verifie()` refuse un niveau où un carreau serait enfermé par des pierres.
+- **Monde 1 : la médina** (10 niveaux, avec une consigne lue à voix haute au début de chaque niveau) ; Carthage et le Sahara : à venir (les fonds sont prêts dans la file ComfyUI).
+- **Images ComfyUI** (préfixe `k/`, `docs/kassar/build_images.py`) : carreaux de zellige (turquoise, bleu, vert, jaune, rouge, violet, mosaïque), pierre, jarre, boule d'or, balle en céramique, fond de la médina, image du menu. Couleur du carreau selon ses points de départ (1 turquoise … 11+ violet), fissures quand il est abîmé. Titre doré كسّار en Aref Ruqaa (`docs/kassar/titre.cjs`).
+- **Sons ElevenLabs** (`famille-data/kassar-sons`, `kassar/son.php`, déposés par `kassar/depot.php`) : tir, tuile, casse, jarre, bonus, descend, victoire, perdu (4 variantes chacun).
+- L'avatar « en vrai » du joueur est le lanceur ; sauvegarde `kassar:<Prénom>` (`niv[i] = { e:étoiles, sc:score }`, Tranquille/Normal) ; record de la famille « etoiles » ; carte dans Progression.
+
 ## Chkobba (شكبة) — `jeux/chkobba.html` (jeu de cartes tunisien, contre l'ordi ou en ligne) (15/11)
 
 Demandé par le papa (cahier des charges « Chkobba Tunisia multijoueur » + Wikipédia) : la vraie chkobba, avec les avatars du site, des adversaires tunisiens rigolos et des mondes tunisiens.
