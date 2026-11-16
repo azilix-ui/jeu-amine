@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Deutsch Express 2</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%9A%86%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="../salma/ollie/cours.css?v=1">
+<style>
+/* Deutsch Express 2 (16/11) : la suite du cours d'allemand d'Essil (Deutsch Express, 14 étapes), sur le moteur commun des cours
+   (salma/ollie/cours.js). La contrôleuse Frau Eule (une chouette en casquette de contrôleur) ; l'allemand est lu par la voix
+   ElevenLabs « Toni » (api/voix.php ?l=de), le français par Céline. */
+:root{ --pen:#1f3c88; --plum:#d7263d; --sun:#f2c230; }
+body{background:linear-gradient(#20335f 0%,#3b5998 58%,#6b6b6b 58%,#4a4a4a 60%,#8a8f96 60%,#5d6168 100%) fixed;background-color:#20335f}
+h1{color:#fff;text-shadow:0 4px 0 #d7263d}.lead,.help{color:#fff;text-shadow:0 2px 0 #0006}
+.rail{width:100%;aspect-ratio:7/2;border-radius:22px;box-shadow:0 6px 0 #0003;background:linear-gradient(#111 0 33%,#d7263d 33% 66%,#f2c230 66%);display:grid;place-items:center}
+.rail span{background:#fff;border-radius:16px;padding:8px 18px;font-family:'Baloo 2',sans-serif;font-weight:800;color:#1f3c88;font-size:clamp(20px,4vw,34px)}
+.de{color:#1f3c88;font-weight:800}
+.horloge{width:min(56vw,220px);height:auto}
+.scene{position:relative;width:min(100%,520px);aspect-ratio:4/3;border-radius:18px;overflow:hidden;box-shadow:0 6px 0 #0002;background:linear-gradient(#f6e7cf 0 64%,#c79a6b 64% 66%,#b98656 66% 100%)}
+.scene img{position:absolute;display:block;height:auto;filter:drop-shadow(0 4px 3px #0003)}
+.plan{display:grid;grid-template-columns:repeat(3,64px);gap:6px;justify-content:center;font-size:34px}
+.plan div{width:64px;height:64px;border-radius:12px;background:#eef2f8;display:grid;place-items:center}
+.lettre{background:#fffdf5;border:2px solid #e8dcc0;border-radius:12px;padding:12px 16px;text-align:left;font-size:19px;line-height:1.6;max-width:560px}
+.tableau{width:100%;border-collapse:collapse;font-size:16px}.tableau th,.tableau td{border-bottom:1px solid #e3e8f2;padding:6px 8px;text-align:center}.tableau th{background:#eef2f8}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const D = t => `<i lang="de">${t}</i>`;   // de l'allemand, lu en allemand
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1)), pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+function noDup(f, n){ const out = [], seen = new Set(); let g = 0; while(out.length < n && g++ < 400){ const q = f(); const k = (q.q || '') + '|' + q.good + '|' + (q.body || '') + (q.words || ''); if(!seen.has(k)){ seen.add(k); out.push(q); } } return out; }
+const opts3 = (good, faux, n = 3) => shuffle([good, ...shuffle([...new Set(faux)].filter(x => x !== good)).slice(0, n)]);
+const deo = x => ({ v:x, html:`<span class="de">${x}</span>` });
+
+/* Frau Eule, la contrôleuse du Deutsch Express */
+const EULE = `<svg class="owl" viewBox="0 0 120 130" aria-hidden="true">
+  <ellipse cx="60" cy="124" rx="38" ry="5" fill="#0002"/>
+  <ellipse cx="60" cy="74" rx="42" ry="50" fill="#7d6a58"/>
+  <ellipse cx="60" cy="88" rx="28" ry="32" fill="#f1e4cc"/>
+  <path d="M44 84 q4 4 8 0 M56 92 q4 4 8 0 M68 84 q4 4 8 0 M50 100 q4 4 8 0 M62 100 q4 4 8 0" stroke="#d6bf97" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="42" cy="54" r="17" fill="#fff"/><circle cx="78" cy="54" r="17" fill="#fff"/>
+  <circle cx="44" cy="56" r="8" fill="#1d1d1d"/><circle cx="76" cy="56" r="8" fill="#1d1d1d"/>
+  <circle cx="47" cy="53" r="2.5" fill="#fff"/><circle cx="79" cy="53" r="2.5" fill="#fff"/>
+  <path d="M54 66 L66 66 L60 76 Z" fill="#f2c230"/>
+  <path d="M22 36 Q60 8 98 36 L94 42 L26 42 Z" fill="#1f3c88"/><rect x="18" y="40" width="84" height="7" rx="3.5" fill="#152a60"/><rect x="50" y="22" width="20" height="10" rx="2" fill="#f2c230"/><rect x="18" y="36" width="84" height="4" fill="#d7263d"/>
+  <path d="M18 74 q-6 22 10 34 M102 74 q6 22 -10 34" stroke="#7d6a58" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M48 120 l-4 6 M52 120 l0 6 M68 120 l0 6 M72 120 l4 6" stroke="#f2c230" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+
+/* ---------- 1. Die Uhrzeit ---------- */
+const NB = ['null','eins','zwei','drei','vier','fünf','sechs','sieben','acht','neun','zehn','elf','zwölf'];
+function heureDe(h, m){ const H = h % 12 || 12, S = (h + 1) % 12 || 12;
+  if(m === 0) return `Es ist ${H === 1 ? 'ein' : NB[H]} Uhr.`; if(m === 15) return `Es ist Viertel nach ${NB[H]}.`; if(m === 30) return `Es ist halb ${NB[S]}.`; if(m === 45) return `Es ist Viertel vor ${NB[S]}.`;
+  const MN = { 5:'fünf', 10:'zehn', 20:'zwanzig', 25:'fünfundzwanzig' };
+  if(m < 30) return `Es ist ${MN[m]} nach ${NB[H]}.`; return `Es ist ${MN[60 - m]} vor ${NB[S]}.`; }
+function horloge(h, m){ const a = (m / 60) * 360, b = ((h % 12) + m / 60) / 12 * 360, X = (deg, r) => [100 + r * Math.sin(deg * Math.PI / 180), 100 - r * Math.cos(deg * Math.PI / 180)];
+  const [mx, my] = X(a, 70), [hx, hy] = X(b, 45);
+  return `<svg class="horloge" viewBox="0 0 200 200"><circle cx="100" cy="100" r="92" fill="#fff" stroke="#1f3c88" stroke-width="8"/>${[...Array(12)].map((_, i) => { const [x, y] = X(i * 30, 76); return `<text x="${x}" y="${y + 7}" text-anchor="middle" font-size="20" font-weight="800" fill="#1f3c88">${i || 12}</text>`; }).join('')}<line x1="100" y1="100" x2="${hx}" y2="${hy}" stroke="#d7263d" stroke-width="8" stroke-linecap="round"/><line x1="100" y1="100" x2="${mx}" y2="${my}" stroke="#152a60" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="100" r="7" fill="#152a60"/></svg>`; }
+const MINS = [0, 15, 30, 45, 5, 10, 20, 40, 50, 55];
+function qUhr(){ const h = rnd(1, 12), m = pick(MINS), good = heureDe(h, m), faux = [heureDe(h, (m + 30) % 60), heureDe(h % 12 + 1, m), heureDe(h === 1 ? 12 : h - 1, m), m === 30 ? `Es ist halb ${NB[h % 12 || 12]}.` : heureDe(h, (m + 15) % 60)];
+  if(Math.random() < .5) return { t:'choix', q:`${D('Wie spät ist es?')} Quelle heure est-il ?`, body:horloge(h, m), opts:opts3(good, faux).map(deo), cols:1, good, item:good, expl:`${D(good)}${m === 30 ? ' Attention : « halb » regarde l\'heure qui vient !' : ''}` };
+  const dig = `${h}:${String(m).padStart(2, '0')}`, fx = [`${h}:${String((m + 30) % 60).padStart(2, '0')}`, `${h % 12 + 1}:${String(m).padStart(2, '0')}`, `${h === 1 ? 12 : h - 1}:${String(m).padStart(2, '0')}`];
+  return { t:'choix', q:`Écoute l'heure en allemand, et choisis la bonne.`, en:good, lang:'de', opts:opts3(dig, fx), cols:2, good:dig, item:good, expl:`${D(good)} = ${dig}.`, help:'Touche 🔊 pour réécouter' }; }
+
+/* ---------- 2. Der Akkusativ ---------- */
+const NOMS = [['der','Hund','le chien'],['der','Apfel','la pomme'],['der','Ball','le ballon'],['der','Bruder','le frère'],['der','Kuchen','le gâteau'],['die','Katze','le chat (la chatte)'],['die','Schwester','la sœur'],['die','Tasche','le sac'],['das','Buch','le livre'],['das','Fahrrad','le vélo'],['das','Pferd','le cheval']];
+const VERBS = [['Ich habe','j\'ai'],['Ich sehe','je vois'],['Ich kaufe','j\'achète'],['Ich brauche','j\'ai besoin de'],['Ich suche','je cherche']];
+function qAkk(){ const [g, n, fr] = pick(NOMS), [v, vf] = pick(VERBS), type = pick(['def','indef','kein']);
+  const good = type === 'def' ? (g === 'der' ? 'den' : g) : type === 'indef' ? (g === 'der' ? 'einen' : g === 'die' ? 'eine' : 'ein') : (g === 'der' ? 'keinen' : g === 'die' ? 'keine' : 'kein');
+  const faux = type === 'def' ? ['der','den','die','das','dem'] : type === 'indef' ? ['ein','einen','eine','einem'] : ['kein','keinen','keine','keinem'];
+  return { t:'choix', q:`Complète : « ${vf} ${type === 'kein' ? 'pas de' : type === 'def' ? 'le / la' : 'un / une'} … » (${D(g + ' ' + n)}, ${fr}).`, body:`<div class="big-q"><span class="de">${v} … ${n}.</span></div>`, voice:`Complète la phrase.`, opts:opts3(good, faux).map(deo), cols:2, good, item:g + ' ' + n,
+    expl:`${D(`${v} ${good} ${n}.`)} ${g === 'der' ? 'Au masculin, l\'accusatif change : der → den, ein → einen, kein → keinen.' : 'Au féminin et au neutre, l\'accusatif ne change pas.'}` }; }
+
+/* ---------- 3. Starke Verben ---------- */
+const FORTS = [['fahren','fährst','fährt','aller (en véhicule)'],['schlafen','schläfst','schläft','dormir'],['laufen','läufst','läuft','courir'],['tragen','trägst','trägt','porter'],['essen','isst','isst','manger'],['geben','gibst','gibt','donner'],['sprechen','sprichst','spricht','parler'],['nehmen','nimmst','nimmt','prendre'],['lesen','liest','liest','lire'],['sehen','siehst','sieht','voir'],['helfen','hilfst','hilft','aider']];
+function qFort(){ const [inf, du, er, fr] = pick(FORTS), p = pick(['du','er']), good = p === 'du' ? du : er, rad = inf.replace(/en$/, '');
+  const faux = [rad + (p === 'du' ? 'st' : 't'), p === 'du' ? er : du, rad.replace(/e/, 'ie') + (p === 'du' ? 'st' : 't'), rad.replace(/a/, 'ä') + (p === 'du' ? 'st' : 't')];
+  return { t:'choix', q:`${D(inf)} (${fr}) : conjugue avec ${D(p === 'du' ? 'du' : 'er / sie / es')}.`, opts:opts3(good, faux).map(deo), cols:2, good, item:inf, expl:`${D((p === 'du' ? 'du ' : 'er ') + good)}. Avec du et er, la voyelle change : ${/ä|äu/.test(good) ? 'a → ä' : /ie/.test(good) ? 'e → ie' : 'e → i'}.` }; }
+
+/* ---------- 4. Modalverben ---------- */
+const MOD = { können:['kann','kannst','kann','können','könnt','können','pouvoir, savoir faire'], müssen:['muss','musst','muss','müssen','müsst','müssen','devoir'], wollen:['will','willst','will','wollen','wollt','wollen','vouloir'], dürfen:['darf','darfst','darf','dürfen','dürft','dürfen','avoir le droit'] };
+const PRO = ['ich','du','er','wir','ihr','sie'];
+const PHRM = [['Ich','kann','gut','schwimmen'],['Du','musst','deine','Hausaufgaben','machen'],['Wir','wollen','ins','Kino','gehen'],['Er','kann','Gitarre','spielen'],['Ihr','dürft','hier','spielen'],['Sie','will','ein','Pferd','reiten'],['Ich','muss','um','acht','Uhr','aufstehen']];
+function qMod(){ if(Math.random() < .4){ const w = pick(PHRM); return { t:'ordre', q:`Remets la phrase allemande dans l'ordre. Attention : le 2<sup>e</sup> verbe va <b>à la fin</b> !`, voice:`Remets la phrase allemande dans l'ordre. Attention, le deuxième verbe va à la fin !`, words:w, fin:'.', item:w.join(' '), expl:`${D(w.join(' ') + '.')} Le verbe de modalité est en 2<sup>e</sup> position, l'infinitif tout à la fin.` }; }
+  const v = pick(Object.keys(MOD)), p = rnd(0, 5), good = MOD[v][p];
+  return { t:'choix', q:`${D(v)} (${MOD[v][6]}) avec ${D(PRO[p])} ?`, opts:opts3(good, MOD[v].slice(0, 6).concat([v.replace(/en$/, '') + (p === 1 ? 'st' : 't')])).map(deo), cols:2, good, item:v + ' ' + PRO[p], expl:`${D(PRO[p] + ' ' + good)}.${p === 0 || p === 2 ? ' Avec ich et er, pas de terminaison !' : ''}` }; }
+
+/* ---------- 5. Präpositionen (wo?) ---------- */
+const IMG = n => `../salma/ollie/img/${n}.webp`;
+const A = { table:.69, chair:1.7, sofa:.58, bed:.74, box:.77, cat:2.05, ball:1.03 }, S = { table:.98, chair:.5, sofa:.55, bed:.62, box:.9 };
+const OBJ = { auf:['table','chair','sofa','bed','box'], unter:['table','chair'], neben:['table','chair','sofa','bed','box'], hinter:['sofa','bed','chair','table'], in:['box'] };
+const DAT = { table:'dem Tisch', chair:'dem Stuhl', sofa:'dem Sofa', bed:'dem Bett', box:'der Kiste' }, DATIN = { box:'in der Kiste' };
+const SUJ = { cat:'Die Katze', ball:'Der Ball' }, PREPFR = { auf:'sur', unter:'sous', neben:'à côté de', hinter:'derrière', in:'dans' };
+function scene(sub, prep, obj){ const W = obj === 'chair' ? 26 : obj === 'box' ? 30 : 46, x0 = 50 - W / 2, b = 6, H = W * A[obj] / .75;
+  const sw = (sub === 'cat' ? 15 : 12) * (prep === 'unter' ? (obj === 'chair' ? .6 : .8) : 1); let x = 50 - sw / 2, y = b, z = 3;
+  if(prep === 'auf') y = b + H * S[obj] - 1; else if(prep === 'unter'){ y = b + 1; z = 1; x += obj === 'chair' ? 0 : 6; } else if(prep === 'neben') x = x0 + W + 3; else if(prep === 'hinter'){ y = b + H * .45; z = 1; x += 8; } else if(prep === 'in'){ y = b + H * .22; z = 1; }
+  return `<div class="scene"><img src="${IMG(obj)}" alt="" style="left:${x0}%;width:${W}%;bottom:${b}%;z-index:2"><img src="${IMG(sub)}" alt="" style="left:${x}%;width:${sw}%;bottom:${y}%;z-index:${z}"></div>`; }
+const phrase = (sub, prep, obj) => `${SUJ[sub]} ist ${prep === 'in' ? DATIN[obj] : prep + ' ' + DAT[obj]}.`;
+function qPrep(){ const sub = pick(['cat','cat','ball']), prep = pick(Object.keys(OBJ)), obj = pick(OBJ[prep]), good = phrase(sub, prep, obj);
+  const faux = Object.keys(OBJ).filter(p => p !== prep && OBJ[p].includes(obj)).map(p => phrase(sub, p, obj)).concat(Object.keys(OBJ).filter(p => p !== prep).map(p => `${SUJ[sub]} ist ${p} ${DAT[obj]}.`));
+  return { t:'choix', q:`${D(sub === 'cat' ? 'Wo ist die Katze?' : 'Wo ist der Ball?')} Où est-${sub === 'cat' ? 'il' : 'il'} ?`, body:scene(sub, prep, obj), opts:opts3(good, faux).map(deo), cols:1, good, item:prep, expl:`${D(good)} (${PREPFR[prep]}). Après ${D('wo?')}, on met le datif : der → dem, die → der, das → dem.` }; }
+
+/* ---------- 6. Das Perfekt ---------- */
+const PERF = [['spielen','gespielt','haben','jouer'],['machen','gemacht','haben','faire'],['kaufen','gekauft','haben','acheter'],['lernen','gelernt','haben','apprendre'],['lesen','gelesen','haben','lire'],['essen','gegessen','haben','manger'],['sehen','gesehen','haben','voir'],['trinken','getrunken','haben','boire'],['schreiben','geschrieben','haben','écrire'],['gehen','gegangen','sein','aller'],['fahren','gefahren','sein','aller (en véhicule)'],['kommen','gekommen','sein','venir'],['schwimmen','geschwommen','sein','nager'],['reiten','geritten','sein','faire du cheval']];
+const HAB = { haben:['habe','hast','hat','haben','habt','haben'], sein:['bin','bist','ist','sind','seid','sind'] };
+const OBJS = { spielen:'Fußball', machen:'Hausaufgaben', kaufen:'ein Buch', lernen:'Deutsch', lesen:'einen Comic', essen:'Pizza', sehen:'einen Film', trinken:'Orangensaft', schreiben:'einen Brief', gehen:'ins Kino', fahren:'nach Berlin', kommen:'nach Hause', schwimmen:'im Meer', reiten:'am Strand' };
+function qPerf(){ const [inf, pp, aux, fr] = pick(PERF), p = rnd(0, 5);
+  if(Math.random() < .5){ const good = HAB[aux][p], faux = [HAB.haben[p], HAB.sein[p], HAB[aux][(p + 1) % 6]];
+    return { t:'choix', q:`Au parfait : ${D('haben')} ou ${D('sein')} ?`, body:`<div class="big-q"><span class="de">${PRO[p][0].toUpperCase() + PRO[p].slice(1)} … ${OBJS[inf]} ${pp}.</span></div>`, voice:`Au parfait : haben ou sein ? Complète la phrase.`, opts:opts3(good, faux).map(deo), cols:3, good, item:inf,
+      expl:`${D(`${PRO[p][0].toUpperCase() + PRO[p].slice(1)} ${good} ${OBJS[inf]} ${pp}.`)} ${aux === 'sein' ? 'Un verbe de déplacement (aller, venir, nager…) se conjugue avec sein.' : 'La plupart des verbes se conjuguent avec haben.'}` }; }
+  const faux = ['ge' + inf.replace(/en$/, '') + 't', inf.replace(/en$/, 't'), 'ge' + inf, pp.replace(/^ge/, '')];
+  return { t:'choix', q:`Le participe passé de ${D(inf)} (${fr}) ?`, opts:opts3(pp, faux).map(deo), cols:2, good:pp, item:inf, expl:`${D(inf)} → ${D(pp)}. ${/t$/.test(pp) ? 'Verbe régulier : ge… t.' : 'Verbe fort : ge… en, à apprendre par cœur.'}` }; }
+
+/* ---------- 7. Einkaufen ---------- */
+const PRIX = [[1, 50], [2, 0], [2, 50], [3, 20], [0, 80], [4, 99], [5, 50], [1, 20], [6, 0], [0, 99]];
+const ZEHN = { 20:'zwanzig', 50:'fünfzig', 80:'achtzig', 99:'neunundneunzig' };
+const prixDe = ([e, c]) => `Das kostet ${e ? (e === 1 ? 'einen Euro' : NB[e] + ' Euro') : ''}${e && c ? ' ' : ''}${c ? (ZEHN[c] || c) + (e ? '' : ' Cent') : ''}.`;
+const prixFr = ([e, c]) => `${e},${String(c).padStart(2, '0')} €`;
+const COURSES = [['das Brot','le pain'],['die Milch','le lait'],['der Käse','le fromage'],['die Äpfel','les pommes'],['die Tomaten','les tomates'],['die Eier','les œufs'],['das Wasser','l\'eau'],['die Butter','le beurre'],['der Saft','le jus']];
+const DIALOG = [['Was darf es sein?', 'Ich hätte gern ein Kilo Äpfel.', ['Ich bin zwölf Jahre alt.', 'Es ist halb acht.', 'Ich habe einen Hund.']], ['Was kostet das?', 'Das kostet drei Euro.', ['Ich heiße Essil.', 'Das ist mein Bruder.', 'Ich wohne in Frankreich.']], ['Sonst noch etwas?', 'Nein, danke. Das ist alles.', ['Ja, ich bin müde.', 'Es ist kalt.', 'Ich spiele Fußball.']], ['Möchtest du eine Tüte?', 'Ja, bitte.', ['Guten Morgen!', 'Viertel nach drei.', 'Ich kann schwimmen.']]];
+function qKauf(){ const r = Math.random();
+  if(r < .4){ const p = pick(PRIX), good = prixFr(p); return { t:'choix', q:`Écoute le prix, et choisis le bon.`, en:prixDe(p), lang:'de', opts:opts3(good, PRIX.map(prixFr)), cols:2, good, item:prixDe(p), expl:`${D(prixDe(p))} = ${good}.`, help:'Touche 🔊 pour réécouter' }; }
+  if(r < .7){ const [de, fr] = pick(COURSES); return { t:'choix', q:`Comment dit-on « ${fr} » en allemand ?`, opts:opts3(de, COURSES.map(x => x[0])).map(deo), cols:2, good:de, item:de, expl:`« ${fr} » : ${D(de)}.` }; }
+  const [q, good, faux] = pick(DIALOG); return { t:'choix', q:`Au marché, la vendeuse dit : ${D(q)} Que réponds-tu ?`, opts:shuffle([good, ...faux]).map(deo), cols:1, good, item:q, expl:`${D(q)} → ${D(good)}` }; }
+
+/* ---------- 8. In der Stadt + la mission ---------- */
+const LIEUX = [['der Bahnhof','la gare','🚉'],['das Museum','le musée','🏛️'],['die Kirche','l\'église','⛪'],['der Supermarkt','le supermarché','🛒'],['die Bäckerei','la boulangerie','🥨'],['die Post','la poste','📮'],['die Schule','l\'école','🏫'],['das Kino','le cinéma','🎬']];
+const DIR = [['geradeaus','tout droit','⬆️'],['links','à gauche','⬅️'],['rechts','à droite','➡️']];
+const LETTRE = [['Hallo','Paul!'],['Ich','heiße','Essil.'],['Ich','bin','zwölf','Jahre','alt.'],['Ich','wohne','in','Frankreich.'],['Am','Wochenende','reite','ich','gern.'],['Viele','Grüße!']];
+function qStadt(){ const r = Math.random();
+  if(r < .35){ const [de, fr, e] = pick(LIEUX); return { t:'choix', q:`${e} Comment dit-on « ${fr} » en allemand ?`, opts:opts3(de, LIEUX.map(x => x[0])).map(deo), cols:2, good:de, item:de, expl:`${e} ${D(de)} : ${fr}.` }; }
+  if(r < .65){ const a = pick(DIR), b = pick(DIR.filter(x => x !== a)), good = `Geh ${a[0]} und dann ${b[0]}.`;
+    return { t:'choix', q:`Le chemin, c'est ${a[2]} puis ${b[2]}. Que dis-tu en allemand ?`, voice:`Le chemin, c'est ${a[1]}, puis ${b[1]}. Que dis-tu en allemand ?`, opts:opts3(good, DIR.flatMap(x => DIR.filter(y => y !== x).map(y => `Geh ${x[0]} und dann ${y[0]}.`))).map(deo), cols:1, good, item:'chemin', expl:`${D(good)} : ${a[1]}, puis ${b[1]}.` }; }
+  const w = pick(LETTRE); return { t:'ordre', q:`Mission finale : la lettre à ton correspondant ! Remets la phrase dans l'ordre.`, words:w, fin:'', item:w.join(' '), expl:`${D(w.join(' '))}` }; }
+
+window.COURS = {
+  enfant:'Essil', prof:EULE, key:'essil-deutsch2', track:'essil-deutsch2', retour:'Le quai', titre:'Deutsch Express 2', sous:'La suite de l\'allemand : l\'heure, l\'accusatif, les verbes forts, le parfait, la ville',
+  bandeau:'<div class="rail"><span>🚆 Deutsch Express 2 · Abfahrt !</span></div>',
+  bonjour:`${D('Hallo Essil!')} Je suis Frau Eule, la contrôleuse du Deutsch Express. Ton premier voyage est fini : on repart pour 8 nouvelles gares ! Chaque bonne réponse te donne un <b>ticket 🎟️</b> pour Serpent Légendes.`,
+  confetti:['🚆','🥨','🇩🇪','⭐','🎟️'], revoir:'À revoir',
+  CH:[
+    { id:'uhr', name:'Die Uhrzeit', sub:'Wie spät ist es?', icon:'🕒', edge:'#1f3c88', make:() => noDup(qUhr, 10),
+      rule:`${D('Es ist acht Uhr.')} (8 h) · ${D('Viertel nach drei.')} (3 h 15) · ${D('halb acht.')} (7 h 30 : attention, « la moitié vers 8 » !) · ${D('Viertel vor vier.')} (3 h 45) · ${D('zehn nach zwei.')} (2 h 10).` },
+    { id:'akk', name:'Der Akkusativ', sub:'den, einen, keinen', icon:'🎯', edge:'#d7263d', make:() => noDup(qAkk, 10),
+      rule:`Le COD est à l'accusatif. Seul le <b>masculin</b> change : ${D('der → den, ein → einen, kein → keinen')}. ${D('Ich habe einen Hund.')} Féminin et neutre ne bougent pas : ${D('Ich habe eine Katze, ein Pferd.')}` },
+    { id:'fort', name:'Die starken Verben', sub:'fahren → du fährst', icon:'💪', edge:'#f2c230', make:() => noDup(qFort, 10),
+      rule:`Certains verbes changent de voyelle avec ${D('du')} et ${D('er')} : a → ä (${D('fahren, du fährst, er fährt')}), e → i (${D('sprechen, du sprichst')}), e → ie (${D('lesen, du liest')}).` },
+    { id:'mod', name:'Können, müssen, wollen', sub:'Le verbe à la fin !', icon:'🔑', edge:'#1f3c88', make:() => noDup(qMod, 10),
+      rule:`${D('ich kann, du kannst, er kann')} · ${D('ich muss')} · ${D('ich will')} · ${D('ich darf')}. Le 2<sup>e</sup> verbe, à l'infinitif, va <b>à la fin</b> : ${D('Ich kann gut schwimmen.')}` },
+    { id:'wo', name:'Wo ist die Katze?', sub:'auf, unter, neben, hinter, in', icon:'🐈', edge:'#d7263d', make:() => noDup(qPrep, 10),
+      rule:`${D('auf')} = sur · ${D('unter')} = sous · ${D('neben')} = à côté de · ${D('hinter')} = derrière · ${D('in')} = dans. Pour dire où on est (${D('wo?')}), on met le datif : ${D('Die Katze ist auf dem Tisch. Der Ball ist in der Kiste.')}` },
+    { id:'perf', name:'Das Perfekt', sub:'Mon week-end', icon:'📸', edge:'#f2c230', make:() => noDup(qPerf, 10),
+      rule:`Le parfait = ${D('haben')} ou ${D('sein')} + participe à la fin : ${D('Ich habe Fußball gespielt.')} ${D('Ich bin ins Kino gegangen.')} On prend ${D('sein')} pour les déplacements (gehen, fahren, kommen, schwimmen).` },
+    { id:'kauf', name:'Einkaufen', sub:'Les courses et les prix', icon:'🛒', edge:'#1f3c88', make:() => noDup(qKauf, 10),
+      rule:`${D('Was kostet das?')} — ${D('Das kostet zwei Euro fünfzig.')} (2,50 €) · ${D('Ich hätte gern ein Kilo Äpfel.')} (je voudrais) · ${D('Das ist alles, danke.')}` },
+    { id:'stadt', name:'In der Stadt', sub:'Le chemin… et la mission finale', icon:'🗺️', edge:'#d7263d', make:() => noDup(qStadt, 10),
+      rule:`${D('Wo ist der Bahnhof?')} — ${D('Geh geradeaus und dann links.')} ${D('geradeaus')} = tout droit, ${D('links')} = à gauche, ${D('rechts')} = à droite.` },
+  ],
+  fiche:[
+    { h:'Die Uhrzeit', tag:'l\'heure', html:`<p class="de">Es ist acht Uhr · Viertel nach drei · halb acht (7 h 30 !) · Viertel vor vier · zehn nach zwei · zwanzig vor sechs</p>`,
+      lire:`L'heure. ${D('Es ist acht Uhr. Viertel nach drei. Halb acht. Viertel vor vier. Zehn nach zwei. Zwanzig vor sechs.')} Attention : halb acht, c'est sept heures et demie.` },
+    { h:'Akkusativ et datif', tag:'les articles', html:`<table class="tableau"><tr><th></th><th>masculin</th><th>féminin</th><th>neutre</th></tr><tr><th>nominatif</th><td class="de">der / ein</td><td class="de">die / eine</td><td class="de">das / ein</td></tr><tr><th>accusatif (COD)</th><td class="de">den / einen</td><td class="de">die / eine</td><td class="de">das / ein</td></tr><tr><th>datif (wo?)</th><td class="de">dem / einem</td><td class="de">der / einer</td><td class="de">dem / einem</td></tr></table>`,
+      lire:`Au nominatif : ${D('der, die, das')}. À l'accusatif, seul le masculin change : ${D('den, einen')}. Au datif, après wo : ${D('dem, der, dem')}.` },
+    { h:'Les verbes', tag:'forts, modaux, parfait', html:`<p><span class="de">fahren → du fährst · sprechen → du sprichst · lesen → du liest</span></p><p><span class="de">ich kann · ich muss · ich will · ich darf</span> + infinitif à la fin</p><p><span class="de">Ich habe … gespielt · Ich bin … gegangen</span></p>`,
+      lire:`Les verbes forts : ${D('fahren, du fährst. Sprechen, du sprichst. Lesen, du liest.')} Les modaux : ${D('ich kann, ich muss, ich will, ich darf')}, et l'infinitif à la fin. Le parfait : ${D('Ich habe Fußball gespielt. Ich bin ins Kino gegangen.')}` },
+  ],
+};
+</script>
+<script src="../salma/ollie/cours.js?v=4"></script>
+</body></html>

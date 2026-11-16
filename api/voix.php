@@ -10,7 +10,8 @@ declare(strict_types=1);
 require dirname(__DIR__) . '/acces/garde.php';
 ga_garde_api();
 
-const VX_VOIX = ['fr' => '3fxbs2pB9bs8S6Z1N38A', 'en' => 'Xb7hH8MSUJpSbSDYk0k2'];   // Céline | Chaleureuse et immersive · Alice - Clear, Engaging Educator
+const VX_VOIX = ['fr' => '3fxbs2pB9bs8S6Z1N38A', 'en' => 'Xb7hH8MSUJpSbSDYk0k2', 'de' => 'tR9bEXIX9ixlxSis0fqv', 'la' => '3fxbs2pB9bs8S6Z1N38A'];
+// Céline | Chaleureuse et immersive · Alice - Clear, Engaging Educator · Toni - Klar & Engagiert (allemand) · le latin : Céline, sans langue imposée
 const VX_MODELE = 'eleven_multilingual_v2';
 function vx_fin(int $code, string $msg = ''): void { http_response_code($code); header('Content-Type: text/plain; charset=utf-8'); header('Cache-Control: no-store'); echo $msg; exit; }
 function vx_voix(string $l): string { $v = ga_reglage('voix_' . $l); return $v && preg_match('/^[A-Za-z0-9]{10,40}$/', $v) ? $v : VX_VOIX[$l]; }
@@ -20,7 +21,7 @@ $t = trim(preg_replace('/\s+/u', ' ', (string)($_GET['t'] ?? '')));
 if ($t === '' || mb_strlen($t) > 400) vx_fin(400);
 $voix = vx_voix($l);
 $dir = ga_donnees() . '/voix-cache/' . $voix;
-$f = $dir . '/' . sha1(VX_MODELE . '|' . $t) . '.mp3';
+$f = $dir . '/' . sha1(VX_MODELE . '|' . (in_array($l, ['fr', 'en'], true) ? '' : $l . '|') . $t) . '.mp3';   // fr/en : les clés d'avant restent valables
 
 if (!is_file($f)) {
     $cle = (string)ga_reglage('elevenlabs_cle');
@@ -35,7 +36,7 @@ if (!is_file($f)) {
         $ch = curl_init('https://api.elevenlabs.io/v1/text-to-speech/' . $voix . '?output_format=mp3_44100_64');
         curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTPHEADER => ['xi-api-key: ' . $cle, 'Content-Type: application/json', 'Accept: audio/mpeg'],
-            CURLOPT_POSTFIELDS => json_encode(['text' => $t, 'model_id' => VX_MODELE, 'language_code' => $l,
+            CURLOPT_POSTFIELDS => json_encode(array_merge(['text' => $t, 'model_id' => VX_MODELE], $l === 'la' ? [] : ['language_code' => $l]) + [
                 'voice_settings' => ['stability' => 0.5, 'similarity_boost' => 0.75, 'style' => 0.2, 'speed' => $l === 'en' ? 0.9 : 0.95]], JSON_UNESCAPED_UNICODE)]);
         $mp3 = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
         if ($code !== 200 || !is_string($mp3) || strlen($mp3) < 300) {

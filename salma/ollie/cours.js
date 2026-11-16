@@ -1,11 +1,12 @@
-/* Le moteur commun des cours d'Ollie pour Salma (16/11) : Ollie's House, La Pâtisserie d'Ollie, La Fabrique des Phrases.
+/* Le moteur commun des cours (16/11) : pour Salma (Ollie's House, La Pâtisserie d'Ollie, La Fabrique des Phrases) et pour Essil
+   (Via Romana II, Deutsch Express 2 : C.enfant = 'Essil', C.prof = son dessin). Langues dans les textes : <i lang="en|de|la">.
    Repris de l'Atelier des Verbes : un chemin d'étapes qui s'ouvrent l'une après l'autre, Ollie qui parle, 1 ticket 🎟️ par bonne réponse
    (+3 pour un sans-faute) à dépenser dans Serpent Légendes, une fiche de leçon, un carnet, et la sauvegarde sur le serveur (Famille.track).
    La page déclare window.COURS = { key, track, titre, sous, bonjour, retour, CH:[{ id, name, sub, icon, edge, rule, make() }], ask:{ type(q){} }, fiche:[{ h, tag, html, lire }], revoir }
    puis charge ce fichier. Dans un texte d'Ollie, <i lang="en">…</i> est lu avec la voix anglaise. */
 'use strict';
 (function(){
-const C = window.COURS;
+const C = window.COURS, ENF = C.enfant || 'Salma';   // l'enfant (Salma, Essil…) ; C.prof : le dessin du prof (Ollie par défaut)
 const OWL = `<svg class="owl" viewBox="0 0 120 130" aria-hidden="true">
   <ellipse cx="60" cy="124" rx="38" ry="5" fill="#0002"/>
   <path d="M22 40 L30 14 L46 32 Z M98 40 L90 14 L74 32 Z" fill="#7a4b2a"/>
@@ -40,11 +41,12 @@ function tone(f,d,t=0,type='triangle',vol=.12){ if(muted) return; try{ ac = ac |
 const sfx = { ok(){ tone(660,.12); tone(880,.16,.08); }, no(){ tone(240,.25,0,'sine',.1); }, tap(){ tone(900,.05,0,'triangle',.06); }, ticket(){ tone(1046,.08,0,'square',.05); tone(1318,.1,.07,'square',.05); }, win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.22,i*.1)); } };
 function voices(){ try{ const vs = speechSynthesis.getVoices(), nice = v => /google|natural|samantha|daniel|amelie|thomas|female|libby|sonia/i.test(v.name);
   const best = re => { const l = vs.filter(v => re.test(v.lang.replace('_','-'))); return l.find(nice) || l[0] || null; };
-  VF = best(/^fr-FR/i) || best(/^fr/i); VE = best(/^en-GB/i) || best(/^en/i); }catch(e){} }
+  VF = best(/^fr-FR/i) || best(/^fr/i); VE = best(/^en-GB/i) || best(/^en/i); VD = best(/^de-DE/i) || best(/^de/i); VI = best(/^it/i); }catch(e){} }
+let VD = null, VI = null;
 if('speechSynthesis' in window){ voices(); speechSynthesis.onvoiceschanged = voices; }
 const clean = t => String(t).replace(/<small>.*?<\/small>/g,'').replace(/<[^>]+>/g,'').replace(/_{2,}|…{1}(?=\s|$)/g,' ... ').replace(/«|»/g,'').replace(/🎟️|⭐|🔊|→/g,'').replace(/&amp;/g,'&').replace(/&#39;/g,"'").trim();
-function segments(html){ const out = [], re = /<(\w+)[^>]*\blang="?en"?[^>]*>([\s\S]*?)<\/\1>/g; let m, last = 0; html = String(html);
-  while((m = re.exec(html))){ if(m.index > last) out.push([html.slice(last, m.index), 'fr']); out.push([m[2], 'en']); last = re.lastIndex; }
+function segments(html){ const out = [], re = /<(\w+)[^>]*\blang="?(en|de|la)"?[^>]*>([\s\S]*?)<\/\1>/g; let m, last = 0; html = String(html);
+  while((m = re.exec(html))){ if(m.index > last) out.push([html.slice(last, m.index), 'fr']); out.push([m[3], m[2]]); last = re.lastIndex; }
   if(last < html.length) out.push([html.slice(last), 'fr']); return out.map(([t, l]) => [clean(t), l]).filter(([t]) => t && /[\p{L}\p{N}]/u.test(t)); }
 /* Les voix enregistrées (ElevenLabs) : C.voix = 'ollie' → sons famille-data/lire-voix/ollie/<clé>.mp3 (liste window.LIRE_VOIX, servis par
    ../amine/lire/son.php). Une phrase anglaise enregistrée est jouée telle quelle ; le reste est dit par la voix de la tablette, à la suite. */
@@ -70,15 +72,15 @@ function speak(html){
     await dire(t, l, j); } })();
 }
 function dire(t, l, j){ return new Promise(res => { if(!('speechSynthesis' in window) || j !== jeton) return res();
-  try{ const u = new SpeechSynthesisUtterance(t); if(l === 'en'){ u.lang = 'en-GB'; if(VE) u.voice = VE; u.rate = .82; } else { u.lang = 'fr-FR'; if(VF) u.voice = VF; u.rate = .95; } u.pitch = 1.1;
+  try{ const u = new SpeechSynthesisUtterance(t); if(l === 'en'){ u.lang = 'en-GB'; if(VE) u.voice = VE; u.rate = .82; } else if(l === 'de'){ u.lang = 'de-DE'; if(VD) u.voice = VD; u.rate = .85; } else if(l === 'la'){ u.lang = 'it-IT'; if(VI) u.voice = VI; u.rate = .85; } else { u.lang = 'fr-FR'; if(VF) u.voice = VF; u.rate = .95; } u.pitch = 1.1;
     let fait = false; const fin = () => { if(!fait){ fait = true; res(); } }; u.onend = fin; u.onerror = fin; setTimeout(fin, 1500 + t.length * 120); speechSynthesis.speak(u); }catch(e){ res(); } }); }
-const en = t => speak(`<i lang="en">${t}</i>`);
+const en = (t, l = 'en') => speak(`<i lang="${l}">${t}</i>`);
 function hush(){ jeton++; try{ speechSynthesis.cancel(); }catch(e){} if(joueur){ try{ joueur.onended = null; joueur.stop(); }catch(e){} joueur = null; } }
 function talk(){ document.querySelectorAll('.owl').forEach(o => { o.classList.remove('talk'); void o.offsetWidth; o.classList.add('talk'); }); }
 function confetti(){ for(let i=0;i<10;i++){ const s=document.createElement('span'); s.className='float'; s.textContent=pick(C.confetti || ['⭐','🎟️','🌷','🍀','🎉']); s.style.left=rnd(5,90)+'vw'; s.style.top=rnd(55,90)+'vh'; s.style.animationDelay=(i*60)+'ms'; document.body.appendChild(s); setTimeout(()=>s.remove(),1800); } }
 function topbar(back){
   return `<div class="top">
-    ${back ? `<button class="chip" id="back">← ${C.retour || 'Le chemin'}</button>` : `<a class="chip" href="./">← Espace Salma</a>`}
+    ${back ? `<button class="chip" id="back">← ${C.retour || 'Le chemin'}</button>` : `<a class="chip" href="./">← Espace ${ENF}</a>`}
     <button class="chip round" id="mute" aria-label="${muted ? 'Activer' : 'Couper'} le son">${muted ? '🔇' : '🔊'}</button>
     <div class="chip stars" aria-label="Étoiles et tickets">⭐ ${totalStars()} <span class="tk">🎟️ ${data.tickets}</span></div></div>`;
 }
@@ -86,7 +88,7 @@ function wireTop(back){
   const b = document.getElementById('back'); if(b) b.onclick = () => { sfx.tap(); hush(); (back || home)(); };
   document.getElementById('mute').onclick = e => { muted = !muted; try{ localStorage.setItem(KEY+'-muet', muted?'1':'0'); }catch(_){} e.currentTarget.textContent = muted ? '🔇' : '🔊'; if(muted) hush(); };
 }
-const teacher = html => `<div class="teacher">${OWL}<div class="bubble" id="say" aria-live="polite">${html}</div></div>`;
+const teacher = html => `<div class="teacher">${C.prof || OWL}<div class="bubble" id="say" aria-live="polite">${html}</div></div>`;
 function say(html, voice=true){ const s = document.getElementById('say'); if(s) s.innerHTML = html; if(voice) speak(html); }
 const unlocked = i => i === 0 || (data.stars[C.CH[i-1].id] || 0) > 0;
 
@@ -97,7 +99,7 @@ function home(greet){
   app.innerHTML = topbar(false) +
     `<div><h1>${C.titre}</h1><p class="lead">${C.sous}</p></div>` + (C.bandeau || '') +
     teacher(next === 0 && !totalStars() ? C.bonjour
-      : next >= 0 ? `Tu as déjà <b>${data.tickets} tickets 🎟️</b>, Salma ! Ta prochaine étape : <b class="n">${CH[next].name}</b>.` : `Tu as tout fini, Salma ! Refais les étapes pour gagner 3 étoiles partout… et encore des tickets 🎟️.`) +
+      : next >= 0 ? `Tu as déjà <b>${data.tickets} tickets 🎟️</b>, ${ENF} ! Ta prochaine étape : <b class="n">${CH[next].name}</b>.` : `Tu as tout fini, ${ENF} ! Refais les étapes pour gagner 3 étoiles partout… et encore des tickets 🎟️.`) +
     `<div class="tools"><button class="btn" id="fiche">📋 Ma fiche</button><button class="btn" id="carnet">📈 Mon carnet</button><a class="btn tkbtn" href="../jeux/serpent-legendes.html">🎟️ ${data.tickets} → Serpent Légendes</a></div>` +
     `<div class="path">${CH.map((c, i) => {
       const s = data.stars[c.id] || 0, open = unlocked(i);
@@ -142,7 +144,7 @@ function answered(ok, item, expl, btn, goodSel){
   else { S.errors++; sfx.no(); if(btn){ btn.classList.add('bad'); btn.classList.add('shake'); } }
   note(item, ok); save();
   const tk = app.querySelector('.tk'); if(tk) tk.textContent = '🎟️ ' + data.tickets;
-  const msg = (ok ? pick(['Bravo !', 'Exactement !', 'Super, Salma !', 'Oui !', 'Parfait !']) + ' <span class="plus">+1 🎟️</span> ' : 'Pas tout à fait. ') + (expl || '');
+  const msg = (ok ? pick(['Bravo !', 'Exactement !', 'Super, ' + ENF + ' !', 'Oui !', 'Parfait !']) + ' <span class="plus">+1 🎟️</span> ' : 'Pas tout à fait. ') + (expl || '');
   say(msg);
   const card = app.querySelector('.card.ex');
   card.insertAdjacentHTML('beforeend', `<button class="btn ok" id="nx">${S.k + 1 < S.list.length ? 'Suivant →' : 'Terminer'}</button>`);
@@ -150,14 +152,16 @@ function answered(ok, item, expl, btn, goodSel){
   nx.onclick = () => { sfx.tap(); hush(); S.k++; next(); };
 }
 
+/* ce qu'Ollie dit : la consigne, puis le mot ou la phrase à écouter (dans sa langue) */
+const ecoute = q => q.en ? (q.voice || q.q) + ` <i lang="${q.lang || 'en'}">${esc(q.en)}</i>` : q.voice;
 /* ---------- les types de questions communs ---------- */
 const ASK = {
   /* un choix : { q, body, opts:[texte | {v, html}], good, item, expl, cols, voice, en (mot anglais à faire entendre) } */
   choix(q){
     const opts = q.opts.map(o => typeof o === 'object' ? o : { v:o, html:esc(o) });
     const card = frame(q.q, (q.body || '') + (q.en ? `<button class="btn" data-ecoute>🔊 Écouter</button>` : '') +
-      `<div class="answers${q.cols === 3 ? ' ends' : ''}${q.cols === 1 ? ' one' : ''}${q.imgs ? ' imgs' : ''}">${opts.map(o => `<button class="ans" data-v="${esc(o.v)}">${o.html}</button>`).join('')}</div>`, q.help, q.voice);
-    const e = card.querySelector('[data-ecoute]'); if(e){ e.onclick = () => en(q.en); setTimeout(() => en(q.en), q.q ? 2200 : 0); }
+      `<div class="answers${q.cols === 3 ? ' ends' : ''}${q.cols === 1 ? ' one' : ''}${q.imgs ? ' imgs' : ''}">${opts.map(o => `<button class="ans" data-v="${esc(o.v)}">${o.html}</button>`).join('')}</div>`, q.help, ecoute(q));
+    const e = card.querySelector('[data-ecoute]'); if(e) e.onclick = () => en(q.en, q.lang);
     card.querySelectorAll('.ans').forEach(b => b.onclick = () => answered(b.dataset.v === String(q.good), q.item, q.expl, b, `.ans[data-v="${CSS.escape(String(q.good))}"]`));
   },
   /* un nombre au pavé : { q, body, good, item, expl } */
@@ -178,8 +182,8 @@ const ASK = {
     const card = frame(q.q, (q.body || '') + (q.en ? `<button class="btn" data-ecoute>🔊 Écouter</button>` : '') +
       `<div class="mot" aria-live="polite">${[...W].map(c => c === ' ' ? '<i class="sp"></i>' : '<i></i>').join('')}</div>
       <div class="tiles">${tiles.map((c, j) => `<button class="tile" data-j="${j}">${c}</button>`).join('')}</div>
-      <div class="choices"><button class="btn" id="eff" data-lock>⌫ Effacer</button></div>`, q.help, q.voice);
-    const e = card.querySelector('[data-ecoute]'); if(e){ e.onclick = () => en(q.en); setTimeout(() => en(q.en), 2000); }
+      <div class="choices"><button class="btn" id="eff" data-lock>⌫ Effacer</button></div>`, q.help, ecoute(q));
+    const e = card.querySelector('[data-ecoute]'); if(e) e.onclick = () => en(q.en, q.lang);
     const slots = [...card.querySelectorAll('.mot i:not(.sp)')], used = [];
     const show = () => slots.forEach((s, k) => s.textContent = used[k] ? used[k].textContent : '');
     card.querySelectorAll('.tile').forEach(b => b.onclick = () => { if(b.disabled || used.length >= slots.length) return; sfx.tap(); used.push(b); b.disabled = true; show();
@@ -210,7 +214,7 @@ function finish(){
   data.tickets += bonus; data.last = new Date().toISOString(); save();
   sfx.win(); confetti();
   const nextI = S.i + 1 < C.CH.length ? S.i + 1 : -1;
-  const msg = (st === 3 ? `Sans faute, Salma ! ` : `${good} bonnes réponses sur ${total}. `) + `Tu gagnes <b>${S.earned + bonus} tickets 🎟️</b>${bonus ? ' (dont 3 de bonus pour le sans-faute)' : ''}. Tu en as ${data.tickets} en tout pour Serpent Légendes !`;
+  const msg = (st === 3 ? `Sans faute, ${ENF} ! ` : `${good} bonnes réponses sur ${total}. `) + `Tu gagnes <b>${S.earned + bonus} tickets 🎟️</b>${bonus ? ' (dont 3 de bonus pour le sans-faute)' : ''}. Tu en as ${data.tickets} en tout pour Serpent Légendes !`;
   app.innerHTML = topbar(true) + teacher(msg) +
     `<div class="card result"><div class="big" aria-label="${st} étoiles sur 3">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>
      <b style="font-family:var(--display);font-size:26px">${S.c.name}</b>
@@ -227,13 +231,13 @@ function fiche(){
     C.fiche.map((f, j) => `<div class="card fiche"><h2>${f.h}${f.tag ? ` <small>${f.tag}</small>` : ''}</h2>${f.html}<button class="btn" data-read="${j}">🔊 Lire</button></div>`).join('');
   wireTop();
   app.querySelectorAll('[data-read]').forEach(b => b.onclick = () => speak(C.fiche[+b.dataset.read].lire));
-  app.querySelectorAll('[data-en]').forEach(b => b.onclick = () => en(b.dataset.en));
+  app.querySelectorAll('[data-en]').forEach(b => b.onclick = () => en(b.dataset.en, b.dataset.lang || 'en'));
 }
 function carnet(){
   const review = Object.entries(data.items).filter(([, v]) => v.ko > 0).sort((a, b) => (b[1].ko - b[1].ok / 3) - (a[1].ko - a[1].ok / 3)).slice(0, 10);
   const strong = Object.entries(data.items).filter(([, v]) => v.ok >= 3 && v.ko === 0).map(([k]) => k).slice(0, 30);
   const doneN = C.CH.filter(c => data.stars[c.id] > 0).length;
-  app.innerHTML = topbar(true) + teacher(`Voici ton carnet, Salma : <b>${doneN} étape${doneN > 1 ? 's' : ''} sur ${C.CH.length}</b>, ${totalStars()} étoiles et ${data.tickets} tickets 🎟️.`) +
+  app.innerHTML = topbar(true) + teacher(`Voici ton carnet, ${ENF} : <b>${doneN} étape${doneN > 1 ? 's' : ''} sur ${C.CH.length}</b>, ${totalStars()} étoiles et ${data.tickets} tickets 🎟️.`) +
     `<div class="card carnet"><h2>Mes étapes</h2><div class="prog"><i style="width:${Math.round(doneN / C.CH.length * 100)}%"></i></div>
       <ul class="clist">${C.CH.map(c => { const s = data.stars[c.id] || 0; return `<li><span aria-hidden="true">${c.icon}</span><b>${c.name}</b><span class="st">${'★'.repeat(s)}${'☆'.repeat(3-s)}</span><small>${data.done[c.id] ? data.done[c.id] + ' fois' : 'pas encore'}</small></li>`; }).join('')}</ul></div>
     <div class="card carnet"><h2>${C.revoir || 'À revoir'}</h2>${review.length ? `<div class="vlist">${review.map(([k, v]) => `<span class="vk">${esc(k)} <small>${v.ok} ✔ · ${v.ko} ✘</small></span>`).join('')}</div>` : `<p>Rien à revoir pour l'instant. Bravo !</p>`}
@@ -244,8 +248,8 @@ function carnet(){
 window.OLLIE = { segments, rnd, pick, shuffle, esc, speak, en, hush, say, frame, answered, sfx, ASK, get S(){ return S; } };
 home(false);
 if(window.Famille){
-  Famille.track(C.track, 'Salma', [KEY]);
-  Famille.load(C.track, 'Salma').then(r => {
+  Famille.track(C.track, ENF, [KEY]);
+  Famille.load(C.track, ENF).then(r => {
     const d = r && r[KEY];
     if(d && (d.t || 0) > (data.t || 0) && (d.tickets || 0) >= (data.tickets || 0)){ data = Object.assign({ stars:{}, done:{}, tickets:0, items:{} }, d); try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} if(!S) home(false); }
   });

@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#7a1f1f">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Via Romana II</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%9B%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="../salma/ollie/cours.css?v=1">
+<style>
+/* Via Romana II (16/11) : la suite du cours de latin d'Essil (Via Romana, 10 étapes). Moteur commun des cours (salma/ollie/cours.js),
+   avec Noctua, la chouette de Minerve, comme professeure. Les mots latins sont lus par Céline (voix ElevenLabs, api/voix.php ?l=la). */
+:root{ --sky:#efe6d3; --sky2:#e2d3b5; --grass:#b98a4b; --grass2:#8a5d2b; --pen:#7a1f1f; --plum:#7a1f1f; --sun:#d8a531; }
+body{background:linear-gradient(#f3ebda 0%,#e7d9bc 62%,#c9a26a 62%,#a87b44 100%) fixed;background-color:#efe6d3}
+h1{font-family:Cinzel,serif;color:#7a1f1f;text-shadow:0 2px 0 #fff8}
+.lead,.help{color:#5b2a12;text-shadow:none}
+.spqr{font-family:Cinzel,serif;letter-spacing:.3em;color:#b8862b;margin:0;font-size:15px}
+.big-q i[lang="la"], .lat{font-family:Cinzel,serif;font-style:normal;color:#7a1f1f}
+.tableau{width:100%;border-collapse:collapse;font-size:16px}
+.tableau th,.tableau td{border-bottom:1px solid #e3d8c3;padding:6px 8px;text-align:center}
+.tableau th{background:#f6efe0}
+.tableau td.l{font-family:Cinzel,serif;color:#7a1f1f}
+.mosaique{width:100%;aspect-ratio:7/2;border-radius:22px;box-shadow:0 6px 0 #0002;background:
+  repeating-conic-gradient(from 45deg,#7a1f1f 0 25%,#d8a531 0 50%) 0 0/28px 28px;opacity:.9;display:grid;place-items:center}
+.mosaique span{background:#fff8ec;border-radius:16px;padding:8px 18px;font-family:Cinzel,serif;color:#7a1f1f;font-size:clamp(20px,4vw,34px)}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const L = t => `<i lang="la">${t}</i>`;   // un mot latin, lu en latin
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1)), pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+function noDup(f, n){ const out = [], seen = new Set(); let g = 0; while(out.length < n && g++ < 400){ const q = f(); const k = (q.q || '') + '|' + q.good + '|' + (q.body || '') + (q.words || ''); if(!seen.has(k)){ seen.add(k); out.push(q); } } return out; }
+const opts3 = (good, faux, n = 3) => shuffle([good, ...shuffle([...new Set(faux)].filter(x => x !== good)).slice(0, n)]);
+const PERS = ['je','tu','il / elle','nous','vous','ils / elles'], PERSL = ['1re pers. du sing.','2e pers. du sing.','3e pers. du sing.','1re pers. du pluriel','2e pers. du pluriel','3e pers. du pluriel'];
+
+/* Noctua, la chouette de Minerve (couronne de laurier) */
+const NOCTUA = `<svg class="owl" viewBox="0 0 120 130" aria-hidden="true">
+  <ellipse cx="60" cy="124" rx="38" ry="5" fill="#0002"/>
+  <path d="M22 40 L30 14 L46 32 Z M98 40 L90 14 L74 32 Z" fill="#6b5a4a"/>
+  <ellipse cx="60" cy="74" rx="42" ry="50" fill="#8a7663"/>
+  <ellipse cx="60" cy="88" rx="28" ry="32" fill="#efe3cc"/>
+  <path d="M44 84 q4 4 8 0 M56 92 q4 4 8 0 M68 84 q4 4 8 0 M50 100 q4 4 8 0 M62 100 q4 4 8 0" stroke="#cdb894" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="42" cy="52" r="17" fill="#fff"/><circle cx="78" cy="52" r="17" fill="#fff"/>
+  <circle cx="44" cy="54" r="8" fill="#2a2420"/><circle cx="76" cy="54" r="8" fill="#2a2420"/>
+  <circle cx="47" cy="51" r="2.5" fill="#fff"/><circle cx="79" cy="51" r="2.5" fill="#fff"/>
+  <path d="M54 64 L66 64 L60 74 Z" fill="#d8a531"/>
+  <g fill="#3f7a3a">${[0,1,2,3,4,5].map(i => `<ellipse cx="${28 + i * 6}" cy="${36 - i * 2.6}" rx="5" ry="2.6" transform="rotate(${-30 + i * 6} ${28 + i * 6} ${36 - i * 2.6})"/><ellipse cx="${92 - i * 6}" cy="${36 - i * 2.6}" rx="5" ry="2.6" transform="rotate(${30 - i * 6} ${92 - i * 6} ${36 - i * 2.6})"/>`).join('')}</g>
+  <path d="M18 74 q-6 22 10 34 M102 74 q6 22 -10 34" stroke="#6b5a4a" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M48 120 l-4 6 M52 120 l0 6 M68 120 l0 6 M72 120 l4 6" stroke="#d8a531" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+
+/* ---------- 1. Le présent des 4 conjugaisons ---------- */
+const TERM = { 1:['o','as','at','amus','atis','ant'], 2:['eo','es','et','emus','etis','ent'], 3:['o','is','it','imus','itis','unt'], 4:['io','is','it','imus','itis','iunt'] };
+const VERBES = [   // [radical, conjugaison, infinitif, sens]
+  ['am',1,'amare','aimer'],['laud',1,'laudare','louer'],['port',1,'portare','porter'],['voc',1,'vocare','appeler'],['habit',1,'habitare','habiter'],['pugn',1,'pugnare','combattre'],['navig',1,'navigare','naviguer'],
+  ['mon',2,'monere','avertir'],['vid',2,'videre','voir'],['hab',2,'habere','avoir'],['tim',2,'timere','craindre'],['del',2,'delere','détruire'],
+  ['leg',3,'legere','lire'],['dic',3,'dicere','dire'],['mitt',3,'mittere','envoyer'],['duc',3,'ducere','conduire'],['scrib',3,'scribere','écrire'],
+  ['aud',4,'audire','entendre'],['ven',4,'venire','venir'],['dorm',4,'dormire','dormir'],['sc',4,'scire','savoir']];
+const SUM = ['sum','es','est','sumus','estis','sunt'];
+const pres = (v, p) => v[0] + TERM[v[1]][p];
+const SENSP = { aimer:['aime','aimes','aime','aimons','aimez','aiment'], voir:['vois','vois','voit','voyons','voyez','voient'], lire:['lis','lis','lit','lisons','lisez','lisent'], entendre:['entends','entends','entend','entendons','entendez','entendent'], dormir:['dors','dors','dort','dormons','dormez','dorment'], porter:['porte','portes','porte','portons','portez','portent'], écrire:['écris','écris','écrit','écrivons','écrivez','écrivent'], avoir:['ai','as','a','avons','avez','ont'], venir:['viens','viens','vient','venons','venez','viennent'], dire:['dis','dis','dit','disons','dites','disent'] };
+const PRON = ['je ','tu ','il ','nous ','vous ','ils '], fr = (sens, p) => (p === 0 && /^[aeéiou]/.test(SENSP[sens][0]) ? "j'" : PRON[p]) + SENSP[sens][p];
+function qConj(){
+  if(Math.random() < .15){ const p = rnd(0, 5); return { t:'choix', q:`Le verbe ${L('esse')} (être) à la ${PERSL[p]} ?`, opts:opts3(SUM[p], SUM), cols:2, good:SUM[p], item:'sum', expl:`${L(SUM.join(', '))} : ${L(SUM[p])}.` }; }
+  const v = pick(VERBES), p = rnd(0, 5), g = pres(v, p), faux = [1,2,3,4].filter(c => c !== v[1]).map(c => v[0] + TERM[c][p]).concat([v[0] + TERM[v[1]][(p + 1) % 6]]);
+  return { t:'choix', q:`Conjugue ${L(v[2])} (${v[3]}, ${v[1]}<sup>e</sup> conjugaison) au présent, ${PERSL[p]}.`, opts:opts3(g, faux).map(x => ({ v:x, html:`<span class="lat">${x}</span>` })), cols:2, good:g, item:v[2],
+    expl:`${L(g)} : radical ${L(v[0])} + terminaison ${L('-' + TERM[v[1]][p])} de la ${v[1]}<sup>e</sup> conjugaison.` };
+}
+function qConjSens(){
+  const v = pick(VERBES.filter(v => SENSP[v[3]])), p = rnd(0, 5), g = pres(v, p), good = fr(v[3], p);
+  return { t:'choix', q:`Que veut dire ${L(g)} ?`, body:`<div class="big-q">${L(g)}</div>`, opts:opts3(good, [0,1,2,3,4,5].filter(x => x !== p).map(x => fr(v[3], x))), cols:1, good, item:g, expl:`${L(g)} = « ${good} ». La terminaison ${L('-' + TERM[v[1]][p])} dit la personne.` };
+}
+function qGroupe(){ const v = pick(VERBES); return { t:'choix', q:`À quelle conjugaison appartient ${L(v[2] + ', ' + pres(v, 0))} ?`, body:`<div class="big-q">${L(v[2])}, ${L(pres(v, 0))}</div>`, opts:['1','2','3','4'].map(c => ({ v:c, html:c + '<sup>e</sup> conjugaison' })), cols:2, good:String(v[1]), item:v[2],
+  expl:{ 1:`Infinitif en ${L('-are')} : 1<sup>re</sup> conjugaison.`, 2:`Infinitif en ${L('-ēre')} (et ${L('-eo')} à la 1<sup>re</sup> personne) : 2<sup>e</sup> conjugaison.`, 3:`Infinitif en ${L('-ĕre')} et ${L('-o')} : 3<sup>e</sup> conjugaison.`, 4:`Infinitif en ${L('-ire')} : 4<sup>e</sup> conjugaison.` }[v[1]] }; }
+
+/* ---------- 2. La 3e déclinaison ---------- */
+const N3 = [['rex','reg','m','le roi'],['consul','consul','m','le consul'],['miles','milit','m','le soldat'],['pater','patr','m','le père'],['mater','matr','f','la mère'],['urbs','urb','f','la ville'],['lex','leg','f','la loi'],['corpus','corpor','n','le corps'],['nomen','nomin','n','le nom'],['tempus','tempor','n','le temps']];
+const CAS = ['nominatif','vocatif','accusatif','génitif','datif','ablatif'];
+function decl3(n){ const [nom, r, g] = n, neutre = g === 'n';
+  return { sg:[nom, nom, neutre ? nom : r + 'em', r + 'is', r + 'i', r + 'e'], pl:neutre ? [r + 'a', r + 'a', r + 'a', r + 'um', r + 'ibus', r + 'ibus'] : [r + 'es', r + 'es', r + 'es', r + 'um', r + 'ibus', r + 'ibus'] }; }
+function qDecl(){
+  const n = pick(N3), d = decl3(n), c = pick([2,3,4,5]), pl = Math.random() < .4 && c !== 4 && c !== 5, form = (pl ? d.pl : d.sg)[c];
+  const faux = [...d.sg, ...d.pl];
+  return { t:'choix', q:`Décline ${L(n[0] + ', ' + n[1] + 'is')} (${n[3]}, ${n[2] === 'n' ? 'neutre' : n[2] === 'f' ? 'féminin' : 'masculin'}) : ${CAS[c]} ${pl ? 'pluriel' : 'singulier'} ?`, opts:opts3(form, faux).map(x => ({ v:x, html:`<span class="lat">${x}</span>` })), cols:2, good:form, item:n[0],
+    expl:`${CAS[c]} ${pl ? 'pluriel' : 'singulier'} : ${L(form)}. On part du génitif ${L(n[1] + 'is')} pour trouver le radical ${L(n[1] + '-')}.` };
+}
+function qCasForme(){
+  const n = pick(N3.filter(x => x[2] !== 'n')), d = decl3(n), [form, c] = pick([[d.sg[2], 'accusatif singulier'], [d.sg[3], 'génitif singulier'], [d.sg[4], 'datif singulier'], [d.pl[3], 'génitif pluriel']]);
+  return { t:'choix', q:`${L(form)} : quel cas ?`, body:`<div class="big-q">${L(form)}</div>`, opts:['accusatif singulier','génitif singulier','datif singulier','génitif pluriel'], cols:1, good:c, item:form, expl:`${L(form)} : ${c} de ${L(n[0])} (${n[3]}).` };
+}
+
+/* ---------- 3. Les cas et leur rôle ---------- */
+const PHR = [   // phrase latine (mots), index souligné, cas, fonction, traduction
+  [['Puella','rosam','amat'],0,'nominatif','sujet','La jeune fille aime la rose.'],[['Puella','rosam','amat'],1,'accusatif','COD','La jeune fille aime la rose.'],
+  [['Dominus','servo','panem','dat'],1,'datif','COI (à qui ?)','Le maître donne du pain à l\'esclave.'],[['Dominus','servo','panem','dat'],2,'accusatif','COD','Le maître donne du pain à l\'esclave.'],
+  [['Filia','agricolae','cantat'],1,'génitif','complément du nom','La fille du paysan chante.'],[['Agricola','gladio','pugnat'],1,'ablatif','complément circonstanciel (avec quoi ?)','Le paysan combat avec une épée.'],
+  [['Rex','urbem','videt'],1,'accusatif','COD','Le roi voit la ville.'],[['Milites','regi','parent'],1,'datif','COI (à qui ?)','Les soldats obéissent au roi.'],[['Templum','deae','magnum','est'],1,'génitif','complément du nom','Le temple de la déesse est grand.'],
+  [['Marcus','in','silva','ambulat'],2,'ablatif','complément circonstanciel (où ?)','Marcus se promène dans la forêt.'],[['Pueri','magistrum','audiunt'],0,'nominatif','sujet','Les enfants écoutent le maître.'],[['Pueri','magistrum','audiunt'],1,'accusatif','COD','Les enfants écoutent le maître.']];
+const FONCS = ['sujet','COD','COI (à qui ?)','complément du nom','complément circonstanciel (avec quoi ?)','complément circonstanciel (où ?)'];
+function qCas(){ const [w, i, cas, fon, tr] = pick(PHR);
+  const html = w.map((x, j) => j === i ? `<u>${x}</u>` : x).join(' ') + '.';
+  if(Math.random() < .5) return { t:'choix', q:`À quel cas est le mot ${L(w[i])} ?`, body:`<div class="big-q"><span class="lat">${html}</span></div>`, voice:`À quel cas est le mot souligné ? ${L(w.join(' '))}`, opts:CAS.filter(c => c !== 'vocatif'), cols:1, good:cas, item:w[i], expl:`${L(w[i])} est au ${cas} : c'est le ${fon}. « ${tr} »` };
+  const opts = opts3(fon, FONCS);
+  return { t:'choix', q:`Quelle est la fonction du mot ${L(w[i])} ?`, body:`<div class="big-q"><span class="lat">${html}</span></div>`, voice:`Quelle est la fonction du mot souligné ? ${L(w.join(' '))}`, opts, cols:1, good:fon, item:w[i], expl:`${L(w[i])} est au ${cas} : ${fon}. « ${tr} »` };
+}
+
+/* ---------- 4. L'imparfait et le parfait ---------- */
+const PARF = { am:'amav', laud:'laudav', port:'portav', voc:'vocav', mon:'monu', hab:'habu', tim:'timu', vid:'vid', leg:'leg', dic:'dix', mitt:'mis', duc:'dux', scrib:'scrips', aud:'audiv', ven:'ven', dorm:'dormiv' };
+const TI = ['bam','bas','bat','bamus','batis','bant'], TP = ['i','isti','it','imus','istis','erunt'];
+const impf = (v, p) => v[0] + (v[1] <= 2 ? (v[1] === 1 ? 'a' : 'e') : v[1] === 3 ? 'e' : 'ie') + TI[p], parf = (v, p) => PARF[v[0]] + TP[p];
+function qTemps(){
+  const v = pick(VERBES.filter(v => PARF[v[0]] && PARF[v[0]] !== v[0] + '')), p = rnd(0, 5), t = pick(['présent','imparfait','parfait']), f = t === 'présent' ? pres(v, p) : t === 'imparfait' ? impf(v, p) : parf(v, p);
+  return { t:'choix', q:`${L(f)} (${L(v[2])}, ${v[3]}) : à quel temps ?`, body:`<div class="big-q">${L(f)}</div>`, opts:['présent','imparfait','parfait'], cols:3, good:t, item:v[2],
+    expl:t === 'imparfait' ? `On voit ${L('-ba-')} : c'est l'imparfait (${L(f)}).` : t === 'parfait' ? `Le radical du parfait ${L(PARF[v[0]] + '-')} et la terminaison ${L('-' + TP[p])} : c'est le parfait.` : `Ni ${L('-ba-')}, ni radical du parfait : c'est le présent.` };
+}
+function qImpf(){ const v = pick(VERBES), p = rnd(0, 5), g = impf(v, p);
+  return { t:'choix', q:`Mets ${L(pres(v, p))} à l'imparfait.`, opts:opts3(g, [pres(v, p), v[0] + 'abat', v[0] + 'ebit', v[0] + 'bam', impf(v, (p + 1) % 6)]).map(x => ({ v:x, html:`<span class="lat">${x}</span>` })), cols:2, good:g, item:v[2], expl:`Imparfait : ${L(g)} (le suffixe ${L('-ba-')} et les terminaisons ${L('-m, -s, -t, -mus, -tis, -nt')}).` }; }
+function qParf(){ const v = pick(VERBES.filter(v => PARF[v[0]])), p = rnd(0, 5), g = parf(v, p);
+  return { t:'choix', q:`Mets ${L(pres(v, p))} au parfait.`, opts:opts3(g, [pres(v, p), impf(v, p), PARF[v[0]] + TP[(p + 2) % 6], v[0] + TP[p]]).map(x => ({ v:x, html:`<span class="lat">${x}</span>` })), cols:2, good:g, item:v[2], expl:`Parfait : radical ${L(PARF[v[0]] + '-')} + ${L('-i, -isti, -it, -imus, -istis, -erunt')} → ${L(g)}.` }; }
+
+/* ---------- 5. Les adjectifs ---------- */
+const ADJ1 = [['bonus','bona','bonum','bon'],['magnus','magna','magnum','grand'],['parvus','parva','parvum','petit'],['longus','longa','longum','long'],['pulcher','pulchra','pulchrum','beau'],['altus','alta','altum','haut'],['novus','nova','novum','nouveau'],['multus','multa','multum','nombreux']];
+const ADJ2 = [['fortis','fortis','forte','courageux'],['brevis','brevis','breve','court'],['omnis','omnis','omne','tout'],['ingens','ingens','ingens','immense']];
+const NOMS = [['rosa','f','sg','la rose'],['dominus','m','sg','le maître'],['templum','n','sg','le temple'],['puellae','f','pl','les jeunes filles'],['servi','m','pl','les esclaves'],['bella','n','pl','les guerres'],['via','f','sg','la route'],['murus','m','sg','le mur']];
+function accord(a, g, nb, c2){ if(!c2) return nb === 'sg' ? a[g === 'm' ? 0 : g === 'f' ? 1 : 2] : (g === 'm' ? a[1].replace(/a$/, 'i').replace(/ra$/, 'ri') : g === 'f' ? a[1] + 'e' : a[1]);
+  return nb === 'sg' ? a[g === 'n' ? 2 : 0] : (g === 'n' ? a[2].replace(/e$/, 'ia').replace(/ingens$/, 'ingentia') : a[0].replace(/is$/, 'es').replace(/ingens$/, 'ingentes')); }
+function plur1(a, g){ const f = a[1]; return g === 'm' ? f.slice(0, -1) + 'i' : g === 'f' ? f + 'e' : f; }
+function qAdj(){ const c2 = Math.random() < .35, a = pick(c2 ? ADJ2 : ADJ1), [nom, g, nb, tr] = pick(NOMS);
+  const good = c2 ? accord(a, g, nb, true) : nb === 'sg' ? a[g === 'm' ? 0 : g === 'f' ? 1 : 2] : plur1(a, g);
+  const faux = c2 ? [a[0], a[2], a[0].replace(/is$/, 'es'), a[2].replace(/e$/, 'ia')] : [a[0], a[1], a[2], plur1(a, 'm'), plur1(a, 'f'), plur1(a, 'n')];
+  return { t:'choix', q:`Accorde l'adjectif ${L(a[0])} (${a[3]}) avec ${L(nom)} (${tr}).`, body:`<div class="big-q">${L(nom)} <span class="trou" style="display:inline-block;min-width:3em;border-bottom:5px dotted var(--sun)">…</span></div>`, opts:opts3(good, faux).map(x => ({ v:x, html:`<span class="lat">${x}</span>` })), cols:2, good, item:a[0],
+    expl:`${L(nom)} est ${g === 'm' ? 'masculin' : g === 'f' ? 'féminin' : 'neutre'} ${nb === 'sg' ? 'singulier' : 'pluriel'} : ${L(nom + ' ' + good)}. L'adjectif prend le même genre, le même nombre et le même cas que le nom.` }; }
+
+/* ---------- 6. Versio : Romulus et Rémus ---------- */
+const VERSIO = [
+  ['Romulus et Remus fratres erant.', 'Romulus et Rémus étaient frères.', ['Romulus et Rémus étaient des rois.', 'Romulus aimait son frère Rémus.']],
+  ['Amulius rex pueros in Tiberim mittit.', 'Le roi Amulius envoie les enfants dans le Tibre.', ['Les enfants envoient le roi Amulius dans le Tibre.', 'Le roi Amulius regarde les enfants près du Tibre.']],
+  ['Lupa pueros in ripa invenit.', 'Une louve trouve les enfants sur la rive.', ['Les enfants trouvent une louve sur la rive.', 'Une louve cherche les enfants dans la forêt.']],
+  ['Lupa pueros lacte nutriebat.', 'La louve nourrissait les enfants de son lait.', ['Les enfants nourrissaient la louve.', 'La louve buvait du lait avec les enfants.']],
+  ['Faustulus pastor pueros servavit.', 'Le berger Faustulus sauva les enfants.', ['Les enfants sauvèrent le berger Faustulus.', 'Le berger Faustulus vendit les enfants.']],
+  ['Romulus urbem novam aedificavit.', 'Romulus construisit une nouvelle ville.', ['Romulus détruisit une nouvelle ville.', 'Une nouvelle ville construisit Romulus.']],
+  ['Romulus primus rex Romae fuit.', 'Romulus fut le premier roi de Rome.', ['Rome fut le premier roi de Romulus.', 'Romulus fut le dernier roi de Rome.']],
+];
+function qVersio(i){ const [la, bon, faux] = VERSIO[i];
+  return { t:'choix', q:`Épisode ${i + 1}. Traduis la phrase.`, voice:`Épisode ${i + 1}. Traduis la phrase. ${L(la)}`, body:`<div class="big-q">${L(la)}</div>`, opts:shuffle([bon, ...faux]), cols:1, good:bon, item:'versio ' + (i + 1), expl:`« ${bon} »` }; }
+const VOC = [['frater, fratris','le frère'],['lupa, ae','la louve'],['pastor, oris','le berger'],['urbs, urbis','la ville'],['rex, regis','le roi'],['ripa, ae','la rive'],['aedificare','construire'],['servare','sauver'],['invenire','trouver'],['nutrire','nourrir']];
+function qVoc(){ const [la, fr] = pick(VOC); return { t:'choix', q:`Que veut dire ${L(la)} ?`, opts:opts3(fr, VOC.map(x => x[1])), cols:2, good:fr, item:la, expl:`${L(la)} : ${fr}.` }; }
+
+/* ---------- 7. Rome et l'Afrique romaine ---------- */
+const CIV = [
+  ['Quelle grande ville de Tunisie fut la rivale de Rome ?', 'Carthage', ['Kairouan','Sousse','Tozeur'], 'Carthage, fondée par les Phéniciens, s\'est battue contre Rome pendant les trois guerres puniques.'],
+  ['Quel général carthaginois a traversé les Alpes avec des éléphants ?', 'Hannibal', ['Jules César','Scipion','Romulus'], 'Hannibal a traversé les Alpes en 218 avant J.-C. pour attaquer Rome.'],
+  ['En quelle année Rome a-t-elle détruit Carthage ?', '146 av. J.-C.', ['753 av. J.-C.','44 av. J.-C.','476 apr. J.-C.'], 'En 146 av. J.-C., à la fin de la troisième guerre punique. Rome a ensuite reconstruit une Carthage romaine.'],
+  ['Où se trouve un des plus grands amphithéâtres romains du monde, en Tunisie ?', 'El Jem', ['Djerba','Tabarka','Bizerte'], 'L\'amphithéâtre d\'El Jem (Thysdrus) pouvait accueillir environ 35 000 spectateurs.'],
+  ['Quelle ville romaine de Tunisie a un très beau théâtre et un Capitole ?', 'Dougga', ['Monastir','Gafsa','Nabeul'], 'Dougga (Thugga) est l\'une des villes romaines les mieux conservées d\'Afrique.'],
+  ['Qu\'est-ce qu\'un aqueduc ?', 'Un pont-canal qui amène l\'eau', ['Un temple pour Neptune','Un bateau de guerre','Une route pavée'], 'L\'aqueduc de Zaghouan amenait l\'eau jusqu\'à Carthage, sur environ 130 km.'],
+  ['Comment s\'appelle la place centrale d\'une ville romaine ?', 'le forum', ['les thermes','la domus','le cirque'], 'Le forum : la place des temples, des tribunaux, du marché et des discours.'],
+  ['Que trouvait-on aux thermes ?', 'Des bains chauds et froids', ['Des courses de chars','Des combats de gladiateurs','Une bibliothèque seulement'], 'Caldarium (chaud), tepidarium (tiède), frigidarium (froid) : les Romains s\'y lavaient et s\'y retrouvaient.'],
+  ['La maison d\'une riche famille romaine s\'appelle…', 'la domus', ['l\'insula','la villa rustica','le forum'], 'La domus, avec son atrium. Les familles pauvres vivaient dans des immeubles : les insulae.'],
+  ['Où admirer de magnifiques mosaïques romaines en Tunisie ?', 'au musée du Bardo', ['au Louvre','au Colisée','à la Médina de Tunis'], 'Le musée du Bardo, à Tunis, a l\'une des plus belles collections de mosaïques romaines au monde.'],
+  ['Pourquoi l\'Afrique romaine était-elle si importante pour Rome ?', 'Elle fournissait le blé et l\'huile d\'olive', ['Elle fournissait l\'or et l\'argent','C\'était la capitale de l\'Empire','Elle fournissait la neige'], 'On l\'appelait « le grenier à blé de Rome ».'],
+  ['Qui fut le premier empereur romain ?', 'Auguste', ['Jules César','Néron','Romulus'], 'Octave, appelé Auguste, devient le premier empereur en 27 avant J.-C.'],
+];
+function qCiv(){ const [q, g, f, e] = pick(CIV); return { t:'choix', q, opts:shuffle([g, ...f]), cols:1, good:g, item:g, expl:e }; }
+
+/* ---------- 8. Le latin dans nos mots ---------- */
+const ETY = [['aqua','l\'eau','aquarium',['librairie','maternel','pédestre']],['mater, matris','la mère','maternel',['aquatique','urbain','vidéo']],['pater, patris','le père','paternel',['manuel','puéril','royal']],['urbs, urbis','la ville','urbain',['audition','aquarium','paternel']],['liber, libri','le livre','librairie',['liberté ?','maternel','vidéo']],['manus, us','la main','manuel',['urbain','audition','pédestre']],['pes, pedis','le pied','pédestre',['paternel','aquatique','manuel']],['videre','voir','vidéo',['audio','urbain','librairie']],['audire','entendre','audition',['vidéo','pédestre','maternel']],['puer, pueri','l\'enfant','puéril',['paternel','manuel','royal']],['rex, regis','le roi','régner',['urbain','audition','aquarium']],['scribere','écrire','scribe',['vidéo','manuel','urbain']]];
+const DE = [['fenestra','la fenêtre','das Fenster'],['murus','le mur','die Mauer'],['vinum','le vin','der Wein'],['caseus','le fromage','der Käse'],['strata (via)','la route','die Straße'],['tegula','la tuile','der Ziegel']];
+function qEty(){ if(Math.random() < .3){ const [la, fr, de] = pick(DE); return { t:'choix', q:`Le latin est même passé en allemand ! Quel mot allemand vient de ${L(la)} (${fr}) ?`, opts:opts3(de, DE.map(x => x[2])), cols:2, good:de, item:la, expl:`${L(la)} est devenu <i lang="de">${de}</i> en allemand.` }; }
+  const [la, fr, mot, faux] = pick(ETY); return { t:'choix', q:`${L(la)} veut dire « ${fr} ». Quel mot français vient de lui ?`, opts:shuffle([mot, ...faux.filter(x => !/\?/.test(x))]).slice(0, 4), cols:2, good:mot, item:la, expl:`${L(la)} (${fr}) → « ${mot} ».` }; }
+
+window.COURS = {
+  enfant:'Essil', prof:NOCTUA, key:'essil-latin2', track:'essil-latin2', retour:'La voie', titre:'Via Romana II', sous:'La suite du latin : conjugaisons, 3<sup>e</sup> déclinaison, cas, versions et l\'Afrique romaine',
+  bandeau:'<div class="mosaique"><span>SPQR · VIA ROMANA II</span></div>',
+  bonjour:`${L('Salve, Essil !')} Je suis Noctua, la chouette de Minerve. Tu as fini la première Via Romana : on continue la route ! Chaque bonne réponse te donne un <b>ticket 🎟️</b> pour Serpent Légendes.`,
+  confetti:['🏛️','🦉','🏺','⭐','🎟️'], revoir:'À revoir',
+  CH:[
+    { id:'conj', name:'Les 4 conjugaisons', sub:`Le présent : ${L('amo, moneo, lego, audio')}`, icon:'⚔️', edge:'#7a1f1f', make:() => shuffle([...noDup(qConj, 6), ...noDup(qConjSens, 2), ...noDup(qGroupe, 2)]),
+      rule:`Au présent : 1<sup>re</sup> ${L('amo, amas, amat, amamus, amatis, amant')} ; 2<sup>e</sup> ${L('moneo, mones, monet…')} ; 3<sup>e</sup> ${L('lego, legis, legit, legimus, legitis, legunt')} ; 4<sup>e</sup> ${L('audio, audis, audit… audiunt')}. Et ${L('sum, es, est, sumus, estis, sunt')}.` },
+    { id:'decl3', name:'La 3e déclinaison', sub:`${L('rex, regis')} · ${L('corpus, corporis')}`, icon:'👑', edge:'#b8862b', make:() => shuffle([...noDup(qDecl, 6), ...noDup(qCasForme, 4)]),
+      rule:`Le génitif en ${L('-is')} donne le radical : ${L('rex, regis')} → ${L('reg-')}. Singulier : ${L('rex, rex, regem, regis, regi, rege')}. Pluriel : ${L('reges, reges, reges, regum, regibus, regibus')}. Neutre : ${L('corpus, corpus, corpus, corporis…')}, pluriel ${L('corpora')}.` },
+    { id:'cas', name:'Les cas et leur rôle', sub:'Sujet, COD, complément du nom…', icon:'🧭', edge:'#3f7a3a', make:() => noDup(qCas, 10),
+      rule:`Nominatif : sujet. Accusatif : COD. Génitif : complément du nom (« de »). Datif : COI (« à qui ? »). Ablatif : complément circonstanciel (avec quoi ? où ? quand ?).` },
+    { id:'temps', name:'L\'imparfait et le parfait', sub:`${L('amabam')} · ${L('amavi')}`, icon:'⏳', edge:'#2a5c8a', make:() => shuffle([...noDup(qTemps, 4), ...noDup(qImpf, 3), ...noDup(qParf, 3)]),
+      rule:`Imparfait : ${L('-ba-')} + ${L('m, s, t, mus, tis, nt')} : ${L('amabam, monebam, legebam, audiebam')}. Parfait : un radical à apprendre + ${L('-i, -isti, -it, -imus, -istis, -erunt')} : ${L('amavi, monui, legi, audivi')}. Et ${L('sum')} fait ${L('fui')}.` },
+    { id:'adj', name:'Les adjectifs', sub:`${L('bonus, bona, bonum')} · ${L('fortis, forte')}`, icon:'🏺', edge:'#b8862b', make:() => noDup(qAdj, 8),
+      rule:`L'adjectif s'accorde avec le nom en genre, nombre et cas. 1<sup>re</sup> classe : ${L('bonus')} (m), ${L('bona')} (f), ${L('bonum')} (n) comme ${L('dominus, rosa, templum')}. 2<sup>e</sup> classe : ${L('fortis')} (m et f), ${L('forte')} (n).` },
+    { id:'versio', name:'Versio : Romulus et Rémus', sub:'Une légende en 7 épisodes', icon:'🐺', edge:'#7a1f1f', make:() => [...VERSIO.map((_, i) => qVersio(i)), ...noDup(qVoc, 3)],
+      rule:`Pour traduire : 1) trouve le verbe (souvent à la fin), 2) trouve son sujet au nominatif, 3) cherche le COD à l'accusatif, 4) puis les autres mots.` },
+    { id:'civ', name:'Rome et l\'Afrique romaine', sub:'Carthage, El Jem, Dougga, le Bardo', icon:'🏟️', edge:'#3f7a3a', make:() => noDup(qCiv, 10) },
+    { id:'ety', name:'Le latin dans nos mots', sub:'Français… et même allemand !', icon:'🔤', edge:'#2a5c8a', make:() => noDup(qEty, 10) },
+  ],
+  fiche:[
+    { h:'Le présent', tag:'4 conjugaisons', html:`<table class="tableau"><tr><th></th><th>1<sup>re</sup></th><th>2<sup>e</sup></th><th>3<sup>e</sup></th><th>4<sup>e</sup></th><th>esse</th></tr>${[0,1,2,3,4,5].map(p => `<tr><th>${PERS[p]}</th>${[['am',1],['mon',2],['leg',3],['aud',4]].map(v => `<td class="l">${v[0] + TERM[v[1]][p]}</td>`).join('')}<td class="l">${SUM[p]}</td></tr>`).join('')}</table>`,
+      lire:`Le présent. Première conjugaison : ${L('amo, amas, amat, amamus, amatis, amant')}. Deuxième : ${L('moneo, mones, monet, monemus, monetis, monent')}. Troisième : ${L('lego, legis, legit, legimus, legitis, legunt')}. Quatrième : ${L('audio, audis, audit, audimus, auditis, audiunt')}. Et être : ${L('sum, es, est, sumus, estis, sunt')}.` },
+    { h:'La 3e déclinaison', tag:'rex, regis', html:`<table class="tableau"><tr><th></th><th>singulier</th><th>pluriel</th><th>neutre sing.</th><th>neutre plur.</th></tr>${CAS.map((c, i) => `<tr><th>${c}</th><td class="l">${decl3(N3[0]).sg[i]}</td><td class="l">${decl3(N3[0]).pl[i]}</td><td class="l">${decl3(N3[7]).sg[i]}</td><td class="l">${decl3(N3[7]).pl[i]}</td></tr>`).join('')}</table>`,
+      lire:`La troisième déclinaison. ${L('rex, rex, regem, regis, regi, rege')}. Au pluriel : ${L('reges, reges, reges, regum, regibus, regibus')}. Pour un neutre : ${L('corpus, corpus, corpus, corporis, corpori, corpore')}, et au pluriel ${L('corpora, corpora, corpora, corporum, corporibus, corporibus')}.` },
+    { h:'Les cas', tag:'à quoi ils servent', html:`<p><b>Nominatif</b> : sujet · <b>Vocatif</b> : on appelle · <b>Accusatif</b> : COD · <b>Génitif</b> : complément du nom · <b>Datif</b> : COI (à qui ?) · <b>Ablatif</b> : compléments circonstanciels.</p>`,
+      lire:`Le nominatif est le cas du sujet. Le vocatif sert à appeler. L'accusatif, c'est le COD. Le génitif, le complément du nom. Le datif, le COI, à qui. L'ablatif, les compléments circonstanciels.` },
+    { h:'Imparfait et parfait', tag:'raconter', html:`<p>Imparfait : <span class="lat">amabam, amabas, amabat, amabamus, amabatis, amabant</span>.</p><p>Parfait : <span class="lat">amavi, amavisti, amavit, amavimus, amavistis, amaverunt</span> · <span class="lat">fui</span> (sum).</p>`,
+      lire:`Imparfait : ${L('amabam, amabas, amabat, amabamus, amabatis, amabant')}. Parfait : ${L('amavi, amavisti, amavit, amavimus, amavistis, amaverunt')}.` },
+  ],
+};
+</script>
+<script src="../salma/ollie/cours.js?v=4"></script>
+</body></html>
