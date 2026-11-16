@@ -21,7 +21,7 @@ $t = trim(preg_replace('/\s+/u', ' ', (string)($_GET['t'] ?? '')));
 if ($t === '' || mb_strlen($t) > 400) vx_fin(400);
 $voix = vx_voix($l);
 $dir = ga_donnees() . '/voix-cache/' . $voix;
-$f = $dir . '/' . sha1(VX_MODELE . '|' . (in_array($l, ['fr', 'en'], true) ? '' : $l . '|') . $t) . '.mp3';   // fr/en : les clés d'avant restent valables
+$f = $dir . '/' . sha1(VX_MODELE . '|' . (in_array($l, ['fr', 'en'], true) ? '' : ($l === 'la' ? 'la-lent|' : $l . '|')) . $t) . '.mp3';   // fr/en : les clés d'avant restent valables
 
 if (!is_file($f)) {
     $cle = (string)ga_reglage('elevenlabs_cle');
@@ -37,7 +37,7 @@ if (!is_file($f)) {
         curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTPHEADER => ['xi-api-key: ' . $cle, 'Content-Type: application/json', 'Accept: audio/mpeg'],
             CURLOPT_POSTFIELDS => json_encode(array_merge(['text' => $t, 'model_id' => VX_MODELE], $l === 'la' ? [] : ['language_code' => $l]) + [
-                'voice_settings' => ['stability' => 0.5, 'similarity_boost' => 0.75, 'style' => 0.2, 'speed' => $l === 'en' ? 0.9 : 0.95]], JSON_UNESCAPED_UNICODE)]);
+                'voice_settings' => ['stability' => $l === 'la' ? 0.65 : 0.5, 'similarity_boost' => 0.75, 'style' => 0.2, 'speed' => $l === 'la' ? 0.8 : ($l === 'en' ? 0.9 : 0.95)]], JSON_UNESCAPED_UNICODE)]);
         $mp3 = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
         if ($code !== 200 || !is_string($mp3) || strlen($mp3) < 300) {
             if ($verrou) { flock($verrou, LOCK_UN); fclose($verrou); }

@@ -478,8 +478,13 @@ const synth=window.speechSynthesis;let voices=[];
 function lv(){if(synth)voices=synth.getVoices()}
 if(synth){lv();synth.onvoiceschanged=lv}
 function voice(){for(const p of C.voiceLangs){const l=voices.filter(v=>v.lang.replace("_","-").toLowerCase().startsWith(p.toLowerCase()));const n=l.find(v=>/google|natural|online|premium|enhanced/i.test(v.name));if(n||l[0])return n||l[0]}return null}
-function speak(t,rate){if(!audioOn||!synth||!t)return;synth.cancel();const u=new SpeechSynthesisUtterance(t);const v=voice();if(v)u.voice=v;u.lang=C.voiceLangs[0];u.rate=rate||C.rate;synth.speak(u)}
-function hush(){if(synth)synth.cancel()}
+/* 16/11 : les mots sont dits par une vraie voix ElevenLabs (api/voix.php : Toni, voix allemande), gardée sur le site
+   après la 1re fois ; si le site ne peut pas (pas de clé, plafond du mois), la voix de la tablette prend le relais. */
+const VX_L="de",vxBuf={};let vxJeton=0,vxSrc=null;
+function vxCharge(t){const k=t;if(vxBuf[k])return vxBuf[k];const a=actx();if(!a)return Promise.reject();return vxBuf[k]=fetch("/api/voix.php?l="+VX_L+"&t="+encodeURIComponent(t)).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(b=>new Promise((ok,ko)=>{const p=a.decodeAudioData(b,ok,ko);if(p&&p.catch)p.catch(ko)})).catch(e=>{delete vxBuf[k];throw e})}
+function speakTablette(t,rate){if(!synth)return;synth.cancel();const u=new SpeechSynthesisUtterance(t);const v=voice();if(v)u.voice=v;u.lang=C.voiceLangs[0];u.rate=rate||C.rate;synth.speak(u)}
+function speak(t,rate){if(!audioOn||!t)return;hush();const j=vxJeton;t=String(t).trim();vxCharge(t).then(b=>{if(j!==vxJeton)return;const a=actx(),s=a.createBufferSource();s.buffer=b;s.connect(a.destination);vxSrc=s;s.start()}).catch(()=>{if(j===vxJeton)speakTablette(t,rate)})}
+function hush(){vxJeton++;if(synth)synth.cancel();if(vxSrc){try{vxSrc.stop()}catch(e){}vxSrc=null}}
 let ac;
 function actx(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==="suspended")ac.resume();return ac}
 function tone(f,t0,d,type="sine",g=.12,f2){const a=actx();if(!a||!audioOn)return;const o=a.createOscillator(),gn=a.createGain();o.type=type;o.frequency.setValueAtTime(f,a.currentTime+t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,a.currentTime+t0+d);gn.gain.setValueAtTime(g,a.currentTime+t0);gn.gain.exponentialRampToValueAtTime(.001,a.currentTime+t0+d);o.connect(gn).connect(a.destination);o.start(a.currentTime+t0);o.stop(a.currentTime+t0+d+.05)}
