@@ -80,6 +80,9 @@
   function lit(t){ try{ if(!explo && 'speechSynthesis' in window){ var u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; speechSynthesis.speak(u); } }catch(e){} }
   var sget = function(k, d){ try{ var v = sessionStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } };
   var sset = function(k, v){ try{ sessionStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+  // ce qui a été lu est gardé dans le vrai localStorage de l'appareil (avant : sessionStorage, oublié à chaque visite → la pastille revenait)
+  var luGet = function(m){ try{ var v = VRAI && VRAI.getItem('salon-lu:' + m); return v ? JSON.parse(v) || {} : null; }catch(e){ return {}; } };
+  var luSet = function(m, o){ try{ VRAI && VRAI.setItem('salon-lu:' + m, JSON.stringify(o)); }catch(e){} };
   var client = sget('salon-client', ''); if(!/^[0-9a-z]{8,40}$/.test(client)){ client = Math.random().toString(36).slice(2) + Date.now().toString(36); sset('salon-client', client); }
   var S = { enLigne:[], msgs:[], vue:null, avec:null, pret:false, stop:false };
 
@@ -87,7 +90,7 @@
     '#famExplo{position:fixed;left:12px;bottom:12px;z-index:2147483000;display:flex;align-items:center;gap:8px;background:#0f766e;color:#fff;border-radius:999px;padding:5px 14px 5px 5px;box-shadow:0 3px 0 #0b5a54,0 6px 18px #0003;font:800 15px/1.1 Nunito,system-ui,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;min-height:48px;box-sizing:border-box}' +
     '#famExplo.enfant{padding:5px;background:#2563eb;box-shadow:0 3px 0 #1d4ed8,0 6px 18px #0003}#famExplo.cache{display:none}' +
     '#famExplo img{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#d7f1ee;border:2px solid #fff;pointer-events:none}#famExplo .t{display:flex;flex-direction:column;pointer-events:none}#famExplo small{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#bfeee8}' +
-    '#famExplo .n{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;border-radius:11px;background:#d7263d;color:#fff;font-size:13px;display:none;place-items:center;padding:0 5px;box-sizing:border-box}#famExplo .n.on{display:grid}' +
+    '#famExplo .porte{display:grid;place-items:center;width:40px;height:40px;margin:0 -8px 0 4px;border-radius:50%;background:#ffffff26;font-size:20px;cursor:pointer}#famExplo .porte:hover{background:#ffffff40}#famExplo .n{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;border-radius:11px;background:#d7263d;color:#fff;font-size:13px;display:none;place-items:center;padding:0 5px;box-sizing:border-box}#famExplo .n.on{display:grid}' +
     '#famExplo .v{font-size:12px;background:#ffffff2e;border-radius:999px;padding:2px 8px;pointer-events:none}' +
     '#famSalon{position:fixed;z-index:2147483001;width:min(380px,calc(100vw - 16px));max-height:min(70vh,560px);display:none;flex-direction:column;background:#fff;color:#18202e;border-radius:22px;box-shadow:0 18px 50px #0005;font:600 16px/1.35 Nunito,system-ui,sans-serif;overflow:hidden}#famSalon.on{display:flex}' +
     '#famSalon header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#0f766e;color:#fff}#famSalon header b{flex:1;font-size:17px}#famSalon header button{all:unset;cursor:pointer;min-width:40px;min-height:40px;display:grid;place-items:center;border-radius:12px;font-size:20px}#famSalon header img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #fff;background:#fff}' +
@@ -113,7 +116,7 @@
     css();
     B = document.createElement('div'); B.id = 'famExplo'; B.setAttribute('role', 'button'); B.tabIndex = 0;
     B.setAttribute('aria-label', explo ? 'Explorateur du site : ' + moi() + '. Toucher pour voir qui est sur le site et discuter.' : 'Les messages');
-    B.innerHTML = '<img alt="" src="' + tete(moi(), profil && profil.av) + '">' + (explo ? '<span class="t"><small>Explorateur du site</small><span></span></span><span class="v" title="sur le site en ce moment"></span>' : '') + '<span class="n"></span>';
+    B.innerHTML = '<img alt="" src="' + tete(moi(), profil && profil.av) + '">' + (explo ? '<span class="t"><small>Explorateur du site</small><span></span></span><span class="v" title="sur le site en ce moment"></span><span class="porte" title="Sortir : revenir à « Qui es-tu ? »" aria-label="Sortir">🚪</span>' : '') + '<span class="n"></span>';
     if(explo) B.querySelector('.t span').textContent = moi(); else { B.classList.add('enfant', 'cache'); }
     var pos = sget('salon-pos', null);
     if(pos){ B.style.left = pos.l + 'px'; B.style.bottom = pos.b + 'px'; }
@@ -125,18 +128,20 @@
     B.addEventListener('pointermove', function(e){ if(!d) return; var dx = e.clientX - d.x, dy = e.clientY - d.y; if(!d.bouge && Math.hypot(dx, dy) < 8) return; d.bouge = true;
       var l = Math.max(4, Math.min(innerWidth - B.offsetWidth - 4, d.l + dx)), b = Math.max(4, Math.min(innerHeight - B.offsetHeight - 4, d.b - dy));
       B.style.left = l + 'px'; B.style.bottom = b + 'px'; if(P.classList.contains('on')) place(); });
-    B.addEventListener('pointerup', function(){ if(!d) return; if(d.bouge) sset('salon-pos', { l:parseFloat(B.style.left), b:parseFloat(B.style.bottom) }); else bascule(); d = null; });
+    B.addEventListener('pointerup', function(e){ if(!d) return; if(d.bouge) sset('salon-pos', { l:parseFloat(B.style.left), b:parseFloat(B.style.bottom) }); else if(e.target.closest && e.target.closest('.porte') || porteVisee(e)) sortir(); else bascule(); d = null; });
     B.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); bascule(); } });
     P.addEventListener('click', clicPanneau);
     P.addEventListener('submit', function(e){ e.preventDefault(); var i = P.querySelector('input'); envoie(i.value); });
     salut(); setInterval(salut, 8000);
     document.addEventListener('visibilitychange', function(){ if(!document.hidden) salut(); });
   }
+  function porteVisee(e){ var p = B.querySelector('.porte'); if(!p) return false; var r = p.getBoundingClientRect(); return e.clientX >= r.left - 4 && e.clientX <= r.right + 4 && e.clientY >= r.top - 4 && e.clientY <= r.bottom + 4; }
+  function sortir(){ location.href = '/?profil'; }   // l'accueil oublie le profil et montre « Qui es-tu ? »
   function bascule(){ if(P.classList.contains('on')){ P.classList.remove('on'); return; } S.vue = S.avec ? 'conv' : 'liste'; dessine(); P.classList.add('on'); place(); }
   function autres(){ var m = moi(); return S.enLigne.filter(function(p){ return p.nom !== m; }); }
-  function nonLus(nom){ var lu = sget('salon-lu:' + moi(), {}); return S.msgs.filter(function(m){ return m.nom === nom && m.a === moi() && m.id > (lu[nom] || 0); }).length; }
+  function nonLus(nom){ var lu = luGet(moi()) || {}; return S.msgs.filter(function(m){ return m.nom === nom && m.a === moi() && m.id > (lu[nom] || 0); }).length; }
   function badges(){
-    if(!B) return; var n = 0, m = moi(); S.msgs.forEach(function(x){ if(x.a === m && x.id > (sget('salon-lu:' + m, {})[x.nom] || 0)) n++; });
+    if(!B) return; var n = 0, m = moi(), lu = luGet(m) || {}; S.msgs.forEach(function(x){ if(x.a === m && x.id > (lu[x.nom] || 0)) n++; });
     var e = B.querySelector('.n'); e.textContent = n > 9 ? '9+' : n; e.classList.toggle('on', n > 0);
     var v = B.querySelector('.v'); if(v){ var k = autres().length; v.textContent = k ? '👥 ' + k : ''; v.style.display = k ? '' : 'none'; }
     if(!explo && (n > 0 || S.msgs.length)) B.classList.remove('cache');
@@ -151,7 +156,7 @@
         '<div class="emo">' + ['👋', '😀', '😂', '❤️', '👍', '🎉', '⭐', '🏠'].map(function(e){ return '<button type="button" data-e="' + e + '">' + e + '</button>'; }).join('') + '</div>' +
         '<form><input maxlength="300" placeholder="Ton message à ' + esc(a) + '…" autocomplete="off" enterkeyhint="send"><button type="submit">Envoyer</button></form>';
       var c = P.querySelector('.corps'); c.scrollTop = c.scrollHeight;
-      var lu = sget('salon-lu:' + m, {}); L.forEach(function(x){ if(x.nom === a) lu[a] = Math.max(lu[a] || 0, x.id); }); sset('salon-lu:' + m, lu); badges();
+      var lu = luGet(m) || {}; L.forEach(function(x){ if(x.nom === a) lu[a] = Math.max(lu[a] || 0, x.id); }); luSet(m, lu); badges();
       return;
     }
     var O = autres(), deja = {}; O.forEach(function(p){ deja[p.nom] = 1; });
@@ -197,6 +202,7 @@
       S.enLigne = j.en_ligne || [];
       var nv = (j.msgs || []).filter(function(x){ return x.id > plusGrand; });
       if(nv.length){ S.msgs = S.msgs.concat(nv).slice(-200);
+        if(luGet(m) === null){ var lu0 = {}, vieux = Date.now() / 1000 - 86400; S.msgs.forEach(function(x){ if(x.a === m && x.ts < vieux) lu0[x.nom] = Math.max(lu0[x.nom] || 0, x.id); }); luSet(m, lu0); }   // nouvel appareil : les messages de plus d'un jour ne comptent pas
         var max = S.msgs[S.msgs.length - 1].id;
         if(dernier >= 0) nv.filter(function(x){ return x.a === m && x.id > dernier; }).forEach(function(x){ if(!(P.classList.contains('on') && S.vue === 'conv' && S.avec === x.nom)) bulle(x); });
         sset(cle, Math.max(max, dernier));
