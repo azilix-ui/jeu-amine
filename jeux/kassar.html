@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#123a6b">
+<title>Kassar</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%B1%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* Kassar (كسّار, « le casseur ») : on vise, on lâche une rafale de balles, et on casse les carreaux de zellige.
+   Chaque carreau porte un nombre (combien de coups pour le casser) ; après chaque tir les carreaux descendent d'une rangée.
+   D'après le cahier des charges du papa (16/11, « Brick Out – Shoot the ball »), adapté au site : sans compilation ni moteur,
+   dessin 2D, mode tir d'abord (la raquette viendra), avatars « en vrai », images ComfyUI, bruitages ElevenLabs.
+   Code : kassar/regles.js (règles, physique, niveaux ; testés en Node : docs/kassar/), kassar/jeu.js (dessin, menus, sons). */
+:root{ --bleu:#1f5fbf; --bleuF:#0b3a82; --or:#f2b632; --nuit:#14213d; --ombre:0 4px 0 rgba(0,0,0,.18); }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body{ margin:0; height:100%; overflow:hidden; background:#0e1a2e; font-family:Nunito, system-ui, sans-serif; color:var(--nuit); touch-action:none; user-select:none; -webkit-user-select:none; }
+button{ font:inherit; cursor:pointer; border:0; }
+#cv{ position:fixed; inset:0; width:100%; height:100%; display:block; }
+.ecran{ position:fixed; inset:0; display:none; overflow:auto; touch-action:pan-y; z-index:2; }
+.ecran.on{ display:block; }
+#menu{ background:#123a6b url(kassar/img/menu.webp) center/cover; }
+#menu::before{ content:''; position:fixed; inset:0; background:linear-gradient(180deg, rgba(10,25,50,.15), rgba(10,25,50,.6)); pointer-events:none; }
+.boite{ position:relative; max-width:780px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top)) 16px 30px; }
+.haut{ display:flex; align-items:center; gap:10px; }
+.pill{ background:#fff; color:var(--nuit); border-radius:999px; padding:10px 16px; font-weight:800; box-shadow:var(--ombre); min-height:48px; display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+.pill img{ width:34px; height:34px; border-radius:50%; object-fit:cover; background:#e8eef7; }
+.titre{ display:block; width:min(330px, 62vw); margin:8px auto 0; filter:drop-shadow(0 6px 12px rgba(0,0,0,.5)); }
+.nom{ text-align:center; font-family:'Baloo 2', sans-serif; color:#fff; font-size:34px; margin:-2px 0 2px; letter-spacing:4px; text-shadow:0 3px 0 var(--bleuF), 0 6px 14px rgba(0,0,0,.45); }
+.sous{ text-align:center; color:#fff; font-size:18px; margin:0 0 14px; text-shadow:0 2px 6px rgba(0,0,0,.7); }
+.carte{ background:rgba(255,255,255,.95); border-radius:22px; padding:16px; box-shadow:0 6px 0 rgba(0,0,0,.15); margin-bottom:14px; }
+.carte h2{ font-family:'Baloo 2', sans-serif; margin:0 0 10px; font-size:24px; }
+.modes{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.mode{ background:#fff; border-radius:18px; padding:12px 14px; text-align:left; box-shadow:inset 0 0 0 3px #dbe6f5; min-height:90px; }
+.mode b{ display:block; font-family:'Baloo 2', sans-serif; font-size:22px; }
+.mode span{ font-size:14px; color:#4b5b75; }
+.mode.on{ box-shadow:inset 0 0 0 4px var(--bleu); background:#eef5ff; }
+.mode:disabled{ opacity:.55; cursor:default; }
+.choix{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.choix button{ background:#fff; border-radius:999px; padding:8px 16px; min-height:48px; font-weight:800; box-shadow:inset 0 0 0 3px #dbe6f5; }
+.choix button.on{ box-shadow:inset 0 0 0 4px var(--bleu); background:#eef5ff; }
+.monde{ font-family:'Baloo 2', sans-serif; font-size:20px; margin:8px 0 6px; }
+.niveaux{ display:grid; grid-template-columns:repeat(auto-fill, minmax(62px, 1fr)); gap:8px; }
+.niv{ height:66px; border-radius:16px; background:var(--bleu) url(kassar/img/z-bleu.webp) center/cover; color:#fff; font-family:'Baloo 2', sans-serif; font-size:26px; line-height:1; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 0 var(--bleuF); text-shadow:0 2px 3px #000, 0 0 8px #000; }
+.niv small{ font-size:12px; letter-spacing:1px; color:var(--or); min-height:13px; }
+.niv.ferme{ background:#c9d3e2; color:#8392a8; box-shadow:0 4px 0 #a8b5c9; text-shadow:none; }
+.niv.suivant{ background-image:url(kassar/img/z-jaune.webp); color:#fff; box-shadow:0 4px 0 #b57f00; animation:pulse 1.2s infinite; }
+.niv.bientot{ background:#e8eef7; color:#8392a8; box-shadow:0 4px 0 #c9d3e2; font-size:14px; text-shadow:none; }
+@keyframes pulse{ 50%{ transform:scale(1.06); } }
+.regles{ margin:0; padding-left:20px; line-height:1.5; font-size:17px; }
+.none{ color:#6b7a90; margin:0; }
+ol.rec{ margin:0; padding-left:22px; font-size:16px; line-height:1.6; }
+/* pendant la partie */
+#hud{ position:fixed; inset:0; pointer-events:none; display:none; z-index:1; }
+body.jeu #hud{ display:block; }
+#hud button{ pointer-events:auto; position:absolute; width:52px; height:52px; border-radius:50%; background:#fff; box-shadow:var(--ombre); font-size:22px; }
+#pause{ left:calc(10px + env(safe-area-inset-left)); top:calc(10px + env(safe-area-inset-top)); }
+#vite{ right:calc(10px + env(safe-area-inset-right)); bottom:calc(14px + env(safe-area-inset-bottom)); display:none; }
+#rappel{ right:calc(70px + env(safe-area-inset-right)); bottom:calc(14px + env(safe-area-inset-bottom)); display:none; }
+#aide{ position:absolute; left:50%; top:calc(130px + env(safe-area-inset-top)); transform:translateX(-50%); width:min(440px, 88vw); background:rgba(20,33,61,.86); color:#fff; padding:12px 18px; border-radius:16px; font-size:18px; text-align:center; transition:opacity .4s; pointer-events:auto; }
+#aide.off{ opacity:0; pointer-events:none; }
+#modal{ position:fixed; inset:0; background:rgba(10,20,40,.55); display:none; align-items:center; justify-content:center; padding:16px; z-index:5; }
+#modal.on{ display:flex; }
+#modal .carte{ max-width:440px; width:100%; text-align:center; }
+#modal h2{ font-size:32px; }
+.etoiles{ font-size:46px; letter-spacing:6px; }
+.etoiles .off{ filter:grayscale(1); opacity:.35; }
+.rang{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+.rang .go{ background:var(--bleu); color:#fff; }
+@media (max-width:520px){ .modes{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<section class="ecran on" id="menu"><div class="boite">
+  <div class="haut"><a class="pill" href="../" aria-label="Retour à l'accueil">←</a><button class="pill" id="who">Qui joue ?</button><span class="pill" id="total" style="margin-left:auto">⭐ 0</span></div>
+  <img class="titre" src="kassar/img/titre.webp" alt="كسّار">
+  <div class="nom">KASSAR</div>
+  <p class="sous">Vise, tire, et casse tous les carreaux de zellige !</p>
+  <div class="carte">
+    <div class="modes">
+      <button class="mode on" data-m="tir"><b>🎯 Le tir</b><span>Vise avec le doigt, lâche : toutes tes balles partent et rebondissent.</span></button>
+      <button class="mode" data-m="raquette" disabled><b>🏓 La raquette</b><span>Bientôt ! Renvoie la balle avec ta raquette.</span></button>
+    </div>
+    <div class="choix" id="diff"><button data-d="facile">🐢 Tranquille (les carreaux descendent moins vite)</button><button data-d="normal">🐆 Normal</button></div>
+    <div id="niveaux"></div>
+  </div>
+  <div class="carte"><h2>Comment jouer</h2><ul class="regles">
+    <li><b>Pose ton doigt</b> et glisse-le : les pointillés montrent où partent les balles. <b>Lâche</b> pour tirer.</li>
+    <li>Le <b>nombre</b> sur un carreau dit combien de coups il faut pour le casser. Compte avec lui !</li>
+    <li>Après chaque tir, tu as <b>une balle de plus</b>, et les carreaux <b>descendent</b>. S'ils arrivent en bas, c'est perdu.</li>
+    <li>La <b>boule d'or</b> donne une balle en plus, la <b>jarre</b> explose, la <b>pierre grise</b> ne se casse pas.</li>
+    <li>Moins de tirs = plus d'étoiles ⭐⭐⭐</li>
+  </ul></div>
+  <div class="carte"><h2>🏆 Records de la famille</h2><ol class="rec" id="records"><p class="none">…</p></ol></div>
+</div></section>
+
+<div id="hud">
+  <button id="pause" aria-label="Pause">⏸</button>
+  <button id="vite" aria-label="Plus vite">⏩</button>
+  <button id="rappel" aria-label="Ramener les balles">⤵</button>
+  <div id="aide" class="off"></div>
+</div>
+<div id="modal"></div>
+
+<script src="../famille.js"></script>
+<script type="module" src="kassar/jeu.js?v=1"></script>
+</body>
+</html>
