@@ -7,9 +7,10 @@ const IMG = new URL('./img/', import.meta.url).href, AV = new URL('../avatars/',
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 const img = n => { const i = new Image(); i.src = IMG + n + '.webp'; return i; };
 const ok = i => i && i.complete && i.naturalWidth > 0;
-const IM = { balle:img('balle'), bonus:img('bonus'), jarre:img('jarre'), mur:img('mur'), fonds:{}, tuiles:{} };
-['turquoise', 'bleu', 'vert', 'jaune', 'rouge', 'violet', 'mosaique'].forEach(c => IM.tuiles[c] = img('z-' + c));
-const COUL = { turquoise:'#2fc6c0', bleu:'#1f3fa8', vert:'#18865a', jaune:'#f0b52a', rouge:'#c9542f', violet:'#6b3fb0', mosaique:'#d9a35e' };
+const IM = { balle:img('balle'), bonus:img('bonus'), jarre:img('jarre'), amphore:img('amphore'), oasis:img('oasis'), mur:img('mur'), murs:{}, fonds:{}, tuiles:{} };
+['turquoise', 'bleu', 'vert', 'jaune', 'rouge', 'violet', 'mosaique', 'sable'].forEach(c => IM.tuiles[c] = img('z-' + c));
+const COUL = { turquoise:'#2fc6c0', bleu:'#1f3fa8', vert:'#18865a', jaune:'#f0b52a', rouge:'#c9542f', violet:'#6b3fb0', mosaique:'#d9a35e', sable:'#d8b46a' };
+const murDe = m => m && m.mur ? (IM.murs[m.mur] || (IM.murs[m.mur] = img(m.mur))) : IM.mur;   // la pierre de chaque monde
 const fond = m => IM.fonds[m] || (IM.fonds[m] = img('fond-' + m));
 
 /* ---------- les sons (ElevenLabs par son.php, sinon de petits bips) ---------- */
@@ -115,7 +116,7 @@ function modal(h){ $('modal').innerHTML = '<div class="carte">' + h + '</div>'; 
 
 /* les événements du moteur : sons, éclats */
 const tuileDe = b => P.monde.tuiles[Math.min(5, Math.max(0, Math.ceil(b.hp0 / 2) - 1))];
-function eclats(b, n = 10){ const x = b.c * CW + CW / 2, y = yDe(P.s, b) + CH / 2, c = b.k === 'jarre' ? '#c9542f' : COUL[tuileDe(b)] || '#fff';
+function eclats(b, n = 10){ const x = b.c * CW + CW / 2, y = yDe(P.s, b) + CH / 2, c = b.k === 'jarre' ? '#c9542f' : b.k === 'amphore' ? '#d9a37a' : COUL[tuileDe(b)] || '#fff';
   for(let i = 0; i < n; i++) parts.push({ x, y, vx:(Math.random() - .5) * 260, vy:-Math.random() * 220 - 40, t:0, c, w:4 + Math.random() * 6 }); }
 function evenements(){ const s = P.s;
   for(const e of s.ev.splice(0)){
@@ -123,6 +124,8 @@ function evenements(){ const s = P.s;
     else if(e.k === 'coup') SON.coup(e.b.hp);
     else if(e.k === 'casse'){ SON.casse(); eclats(e.b); }
     else if(e.k === 'boum'){ SON.boum(); eclats(e.b, 24); secousse = .35; }
+    else if(e.k === 'amphore'){ SON.boum(); eclats(e.b, 18); secousse = .2; }
+    else if(e.k === 'oasis'){ SON.bonus(); setTimeout(() => SON.bonus(), 150); parts.push({ x:e.b.c * CW + CW / 2, y:yDe(s, e.b) + CH / 2, vx:0, vy:-60, t:0, txt:'+3' }); }
     else if(e.k === 'bonus'){ SON.bonus(); parts.push({ x:e.b.c * CW + CW / 2, y:yDe(s, e.b) + CH / 2, vx:0, vy:-60, t:0, txt:'+1' }); }
     else if(e.k === 'descend') SON.descend();
     else if(e.k === 'raquette') SON.raquette();
@@ -190,8 +193,10 @@ function dessine(t){
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for(const b of s.cs){ if(!visible(s, b)) continue; const x = b.c * CW + 1.5, y = yDe(s, b) + 1.5, w = CW - 3, h = CH - 3;
     if(b.k === 'bonus'){ const r = 13 + Math.sin(t * 5 + b.c) * 1.5; if(ok(IM.bonus)) ctx.drawImage(IM.bonus, x + w / 2 - r, y + h / 2 - r, r * 2, r * 2); else { ctx.fillStyle = '#ffd34d'; ctx.beginPath(); ctx.arc(x + w / 2, y + h / 2, r * .8, 0, 7); ctx.fill(); } continue; }
+    if(b.k === 'oasis'){ const r = 15 + Math.sin(t * 4 + b.c) * 1.5; if(ok(IM.oasis)) ctx.drawImage(IM.oasis, x + w / 2 - r, y + h / 2 - r - 2, r * 2, r * 2 * IM.oasis.naturalHeight / IM.oasis.naturalWidth); else { ctx.fillStyle = '#3fbf6f'; ctx.beginPath(); ctx.arc(x + w / 2, y + h / 2, r * .8, 0, 7); ctx.fill(); } continue; }
+    if(b.k === 'amphore'){ if(ok(IM.amphore)){ const hh = h + 8, ww = hh * IM.amphore.naturalWidth / IM.amphore.naturalHeight; ctx.drawImage(IM.amphore, x + w / 2 - ww / 2, y - 5, ww, hh); } else { ctx.fillStyle = '#d9a37a'; ctx.fillRect(x, y, w, h); } continue; }
     if(b.k === 'jarre'){ if(ok(IM.jarre)){ const hh = h + 6, ww = hh * IM.jarre.naturalWidth / IM.jarre.naturalHeight; ctx.drawImage(IM.jarre, x + w / 2 - ww / 2, y - 4, ww, hh); } else { ctx.fillStyle = '#c9542f'; ctx.fillRect(x, y, w, h); } continue; }
-    const im = b.k === 'mur' ? IM.mur : IM.tuiles[tuileDe(b)];
+    const im = b.k === 'mur' ? murDe(P.monde) : IM.tuiles[tuileDe(b)];
     ctx.save(); ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, 5) : ctx.rect(x, y, w, h); ctx.clip();
     if(ok(im)) ctx.drawImage(im, x, y, w, h); else { ctx.fillStyle = b.k === 'mur' ? '#777' : COUL[tuileDe(b)]; ctx.fillRect(x, y, w, h); }
     if(b.k === 'n' && b.hp < b.hp0){ ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1.2; ctx.beginPath(); const n = Math.min(4, b.hp0 - b.hp);   // les fissures

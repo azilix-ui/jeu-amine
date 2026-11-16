@@ -3,7 +3,7 @@
    après chaque tir, les carreaux descendent d'une rangée ; s'ils arrivent en bas, c'est perdu. On gagne quand il ne reste
    plus de carreau à casser. Monde logique 360 × 640, pas fixe de 1/120 s (même partie sur toutes les tablettes).
    Carreaux : chiffres 1-9 puis lettres a-z (10 à 35) = points de vie ; '#' pierre (incassable) ; 'J' jarre (explose : −3 aux 8 voisins) ;
-   '+' boule d'or (une balle de plus au prochain tir) ; '.' vide. Après chaque tir, on gagne aussi une balle. */
+   'A' amphore (Carthage : se renverse, −2 à toute sa rangée) ; '+' boule d'or (une balle de plus au prochain tir) ; 'O' oasis (Sahara : 3 balles de plus) ; '.' vide. Après chaque tir, on gagne aussi une balle. */
 export const W = 360, H = 640, COLS = 7, CW = W / COLS, CH = 34, TOP = 64, LIGNE = 588, R = 6, V = 720, DT = 1 / 120, CADENCE = .065;
 export const RANGS = Math.floor((LIGNE - TOP) / CH) - 1;   // rang où un carreau touche la ligne de tir : perdu
 const BAS0 = 5;                                             // au départ, la rangée du bas du niveau est au rang 5
@@ -15,7 +15,7 @@ export function nouvellePartie(niv, { facile = false } = {}){
   const n = niv.rangs.length, off = BAS0 - (n - 1), cs = [];
   niv.rangs.forEach((ligne, r) => [...ligne].forEach((ch, c) => {
     if(ch === '.' || c >= COLS) return;
-    const k = ch === '#' ? 'mur' : ch === 'J' ? 'jarre' : ch === '+' ? 'bonus' : 'n', hp = k === 'n' ? hpDe(ch) : k === 'jarre' ? 1 : 0;
+    const k = ch === '#' ? 'mur' : ch === 'J' ? 'jarre' : ch === 'A' ? 'amphore' : ch === '+' ? 'bonus' : ch === 'O' ? 'oasis' : 'n', hp = k === 'n' ? hpDe(ch) : (k === 'jarre' || k === 'amphore') ? 1 : 0;
     cs.push({ id:cs.length, c, r, k, hp, hp0:hp });
   }));
   return { niv, facile, cs, off, tour:0, balles:(niv.balles || 3) + (facile ? 1 : 0), gagnees:0, lx:W / 2, phase:'vise',
@@ -23,7 +23,8 @@ export function nouvellePartie(niv, { facile = false } = {}){
 }
 export const yDe = (s, b) => TOP + (b.r + s.off) * CH;
 export const visible = (s, b) => b.r + s.off >= 0;
-export const reste = s => s.cs.filter(b => b.k === 'n' || b.k === 'jarre').length;
+export const cassable = b => b.k === 'n' || b.k === 'jarre' || b.k === 'amphore';
+export const reste = s => s.cs.filter(cassable).length;
 
 /* lancer la rafale vers l'angle a (radians, 0 = droite, π/2 = haut) */
 export function tire(s, a){
@@ -34,6 +35,7 @@ export function tire(s, a){
 }
 function touche(s, b, ball){
   if(b.k === 'bonus'){ s.cs.splice(s.cs.indexOf(b), 1); s.gagnees++; s.ev.push({ k:'bonus', b }); return false; }   // on la ramasse, la balle passe
+  if(b.k === 'oasis'){ s.cs.splice(s.cs.indexOf(b), 1); s.gagnees += 3; s.ev.push({ k:'oasis', b }); return false; }   // l'oasis : 3 balles de plus
   if(b.k === 'mur'){ s.ev.push({ k:'mur', b }); return true; }
   b.hp--; s.score++; s.ev.push({ k:'coup', b });
   if(b.hp <= 0) casse(s, b);
@@ -43,7 +45,9 @@ function casse(s, b){
   const i = s.cs.indexOf(b); if(i < 0) return;
   s.cs.splice(i, 1); s.casses++; s.score += 10; s.ev.push({ k:'casse', b });
   if(b.k === 'jarre'){ s.ev.push({ k:'boum', b });
-    for(const o of s.cs.slice()) if(o !== b && Math.abs(o.c - b.c) <= 1 && Math.abs(o.r - b.r) <= 1 && (o.k === 'n' || o.k === 'jarre')){ o.hp -= 3; s.score += 3; if(o.hp <= 0) casse(s, o); else s.ev.push({ k:'coup', b:o }); } }
+    for(const o of s.cs.slice()) if(o !== b && Math.abs(o.c - b.c) <= 1 && Math.abs(o.r - b.r) <= 1 && cassable(o)){ o.hp -= 3; s.score += 3; if(o.hp <= 0) casse(s, o); else s.ev.push({ k:'coup', b:o }); } }
+  if(b.k === 'amphore'){ s.ev.push({ k:'amphore', b });   // l'amphore se renverse : −2 à toute sa rangée
+    for(const o of s.cs.slice()) if(o !== b && o.r === b.r && cassable(o) && s.cs.includes(o)){ o.hp -= 2; s.score += 2; if(o.hp <= 0) casse(s, o); else s.ev.push({ k:'coup', b:o }); } }
 }
 /* une balle contre les carreaux : le plus proche touché, rebond (commun aux deux modes) */
 function heurte(s, ball){
@@ -87,8 +91,8 @@ function finTour(s){
   s.lx = s.premier ?? s.lx; s.balles += s.gagnees + 1; s.gagnees = 0; s.bs = [];   // une balle de plus à chaque tir (et les boules d'or)
   if(!reste(s)){ s.phase = 'gagne'; s.ev.push({ k:'gagne' }); return; }
   if(!s.facile || s.tour % 2 === 0){ s.off++; s.ev.push({ k:'descend' }); }
-  s.cs = s.cs.filter(b => !(b.k !== 'n' && b.k !== 'jarre' && b.r + s.off > RANGS));   // pierres et boules d'or tombées en bas : elles disparaissent
-  if(s.cs.some(b => (b.k === 'n' || b.k === 'jarre') && b.r + s.off >= RANGS)){ s.phase = 'perdu'; s.ev.push({ k:'perdu' }); return; }
+  s.cs = s.cs.filter(b => !(!cassable(b) && b.r + s.off > RANGS));   // pierres et boules d'or tombées en bas : elles disparaissent
+  if(s.cs.some(b => cassable(b) && b.r + s.off >= RANGS)){ s.phase = 'perdu'; s.ev.push({ k:'perdu' }); return; }
   s.phase = 'vise';
 }
 export const etoiles = s => s.phase !== 'gagne' ? 0 : s.tour <= s.niv.par ? 3 : s.tour <= s.niv.par + 3 ? 2 : 1;
@@ -102,7 +106,7 @@ export function guide(s, a, long = 330){
     x += vx * 3; y += vy * 3; d += 3;
     if(x < R || x > W - R){ vx = -vx; rebonds++; x = Math.max(R, Math.min(W - R, x)); }
     if(y < TOP + R){ vy = -vy; rebonds++; }
-    const b = s.cs.find(b => b.k !== 'bonus' && visible(s, b) && x > b.c * CW - R + 1.5 && x < b.c * CW + CW - 1.5 + R && y > yDe(s, b) - R + 1.5 && y < yDe(s, b) + CH - 1.5 + R);
+    const b = s.cs.find(b => b.k !== 'bonus' && b.k !== 'oasis' && visible(s, b) && x > b.c * CW - R + 1.5 && x < b.c * CW + CW - 1.5 + R && y > yDe(s, b) - R + 1.5 && y < yDe(s, b) + CH - 1.5 + R);
     if(b){ pts.push([x, y]); return { pts, fin:[x, y] }; }
     if(d % 9 < 3) pts.push([x, y]);
   }
@@ -126,8 +130,8 @@ export function verifie(niv){
 /* les mondes et les niveaux (le monde 1 d'abord ; 2 et 3 viendront) */
 export const MONDES = [
   { id:'medina', nom:'La médina', fond:'fond-medina', tuiles:['turquoise', 'bleu', 'vert', 'jaune', 'rouge', 'violet'] },
-  { id:'carthage', nom:'Carthage', fond:'fond-carthage', tuiles:['mosaique', 'jaune', 'rouge', 'bleu', 'turquoise', 'violet'] },
-  { id:'sahara', nom:'Le Sahara', fond:'fond-sahara', tuiles:['jaune', 'rouge', 'violet', 'turquoise', 'vert', 'bleu'] },
+  { id:'carthage', nom:'Carthage', fond:'fond-carthage', mur:'mur-carthage', tuiles:['mosaique', 'jaune', 'rouge', 'bleu', 'turquoise', 'violet'] },
+  { id:'sahara', nom:'Le Sahara', fond:'fond-sahara', mur:'mur-sahara', tuiles:['sable', 'jaune', 'rouge', 'violet', 'turquoise', 'vert'] },
 ];
 export const NIVEAUX = [
   { m:0, nom:'Premier tir', balles:3, par:3, aide:'Glisse ton doigt pour viser, lâche pour tirer ! Le nombre sur un carreau dit combien de coups il faut pour le casser.',
@@ -150,6 +154,28 @@ export const NIVEAUX = [
     rangs:['6666666', '6J6J6J6', '6666666', '#.#+#.#', '4444444', '2+222+2'] },
   { m:0, nom:'Bab el Bhar', balles:6, par:11, aide:'La grande porte de la médina ! Casse tout pour passer.',
     rangs:['9999999', '7#777#7', '7#7J7#7', '6666666', '5+5J5+5', '#44444#', '3.3+3.3', '2222222'] },
+  // Monde 2 : Carthage (16/11) — les amphores
+  { m:1, nom:'Le port de Carthage', balles:6, par:9, aide:'Bienvenue à Carthage ! L’amphore se renverse et abîme toute sa rangée.', rangs:['5555555', '4A444A4', '3333333', '2+2+2+2'] },
+  { m:1, nom:'Les amphores', balles:6, par:9, aide:'Vise les amphores : chacune enlève 2 à toute la rangée !', rangs:['6666666', 'A6A6A6A', '5555555', '.4+4+4.'] },
+  { m:1, nom:'Les thermes d’Antonin', balles:7, par:10, aide:'Les colonnes de marbre ne se cassent pas : fais rebondir tes balles dessus.', rangs:['7777777', '7#A#A#7', '6666666', '5+5J5+5', '4444444'] },
+  { m:1, nom:'La colline de Byrsa', balles:7, par:10, aide:'Commence par le bas de la colline !', rangs:['...9...', '..888..', '.77A77.', '6666666', 'A55+55A'] },
+  { m:1, nom:'Les éléphants d’Hannibal', balles:8, par:11, aide:'Hannibal a traversé les Alpes avec ses éléphants. Toi, traverse ce mur !', rangs:['8888888', '8J888J8', '7777777', '#A#+#A#', '6666666', '5.5.5.5'] },
+  { m:1, nom:'Les ports puniques', balles:8, par:11, aide:'Le port rond de Carthage : entre par le bas pour casser les amphores du milieu.', rangs:['.99999.', '9#...#9', '9.AAA.9', '9#...#9', '.88+88.'] },
+  { m:1, nom:'La mosaïque', balles:8, par:12, aide:'10, c’est le « a » : compte bien les coups !', rangs:['a9a9a9a', '9a9a9a9', 'A8A8A8A', '7777777', '6+6+6+6'] },
+  { m:1, nom:'Le cirque', balles:10, par:12, aide:'Ouvre la porte du cirque pour atteindre le trésor.', rangs:['9999999', '9#####9', '9#7J7#9', '9#A+A#9', '8.....8', '7777777'] },
+  { m:1, nom:'L’aqueduc', balles:10, par:13, aide:'L’aqueduc de Zaghouan amenait l’eau à Carthage. Passe entre ses arches !', rangs:['aaaaaaa', '#.#.#.#', '9A9A9A9', '8888888', '#+#J#+#', '7777777'] },
+  { m:1, nom:'Didon, la reine', balles:10, par:14, aide:'La reine Didon a fondé Carthage. Le dernier niveau du monde !', rangs:['cccbccc', 'b#bAb#b', 'aaaaaaa', '9J9A9J9', '8888888', '#7+7+7#', '6666666'] },
+  // Monde 3 : le Sahara (16/11) — les oasis
+  { m:2, nom:'Les dunes', balles:7, par:10, aide:'Bienvenue au Sahara ! Touche l’oasis : trois balles de plus !', rangs:['7.7.7.7', '.6.6.6.', '5555555', '4O444O4'] },
+  { m:2, nom:'L’oasis de Tozeur', balles:7, par:10, aide:'Les palmiers de Tozeur : deux oasis à prendre.', rangs:['8888888', '7777777', '6O6J6O6', '5555555'] },
+  { m:2, nom:'Le chott el Jérid', balles:8, par:11, aide:'Le grand lac de sel : les rochers ne se cassent pas.', rangs:['9999999', '8#8#8#8', '7777777', '6+6O6+6', '5555555'] },
+  { m:2, nom:'Matmata', balles:9, par:12, aide:'Les maisons troglodytes de Matmata sont creusées dans la roche.', rangs:['9999999', '9#.#.#9', '8.8O8.8', '8#8J8#8', '7777777'] },
+  { m:2, nom:'La caravane', balles:8, par:12, aide:'Une caravane de jarres : fais-les exploser en chaîne !', rangs:['.a.a.a.', '9999999', 'JaJaJaJ', '8888888', '7O7+7O7', '6666666'] },
+  { m:2, nom:'Le ksar', balles:10, par:13, aide:'Le grenier fortifié : entre par les portes du haut et du bas.', rangs:['aaaaaaa', 'a##.##a', 'a#9O9#a', 'a#9J9#a', 'a#...#a', '9.....9', '8888888'] },
+  { m:2, nom:'Le mirage', balles:9, par:13, aide:'Est-ce une vraie oasis, ou un mirage ? Vise pour le savoir !', rangs:['b.b.b.b', '.a.a.a.', 'bObAbOb', '.a.J.a.', '9999999'] },
+  { m:2, nom:'La tempête de sable', balles:9, par:14, aide:'La tempête souffle : casse vite avant que les carreaux descendent !', rangs:['ccccccc', 'bJbbbJb', 'aaaaaaa', '9O9+9O9', '8888888', '7777777'] },
+  { m:2, nom:'Ksar Ghilane', balles:11, par:15, aide:'La dernière oasis avant le grand erg.', rangs:['ccccccc', 'b#b#b#b', 'aaaaaaa', '9J9O9J9', '8888888', '#7#7#7#', '6666666'] },
+  { m:2, nom:'Le grand erg', balles:11, par:16, aide:'La mer de dunes : le tout dernier niveau de Kassar !', rangs:['ddddddd', 'cccOccc', 'b#bJb#b', 'aaaaaaa', '9O9+9O9', '8888888', '7777777'] },
 ];
 
 /* ---------- le mode raquette (16/11) ----------
@@ -182,8 +208,8 @@ export function pasR(s){
       if(ball.x > W - R){ ball.x = W - R; ball.vx = -Math.abs(ball.vx); s.ev.push({ k:'bord' }); }
       if(ball.y < TOP + R){ ball.y = TOP + R; ball.vy = Math.abs(ball.vy); s.ev.push({ k:'bord' }); }
       const n0 = s.gagnees; heurte(s, ball);
-      if(s.gagnees > n0){ s.gagnees = n0; const sp = Math.hypot(ball.vx, ball.vy), a = Math.PI / 2 + (Math.random() - .5) * 1.2;   // boule d'or : une balle de plus
-        s.bs.push({ x:ball.x, y:ball.y, vx:Math.cos(a) * sp, vy:-Math.sin(a) * sp, ok:true }); }
+      if(s.gagnees > n0){ const nb = Math.min(3, s.gagnees - n0); s.gagnees = n0; const sp = Math.hypot(ball.vx, ball.vy);   // boule d'or : une balle de plus ; oasis : trois
+        for(let i = 0; i < nb; i++){ const a = Math.PI / 2 + (Math.random() - .5) * 1.2; s.bs.push({ x:ball.x, y:ball.y, vx:Math.cos(a) * sp, vy:-Math.sin(a) * sp, ok:true }); } }
       // la raquette : l'angle de renvoi dépend de l'endroit touché (bord = plus penché)
       if(ball.vy > 0 && ball.y + R >= RQ.y && ball.y - R <= RQ.y + RQ.h && ball.x >= s.px - s.pl / 2 - R && ball.x <= s.px + s.pl / 2 + R){
         const u = Math.max(-1, Math.min(1, (ball.x - s.px) / (s.pl / 2))), a = Math.PI / 2 - u * 1.05;

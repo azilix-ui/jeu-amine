@@ -21,3 +21,12 @@ for m in ['medina', 'carthage', 'sahara']:
     if p: im = Image.open(p).convert('RGB'); im.thumbnail((720, 1260), Image.LANCZOS); save(im, 'fond-' + m, 78)
 p = f('menu')
 if p: im = Image.open(p).convert('RGB'); im.thumbnail((1344, 768), Image.LANCZOS); save(im, 'menu', 78)
+# 16/11 (soir) : Carthage et le Sahara — amphore et oasis détourées, pierre de chaque monde, carreau de sable
+def g(n):
+    l = sorted(glob.glob(os.path.join(SRC, f'{n}_0000*_.png'))); return l[-1] if l else None
+for n, t in [('amphore', 110), ('oasis', 90)]:
+    p = g(n)
+    if p: im = cut(p); im = im.crop(im.getchannel('A').point(lambda v: 255 if v > 60 else 0).getbbox()); im.thumbnail((t, t), Image.LANCZOS); save(im, n, 88)
+for n in ['mur_carthage', 'mur_sahara', 'z_sable']:
+    p = g(n)
+    if p: im = Image.open(p).convert('RGB'); w, h = im.size; cw = int(w * .8); ch = int(cw * 2 / 3); save(im.crop(((w - cw) // 2, (h - ch) // 2, (w + cw) // 2, (h + ch) // 2)).resize((180, 120), Image.LANCZOS), n.replace('_', '-'))
