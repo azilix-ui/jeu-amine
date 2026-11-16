@@ -31,7 +31,10 @@ const SPR = {
   rat:{ f:'stage2/rat-anim.webp', fixe:'stage2/en/rat.webp', h:26, dy:1 }, serpent:{ f:'stage2/serpent-anim.webp', fixe:'stage2/en/serpent.webp', h:40, dy:2 },
   voleur:{ f:'stage2/voleur-anim.webp', fixe:'stage2/en/voleur.webp', h:62 }, controleur:{ f:'stage2/controleur-anim.webp', fixe:'stage2/en/controleur.webp', h:66 }
 };
-function sprite(nom){ const s = SPR[nom]; if(!s) return null; if(!s.im){ s.im = img('sp_' + nom, s.f + '?v=2'); if(s.fixe) s.fx = img('spf_' + nom, s.fixe + '?v=2'); } return s; }
+function sprite(nom){ const s = SPR[nom]; if(!s) return null; if(!s.im){ s.im = img('sp_' + nom, s.f + '?v=2'); if(s.fixe) s.fx = img('spf_' + nom, s.fixe + '?v=2'); if(PRIS[nom]) s.pr = img('spp_' + nom, 'stage2/pris/' + PRIS[nom] + '.webp?v=1'); } return s; }
+// 16/11 : les ennemis qu'on attrape par derrière (ou étourdis), qu'on porte au-dessus de la tête et qu'on lance ; leur image « capturé, tout triste »
+const PRIS = { garde:'garde', chien:'chien', marchand:'marchand', voleur:'voleur', controleur:'controleur', rat:'rat', serpent:'serpent', chat:'chat', scorpion:'scorpion', crabe:'crabe', chevre:'chevre' };
+const attrapable = e => e.vivant && e.E.type !== 'boss' && e.E.type !== 'vol' && !(e.E.type === 'serpent' && e.etat === 'cache') && !['fuite', 'porte', 'lance'].includes(e.etat);
 const MI1 = MONDES[0].img;
 function imagesMonde(n){ MI1.forEach(k => img('m1' + k, `stage2/m1/${k}.webp?v=2`)); const M = MONDES.find(m => m.n === n); if(n !== 1) (M.img || []).forEach(k => img('m' + n + k, `stage2/m${n}/${k}.webp?v=2`)); }
 const W_ = k => { const a = IM['m' + G.n + k]; return ok(a) ? a : IM['m1' + k]; };
@@ -46,8 +49,23 @@ const SND = { saut:['saut', () => bip(420, .14, 'square', .07, 300)], pose:['att
   ressort:['ressort', () => bip(300, .3, 'sine', .14, 500)], victoire:['victoire', () => bip(784, .6, 'sine')], bonus:['bonus', () => bip(880, .3)], porte:['portail', () => bip(330, .4, 'sine', .12, 200)], coup:['ecrase', () => bip(180, .12, 'square', .12)],
   plouf:['plouf', () => bip(200, .3, 'sine', .14, -120)],
   prend:[null, () => bip(600, .07, 'sine', .1, 200)], lance:[null, () => bip(500, .12, 'triangle', .1, -250)], levier:[null, () => { bip(200, .05, 'square'); bip(260, .08, 'square'); }], miaou:[null, () => bip(700, .35, 'sine', .1, -300)], ouaf:[null, () => { bip(200, .08, 'square', .14); }],
-  vroum:[null, () => bip(90, .5, 'sawtooth', .08, 60)], passage:[null, () => bip(260, .4, 'sine', .12, 400)], vole:[null, () => { bip(500, .1, 'sine', .08, -200); }] };
-function son(k){ if(!S2J.son) return; audio(); const s = SND[k]; if(!s) return; if(s[0] && window.Sons && Sons.jouer(AC, master, s[0], .8)) return; s[1](); }
+  vroum:[null, () => bip(90, .5, 'sawtooth', .08, 60)], attrape:[null, () => bip(500, .3, 'sine', .1, -300)], jete:[null, () => bip(600, .25, 'triangle', .1, -400)], strike:[null, () => { bip(150, .2, 'square', .12, -80); bip(900, .15); }], fete:[null, () => bip(784, .6, 'sine')], passage:[null, () => bip(260, .4, 'sine', .12, 400)], vole:[null, () => { bip(500, .1, 'sine', .08, -200); }] };
+/* 16/11 : les sons ElevenLabs du Stage 2 (stage2/son.php : ambiances des mondes 11 à 20, attraper, lancer un ennemi, strike, fête)
+   et l'ambiance de chaque monde en boucle (sinon celle du Jasmin la plus proche, sons/jasmin-amb-<n>.mp3) */
+const S2SON = 'stage2/son.php', BUF2 = {}; let liste2 = null;
+async function listeSons(){ if(liste2) return liste2; try{ liste2 = await fetch(S2SON + '?liste=1').then(r => r.json()); }catch(e){ liste2 = []; } return liste2; }
+async function tampon(url){ const a = audio(); if(!a) return null; try{ const b = await fetch(url).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); }); return await new Promise((ok, ko) => a.decodeAudioData(b, ok, ko)); }catch(e){ return null; } }
+async function chargeSon2(k){ if(BUF2[k] !== undefined) return BUF2[k]; BUF2[k] = null; const l = (await listeSons()).filter(n => n.slice(0, -1) === k); if(!l.length) return null; BUF2[k] = await tampon(S2SON + '?n=' + l[Math.floor(Math.random() * l.length)]); return BUF2[k]; }
+['attrape', 'jete', 'strike', 'fete'].forEach(k => setTimeout(() => chargeSon2(k), 1500));
+function joue2(k, v = .9){ const b = BUF2[k]; if(!b || !AC) return false; const s = AC.createBufferSource(), g = AC.createGain(); g.gain.value = v; s.buffer = b; s.connect(g); g.connect(master); s.start(); return true; }
+let amb = null;
+async function ambiance(M){ ambStop(); if(!M) return; const a = audio(); if(!a) return; const jeton = {}; amb = { jeton };
+  let b = M.amb ? await chargeSon2(M.amb) : null; if(!b && M.ambJ) b = await tampon(`sons/jasmin-amb-${M.ambJ}.mp3`);
+  if(!b || !amb || amb.jeton !== jeton) return; const src = a.createBufferSource(), g = a.createGain(); g.gain.value = 0; src.buffer = b; src.loop = true; src.connect(g); g.connect(a.destination); src.start();
+  g.gain.linearRampToValueAtTime(S2J.son ? .32 : 0, a.currentTime + 1.5); amb.src = src; amb.g = g; }
+function ambStop(){ if(amb && amb.src){ try{ amb.src.stop(); }catch(e){} } amb = null; }
+function ambVolume(v){ if(amb && amb.g && AC){ amb.g.gain.cancelScheduledValues(AC.currentTime); amb.g.gain.setTargetAtTime(v, AC.currentTime, .2); } }
+function son(k){ if(!S2J.son) return; audio(); if({ attrape:1, jete:1, strike:1, fete:1 }[k] && joue2(k)) return; const s = SND[k]; if(!s) return; if(s[0] && window.Sons && Sons.jouer(AC, master, s[0], .8)) return; s[1](); }
 function dire(t){ if(!S2J.voix) return; try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t.replace(/[◀▶▲▼←→↑↓✋🎯★🔒🔑]/g, ' ').replace(/\+/g, ' plus ')); u.lang = 'fr-FR'; u.rate = .95; speechSynthesis.speak(u); }catch(e){} }
 
 /* ---------- commandes (15/11, liste du papa) ----------
@@ -277,7 +295,8 @@ function finPas(h, dt, I){
 function montreIndice(t, voix){ const g = G; if(g.indice === t && g.indiceT > 0){ g.indiceT = 2; return; } g.indice = t; g.indiceT = 2.5; if(voix && g.dernierDit !== t){ g.dernierDit = t; dire(t); } }
 function porteFermee(cx, cy){ const g = G; montreIndice('🔒 Cette porte est fermée à clé. Il faut trouver la clé 🔑 et revenir la toucher.', !g.porteDite); g.porteDite = true; }
 function plouf(h){ const g = G; son('plouf'); eclat(h.x, h.y - 10, '#9fd6ff', 16); texte('Plouf !', h.x, h.y - 60, '#9fd6ff');
-  if(h.porte){ const o = h.porte; o.etat = 'pose'; o.x = o.x0; o.y = o.y0; h.porte = null; }
+  if(h.porte && h.porte.e){ const e = h.porte.e; h.porte = null; e.etat = 'etourdi'; e.tm = .8; e.x = h.sauf.x + 40; e.y = h.sauf.y; }
+  else if(h.porte){ const o = h.porte; o.etat = 'pose'; o.x = o.x0; o.y = o.y0; h.porte = null; }
   h.x = h.sauf.x; h.y = h.sauf.y; h.vx = h.vy = 0; h.monte = false; h.inv = 0; blesse(h, true); if(!h.mort){ h.vx = 0; h.vy = 0; h.x = h.sauf.x; h.y = h.sauf.y; } }
 
 /* ---------- scooter et tapis volant ---------- */
@@ -330,6 +349,9 @@ function proche(h){
   let best = null, bd = 52;
   for(const o of G.objs){ if(o.etat !== 'pose') continue; const d = Math.abs(o.x - h.x); if(d < bd && Math.abs(o.y - h.y) < 36){ bd = d; best = { o }; } }
   for(const l of G.leviers){ const d = Math.hypot(l.x - h.x, l.y - (h.y - 36)); if(d < 56 && d < bd + 10){ bd = d; best = { l }; } }
+  for(const e of G.ens){ if(!attrapable(e) || Math.abs(e.y - h.y) > 30) continue; const dx = h.x - e.x, d = Math.abs(dx);
+    const deDos = Math.sign(dx) === -e.face || e.etat === 'dort' || e.etat === 'etourdi' || e.etat === 'cache' || (e.E.type === 'serpent');
+    if(d < e.w / 2 + 34 && deDos && d < bd + 6){ bd = d; best = { en:e }; } }
   return best;
 }
 function indiceAgir(h){
@@ -337,21 +359,25 @@ function indiceAgir(h){
   if(h.porte) return h.porte.O.cle ? '🔑 Va toucher la porte fermée avec la clé.' : `Espace : lancer ${leLa(h.porte.O.nom)} · ↓ + Espace : ${h.porte.O.nom === 'clé' ? 'la' : 'le'} poser`.replace('le poser', ['caisse', 'jarre', 'pierre'].includes(h.porte.O.nom) ? 'la poser' : 'le poser');
   const p = proche(h); if(!p) return '';
   if(p.o) return `↓ + Espace : ramasser ${leLa(p.o.O.nom)}`;
+  if(p.en) return `↓ + Espace : attraper ${leLa(p.en.E.nom)} !`;
   if(p.l) return p.l.on ? '' : 'Espace : tirer le levier';
   return '';
 }
-const leLa = n => (['caisse', 'jarre', 'pierre', 'clé'].includes(n) ? 'la ' : 'le ') + n;
+const leLa = n => (['caisse', 'jarre', 'pierre', 'clé', 'chèvre'].includes(n) ? 'la ' : 'le ') + n;
 function agirLancer(h, I){
   const g = G;
   if(agir){ agir = false;   // ↓ + Espace : ramasser ou poser (et tirer un levier)
-    if(h.porte){ const o = h.porte, nx = h.x + h.face * 26;
+    if(h.porte && h.porte.e){ lacheEnnemi(h, false); }
+    else if(h.porte){ const o = h.porte, nx = h.x + h.face * 26;
       if(!boite(nx - 14, h.y - 30, nx + 14, h.y - 2, o)){ o.x = nx; o.y = h.y - 2; } else { o.x = h.x; o.y = h.y - 2; }
       o.vx = 0; o.vy = 0; o.etat = 'pose'; h.porte = null; son('pose'); }
     else { const p = proche(h);
       if(p && p.o){ if(h.monte && !p.o.O.petit){ texte('Descends de l’échelle d’abord', h.x, h.y - 90); } else { p.o.etat = 'porte'; h.porte = p.o; son('prend'); } }
+      else if(p && p.en && !h.monte){ attrape(h, p.en); }
       else if(p && p.l && !p.l.on){ levier(p.l); } } }
   if(lancer){ lancer = false;   // Espace : lancer (ou tirer le levier tout près)
-    if(h.porte && !h.monte){ const o = h.porte, L = o.O.lance; o.etat = 'vol'; o.vx = h.face * L[0] + h.vx * .3; o.vy = L[1]; o.x = h.x + h.face * 12; o.y = h.y - (h.bas ? 30 : 74); o.lanceur = 'heros'; h.porte = null; h.lance = .3; son('lance'); }
+    if(h.porte && h.porte.e && !h.monte){ lacheEnnemi(h, true); }
+    else if(h.porte && !h.monte){ const o = h.porte, L = o.O.lance; o.etat = 'vol'; o.vx = h.face * L[0] + h.vx * .3; o.vy = L[1]; o.x = h.x + h.face * 12; o.y = h.y - (h.bas ? 30 : 74); o.lanceur = 'heros'; h.porte = null; h.lance = .3; son('lance'); }
     else if(!h.porte){ const p = proche(h);
       if(p && p.l && !p.l.on) levier(p.l);
       else if(p && p.o) montreIndice('Pour ramasser : accroupis-toi (↓) et appuie sur Espace', true);
@@ -360,6 +386,30 @@ function agirLancer(h, I){
   if(h.porte && h.porte.O.cle){ for(let y = Math.floor((h.y - HH) / T); y <= Math.floor((h.y - 1) / T); y++) for(const x of [Math.floor((h.x + HW + 4) / T), Math.floor((h.x - HW - 4) / T)])
     if(tile(x, y) === 'D' && !g.ouvert.has(x + ',' + y)){ ouvrePorte(x, y); g.objs = g.objs.filter(o => o !== h.porte); h.porte = null; g.clesUsees = true; return; } }
 }
+const CRI_PRIS = { garde:'Lâche-moi ! 😢', chien:'Ouin… 🐶', marchand:'Mes oranges… 😢', voleur:'Pardon, pardon ! 😭', controleur:'Mon billet… 😢', rat:'Couic… 😢', serpent:'Sss… 😢', chat:'Miaou… 😿', scorpion:'Pas juste ! 😢', crabe:'Clac… 😢', chevre:'Bêêê… 😢' };
+function attrape(h, e){ const g = G; e.etat = 'porte'; e.vx = e.vy = 0; e.prisT = 0; e.face = h.face; e.lanceur = null;
+  h.porte = { e, O:{ nom:e.E.nom, lance:e.w > 30 || e.h > 50 ? [340, -230] : [400, -250], lourd:false, petit:false, casseMur:e.h > 50 }, etat:'porte' };
+  son('attrape'); texte(CRI_PRIS[e.E.sp] || 'Oh non… 😢', e.x, e.y - e.h - 30, '#bfe6ff', 20); h.inv = Math.max(h.inv, .3); }
+function lacheEnnemi(h, lance){ const e = h.porte.e; h.porte = null; if(!e) return;
+  if(lance){ e.etat = 'lance'; e.vx = h.face * (e.h > 50 ? 340 : 400) + h.vx * .3; e.vy = -240; e.x = h.x + h.face * 14; e.y = h.y - hauteurHeros() * .9; e.rot = 0; h.lance = .3; son('jete'); }
+  else { e.etat = 'etourdi'; e.tm = 1.2; e.x = h.x + h.face * (e.w / 2 + 16); e.y = h.y; e.vy = 0; if(boite(e.x - e.w / 2, e.y - 30, e.x + e.w / 2, e.y - 2)) e.x = h.x; son('pose'); } }
+// l'ennemi porté se débat ; au bout de 6 s il s'échappe ; lancé, il chasse les autres ennemis et casse les murs fissurés
+function enneMiPorte(e, h, dt){ const g = G;
+  if(e.etat === 'porte'){ if(h.porte && h.porte.e === e){ const H2 = hauteurHeros(); e.x = h.x + h.face * 2; e.y = h.y - H2 * 1.12; e.face = h.face; e.prisT += dt;
+      if(e.prisT > 6){ h.porte = null; e.etat = 'etourdi'; e.tm = .4; e.vy = -300; e.x = h.x - h.face * 20; texte('Il s’échappe !', e.x, e.y - 30, '#ffe066'); } }
+    else { e.etat = 'etourdi'; e.tm = 1; }
+    return; }
+  // lancé
+  e.vy += PH.g * dt; e.x += e.vx * dt; e.y += e.vy * dt; e.rot = (e.rot || 0) + e.vx * dt * .03;
+  for(const o of g.ens){ if(o === e || !o.vivant || o.etat === 'fuite' || o.etat === 'cache' || o.etat === 'porte') continue; const oy = o.E.type === 'vol' ? o.y : o.y - o.h / 2;
+    if(Math.abs(o.x - e.x) < o.w / 2 + e.w / 2 && Math.abs(oy - (e.y - e.h / 2)) < o.h / 2 + e.h / 2){ coup(o, o.E.type === 'boss' ? 1 : 2); texte('Strike ! 🎳', o.x, o.y - o.h - 20, '#ffe066', 24); son('strike'); return fuitPris(e); } }
+  const b = boite(e.x - e.w / 2, e.y - Math.min(e.h, 40), e.x + e.w / 2, e.y);
+  if(b){ if(!b.caisse && e.h > 50){ let f = null; for(let cy = Math.floor((e.y - 40) / T); cy <= Math.floor((e.y + 2) / T) && !f; cy++) for(let cx = Math.floor((e.x - e.w) / T); cx <= Math.floor((e.x + e.w) / T); cx++) if(tile(cx, cy) === 'B'){ f = [cx, cy]; break; } if(f) casseMur(f[0], f[1]); }
+    return fuitPris(e); }
+  if(e.y > g.H * T + 100 || tile(Math.floor(e.x / T), Math.floor((e.y - 6) / T)) === 'W'){ eclat(e.x, e.y, '#9fd6ff', 10); e.vivant = false; G.chasses = (G.chasses || 0) + 1; } }
+function fuitPris(e){ const g = G; e.etat = 'fuite'; e.vx = 0; e.rot = 0; e.face = Math.sign(e.x - g.h.x) || 1; eclat(e.x, e.y - e.h / 2, '#ffffff', 12); son('coup'); bruit(e.x, e.y, 6);
+  if(e.butin){ for(let i = 0; i < e.butin; i++) g.piecesP.push({ x:e.x + (i - 1) * 18, y:e.y - 30, ok:true, saute:1 }); e.butin = 0; }
+  const cri = { z:'Miaou ! 🐾', d:'Ouaf… 🐕', h:'Bêêê !', a:'Couic !' }[e.t] || 'Ouste ! 💨'; texte(cri, e.x, e.y - e.h - 16, '#ffe066', 22); g.chasses = (g.chasses || 0) + 1; }
 function ouvrePorte(x, y){ const g = G; let y0 = y; while(tile(x, y0 - 1) === 'D') y0--; for(let k = y0; tile(x, k) === 'D'; k++) g.ouvert.add(x + ',' + k); son('porte'); texte('🔓 La porte s’ouvre !', x * T + 16, y0 * T - 20, '#ffe066'); eclat(x * T + 16, y * T, '#ffe066', 14); }
 function levier(l){ const g = G; l.on = true; son('levier');
   // il ouvre les grilles les plus proches (dans les 14 cases)
@@ -439,6 +489,7 @@ function ennemis(dt, h){
   const g = G, k = g.D.vit;
   for(const e of g.ens){
     if(!e.vivant) continue; const E = e.E; e.fr += dt;
+    if(e.etat === 'porte' || e.etat === 'lance'){ enneMiPorte(e, h, dt); continue; }
     if(e.etat === 'fuite'){ e.x += e.face * 260 * dt; e.alpha = (e.alpha === undefined ? 1 : e.alpha) - dt * 1.2; if(e.alpha <= 0) e.vivant = false; continue; }
     if(E.type === 'boss' && e.etat !== 'fuite'){ boss(e, h, dt, k); continue; }
     if(e.etat === 'etourdi'){ e.tm -= dt; if(e.tm <= 0){ e.etat = E.dort ? 'dort' : E.suspendu ? 'retour' : E.type === 'vol' ? 'vol' : E.type === 'serpent' ? 'rentre' : E.type === 'boss' ? 'marche' : 'patrouille'; e.tm = 1; } if(E.type !== 'vol') gravite(e, dt); else e.y += 30 * dt; continue; }
@@ -503,7 +554,7 @@ function gravite(e, dt){ if(e.E.type === 'vol') return; e.vy = Math.min(PH.chute
   else { const y = Math.floor(ny / T); for(let x = Math.floor((e.x - e.w / 2) / T); x <= Math.floor((e.x + e.w / 2) / T); x++) if((tile(x, y) === '=' || (tile(x, y) === 'H' && tile(x, y - 1) !== 'H')) && e.y <= y * T + .5 && ny >= y * T){ e.y = y * T; pose = true; } }
   if(pose){ e.vy = 0; e.sol = true; } else { e.y = ny; e.sol = false; }
   if(e.y > G.H * T + 100 || tile(Math.floor(e.x / T), Math.floor((e.y - 6) / T)) === 'W'){ if(e.E.type === 'boss'){ e.x = e.x0; e.y = e.y0; e.vy = 0; } else e.vivant = false; } }
-function touche(e, h){ if(h.mort || e.etat === 'etourdi' || e.etat === 'fuite' || e.etat === 'cache' || G.fini || h.vehicule && h.vehicule.k === 'N' && e.E.type !== 'boss' && e.E.type !== 'vol') return;
+function touche(e, h){ if(h.mort || e.etat === 'porte' || e.etat === 'lance' || e.etat === 'etourdi' || e.etat === 'fuite' || e.etat === 'cache' || G.fini || h.vehicule && h.vehicule.k === 'N' && e.E.type !== 'boss' && e.E.type !== 'vol') return;
   const vol = e.E.type === 'vol', ey = vol ? e.y + e.h / 2 : e.y, haut = ey - e.h;
   if(Math.abs(h.x - e.x) < e.w / 2 + HW - 2 && h.y > haut + 4 && h.y - (h.bas ? HHbas : HH) < ey){
     // on lui saute dessus : il est étourdi (le boss, seulement quand il est déjà étourdi : voir boss())
@@ -553,13 +604,14 @@ function tirs(dt, h){ const g = G;
 function blesse(h, cactus, depuis, deg = 1){ const g = G; if(h.inv > 0 || h.mort || g.fini) return;
   g.coeurs = Math.max(0, g.coeurs - deg); g.flash = .5; h.inv = 1.5; son('aie'); h.vy = -330; h.sol = false; h.monte = false; h.vx = (depuis !== undefined ? Math.sign(h.x - depuis) || -h.face : -h.face) * 220;
   if(h.vehicule) descend(false);
-  if(h.porte){ h.porte.etat = 'pose'; h.porte.x = h.x; h.porte.y = h.y; h.porte = null; }
+  if(h.porte && h.porte.e){ const e = h.porte.e; h.porte = null; e.etat = 'etourdi'; e.tm = .8; e.y = h.y; }
+  else if(h.porte){ h.porte.etat = 'pose'; h.porte.x = h.x; h.porte.y = h.y; h.porte = null; }
   if(g.coeurs <= 0) perdVie(); }
 function perdVie(){ const g = G, h = g.h; if(h.mort) return; h.mort = true; h.mortT = 0; h.vy = -500; son('chute'); g.vies--; if(h.vehicule){ h.vehicule.pris = false; h.vehicule.x = h.vehicule.x0; h.vehicule.y = h.vehicule.y0; h.vehicule = null; } }
-function reprise(gratuit){ const g = G; if(!gratuit && g.vies <= 0){ etat = 'fin'; S2J.surFin && S2J.surFin({ perdu:true, g }); return; }
+function reprise(gratuit){ const g = G; if(!gratuit && g.vies <= 0){ etat = 'fin'; ambStop(); S2J.surFin && S2J.surFin({ perdu:true, g }); return; }
   const n = g.n, d = g.diff; charger(n, d, true); G.vies = g.vies; G.dinars = g.dinars; G.coeurs = G.D.coeurs; if(!G.check) { G.h.x = G.depart.x; G.h.y = G.depart.y; } G.h.inv = 1.5; }
-function gagne(){ const g = G; if(g.fini) return; g.fini = true; g.h.vx = 0; if(g.h.vehicule){ g.h.vehicule = null; } son('victoire'); eclat(g.h.x, g.h.y - 40, '#ffe066', 30);
-  setTimeout(() => { if(G !== g) return; etat = 'fin'; S2J.surFin && S2J.surFin({ perdu:false, g }); }, 1600); }
+function gagne(){ const g = G; if(g.fini) return; g.fini = true; g.h.vx = 0; if(g.h.vehicule){ g.h.vehicule = null; } son('victoire'); setTimeout(() => son('fete'), 500); ambVolume(.08); eclat(g.h.x, g.h.y - 40, '#ffe066', 30);
+  setTimeout(() => { if(G !== g) return; etat = 'fin'; ambStop(); S2J.surFin && S2J.surFin({ perdu:false, g }); }, 3200); }   // 3,2 s : le temps de danser
 
 /* ---------- effets ---------- */
 function texte(s, x, y, c = '#ffffff', taille = 18){ G.textes.push({ s, x, y, c, taille, vie:1.6 }); }
@@ -582,7 +634,7 @@ function chargeCorps(nom, tenue){ corps = null; gestes = null; const id = idDe(n
   const cle = id + (tenue && tenue !== 'classique' ? '-' + tenue : ''), meta = (window.S2_GESTES || {})[cle];
   if(meta){ const gi = new Image(); gi.onload = () => { gestes = Object.assign({ im:gi }, meta); }; gi.src = `stage2/heros/${cle}.webp?v=${meta.v || 1}`; } }
 const hauteurHeros = () => corps ? 76 * corps.k : 70;
-const GL = { grimpe:0, rampe:1, accroupi:2, porte:3, lance:4 };
+const GL = { grimpe:0, rampe:1, accroupi:2, porte:3, lance:4, danse:5 };
 function geste(nom, f, flip){ // dessine une image des gestes (pieds en bas de la case), renvoie false si absente
   if(!gestes || !gestes.n || !gestes.n[GL[nom]]) return false; const gs = gestes, n = gs.n[GL[nom]], i = ((f % n) + n) % n, sc = 76 * corps.k / gs.ref, w = gs.cw * sc, hh = gs.ch * sc;
   ctx.save(); if(flip) ctx.scale(-1, 1); ctx.imageSmoothingQuality = 'high'; ctx.drawImage(gs.im, i * gs.cw, GL[nom] * gs.ch, gs.cw, gs.ch, -w / 2, -hh + (gs.pied ? gs.pied * sc : 0), w, hh); ctx.restore(); return true; }
@@ -601,13 +653,14 @@ function dessineHeros(t){
   if(!corps){ ctx.fillStyle = '#1f5fbf'; ctx.fillRect(-10, -60, 20, 60); ctx.restore(); return; }
   const run = Math.abs(h.vx) / PH.course, fl = h.face < 0;
   // les gestes ComfyUI quand ils existent
+  if(!h.mort && G.fini && gestes && geste('danse', Math.floor(h.gagne * 10), false)){ ctx.restore(); return; }
   if(!h.mort && !G.fini && gestes){
     let fait = false;
     if(h.monte) fait = geste('grimpe', Math.floor((h.pm || 0) / 22) % 2, false);
     else if(h.vehicule && h.vehicule.k === 'A') fait = geste('accroupi', 0, fl);
     else if(h.lance > 0 && h.lance < .3 && !h.porte) fait = geste('porte', 3, fl);   // on lance par-dessus la tête (l'image « lancer » de ComfyUI garde une balle dans la main)
     else if(h.bas && h.sol) fait = run > .05 ? geste('rampe', Math.floor(h.phase * 1.6), fl) : geste('accroupi', 0, fl);
-    else if(h.porte && !h.porte.O.petit) fait = geste('porte', h.sol && run > .05 ? Math.floor(h.phase * 1.9) : 0, fl);
+    else if(h.porte && !h.monte) fait = geste('porte', h.sol && run > .05 ? Math.floor(h.phase * 1.9) : 0, fl);
     if(fait){ ctx.restore(); return; } }
   const b = corps, sc = 76 * b.k / (b.feet - b.top), w = b.cw * sc, hh = b.ch * sc;
   let f, sx = 1, sy = 1;
@@ -711,9 +764,9 @@ function dessine(t){
   // les véhicules libres, les objets, les ennemis, le héros
   g.vehicules.forEach(v => { if(!v.pris) dessineVehicule(v, t); });
   g.objs.forEach(o => { if(o.etat !== 'porte') dessineObjet(o); });
-  g.ens.forEach(e => dessineEnnemi(e, t));
+  g.ens.forEach(e => { if(e.etat === 'lance') dessinePris(e, t); else if(e.etat !== 'porte') dessineEnnemi(e, t); });
   dessineHeros(t);
-  if(g.h.porte) dessineObjet(g.h.porte, true);
+  if(g.h.porte && g.h.porte.e) dessinePris(g.h.porte.e, t); else if(g.h.porte) dessineObjet(g.h.porte, true);
   // les projectiles
   g.tirs.forEach(o => { const im = IM[o.im]; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot);
     if(o.im === 'bulle'){ ctx.fillStyle = 'rgba(190,230,255,.75)'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 10, 0, 7); ctx.fill(); ctx.stroke(); }
@@ -745,6 +798,22 @@ function dessineObjet(o, porte){
   ctx.restore();
   if(!porte && o.etat === 'pose' && G.h && !G.h.porte && !G.h.vehicule && Math.abs(o.x - G.h.x) < 52 && Math.abs(o.y - G.h.y) < 36){ ctx.fillStyle = '#ffe066'; ctx.font = '800 15px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('↓ + Espace', o.x, o.y - hh - 8 + Math.sin(performance.now() / 200) * 3); }
 }
+// l'ennemi capturé : son image « tout triste » (ComfyUI) ; sinon son image à l'envers ; il se débat de plus en plus
+function dessinePris(e, t){
+  const E = e.E, nom = (G.M.sprites || {})[e.t] || E.sp, sp = sprite(nom), hh = (sp ? sp.h : e.h) * 1.05, deb = e.etat === 'porte' ? Math.min(1, (e.prisT || 0) / 6) : 0;
+  ctx.save(); ctx.translate(e.x, e.y); if(e.etat === 'lance') ctx.rotate(e.rot || 0); else ctx.rotate(Math.sin(t * (6 + deb * 14)) * (.05 + deb * .18));
+  ctx.scale(e.face < 0 ? -1 : 1, 1);
+  if(sp && ok(sp.pr)){ const iw = sp.pr.naturalWidth, ih = sp.pr.naturalHeight;
+    if(ih > iw * 1.2){ // un personnage debout : on le porte couché sur les mains, comme un sac (la tête devant)
+      const L = hh * .95, E = L * iw / ih; ctx.translate(0, -E / 2 + 4); ctx.rotate(-Math.PI / 2); ctx.drawImage(sp.pr, -L / 2, -E / 2, L, E); }
+    else { const w = hh * iw / ih; ctx.drawImage(sp.pr, -w / 2, -hh + 6, w, hh); } }
+  else if(sp && ok(sp.im)){ const cw = sp.im.naturalWidth / 12, ch = sp.im.naturalHeight / (sp.rows || 1), w = hh * cw / ch; ctx.scale(1, -1); ctx.drawImage(sp.im, 0, 0, cw, ch, -w / 2, 0, w, hh); }
+  else if(sp && ok(sp.fx)){ const w = hh * sp.fx.naturalWidth / sp.fx.naturalHeight; ctx.scale(1, -1); ctx.drawImage(sp.fx, -w / 2, 0, w, hh); }
+  else { ctx.fillStyle = '#7a7a7a'; ctx.fillRect(-e.w / 2, -e.h, e.w, e.h); }
+  ctx.restore();
+  if(e.etat === 'porte'){ ctx.save(); ctx.font = '800 18px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; const y = e.y - hh - 6;
+    ctx.fillText('😢', e.x + 14 * Math.sin(t * 2), y); if(Math.sin(t * 5) > .3){ ctx.fillStyle = '#7fd0ff'; ctx.beginPath(); ctx.arc(e.x + 8, e.y - hh * .6 + (t * 40 % 20), 3, 0, 7); ctx.fill(); }
+    if(deb > .6){ ctx.fillStyle = '#ffe066'; ctx.fillText('!', e.x - 18, y + 4); } ctx.restore(); } }
 function dessineEnnemi(e, t){
   const E = e.E, nom = (G.M.sprites || {})[e.t] || E.sp, sp = sprite(nom);
   if(E.type === 'serpent' && e.etat === 'cache'){ ctx.fillStyle = 'rgba(120,90,50,.35)'; ctx.beginPath(); ctx.ellipse(e.x, e.y - 2, 12, 4, 0, 0, 7); ctx.fill(); return; }
@@ -798,7 +867,7 @@ function hud(t){
   ctx.font = '800 22px "Baloo 2", sans-serif'; ctx.textAlign = 'left';
   ligne(`🧒 × ${g.vies}`, pad, 28);
   ligne(`🪙 ${g.dinars}`, pad, 62); ligne(`🌼 ${g.jasmins.size}/3`, pad + 96, 62);
-  if(g.h.porte){ ctx.textAlign = 'center'; ctx.font = '800 17px "Baloo 2", sans-serif'; ligne(`Tu portes ${leLa(g.h.porte.O.nom)}`, CW / 2, g.boss && !g.bossVaincu && g.boss.etat !== 'attend' ? 92 : 56); }
+  if(g.h.porte){ ctx.textAlign = 'center'; ctx.font = '800 17px "Baloo 2", sans-serif'; ligne(g.h.porte.e ? `Tu as attrapé ${leLa(g.h.porte.O.nom)} ! Espace : le lancer` : `Tu portes ${leLa(g.h.porte.O.nom)}`, CW / 2, g.boss && !g.bossVaincu && g.boss.etat !== 'attend' ? 92 : 56); }
   if(g.indice && etat === 'jeu'){ ctx.font = '800 19px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; const w = Math.min(CW - 40, ctx.measureText(g.indice).width + 36), y = CH - (document.body.classList.contains('touch') ? 170 : 44);
     ctx.fillStyle = 'rgba(11,30,70,.85)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(CW / 2 - w / 2, y - 22, w, 44, 14) : ctx.rect(CW / 2 - w / 2, y - 22, w, 44); ctx.fill(); ctx.fillStyle = '#ffe9a8'; ctx.fillText(g.indice, CW / 2, y + 1, CW - 60); }
   ctx.textBaseline = 'alphabetic';
@@ -808,13 +877,14 @@ function hud(t){
 const S2J = window.S2J = {
   son:true, voix:true, surFin:null,
   joueur(nom, tenue){ chargeCorps(nom, tenue); },
-  lancer(n, diff){ audio(); if(!charger(n, diff)) return false; etat = 'jeu'; reste = 0; dernier = performance.now(); saut = agir = lancer = false; return true; },
-  pause(){ if(etat === 'jeu'){ etat = 'pause'; return true; } return false; },
-  reprendre(){ if(etat === 'pause'){ etat = 'jeu'; dernier = performance.now(); } },
-  basculePause(){ if(etat === 'jeu'){ etat = 'pause'; S2J.surPause && S2J.surPause(); } else if(etat === 'pause'){ S2J.surReprise && S2J.surReprise(); } },
+  lancer(n, diff){ audio(); if(!charger(n, diff)) return false; etat = 'jeu'; reste = 0; dernier = performance.now(); saut = agir = lancer = false; ambiance(G.M); return true; },
+  pause(){ if(etat === 'jeu'){ etat = 'pause'; ambVolume(0); return true; } return false; },
+  reprendre(){ if(etat === 'pause'){ etat = 'jeu'; dernier = performance.now(); ambVolume(S2J.son ? .32 : 0); } },
+  basculePause(){ if(etat === 'jeu'){ etat = 'pause'; ambVolume(0); S2J.surPause && S2J.surPause(); } else if(etat === 'pause'){ S2J.surReprise && S2J.surReprise(); } },
   // coincé ? on revient à la dernière lanterne (ou au départ) sans perdre de vie ; les objets reviennent à leur place
   revenir(){ if(!G) return; reprise(true); etat = 'jeu'; dernier = performance.now(); },
-  quitter(){ etat = 'menu'; G = null; },
+  quitter(){ etat = 'menu'; G = null; ambStop(); },
+  sonChange(){ ambVolume(S2J.son && etat === 'jeu' ? .32 : 0); },
   etat: () => etat, G: () => G
 };
 requestAnimationFrame(boucle);

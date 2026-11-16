@@ -77,7 +77,7 @@ body.touch.joue #tactile{display:block}
 </div>
 
 <div class="screen on" id="menu"><div class="box">
-  <h1>La Légende du Jasmin<small>Stage 2 · 10 nouveaux mondes</small></h1>
+  <h1>La Légende du Jasmin<small>Stage 2 · 20 mondes</small></h1>
   <button id="who" type="button"><img id="whoImg" alt="" src="avatars/mascotte-nour.webp"><span id="whoNom">Qui joue ?</span></button>
   <div class="diff" role="radiogroup" aria-label="Difficulté">
     <button data-d="facile" role="radio">🌼 Facile</button><button data-d="normal" role="radio">⭐ Normal</button><button data-d="difficile" role="radio">🔥 Difficile</button>
@@ -103,6 +103,7 @@ body.touch.joue #tactile{display:block}
     <kbd>↓ + ← / →</kbd><span>ramper</span>
     <kbd>↓ + Espace</kbd><span>ramasser un objet / le déposer</span>
     <kbd>Espace</kbd><span>lancer l’objet (ou tirer un levier)</span>
+    <kbd>↓ + Espace</kbd><span>derrière un ennemi (ou quand il est étourdi ★) : l’attraper ! Puis Espace : le lancer sur les autres 🎳</span>
     <kbd>↓ maintenu</kbd><span>entrer dans un passage secret (petite porte ▼)</span>
     <kbd>↑ ↓</kbd><span>devant une échelle : monter, descendre (← ou → pour la lâcher)</span>
     <kbd>Échap</kbd><span>pause</span>
@@ -125,7 +126,7 @@ body.touch.joue #tactile{display:block}
 
 <script src="../famille.js"></script>
 <script src="sons/sons.js"></script>
-<script src="stage2/niveaux.js?v=3"></script>
+<script src="stage2/niveaux.js?v=4"></script>
 <script src="stage2/cartes/m1.js?v=2"></script>
 <script src="stage2/cartes/m2.js?v=2"></script>
 <script src="stage2/cartes/m3.js?v=2"></script>
@@ -136,8 +137,18 @@ body.touch.joue #tactile{display:block}
 <script src="stage2/cartes/m8.js?v=2"></script>
 <script src="stage2/cartes/m9.js?v=2"></script>
 <script src="stage2/cartes/m10.js?v=2"></script>
+<script src="stage2/cartes/m11.js?v=1"></script>
+<script src="stage2/cartes/m12.js?v=1"></script>
+<script src="stage2/cartes/m13.js?v=1"></script>
+<script src="stage2/cartes/m14.js?v=1"></script>
+<script src="stage2/cartes/m15.js?v=1"></script>
+<script src="stage2/cartes/m16.js?v=1"></script>
+<script src="stage2/cartes/m17.js?v=1"></script>
+<script src="stage2/cartes/m18.js?v=1"></script>
+<script src="stage2/cartes/m19.js?v=1"></script>
+<script src="stage2/cartes/m20.js?v=1"></script>
 <script src="stage2/heros/heros.js?v=9"></script>
-<script src="stage2/moteur.js?v=4"></script>
+<script src="stage2/moteur.js?v=5"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -149,7 +160,7 @@ const cle = () => 'stage2:' + joueur;
 const neuf = () => ({ ouvert:1, best:{}, diff:'normal', t:0 });
 const garder = () => { sv.t = Date.now(); store.set(cle(), sv); };
 const suivis = new Set();
-function tete(nom){ const k = (nom || '').toLowerCase(); if(PEOPLE.includes(k)) return `avatars/${k}.webp`; const h = window.Famille && Famille.head ? Famille.head(nom) : null; return `avatars/mascotte-${h && h.id ? h.id : 'nour'}.webp`; }
+function tete(nom){ const k = (nom || '').toLowerCase(); if(PEOPLE.includes(k)) return `avatars/reel/${k}.webp`; const h = window.Famille && Famille.head ? Famille.head(nom) : null; return `avatars/reel/${h && h.id ? h.id : 'nour'}.webp`; }   // 16/11 : portraits « en vrai »
 // la tenue choisie dans le Jasmin (même garde-robe que Médina Express)
 function tenue(){ const js = store.get('jasmin:' + joueur, {}) || {}, m = store.get('medina:' + joueur, {}) || {}, skins = Array.isArray(m.skins) ? m.skins : ['classique']; return js.tenue && (js.tenue === 'classique' || skins.includes(js.tenue)) ? js.tenue : 'classique'; }
 function choisirJoueur(nom){
@@ -177,7 +188,7 @@ $('jouer').onclick = async () => { if(!joueur && !(await qui())) return; const m
 $('go').onclick = () => { try{ speechSynthesis.cancel(); }catch(e){} if(S2J.lancer(choisi, diff)) montre(null); };
 $('aide').onclick = () => montre('aideS');
 document.querySelectorAll('[data-ferme]').forEach(b => b.onclick = () => menu());
-$('sonB').onclick = () => { S2J.son = !S2J.son; S2J.voix = S2J.son; $('sonB').textContent = S2J.son ? '🔊 Son' : '🔇 Muet'; };
+$('sonB').onclick = () => { S2J.son = !S2J.son; S2J.voix = S2J.son; $('sonB').textContent = S2J.son ? '🔊 Son' : '🔇 Muet'; S2J.sonChange && S2J.sonChange(); };
 $('pauseB').onclick = () => { if(S2J.pause()) montre('pause'); };
 S2J.surPause = () => montre('pause');
 S2J.surReprise = () => { S2J.reprendre(); montre(null); };
@@ -197,7 +208,7 @@ S2J.surFin = ({ perdu, g }) => {
     const suivant = S2.MONDES.find(x => x.n === g.n + 1);
     $('finBox').innerHTML = `<h2>Bravo ${joueur} ! 🎉</h2><p>Tu as traversé « ${m.nom} ».</p><p style="font-size:34px">${'🌼'.repeat(j)}${'⚪'.repeat(3 - j)}</p><p>🪙 ${g.dinars} dinars${typeof js.bourse === 'number' ? ' (ajoutés à ta bourse du Jasmin)' : ''} · ⏱ ${Math.floor(g.t / 60)} min ${String(Math.round(g.t % 60)).padStart(2, '0')} s · ${g.chasses || 0} ennemis chassés</p>
       ${j < 3 ? `<p style="color:var(--mist)">Il reste ${3 - j} jasmin${3 - j > 1 ? 's' : ''} d’or caché${3 - j > 1 ? 's' : ''} : cherche les passages secrets !</p>` : ''}
-      <div class="rang">${suivant && suivant.pret ? `<button class="btn" id="fSuite">Monde ${suivant.n} ▶</button>` : (g.n === 10 ? `<p style="color:var(--gold);font-weight:800">🏆 Tu as fini tout le Stage 2 ! Le Scorpion d’Or s’est enfui et la Tunisie a retrouvé ses jasmins.</p>` : `<p style="color:var(--gold);font-weight:800">Le monde ${g.n + 1} arrive bientôt !</p>`)}<button class="btn bleu" id="fRe">↺ Rejouer</button><button class="btn gris" id="fMenu">Menu</button></div>`;
+      <div class="rang">${suivant && suivant.pret ? `<button class="btn" id="fSuite">Monde ${suivant.n} ▶</button>` : (g.n === 20 ? `<p style="color:var(--gold);font-weight:800">🏆 Tu as fini les 20 mondes du Stage 2 ! Le Scorpion d’Or s’est enfui pour de bon et la Tunisie a retrouvé tous ses jasmins.</p>` : `<p style="color:var(--gold);font-weight:800">Le monde ${g.n + 1} arrive bientôt !</p>`)}<button class="btn bleu" id="fRe">↺ Rejouer</button><button class="btn gris" id="fMenu">Menu</button></div>`;
     dire(`Bravo ${joueur} ! Tu as trouvé ${j} jasmin${j > 1 ? 's' : ''} d'or.`); if(window.Famille && Famille.score) try{ Famille.score('jasmin', joueur, g.dinars * 10 + j * 500); }catch(e){} }
   montre('fin');
   const re = $('fRe'), mn = $('fMenu'), su = $('fSuite');

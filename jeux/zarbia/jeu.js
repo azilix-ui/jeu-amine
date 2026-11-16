@@ -25,8 +25,9 @@ export const NMOTIFS = 11;   // 1 à 3 : tapis clairs teints ; 4 à 11 : vrais t
 ['sol'].concat(Array.from({ length:NMOTIFS }, (_, i) => 'zarbia' + (i + 1))).forEach(k => charge(IMG + k + '.webp'));
 export function teteDe(nom, botId){
   if(botId) return IMG + 'bot-' + botId + '.webp';
-  const k = String(nom || '').toLowerCase(); if(FAMILLE[k]) return AV + k + '.webp';
-  const h = window.Famille && Famille.head ? Famille.head(nom) : null; return h ? h.img : null;
+  // 16/11 : les portraits « en vrai » des héros du Jasmin (avatars/reel/), pour la famille et les invités
+  const k = String(nom || '').toLowerCase(); if(FAMILLE[k]) return AV + 'reel/' + k + '.webp';
+  const h = window.Famille && Famille.head ? Famille.head(nom) : null; return h ? AV + 'reel/' + h.id + '.webp' : null;
 }
 
 /* ---------- les sons (fabriqués par le navigateur) ---------- */

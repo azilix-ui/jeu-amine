@@ -60,9 +60,10 @@ async function setJoueur(n){ joueur = n; sv = Object.assign(neuf(), store.get(cl
   if(window.Famille && Famille.track){ Famille.track('chkobba', n, [cle()]); try{ const r = await Famille.load('chkobba', n), d = r && r[cle()]; if(d && joueur === n && (d.t || 0) > (sv.t || 0)){ sv = Object.assign(neuf(), d); store.set(cle(), sv); } }catch(e){} }
   menu(); }
 async function choisirJoueur(){ if(!window.Famille) return null;
-  const n = await Famille.choosePlayer({ title:'Qui joue à la chkobba ?', cancel:!!joueur, extra:[{ name:'Anis', color:'#0f766e', emoji:'🧔' }, { name:'Imen', color:'#b4235a', emoji:'👩' }], avatar:k => `<img src="${AV}${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` });
+  const n = await Famille.choosePlayer({ title:'Qui joue à la chkobba ?', cancel:!!joueur, extra:[{ name:'Anis', color:'#0f766e', emoji:'🧔' }, { name:'Imen', color:'#b4235a', emoji:'👩' }], avatar:k => `<img src="${AV}reel/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` });
   if(n) await setJoueur(n); return n; }
-const tete = n => { const k = String(n || '').toLowerCase(); if(['essil', 'salma', 'amine'].includes(k)) return AV + 'qui/' + k + '.webp'; if(['anis', 'imen'].includes(k)) return AV + k + '.webp'; const h = window.Famille && Famille.head ? Famille.head(n) : null; return h ? h.img : null; };
+// 16/11 : les portraits « en vrai » des héros du Jasmin (avatars/reel/), pour la famille et les invités
+const tete = n => { const k = String(n || '').toLowerCase(); if(['essil', 'salma', 'amine', 'anis', 'imen'].includes(k)) return AV + 'reel/' + k + '.webp'; const h = window.Famille && Famille.head ? Famille.head(n) : null; return h ? AV + 'reel/' + h.id + '.webp' : null; };
 const visage = (p, humeur = 'malin') => p.perso ? IMG + p.perso + '-' + humeur + '.webp' : (p.tete || tete(p.nom) || '');
 
 /* ---------- le menu ---------- */

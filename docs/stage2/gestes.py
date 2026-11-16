@@ -1,7 +1,7 @@
 """Stage 2 : les gestes du héros faits avec ComfyUI (15/11) → jeux/stage2/heros/<id>.webp + heros.js.
 Sources (dossier output/g2 de ComfyUI) : <id>_accroupi, <id>_grimpe2, <id>_porte2, <id>_lance, <id>_rampe (FLUX.2 klein, retouche de houma_<id>.png)
 et les vidéos Wan 2.2 anim_<id>_rampe_000NN_ (il rampe sur place) et anim_<id>_porte_000NN_ (il marche les bras levés), 33 images chacune.
-Planche 12 × 5 : ligne 0 grimper (2 images : la pose et son miroir), 1 ramper (12), 2 accroupi (1), 3 porter (12), 4 lancer (1).
+Planche 12 × 5 (ou 6) : ligne 0 grimper (2 images : la pose et son miroir), 1 ramper (12), 2 accroupi (1), 3 porter (12), 4 lancer (1), 5 danser (12, depuis le 16/11 : vidéo anim_<id>_danse).
 Les poses n'ont pas la même échelle (FLUX recadre) : chaque ligne est ramenée à une hauteur connue par rapport au héros debout (RAPPORT).
 Usage : python3 docs/stage2/gestes.py <dossier g2> <id> [<id>…]"""
 import sys, os, json, re
@@ -11,7 +11,7 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'houma')); from detoure import cut
 
 REF = 150                      # hauteur du héros debout dans la planche (px)
-RAPPORT = { 'grimpe':1.2, 'rampe':.52, 'accroupi':.64, 'porte':1.22, 'lance':.98 }
+RAPPORT = { 'grimpe':1.2, 'rampe':.52, 'accroupi':.64, 'porte':1.22, 'lance':.98, 'danse':1.12 }
 SORTIE = os.path.join(os.path.dirname(__file__), '..', '..', 'jeux', 'stage2', 'heros')
 
 def propre(im):   # garde le personnage (la plus grande tache), enlève la balle lancée ou les miettes
@@ -47,6 +47,8 @@ def planche(dos, id):
     lignes['accroupi'] = [propre(cut_(s('accroupi')))]
     po = anim('porte'); lignes['porte'] = [propre(cut_(f)) for f in boucle(po)] if all(os.path.exists(f) for f in po) else [propre(cut_(s('porte2')))]
     lignes['lance'] = [propre(cut_(s('lance') if os.path.exists(s('lance')) else s('porte2')))]   # (le jeu lance avec l'image « porter »)
+    da = anim('danse')   # 16/11 : la danse de la victoire (vidéo Wan 2.2 de face)
+    if all(os.path.exists(f) for f in da): lignes['danse'] = [propre(cut_(f)) for f in boucle(da)]
     cases = {}
     for k, ims in lignes.items():
         boxes = [im.getchannel('A').point(lambda v: 255 if v > 60 else 0).getbbox() for im in ims]
@@ -54,8 +56,8 @@ def planche(dos, id):
         h = max(b[3] - b[1] for b in boxes); sc = RAPPORT[k] * REF / h
         cases[k] = [im.crop(box).resize((max(1, round((box[2] - box[0]) * sc)), max(1, round((box[3] - box[1]) * sc))), Image.LANCZOS) for im in ims]
     cw = max(c.width for v in cases.values() for c in v); ch = max(c.height for v in cases.values() for c in v)
-    ordre = ['grimpe', 'rampe', 'accroupi', 'porte', 'lance']
-    out = Image.new('RGBA', (cw * 12, ch * 5))
+    ordre = [k for k in ['grimpe', 'rampe', 'accroupi', 'porte', 'lance', 'danse'] if k in cases]
+    out = Image.new('RGBA', (cw * 12, ch * len(ordre)))
     for r, k in enumerate(ordre):
         for i, c in enumerate(cases[k]): out.paste(c, (i * cw + (cw - c.width) // 2, r * ch + ch - c.height), c)
     os.makedirs(SORTIE, exist_ok=True); out.save(os.path.join(SORTIE, f'{id}.webp'), quality=84, method=6)
