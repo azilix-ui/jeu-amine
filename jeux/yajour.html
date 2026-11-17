@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0d3b66">
+<title>Yajour</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%B1%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* Yajour (ياجور, « les briques ») : le super-héros de la famille s'envole d'une rosace de zellige et fait tomber des
+   constructions en 3D — briques de Sidi Bou Saïd, colonnes d'El Jem, caisses de feux d'artifice du Sahara.
+   D'après le cahier des charges du papa (17/11, « Let's Go Mightycat », puzzle physique 3D), en jeu ORIGINAL et tunisien :
+   Three.js (lib/) pour la 3D, Rapier (lib/, Apache 2.0) pour la physique, sans compilation ; héros « en vrai » (ComfyUI) ;
+   commentaire en arabe (voix Mohammad, ElevenLabs). Code : yajour/monde.js (physique, niveaux, règles ; testé en Node :
+   docs/yajour/), yajour/jeu.js (3D, visée, écrans, sons, sauvegarde). */
+:root{ --bleu:#0d3b66; --ciel:#3aa0e8; --or:#ffc94a; --rouge:#e63946; --ombre:0 4px 0 rgba(0,0,0,.25); }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body{ margin:0; height:100%; overflow:hidden; background:#0d3b66; font-family:Nunito, system-ui, sans-serif; color:#14213d; user-select:none; -webkit-user-select:none; }
+button{ font:inherit; cursor:pointer; border:0; }
+[hidden]{ display:none !important; }
+#cv{ position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+.ecran{ position:fixed; inset:0; display:none; overflow:auto; z-index:3; }
+.ecran.on{ display:block; }
+#menu{ background:linear-gradient(180deg, rgba(8,30,60,.25), rgba(8,30,60,.75)), url(yajour/img/pano-sidibou.webp) center/cover; }
+.boite{ max-width:860px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top)) 16px 40px; }
+.haut{ display:flex; align-items:center; gap:10px; }
+.pill{ background:#fff; color:#14213d; border-radius:999px; padding:8px 16px; font-weight:800; box-shadow:var(--ombre); min-height:48px; display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+.pill img{ width:34px; height:34px; border-radius:50%; object-fit:cover; background:#e8eef7; }
+.titre{ display:flex; align-items:flex-end; justify-content:center; gap:10px; margin:6px 0 0; }
+.titre img{ height:170px; filter:drop-shadow(0 8px 14px rgba(0,0,0,.45)); }
+.titre h1{ font-family:'Baloo 2', sans-serif; font-size:clamp(48px, 12vw, 84px); line-height:.9; margin:0; color:#fff; text-shadow:0 4px 0 #b3282f, 0 10px 22px rgba(0,0,0,.45); letter-spacing:2px; }
+.titre h1 small{ display:block; font-size:.42em; color:var(--or); text-shadow:0 2px 0 #7a4a00; text-align:center; }
+.sous{ text-align:center; color:#fff; font-size:18px; margin:8px 0 14px; text-shadow:0 2px 6px rgba(0,0,0,.7); font-weight:800; }
+.carte{ background:rgba(255,255,255,.94); border-radius:22px; padding:16px; margin-top:14px; box-shadow:0 10px 30px rgba(0,0,0,.25); }
+.carte h2{ margin:0 0 10px; font-family:'Baloo 2', sans-serif; font-size:22px; }
+.mondes{ display:grid; gap:12px; }
+.monde{ border-radius:18px; overflow:hidden; background:#0d3b66 center/cover; color:#fff; position:relative; min-height:150px; padding:12px; display:flex; flex-direction:column; justify-content:flex-end; }
+.monde::before{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, transparent 20%, rgba(0,0,0,.65)); }
+.monde > *{ position:relative; }
+.monde h3{ margin:0 0 8px; font-family:'Baloo 2', sans-serif; font-size:24px; text-shadow:0 2px 6px #000; }
+.monde h3 small{ font-size:16px; color:var(--or); margin-left:8px; }
+.monde.ferme{ filter:grayscale(.85) brightness(.75); }
+.niveaux{ display:flex; gap:8px; flex-wrap:wrap; }
+.niv{ width:58px; height:58px; border-radius:16px; background:#fff; color:#14213d; font-weight:800; font-size:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:var(--ombre); line-height:1; }
+.niv small{ font-size:11px; color:#d48a00; margin-top:3px; min-height:11px; }
+.niv.suivant{ background:var(--or); }
+.niv:disabled{ opacity:.55; cursor:default; }
+.bourse{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; font-weight:800; }
+.bourse span{ background:#eef4fb; border-radius:999px; padding:8px 14px; }
+.regles{ margin:0; padding-left:20px; line-height:1.5; } .regles li{ margin:4px 0; }
+.rec{ margin:0; padding-left:22px; } .rec li{ margin:4px 0; font-weight:800; } .rec .none{ color:#667; }
+
+/* le jeu */
+#hud{ position:fixed; inset:0; pointer-events:none; z-index:2; display:none; }
+#hud.on{ display:block; }
+#hud > *{ pointer-events:auto; }
+.hb{ position:absolute; display:flex; gap:8px; align-items:center; }
+#hHaut{ top:calc(8px + env(safe-area-inset-top)); left:8px; right:8px; justify-content:space-between; flex-wrap:wrap; pointer-events:none; }
+#hHaut > *{ pointer-events:auto; }
+.bulle{ background:rgba(255,255,255,.93); border-radius:16px; padding:6px 12px; font-weight:800; box-shadow:var(--ombre); }
+#objectif{ max-width:min(520px, 60vw); font-size:15px; }
+#objectif b{ color:#b3282f; }
+#tirs{ display:flex; gap:4px; } #tirs img{ width:34px; height:34px; border-radius:50%; background:#fff; border:2px solid #fff; object-fit:cover; object-position:top; }
+#tirs img.fait{ opacity:.25; filter:grayscale(1); }
+.rond{ width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,.93); font-size:22px; box-shadow:var(--ombre); display:grid; place-items:center; }
+#hBas{ bottom:calc(10px + env(safe-area-inset-bottom)); left:8px; right:8px; justify-content:space-between; flex-wrap:wrap; pointer-events:none; }
+#hBas > *{ pointer-events:auto; }
+.pouv{ display:flex; gap:6px; }
+.pouv button{ min-width:58px; height:58px; border-radius:16px; background:rgba(255,255,255,.93); font-weight:800; font-size:20px; box-shadow:var(--ombre); position:relative; }
+.pouv button i{ position:absolute; top:-6px; right:-6px; background:#14213d; color:#fff; font-style:normal; font-size:12px; border-radius:10px; padding:1px 6px; }
+.pouv button.on{ background:var(--or); outline:3px solid #fff; }
+.pouv button:disabled{ opacity:.4; }
+#lancer{ height:62px; padding:0 26px; border-radius:20px; background:linear-gradient(180deg, #ff6b6b, #e63946); color:#fff; font-weight:800; font-size:22px; box-shadow:0 5px 0 #9b1d26; font-family:'Baloo 2', sans-serif; }
+#lancer:disabled{ filter:grayscale(.6); opacity:.6; }
+#aideTxt{ position:absolute; left:50%; transform:translateX(-50%); top:calc(110px + env(safe-area-inset-top)); max-width:min(560px, 92vw); text-align:center; font-size:16px; transition:opacity .4s; }
+#aideTxt.off{ opacity:0; pointer-events:none; }
+#flash{ position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:4; transition:opacity .25s; }
+#modal{ position:fixed; inset:0; z-index:10; display:none; place-items:center; background:rgba(0,0,0,.45); padding:16px; }
+#modal.on{ display:grid; }
+.fenetre{ background:#fff; border-radius:26px; padding:20px; width:min(460px, 100%); text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.4); max-height:calc(100vh - 32px); overflow:auto; }
+.fenetre h2{ font-family:'Baloo 2', sans-serif; margin:0 0 4px; font-size:30px; }
+.fenetre p{ margin:6px 0 12px; color:#445; }
+.fenetre .heros{ height:170px; margin:-6px 0 0; }
+.fenetre .etoiles{ font-size:42px; letter-spacing:6px; }
+.fenetre .rang{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+.gros{ background:linear-gradient(180deg, #ffd66b, #f5a524); color:#3a2300; border-radius:16px; padding:12px 22px; font-weight:800; font-size:19px; min-height:54px; box-shadow:0 4px 0 #b3700c; }
+.btn{ background:#eef2f8; border-radius:16px; min-height:54px; padding:0 16px; font-weight:800; font-size:16px; }
+.reg{ display:flex; align-items:center; justify-content:space-between; gap:10px; text-align:left; padding:10px 0; border-top:1px solid #e5e9f0; }
+.reg small{ display:block; color:#667; font-size:13px; }
+.choix{ display:flex; gap:6px; flex-wrap:wrap; }
+.choix button{ background:#eef2f8; border:2px solid transparent; border-radius:12px; padding:8px 12px; font-weight:800; min-height:44px; }
+.choix button.on{ border-color:#f5a524; background:#fff6dd; }
+#charge{ position:fixed; inset:0; z-index:20; display:grid; place-items:center; background:#0d3b66; color:#fff; font-weight:800; font-size:20px; }
+@media (max-width:600px){ .titre img{ height:120px; } #objectif{ max-width:100%; } }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<section class="ecran on" id="menu"><div class="boite">
+  <div class="haut"><a class="pill" href="../" aria-label="Retour à l'accueil">←</a><button class="pill" id="who">Qui joue ?</button>
+    <button class="pill" id="regBtn" aria-label="Paramètres" style="margin-left:auto">⚙️</button><span class="pill" id="total">⭐ 0</span></div>
+  <div class="titre"><img id="heroMenu" alt=""><h1>Yajour<small>ياجور</small></h1></div>
+  <p class="sous">Envole-toi, super-héros, et fais tomber les briques !</p>
+  <div class="carte"><div class="mondes" id="mondes"></div></div>
+  <div class="carte"><h2>🎒 Ton sac</h2><div class="bourse" id="bourse"></div></div>
+  <div class="carte"><h2>Comment jouer</h2><ul class="regles">
+    <li><b>Glisse ton doigt</b> (ou la souris) : à gauche, à droite pour tourner, vers le haut pour viser plus haut. Les petits points montrent ton vol. <b>Lâche</b> pour t'envoler !</li>
+    <li>Ou bien <b>touche un bloc</b> : le héros vise tout seul, puis appuie sur <b>LANCER</b>.</li>
+    <li>Chaque niveau a sa mission : faire tomber des blocs du plateau, casser les <b>jarres d'or</b>, ou libérer le <b>chaton</b> de sa cage sans le faire tomber.</li>
+    <li>Les <b>jarres</b> se cassent, les <b>caisses rouges</b> de feux d'artifice explosent, le <b>marbre</b> glisse, le <b>matelas</b> fait rebondir.</li>
+    <li>Pouvoirs : 🪨 <b>lourd</b> (trois fois plus lourd), 💥 <b>boum</b> (tu exploses en touchant), 🔱 <b>triple</b> (trois héros d'un coup). Un 3 étoiles en redonne un.</li>
+    <li>👁️ pour tourner autour (deux doigts pour zoomer), ⏩ pour aller plus vite, ⏭ pour passer quand tout est presque arrêté.</li>
+  </ul></div>
+  <div class="carte"><h2>🏆 Records de la famille</h2><ol class="rec" id="records"><p class="none">…</p></ol></div>
+</div></section>
+
+<div id="hud">
+  <div class="hb" id="hHaut">
+    <div style="display:flex;gap:8px;align-items:center"><button class="rond" id="bPause" aria-label="Pause">⏸</button><div class="bulle" id="objectif"></div></div>
+    <div style="display:flex;gap:8px;align-items:center"><div class="bulle" id="score">0</div><div id="tirs"></div></div>
+  </div>
+  <div class="bulle" id="aideTxt"></div>
+  <div class="hb" id="hBas">
+    <div class="pouv" id="pouv"></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="rond" id="bVue" aria-label="Regarder autour">👁️</button>
+      <button class="rond" id="bVite" aria-label="Plus vite" hidden>⏩</button>
+      <button class="rond" id="bPasse" aria-label="Passer" hidden>⏭</button>
+      <button id="lancer">LANCER 🚀</button>
+    </div>
+  </div>
+</div>
+<div id="flash"></div>
+<div id="modal"></div>
+<div id="charge">Chargement de Yajour…</div>
+
+<script src="../famille.js"></script>
+<script type="module" src="yajour/jeu.js?v=1"></script>
+</body>
+</html>
