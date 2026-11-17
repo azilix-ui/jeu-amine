@@ -23,7 +23,7 @@ async function setJoueur(n){
   joueur = n; sv = Object.assign({ ep:{}, lang:'deux', t:0 }, store.get(cle(), {}) || {});
   if(window.Famille && Famille.track){ Famille.track('eveil-prophete', n, [cle()]);
     try{ const r = await Famille.load('eveil-prophete', n), d = r && r[cle()]; if(d && joueur === n && (d.t || 0) > (sv.t || 0)){ sv = Object.assign({ ep:{}, lang:'deux' }, d); store.set(cle(), sv); } }catch(e){} }
-  accueil();
+  listeAccueil(); if(EP && $('e-episode').classList.contains('on')) episode(EP.n);
 }
 async function choisirJoueur(){
   if(!window.Famille){ await setJoueur('Invité'); return; }
@@ -69,8 +69,8 @@ async function dire(t, qui){
 function ecran(id){ document.querySelectorAll('.ecran').forEach(e => e.classList.toggle('on', e.id === id)); window.scrollTo(0, 0); }
 function rondEtoiles(n){ const k = etoiles(n); return '<span class="et">' + [0, 1, 2].map(i => i < k ? '⭐' : '<i>☆</i>').join('') + '</span>'; }
 
-function accueil(){
-  stop(); ecran('e-accueil');
+function accueil(){ stop(); ecran('e-accueil'); listeAccueil(); }
+function listeAccueil(){   // refaite aussi quand on change de joueur, sans quitter l'écran en cours (film, jeu…)
   $('qui').innerHTML = joueur ? `<img src="/jeux/avatars/reel/${esc(joueur.toLowerCase())}.webp" alt="" onerror="this.remove()"> ${esc(joueur)}` : '👤 Qui regarde ?';
   const total = EPISODES.reduce((a, e) => a + etoiles(e.n), 0);
   $('total').textContent = '⭐ ' + total + ' / ' + EPISODES.length * 3;
@@ -280,6 +280,6 @@ document.addEventListener('visibilitychange', () => { if(document.hidden){ stop(
 $('couv').style.backgroundImage = `url(${IMG(COUVERTURE)})`;
 (async () => {
   let n = null; try{ n = window.Famille && Famille.player ? Famille.player() : null; }catch(e){}
-  if(n) await setJoueur(n); else { accueil(); choisirJoueur(); }
+  accueil(); if(n) await setJoueur(n); else choisirJoueur();
   const p = new URLSearchParams(location.search).get('ep'); if(p) episode(+p);
 })();
