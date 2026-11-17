@@ -2,27 +2,30 @@
    les jeux de chaque enfant, les étoiles et la sauvegarde. Les textes et les jeux sont dans episodes.js.
    Les voix (ElevenLabs, api/voix.php) : papa = Jon (v=jon), maman = Céline, l'arabe = Mohammad. Les versets du Coran
    sont affichés (police Amiri Quran) mais jamais lus par la voix artificielle : seul leur sens en français est lu. */
-import { EPISODES, COUVERTURE } from './episodes.js';
+// une même page pour chaque série : <body data-serie="prophete"> (la vie du Prophète ﷺ) ou "prophetes" (les histoires des prophètes)
+const SERIE = document.body.dataset.serie || 'prophete';
+const { EPISODES, COUVERTURE } = await import('../' + SERIE + '/episodes.js');
 
 const $ = id => document.getElementById(id);
-const IMG = n => 'prophete/img/' + n + '.webp';
+const IMG = n => (n === 'papa' || n === 'maman' ? 'prophete' : SERIE) + '/img/' + n + '.webp';
+const VID = n => SERIE + '/vid/' + n + '.mp4';   // le dessin animé (saison 2) : une petite vidéo qui va et revient, à la place de l'image
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const melange = a => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const CHIFFRES = '٠١٢٣٤٥٦٧٨٩', arabe = n => String(n).replace(/\d/g, d => CHIFFRES[d]);
-const NOMBRES_AR = ['', 'وَاحِد', 'اِثْنَان', 'ثَلَاثَة', 'أَرْبَعَة', 'خَمْسَة', 'سِتَّة', 'سَبْعَة', 'ثَمَانِيَة', 'تِسْعَة', 'عَشَرَة'];
+const NOMBRES_AR = ['', 'وَاحِد', 'اِثْنَان', 'ثَلَاثَة', 'أَرْبَعَة', 'خَمْسَة', 'سِتَّة', 'سَبْعَة', 'ثَمَانِيَة', 'تِسْعَة', 'عَشَرَة', 'أَحَدَ عَشَرَ'];
 const DEBUT_VERSET = { 93:6, 9:40 };
 
 /* ---------- le joueur et ses étoiles ---------- */
 let joueur = null, sv = { ep:{}, lang:'deux', t:0 };
-const cle = () => 'eveil-prophete:' + joueur;
+const COURS = 'eveil-' + SERIE, cle = () => COURS + ':' + joueur;
 function sauve(){ if(!joueur) return; sv.t = Date.now(); store.set(cle(), sv); }
 const etoiles = n => { const e = sv.ep[n] || {}; return (e.vu ? 1 : 0) + (e.jeu ? 1 : 0) + (e.quiz ? 1 : 0); };
 function note(n, quoi){ sv.ep[n] = sv.ep[n] || {}; if(!sv.ep[n][quoi]){ sv.ep[n][quoi] = true; sauve(); } }
 async function setJoueur(n){
   joueur = n; sv = Object.assign({ ep:{}, lang:'deux', t:0 }, store.get(cle(), {}) || {});
-  if(window.Famille && Famille.track){ Famille.track('eveil-prophete', n, [cle()]);
-    try{ const r = await Famille.load('eveil-prophete', n), d = r && r[cle()]; if(d && joueur === n && (d.t || 0) > (sv.t || 0)){ sv = Object.assign({ ep:{}, lang:'deux' }, d); store.set(cle(), sv); } }catch(e){} }
+  if(window.Famille && Famille.track){ Famille.track(COURS, n, [cle()]);
+    try{ const r = await Famille.load(COURS, n), d = r && r[cle()]; if(d && joueur === n && (d.t || 0) > (sv.t || 0)){ sv = Object.assign({ ep:{}, lang:'deux' }, d); store.set(cle(), sv); } }catch(e){} }
   listeAccueil(); if(EP && $('e-episode').classList.contains('on')) episode(EP.n);
 }
 async function choisirJoueur(){
@@ -66,7 +69,7 @@ async function dire(t, qui){
 }
 
 /* ---------- les écrans ---------- */
-function ecran(id){ document.querySelectorAll('.ecran').forEach(e => e.classList.toggle('on', e.id === id)); window.scrollTo(0, 0); }
+function ecran(id){ if(id !== 'e-film'){ const v = document.getElementById('f-vid'); if(v){ try{ v.pause(); }catch(e){} } } document.querySelectorAll('.ecran').forEach(e => e.classList.toggle('on', e.id === id)); window.scrollTo(0, 0); }
 function rondEtoiles(n){ const k = etoiles(n); return '<span class="et">' + [0, 1, 2].map(i => i < k ? '⭐' : '<i>☆</i>').join('') + '</span>'; }
 
 function accueil(){ stop(); ecran('e-accueil'); listeAccueil(); }
@@ -99,6 +102,9 @@ function montreScene(s){
   const im = $('f-img'), url = IMG(s.img || EP.img);
   F.sens = (F.sens + 1) % 4;
   im.className = 'f-img'; void im.offsetWidth; im.style.backgroundImage = `url(${url})`; im.classList.add('kb' + F.sens);
+  const v = $('f-vid'), nomV = s.vid === true ? (s.img || EP.img) : s.vid;
+  if(nomV){ v.poster = url; if(v.dataset.n !== nomV){ v.dataset.n = nomV; v.src = VID(nomV); } v.hidden = false; v.play().catch(() => {}); }
+  else { v.hidden = true; try{ v.pause(); }catch(e){} }
   const b = $('f-bulle'), c = $('f-coran'), l = $('f-lecon');
   b.hidden = !s.qui; c.hidden = !s.coran; l.hidden = !s.lecon;
   if(s.qui){
@@ -112,7 +118,7 @@ function montreScene(s){
   $('f-pos').textContent = (F.i + 1) + ' / ' + scenesFilm().length;
 }
 function carteCoran(q){
-  const d = DEBUT_VERSET[q.s] || 1;
+  const d = q.d || DEBUT_VERSET[q.s] || 1;
   return `<div class="cadre"><p class="sourate">📖 Sourate ${esc(q.nom)}</p>
     <p class="basmala" lang="ar" dir="rtl">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</p>
     <div class="versets" lang="ar" dir="rtl">${q.v.map((v, k) => `${esc(v[0])} <span class="num">﴿${arabe(d + k)}﴾</span>`).join(' ')}</div>
@@ -185,12 +191,14 @@ function touche(zone, g){
   const t = zone.firstChild; let fait = 0;
   dire(g.consigne, 'maman');
   J.dit = () => dire(g.consigne, 'maman');
-  for(let k = 0; k < g.n; k++){
-    const o = document.createElement('button'); o.className = 'objet'; o.textContent = g.objet;
+  // g.objets = [[emoji, nom arabe], …] (saison 2 : la voix dit le nom de l'animal en arabe) ; sinon g.objet répété g.n fois (la voix compte)
+  const objs = g.objets || Array.from({ length:g.n }, () => [g.objet, '']), total = objs.length;
+  for(let k = 0; k < total; k++){
+    const o = document.createElement('button'); o.className = 'objet'; o.textContent = objs[k][0];
     o.style.left = (8 + Math.random() * 78) + '%'; o.style.top = (30 + Math.random() * 55) + '%'; o.style.animationDelay = (-Math.random() * 3) + 's';
     o.onclick = () => { if(o.classList.contains('pris')) return; o.classList.add('pris'); fait++;
-      $('j-compte').innerHTML = `<b>${fait}</b> <span lang="ar">${arabe(fait)}</span>`; dire(NOMBRES_AR[fait] || String(fait), 'ar');
-      if(fait === g.n) setTimeout(async () => { note(EP.n, 'jeu'); await dire('Bravo ' + (joueur || '') + ' !', 'maman'); dire('أَحْسَنْتَ!', 'ar'); fete(); }, 900); };
+      $('j-compte').innerHTML = `<b>${fait}</b> <span lang="ar">${objs[k][1] ? esc(objs[k][1]) : arabe(fait)}</span>`; dire(objs[k][1] || NOMBRES_AR[fait] || String(fait), 'ar');
+      if(fait === total) setTimeout(async () => { note(EP.n, 'jeu'); await dire('Bravo ' + (joueur || '') + ' !', 'maman'); dire('أَحْسَنْتَ!', 'ar'); fete(); }, 900); };
     t.appendChild(o);
   }
 }

@@ -53,3 +53,10 @@ window.__assis = (img, prompt, seed, prefix) => ({
 
 // Stage 2 (14/11) : animation d'une créature en paysage (832 × 480), les 33 images sont gardées (anim_<nom>_000NN_.png) pour bande_comfy.py
 window.__anim = (img, prompt, seed, prefix) => { const w = __assis(img, prompt, seed, prefix); w[12].inputs.width = 832; w[12].inputs.height = 480; delete w[16]; w[17].inputs.images = ['15', 0]; return w; };
+
+// Éveil religieux, saison 2 (17/11) : un plan de « dessin animé », Wan 2.2 image → vidéo 832 × 480, 81 images (5 s à 16 i/s), enregistré directement en mp4 (h264)
+// __film('ev2_p2_c.png', 'animated cartoon: …, static camera', 9501, 'ev2v/p2_c') ; le négatif interdit toute personne (règle : on ne montre jamais un prophète)
+window.__film = (img, prompt, seed, prefix, n = 81) => { const w = __assis(img, prompt, seed, prefix); w[12].inputs.width = 832; w[12].inputs.height = 480; w[12].inputs.length = n; delete w[16]; delete w[17];
+  w[10].inputs.text = 'people, person, human, face, hands, man, woman, child, blurry, distorted, text, watermark, scene change';
+  w[18] = { class_type:'CreateVideo', inputs:{ images:['15', 0], fps:16 } };
+  w[19] = { class_type:'SaveVideo', inputs:{ video:['18', 0], filename_prefix:prefix, format:'mp4', codec:'h264' } }; return w; };
