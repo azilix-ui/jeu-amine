@@ -12,13 +12,15 @@ export const EPISODES = [
     "img": "p1_a",
     "qui": "papa",
     "fr": "Avant les hommes, Allah créa le ciel et la terre, les montagnes, les mers, les plantes et les animaux. Tout ce qui existe, c’est Lui qui l’a créé.",
-    "ar": "خَلَقَ اللهُ السَّمَاءَ وَالأَرْضَ، وَالجِبَالَ وَالبِحَارَ، وَالنَّبَاتَ وَالحَيَوَانَ."
+    "ar": "خَلَقَ اللهُ السَّمَاءَ وَالأَرْضَ، وَالجِبَالَ وَالبِحَارَ، وَالنَّبَاتَ وَالحَيَوَانَ.",
+    "vid": true
    },
    {
     "img": "p1_b",
     "qui": "maman",
     "fr": "Puis Allah créa Adam, le premier homme, avec de l’argile, et lui donna la vie. Il lui apprit le nom de toutes les choses : l’arbre, l’oiseau, l’eau, l’étoile…",
-    "ar": "ثُمَّ خَلَقَ اللهُ آدَمَ مِنْ طِينٍ، وَعَلَّمَهُ أَسْمَاءَ الأَشْيَاءِ كُلِّهَا."
+    "ar": "ثُمَّ خَلَقَ اللهُ آدَمَ مِنْ طِينٍ، وَعَلَّمَهُ أَسْمَاءَ الأَشْيَاءِ كُلِّهَا.",
+    "vid": true
    },
    {
     "coran": {
@@ -38,19 +40,22 @@ export const EPISODES = [
     "img": "p1_c",
     "qui": "papa",
     "fr": "Allah demanda aux anges de se prosterner devant Adam pour l’honorer. Tous obéirent, sauf Iblis, plein d’orgueil, qui dit : « Je suis meilleur que lui ! » L’orgueil, c’est se croire meilleur que les autres.",
-    "ar": "وَأَمَرَ اللهُ المَلَائِكَةَ أَنْ يَسْجُدُوا لِآدَمَ، فَسَجَدُوا إِلَّا إِبْلِيسَ تَكَبَّرَ."
+    "ar": "وَأَمَرَ اللهُ المَلَائِكَةَ أَنْ يَسْجُدُوا لِآدَمَ، فَسَجَدُوا إِلَّا إِبْلِيسَ تَكَبَّرَ.",
+    "vid": true
    },
    {
     "img": "p1_d",
     "qui": "maman",
     "fr": "Adam et sa femme Hawwa vivaient au Paradis. Ils pouvaient manger de tout, sauf des fruits d’un seul arbre. Iblis leur murmura d’y goûter ; ils l’écoutèrent et en mangèrent.",
-    "ar": "سَكَنَ آدَمُ وَحَوَّاءُ الجَنَّةَ، وَنَهَاهُمَا اللهُ عَنْ شَجَرَةٍ وَاحِدَةٍ، فَهَمَسَ لَهُمَا إِبْلِيسُ فَأَكَلَا مِنْهَا."
+    "ar": "سَكَنَ آدَمُ وَحَوَّاءُ الجَنَّةَ، وَنَهَاهُمَا اللهُ عَنْ شَجَرَةٍ وَاحِدَةٍ، فَهَمَسَ لَهُمَا إِبْلِيسُ فَأَكَلَا مِنْهَا.",
+    "vid": true
    },
    {
     "img": "p1_e",
     "qui": "papa",
     "fr": "Ils furent très tristes d’avoir désobéi et demandèrent pardon à Allah, sincèrement. Allah leur pardonna. Puis ils descendirent sur la terre, où nous vivons tous : nous sommes leurs enfants.",
-    "ar": "فَنَدِمَا وَطَلَبَا المَغْفِرَةَ، فَغَفَرَ اللهُ لَهُمَا، ثُمَّ نَزَلَا إِلَى الأَرْضِ."
+    "ar": "فَنَدِمَا وَطَلَبَا المَغْفِرَةَ، فَغَفَرَ اللهُ لَهُمَا، ثُمَّ نَزَلَا إِلَى الأَرْضِ.",
+    "vid": true
    }
   ],
   "lecon": {
@@ -184,13 +189,15 @@ export const EPISODES = [
     "img": "p2_a",
     "qui": "papa",
     "fr": "Bien plus tard, les gens avaient oublié Allah et adoraient des statues. Allah envoya Nouh pour leur rappeler d’adorer Allah seul et d’être bons. Il les appela pendant très, très longtemps : neuf cent cinquante ans, dit le Coran.",
-    "ar": "نَسِيَ النَّاسُ اللهَ وَعَبَدُوا الأَصْنَامَ، فَأَرْسَلَ اللهُ نُوحًا يَدْعُوهُمْ زَمَنًا طَوِيلًا جِدًّا."
+    "ar": "نَسِيَ النَّاسُ اللهَ وَعَبَدُوا الأَصْنَامَ، فَأَرْسَلَ اللهُ نُوحًا يَدْعُوهُمْ زَمَنًا طَوِيلًا جِدًّا.",
+    "vid": true
    },
    {
     "img": "p2_b",
     "qui": "maman",
     "fr": "Très peu de gens l’écoutèrent, et beaucoup se moquaient de lui. Allah lui demanda de construire un très grand bateau, une arche, loin de la mer. Les moqueurs riaient : « Un bateau sans eau ! » Mais Nouh continuait, patient et confiant.",
-    "ar": "أَمَرَ اللهُ نُوحًا أَنْ يَصْنَعَ سَفِينَةً كَبِيرَةً، وَالنَّاسُ يَضْحَكُونَ، وَهُوَ يَصْبِرُ."
+    "ar": "أَمَرَ اللهُ نُوحًا أَنْ يَصْنَعَ سَفِينَةً كَبِيرَةً، وَالنَّاسُ يَضْحَكُونَ، وَهُوَ يَصْبِرُ.",
+    "vid": true
    },
    {
     "img": "p2_c",
@@ -223,7 +230,8 @@ export const EPISODES = [
     "img": "p2_e",
     "qui": "papa",
     "fr": "Quand l’eau se retira, l’arche se posa sur le mont Djoudi. Les croyants et les animaux sortirent sur une terre toute neuve, lavée par la pluie, et remercièrent Allah.",
-    "ar": "وَلَمَّا نَزَلَ المَاءُ، اسْتَقَرَّتِ السَّفِينَةُ عَلَى جَبَلِ الجُودِيِّ، فَشَكَرُوا اللهَ."
+    "ar": "وَلَمَّا نَزَلَ المَاءُ، اسْتَقَرَّتِ السَّفِينَةُ عَلَى جَبَلِ الجُودِيِّ، فَشَكَرُوا اللهَ.",
+    "vid": true
    }
   ],
   "lecon": {

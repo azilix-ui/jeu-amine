@@ -63,6 +63,10 @@ Nahki Tounsi : écriture `3` = ع, `7` = ح, `kh` = خ, `q` = ق, `dh` = ض/ظ. 
   - **Règles de la rubrique** : jamais d'image du Prophète ﷺ, d'un prophète, d'un compagnon ou d'un ange (même en silhouette) ; pas de batailles ; récits incertains marqués « selon la tradition » ; rien de publié sans l'accord du papa.
   - Images : ComfyUI (FLUX.2 klein, préfixe `ev/`, graines 9100+ ; refaites `_v2` sans route moderne ni coupoles), `docs/eveil/build_images.py`. Conteurs : `__edit` de `houma_anis_jebba.png` / `houma_imen_jebba.png` ; les enfants (dernier épisode) : `__edit` des trois avatars.
 
+- **`eveil/prophetes.html`** · « Les histoires des prophètes » (saison 2, 17/11), **en dessin animé** : Adam, Nouh et l'arche, Ibrahim, Youssouf et le rêve, Moussa et la mer, Younous et le grand poisson, Issa le bébé qui parle. Textes relus et validés par le papa (document claude.ai « Les histoires des prophètes — textes à relire ») ; `eveil/prophetes/episodes.js` est **fabriqué** par `docs/eveil/episodes_prophetes.py` (versets tirés de quran-json, pas retapés). Même lecteur que la saison 1 (`prophete/lecteur.js`, choisi par `<body data-serie>`), cours `eveil-prophetes`.
+  - **Le dessin animé** : chaque scène est une vidéo Wan 2.2 (ComfyUI sur le PC du papa, aide `__film` de `docs/comfy/aides.js` : image FLUX → 81 images, 832 × 480, 16 i/s, mp4, environ 3 min par plan), rendue en boucle sans à-coup par `docs/eveil/boucle.sh` (la fin se fond dans le début) → `eveil/prophetes/vid/<scène>.mp4` (environ 350 Ko). Le négatif de la vidéo interdit toute personne ; chaque vidéo est regardée avant publication. Sans vidéo, l'image bouge doucement comme en saison 1.
+  - Jeux : Amine touche des objets (pour Adam et Nouh, des animaux dont la voix dit le nom en arabe : `objets`), Salma l'ordre + 2 questions, Essil 5 questions.
+
 ## Pour toute la famille (dans `jeux/`)
 
 - **Serpent Légendes**, **Ludo Légendes**, **Médina Express** (course infinie à 3 voies dans la médina et le long du TGM, records en ligne), **Grimpe-Glace** (tour de glace) et **La Légende du Jasmin** (plateforme 2.5D en Tunisie, blocs savoir) : voir `docs/jeux-3d.md`.
