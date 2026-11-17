@@ -224,7 +224,8 @@ export const EPISODES = [
     "img": "p2_d",
     "qui": "maman",
     "fr": "Alors la pluie tomba du ciel, l’eau jaillit de la terre, et les vagues devinrent hautes comme des montagnes. L’arche flottait sur l’eau, protégée par Allah.",
-    "ar": "ثُمَّ نَزَلَ المَطَرُ، وَارْتَفَعَتِ الأَمْوَاجُ، وَالسَّفِينَةُ تَطْفُو بِحِفْظِ اللهِ."
+    "ar": "ثُمَّ نَزَلَ المَطَرُ، وَارْتَفَعَتِ الأَمْوَاجُ، وَالسَّفِينَةُ تَطْفُو بِحِفْظِ اللهِ.",
+    "vid": true
    },
    {
     "img": "p2_e",
@@ -373,19 +374,22 @@ export const EPISODES = [
     "img": "p3_a",
     "qui": "maman",
     "fr": "Ibrahim était un jeune homme qui réfléchissait beaucoup. Une nuit, il vit une étoile briller, puis elle disparut. Ensuite la lune, puis le soleil : eux aussi disparaissaient. Il comprit : « Mon Seigneur, c’est Celui qui a créé le ciel et la terre ! »",
-    "ar": "نَظَرَ إِبْرَاهِيمُ إِلَى النَّجْمِ وَالقَمَرِ وَالشَّمْسِ، فَعَرَفَ أَنَّ رَبَّهُ هُوَ الَّذِي خَلَقَهَا كُلَّهَا."
+    "ar": "نَظَرَ إِبْرَاهِيمُ إِلَى النَّجْمِ وَالقَمَرِ وَالشَّمْسِ، فَعَرَفَ أَنَّ رَبَّهُ هُوَ الَّذِي خَلَقَهَا كُلَّهَا.",
+    "vid": true
    },
    {
     "img": "p3_b",
     "qui": "papa",
     "fr": "Son peuple adorait des statues de pierre. Ibrahim leur disait : « Elles ne vous entendent pas et ne peuvent pas vous aider ! » Un jour de fête, il cassa les statues, sauf la plus grande. « Demandez-lui qui a fait ça ! » Les gens comprirent qu’une statue ne parle pas… mais ils se fâchèrent.",
-    "ar": "كَانَ قَوْمُهُ يَعْبُدُونَ الأَصْنَامَ، فَكَسَرَهَا وَتَرَكَ أَكْبَرَهَا لِيَعْرِفُوا أَنَّهَا لَا تَتَكَلَّمُ."
+    "ar": "كَانَ قَوْمُهُ يَعْبُدُونَ الأَصْنَامَ، فَكَسَرَهَا وَتَرَكَ أَكْبَرَهَا لِيَعْرِفُوا أَنَّهَا لَا تَتَكَلَّمُ.",
+    "vid": true
    },
    {
     "img": "p3_c",
     "qui": "maman",
     "fr": "Pour le punir, le roi fit allumer un immense feu et y fit jeter Ibrahim. Mais Ibrahim avait confiance en Allah. Et Allah dit au feu d’être frais et doux pour lui : le feu ne lui fit aucun mal.",
-    "ar": "أَشْعَلُوا نَارًا عَظِيمَةً، فَجَعَلَهَا اللهُ بَارِدَةً عَلَيْهِ، فَلَمْ تَضُرَّهُ."
+    "ar": "أَشْعَلُوا نَارًا عَظِيمَةً، فَجَعَلَهَا اللهُ بَارِدَةً عَلَيْهِ، فَلَمْ تَضُرَّهُ.",
+    "vid": true
    },
    {
     "coran": {
@@ -405,7 +409,8 @@ export const EPISODES = [
     "img": "p3_d",
     "qui": "papa",
     "fr": "Plus tard, Ibrahim alla à La Mecque. Avec son fils Ismaïl, il construisit la Kaaba, pierre après pierre, pour qu’on y adore Allah seul. Tu te souviens ? C’est la maison que l’éléphant a refusé d’attaquer !",
-    "ar": "وَبَنَى إِبْرَاهِيمُ مَعَ ابْنِهِ إِسْمَاعِيلَ الكَعْبَةَ فِي مَكَّةَ."
+    "ar": "وَبَنَى إِبْرَاهِيمُ مَعَ ابْنِهِ إِسْمَاعِيلَ الكَعْبَةَ فِي مَكَّةَ.",
+    "vid": true
    }
   ],
   "lecon": {
@@ -515,7 +520,8 @@ export const EPISODES = [
     "img": "p4_a",
     "qui": "papa",
     "fr": "Youssouf était un petit garçon très aimé de son père, Ya’qoub. Une nuit, il fit un rêve étrange : onze étoiles, le soleil et la lune se prosternaient devant lui. Son père lui dit : « Ne raconte pas ce rêve à tes frères. »",
-    "ar": "رَأَى يُوسُفُ فِي المَنَامِ أَحَدَ عَشَرَ نَجْمًا وَالشَّمْسَ وَالقَمَرَ."
+    "ar": "رَأَى يُوسُفُ فِي المَنَامِ أَحَدَ عَشَرَ نَجْمًا وَالشَّمْسَ وَالقَمَرَ.",
+    "vid": true
    },
    {
     "coran": {
@@ -535,25 +541,29 @@ export const EPISODES = [
     "img": "p4_b",
     "qui": "maman",
     "fr": "Ses grands frères étaient jaloux. Un jour, ils l’emmenèrent loin et le laissèrent au fond d’un vieux puits sec. Youssouf avait peur, mais Allah était avec lui et le rassura.",
-    "ar": "غَارَ إِخْوَتُهُ مِنْهُ، فَتَرَكُوهُ فِي بِئْرٍ، وَلَكِنَّ اللهَ كَانَ مَعَهُ."
+    "ar": "غَارَ إِخْوَتُهُ مِنْهُ، فَتَرَكُوهُ فِي بِئْرٍ، وَلَكِنَّ اللهَ كَانَ مَعَهُ.",
+    "vid": true
    },
    {
     "img": "p4_c",
     "qui": "papa",
     "fr": "Une caravane passa, trouva Youssouf et l’emmena en Égypte. Il grandit en restant honnête et patient, même dans les moments difficiles.",
-    "ar": "أَخَذَتْهُ قَافِلَةٌ إِلَى مِصْرَ، فَكَبِرَ صَادِقًا صَبُورًا."
+    "ar": "أَخَذَتْهُ قَافِلَةٌ إِلَى مِصْرَ، فَكَبِرَ صَادِقًا صَبُورًا.",
+    "vid": true
    },
    {
     "img": "p4_d",
     "qui": "papa",
     "fr": "Allah lui avait appris à expliquer les rêves. Le roi rêva de sept vaches grasses et de sept vaches maigres. Youssouf expliqua : « Sept années de bonnes récoltes vont venir, puis sept années de famine. Gardez du blé ! »",
-    "ar": "وَفَسَّرَ لِلْمَلِكِ رُؤْيَاهُ، فَأَمَرَهُمْ أَنْ يَحْفَظُوا القَمْحَ."
+    "ar": "وَفَسَّرَ لِلْمَلِكِ رُؤْيَاهُ، فَأَمَرَهُمْ أَنْ يَحْفَظُوا القَمْحَ.",
+    "vid": true
    },
    {
     "img": "p4_e",
     "qui": "maman",
     "fr": "Le roi confia les réserves de blé à Youssouf. Pendant la famine, ses frères vinrent en Égypte acheter du blé, sans le reconnaître. Youssouf leur dit qui il était, et au lieu de se venger, il leur pardonna : « Aujourd’hui, pas de reproche contre vous. » Toute la famille fut de nouveau réunie, et le rêve se réalisa.",
-    "ar": "وَلَمَّا جَاءَ إِخْوَتُهُ، عَفَا عَنْهُمْ وَلَمْ يَلُمْهُمْ، وَاجْتَمَعَتِ العَائِلَةُ مِنْ جَدِيدٍ."
+    "ar": "وَلَمَّا جَاءَ إِخْوَتُهُ، عَفَا عَنْهُمْ وَلَمْ يَلُمْهُمْ، وَاجْتَمَعَتِ العَائِلَةُ مِنْ جَدِيدٍ.",
+    "vid": true
    }
   ],
   "lecon": {
@@ -701,13 +711,15 @@ export const EPISODES = [
     "img": "p5_c",
     "qui": "maman",
     "fr": "Moussa et Hâroun demandèrent à Pharaon de laisser partir les Banû Isrâ’îl. Il refusa. Alors une nuit, Moussa partit avec eux. Arrivés devant la mer, ils virent Pharaon et ses soldats arriver derrière eux. Les gens eurent très peur, mais Moussa dit : « Non ! Mon Seigneur est avec moi, Il va me guider. »",
-    "ar": "خَرَجَ مُوسَى بِقَوْمِهِ لَيْلًا، وَلَمَّا وَصَلُوا إِلَى البَحْرِ خَافُوا، فَقَالَ لَهُمْ: اللهُ مَعِي."
+    "ar": "خَرَجَ مُوسَى بِقَوْمِهِ لَيْلًا، وَلَمَّا وَصَلُوا إِلَى البَحْرِ خَافُوا، فَقَالَ لَهُمْ: اللهُ مَعِي.",
+    "vid": true
    },
    {
     "img": "p5_d",
     "qui": "papa",
     "fr": "Allah dit à Moussa de frapper la mer avec son bâton. Et la mer s’ouvrit en deux, avec un chemin sec au milieu, entre deux grands murs d’eau ! Tous traversèrent sans danger. Quand Pharaon voulut les suivre, la mer se referma derrière eux.",
-    "ar": "ضَرَبَ مُوسَى البَحْرَ بِعَصَاهُ فَانْشَقَّ، وَعَبَرُوا فِي طَرِيقٍ يَابِسٍ."
+    "ar": "ضَرَبَ مُوسَى البَحْرَ بِعَصَاهُ فَانْشَقَّ، وَعَبَرُوا فِي طَرِيقٍ يَابِسٍ.",
+    "vid": true
    }
   ],
   "lecon": {
@@ -817,19 +829,22 @@ export const EPISODES = [
     "img": "p6_a",
     "qui": "papa",
     "fr": "Younous appelait les gens de sa ville, Ninive, à adorer Allah, mais ils ne l’écoutaient pas. Fâché, il partit sans attendre la permission d’Allah, et monta sur un bateau.",
-    "ar": "دَعَا يُونُسُ قَوْمَهُ فَلَمْ يُؤْمِنُوا، فَخَرَجَ غَاضِبًا وَرَكِبَ سَفِينَةً."
+    "ar": "دَعَا يُونُسُ قَوْمَهُ فَلَمْ يُؤْمِنُوا، فَخَرَجَ غَاضِبًا وَرَكِبَ سَفِينَةً.",
+    "vid": true
    },
    {
     "img": "p6_b",
     "qui": "maman",
     "fr": "En mer, une grosse tempête se leva et le bateau était trop lourd. Les marins tirèrent au sort qui devait quitter le bateau : ce fut Younous. Il se retrouva dans la mer, et un énorme poisson l’avala… sans lui faire de mal, car Allah le protégeait.",
-    "ar": "هَبَّتْ عَاصِفَةٌ، فَنَزَلَ يُونُسُ فِي البَحْرِ، فَابْتَلَعَهُ حُوتٌ كَبِيرٌ وَلَمْ يُؤْذِهِ."
+    "ar": "هَبَّتْ عَاصِفَةٌ، فَنَزَلَ يُونُسُ فِي البَحْرِ، فَابْتَلَعَهُ حُوتٌ كَبِيرٌ وَلَمْ يُؤْذِهِ.",
+    "vid": true
    },
    {
     "img": "p6_c",
     "qui": "papa",
     "fr": "Dans le ventre du poisson, au fond de la mer, dans la nuit, Younous comprit son erreur. Il demanda pardon à Allah avec une invocation que les musulmans répètent encore aujourd’hui.",
-    "ar": "فِي بَطْنِ الحُوتِ، فِي الظَّلَامِ، تَابَ يُونُسُ وَدَعَا رَبَّهُ."
+    "ar": "فِي بَطْنِ الحُوتِ، فِي الظَّلَامِ، تَابَ يُونُسُ وَدَعَا رَبَّهُ.",
+    "vid": true
    },
    {
     "coran": {
@@ -849,7 +864,8 @@ export const EPISODES = [
     "img": "p6_d",
     "qui": "maman",
     "fr": "Allah entendit son appel et le sauva. Le poisson le déposa sur une plage, et Allah fit pousser une plante à grandes feuilles pour lui faire de l’ombre. Younous retourna dans sa ville : cette fois, tous les habitants crurent en Allah !",
-    "ar": "فَنَجَّاهُ اللهُ، وَأَنْبَتَ لَهُ شَجَرَةً تُظِلُّهُ، ثُمَّ عَادَ إِلَى قَوْمِهِ فَآمَنُوا كُلُّهُمْ."
+    "ar": "فَنَجَّاهُ اللهُ، وَأَنْبَتَ لَهُ شَجَرَةً تُظِلُّهُ، ثُمَّ عَادَ إِلَى قَوْمِهِ فَآمَنُوا كُلُّهُمْ.",
+    "vid": true
    }
   ],
   "lecon": {
@@ -959,13 +975,15 @@ export const EPISODES = [
     "img": "p7_a",
     "qui": "maman",
     "fr": "Maryam était une jeune fille très pieuse, qui priait Allah dans le temple. Zakariyyâ s’occupait d’elle. Chaque fois qu’il entrait, il trouvait près d’elle des fruits, même hors saison. « D’où viennent-ils ? » « D’Allah ! » répondait-elle.",
-    "ar": "كَانَتْ مَرْيَمُ تَعْبُدُ اللهَ، وَكَانَ اللهُ يَرْزُقُهَا فَاكِهَةً فِي غَيْرِ وَقْتِهَا."
+    "ar": "كَانَتْ مَرْيَمُ تَعْبُدُ اللهَ، وَكَانَ اللهُ يَرْزُقُهَا فَاكِهَةً فِي غَيْرِ وَقْتِهَا.",
+    "vid": true
    },
    {
     "img": "p7_b",
     "qui": "papa",
     "fr": "Un jour, un ange lui annonça qu’elle aurait un bébé sans papa, par la volonté d’Allah, qui peut tout. Plus tard, seule sous un palmier, elle eut très mal et était inquiète. Allah lui dit de secouer le palmier : des dattes fraîches tombèrent, et un petit ruisseau coula à ses pieds.",
-    "ar": "بَشَّرَهَا المَلَكُ بِوَلَدٍ، وَتَحْتَ النَّخْلَةِ أَكَلَتْ مِنَ التَّمْرِ وَشَرِبَتْ مِنَ المَاءِ."
+    "ar": "بَشَّرَهَا المَلَكُ بِوَلَدٍ، وَتَحْتَ النَّخْلَةِ أَكَلَتْ مِنَ التَّمْرِ وَشَرِبَتْ مِنَ المَاءِ.",
+    "vid": true
    },
    {
     "img": "p7_c",
