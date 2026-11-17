@@ -103,7 +103,7 @@
   <a class="back" href="./">← Famille Missaoui</a>
   <header class="mur-tete">
     <h1>Le mur de la famille<span>.</span></h1>
-    <p>Un mot, un dessin, la photo d'une création dans Ma Houma ou à l'Atelier, ou ta <b>photo du jour</b> (3 par jour) avec un petit mot : tout le monde le voit, la famille et les proches invités.</p>
+    <p>Un mot, un dessin, la photo d'une création dans Ma Houma ou à l'Atelier, ou ta <b>photo du jour</b> avec un petit mot (3 photos ou images par jour chacun) : tout le monde le voit, la famille et les proches invités.</p>
   </header>
 
   <section class="ecrire" aria-label="Écrire sur le mur">
@@ -135,7 +135,7 @@ const quand = ts => { const s = Date.now() / 1000 - ts; if(s < 60) return 'à l\
 let qui = (window.Famille && Famille.player()) || null, image = null, dernier = 0, EMO = ['❤️', '👏', '😂', '😮'];
 
 function montreQui(){ $('quiNom').textContent = qui ? qui : 'Qui écrit ?'; $('qui').firstElementChild.outerHTML = qui && tete(qui) ? '<img src="' + tete(qui) + '" alt="">' : '<span class="vide">🙂</span>'; }
-$('qui').onclick = async () => { if(!window.Famille) return; const n = await Famille.choosePlayer({ title:'Qui écrit ?', extra:[{ name:'Anis', color:'#0f766e', emoji:'👨' }, { name:'Imen', color:'#b4235a', emoji:'👩' }], avatar:k => '<img src="/jeux/avatars/' + k.name.toLowerCase() + '.webp" alt="">' }); if(n){ qui = n; montreQui(); } };
+$('qui').onclick = async () => { if(!window.Famille) return; const n = await Famille.choosePlayer({ title:'Qui écrit ?', extra:[{ name:'Anis', color:'#0f766e', emoji:'👨' }, { name:'Imen', color:'#b4235a', emoji:'👩' }], avatar:k => '<img src="/jeux/avatars/' + k.name.toLowerCase() + '.webp" alt="">' }); if(n){ qui = n; montreQui(); majReste(); } };
 montreQui();
 
 // une photo : réduite ici (1280 px) avant l'envoi ; le serveur la réencode (plus d'infos cachées)
@@ -170,7 +170,7 @@ $('publier').onclick = async () => {
   if(!qui){ $('qui').click(); return; }
   if(!t && !image){ $('err').textContent = 'Écris un message, prends une photo ou fais un dessin 🙂'; return; }
   $('publier').disabled = true; $('publier').textContent = 'J\'épingle…';
-  try{ await api({ action:'poste', auteur:qui, texte:t, image:image || '' }); $('texte').value = ''; apercu(null); await charge(); }
+  try{ await api({ action:'poste', auteur:qui, texte:t, image:image || '' }); $('texte').value = ''; apercu(null); await charge(); majReste(); }
   catch(e){ $('err').textContent = e.message; }
   finally{ $('publier').disabled = false; $('publier').textContent = 'Épingler sur le mur'; }
 };
@@ -231,13 +231,19 @@ $('cabine').onclick = async () => {
     back.querySelector('#cRep').onclick = camera; back.querySelector('#cAnn').onclick = ferme;
     back.querySelector('#cOk').onclick = async () => {
       const ok = back.querySelector('#cOk'); ok.disabled = true; ok.textContent = 'J\'accroche…';
-      try{ await api({ action:'poste', auteur:qui, texte:back.querySelector('#cMot').value.trim(), image:photo, genre:'polaroid', deco }); ferme(); await charge(); window.scrollTo({ top:$('fil').offsetTop - 20, behavior:'smooth' }); }
+      try{ await api({ action:'poste', auteur:qui, texte:back.querySelector('#cMot').value.trim(), image:photo, genre:'polaroid', deco }); ferme(); await charge(); majReste(); window.scrollTo({ top:$('fil').offsetTop - 20, behavior:'smooth' }); }
       catch(e){ back.querySelector('#cErr').textContent = e.message; ok.disabled = false; ok.textContent = '📌 Accrocher sur le mur'; }
     };
     setTimeout(() => back.querySelector('#cMot').focus(), 100);
   }
   camera();
 };
+
+// le compteur du jour sur les deux boutons d'image (17/11, 19 h : les deux comptent dans les 3 du jour)
+let resteJour = 3;
+async function majReste(){ if(!qui) return; resteJour = await quota(); $('cabine').textContent = '📸 Photo du jour (' + resteJour + ')'; }
+$('photo').addEventListener('click', e => { if(qui && resteJour <= 0){ e.preventDefault(); $('err').textContent = 'Tu as déjà accroché tes 3 photos aujourd\'hui : à demain ! 📸 Tu peux encore écrire un petit mot.'; } });
+majReste(); setInterval(majReste, 60000);
 
 function carte(m){
   const r = m.reac || {};

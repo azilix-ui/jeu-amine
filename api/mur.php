@@ -7,7 +7,7 @@
  *   GET  ?img=ID                                 -> l'image d'un message (WebP)
  *   POST action=poste auteur texte [image=dataURL] jeton  -> nouveau message (l'image est réencodée : plus de position GPS ni d'infos de l'appareil)
  *   POST action=poste … genre=polaroid deco=<style>  -> (17/11) une photo prise avec la caméra + un petit mot, accrochée comme un polaroid ;
- *                                                3 par personne et par jour (heure de Paris), effacer une photo ne rend pas le droit
+ *                                                3 images par personne et par jour (heure de Paris), photo du jour et images envoyées comptées ensemble ; effacer ne rend pas le droit
  *   GET  ?action=quota&auteur=X                  -> {restant} : photos polaroid encore permises aujourd'hui
  *   POST action=reagit id emoji jeton            -> met ou enlève une réaction
  *   POST action=supprime id (jeton de l'auteur | pass = mot de passe parent)
@@ -95,7 +95,11 @@ try {
             if (!$img) fail(400, 'Prends d\'abord ta photo 📸');
             if (mb_strlen($txt) > 90) $txt = mb_substr($txt, 0, 90);
             $deco = in_array($_POST['deco'] ?? '', MUR_DECOS, true) ? (string)$_POST['deco'] : 'polaroid';
-            if (photos_prises($qui) >= MUR_PHOTOS_JOUR) fail(429, 'Tu as déjà accroché tes ' . MUR_PHOTOS_JOUR . ' photos aujourd\'hui : à demain ! 📸');
+        }
+        // la limite du jour (17/11, 19 h) : 3 images par personne et par jour, TOUTES comptées (photo du jour ET bouton « 🖼️ Image »,
+        // qui ouvre aussi l'appareil photo sur la tablette : c'est par là que Salma en avait mis plus de 3)
+        if ($img) {
+            if (photos_prises($qui) >= MUR_PHOTOS_JOUR) fail(429, 'Tu as déjà accroché tes ' . MUR_PHOTOS_JOUR . ' photos aujourd\'hui : à demain ! 📸 (tu peux encore écrire un petit mot)');
             $db->prepare('INSERT INTO photos_jour (auteur, jour, n) VALUES (?, ?, 1) ON CONFLICT(auteur, jour) DO UPDATE SET n = n + 1')->execute([mb_strtolower($qui), jour()]);
             $db->prepare('DELETE FROM photos_jour WHERE jour < ?')->execute([(new DateTime('-7 days', new DateTimeZone('Europe/Paris')))->format('Y-m-d')]);
         }
