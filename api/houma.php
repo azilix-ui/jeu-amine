@@ -51,6 +51,8 @@ function hl(): PDO {
     $p->exec('CREATE TABLE IF NOT EXISTS envois (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
     $p->exec('CREATE TABLE IF NOT EXISTS site (client TEXT PRIMARY KEY, nom TEXT NOT NULL, av TEXT, page TEXT, vu INTEGER NOT NULL)');
     $cols = array_column($p->query('PRAGMA table_info(messages)')->fetchAll(), 'name');
+    $cs = array_column($p->query('PRAGMA table_info(site)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+    if (!in_array('url', $cs, true)) $p->exec("ALTER TABLE site ADD COLUMN url TEXT NOT NULL DEFAULT ''");   // 17/11 : l'adresse de la page (pour savoir si c'est un jeu)
     if (!in_array('a', $cols, true)) $p->exec("ALTER TABLE messages ADD COLUMN a TEXT NOT NULL DEFAULT ''");   // destinataire d'un message privé ('' = la houma)
     return $p;
 }
@@ -120,12 +122,18 @@ try {
         $d = (int)hl()->query("SELECT COALESCE(MAX(id), 0) FROM messages WHERE a = ''")->fetchColumn();
         out(200, ['en_ligne' => array_values($en), 'msgs' => $msgs, 'trocs' => array_map('troc_out', $s->fetchAll()), 'dernier' => $d, 'now' => $t]);
     }
+    if ($a === 'presents') {   // 17/11 : qui est sur le site (pastilles vertes de l'accueil, tableau du temps de jeu), sans se compter soi-même
+        hl()->prepare('DELETE FROM site WHERE vu < ?')->execute([$t - 25]);
+        $en = []; foreach (hl()->query('SELECT nom, page, url, vu FROM site ORDER BY vu DESC') as $p) if (!isset($en[$p['nom']])) $en[$p['nom']] = ['nom' => $p['nom'], 'page' => $p['page'], 'url' => $p['url'], 'vu' => (int)$p['vu']];
+        out(200, ['en_ligne' => array_values($en), 'now' => $t]);
+    }
     if ($a === 'site') {
         $nom = nom($_POST['nom'] ?? ''); $client = (string)($_POST['client'] ?? '');
         if (!preg_match('/^[0-9a-z]{8,40}$/', $client)) fail(400, 'Appareil inconnu.');
         $av = preg_match('/^[a-z]{2,12}$/', (string)($_POST['av'] ?? '')) ? (string)$_POST['av'] : '';
         hl()->prepare('DELETE FROM site WHERE vu < ?')->execute([$t - 25]);
-        hl()->prepare('INSERT OR REPLACE INTO site (client, nom, av, page, vu) VALUES (?, ?, ?, ?, ?)')->execute([$client, $nom, $av, court($_POST['page'] ?? '', 60), $t]);
+        $url = preg_match('~^/[A-Za-z0-9/_.-]{0,80}$~', (string)($_POST['url'] ?? '')) ? (string)$_POST['url'] : '';
+        hl()->prepare('INSERT OR REPLACE INTO site (client, nom, av, page, url, vu) VALUES (?, ?, ?, ?, ?, ?)')->execute([$client, $nom, $av, court($_POST['page'] ?? '', 60), $url, $t]);
         $en = []; foreach (hl()->query('SELECT nom, av, page FROM site ORDER BY vu DESC') as $p) if (!isset($en[$p['nom']])) $en[$p['nom']] = $p;
         $depuis = (int)($_POST['depuis'] ?? 0);
         $s = $depuis > 0 ? hl()->prepare("SELECT * FROM messages WHERE id > ? AND a <> '' AND (a = ? OR nom = ?) ORDER BY id LIMIT 60")

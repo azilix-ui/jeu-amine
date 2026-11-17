@@ -321,6 +321,7 @@
   }
 
   window.Famille = {
+    estJeu: function(chemin){ return JEUX.test(chemin || ''); },   // 17/11 : la page compte-t-elle dans le temps de jeu ?
     kids: KIDS,
     player: function(){ return get('famille-joueur', null); },
     setPlayer: function(n){ n = cleanName(n); if(n) set('famille-joueur', n); return n; },

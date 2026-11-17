@@ -146,7 +146,8 @@
     '#famExplo{position:fixed;left:12px;bottom:12px;z-index:2147483000;display:flex;align-items:center;gap:8px;background:#0f766e;color:#fff;border-radius:999px;padding:5px 14px 5px 5px;box-shadow:0 3px 0 #0b5a54,0 6px 18px #0003;font:800 15px/1.1 Nunito,system-ui,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;min-height:48px;box-sizing:border-box}' +
     '#famExplo.enfant{padding:5px;background:#2563eb;box-shadow:0 3px 0 #1d4ed8,0 6px 18px #0003}#famExplo.cache{display:none}' +
     '#famExplo img{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#d7f1ee;border:2px solid #fff;pointer-events:none}#famExplo .t{display:flex;flex-direction:column;pointer-events:none}#famExplo small{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#bfeee8}' +
-    '#famExplo .porte{display:grid;place-items:center;width:40px;height:40px;margin:0 -8px 0 4px;border-radius:50%;background:#ffffff26;font-size:20px;cursor:pointer}#famExplo .porte:hover{background:#ffffff40}#famExplo .n{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;border-radius:11px;background:#d7263d;color:#fff;font-size:13px;display:none;place-items:center;padding:0 5px;box-sizing:border-box}#famExplo .n.on{display:grid}' +
+    '#famExplo .porte{display:grid;place-items:center;width:40px;height:40px;margin:0 -8px 0 4px;border-radius:50%;background:#ffffff26;font-size:20px;cursor:pointer}#famExplo .porte:hover{background:#ffffff40}#famExplo .n{position:absolute;top:-6px;left:28px;min-width:22px;height:22px;border-radius:11px;background:#d7263d;color:#fff;font-size:13px;display:none;place-items:center;padding:0 5px;box-sizing:border-box}#famExplo .n.on{display:grid}' +
+    '#famExplo.replie{padding:5px}#famExplo.replie .t,#famExplo.replie .v,#famExplo.replie .porte{display:none}' +
     '#famExplo .v{font-size:12px;background:#ffffff2e;border-radius:999px;padding:2px 8px;pointer-events:none}' +
     '#famSalon{position:fixed;z-index:2147483001;width:min(380px,calc(100vw - 16px));max-height:min(70vh,560px);display:none;flex-direction:column;background:#fff;color:#18202e;border-radius:22px;box-shadow:0 18px 50px #0005;font:600 16px/1.35 Nunito,system-ui,sans-serif;overflow:hidden}#famSalon.on{display:flex}' +
     '#famSalon header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#0f766e;color:#fff}#famSalon header b{flex:1;font-size:17px}#famSalon header button{all:unset;cursor:pointer;min-width:40px;min-height:40px;display:grid;place-items:center;border-radius:12px;font-size:20px}#famSalon header img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #fff;background:#fff}' +
@@ -174,6 +175,7 @@
     B.setAttribute('aria-label', explo ? 'Explorateur du site : ' + moi() + '. Toucher pour voir qui est sur le site et discuter.' : 'Les messages');
     B.innerHTML = '<img alt="" src="' + tete(moi(), profil && profil.av) + '">' + (explo ? '<span class="t"><small>Explorateur du site</small><span></span></span><span class="v" title="sur le site en ce moment"></span><span class="porte" title="Sortir : revenir à « Qui es-tu ? »" aria-label="Sortir">🚪</span>' : '') + '<span class="n"></span>';
     if(explo) B.querySelector('.t span').textContent = moi(); else { B.classList.add('enfant', 'cache'); }
+    B.classList.add('replie');   // 17/11 (demande du papa) : repliée = juste l'avatar ; on la touche, elle se déplie (nom, 🚪) et le salon s'ouvre
     var pos = sget('salon-pos', null);
     if(pos){ B.style.left = pos.l + 'px'; B.style.bottom = pos.b + 'px'; }
     P = document.createElement('div'); P.id = 'famSalon'; P.setAttribute('role', 'dialog'); P.setAttribute('aria-label', 'Sur le site en ce moment');
@@ -184,7 +186,7 @@
     B.addEventListener('pointermove', function(e){ if(!d) return; var dx = e.clientX - d.x, dy = e.clientY - d.y; if(!d.bouge && Math.hypot(dx, dy) < 8) return; d.bouge = true;
       var l = Math.max(4, Math.min(innerWidth - B.offsetWidth - 4, d.l + dx)), b = Math.max(4, Math.min(innerHeight - B.offsetHeight - 4, d.b - dy));
       B.style.left = l + 'px'; B.style.bottom = b + 'px'; if(P.classList.contains('on')) place(); });
-    B.addEventListener('pointerup', function(e){ if(!d) return; if(d.bouge) sset('salon-pos', { l:parseFloat(B.style.left), b:parseFloat(B.style.bottom) }); else if(e.target.closest && e.target.closest('.porte') || porteVisee(e)) sortir(); else bascule(); d = null; });
+    B.addEventListener('pointerup', function(e){ if(!d) return; if(d.bouge) sset('salon-pos', { l:parseFloat(B.style.left), b:parseFloat(B.style.bottom) }); else if(!B.classList.contains('replie') && (e.target.closest && e.target.closest('.porte') || porteVisee(e))) sortir(); else bascule(); d = null; });
     B.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); bascule(); } });
     P.addEventListener('click', clicPanneau);
     P.addEventListener('submit', function(e){ e.preventDefault(); var i = P.querySelector('input'); envoie(i.value); });
@@ -193,7 +195,8 @@
   }
   function porteVisee(e){ var p = B.querySelector('.porte'); if(!p) return false; var r = p.getBoundingClientRect(); return e.clientX >= r.left - 4 && e.clientX <= r.right + 4 && e.clientY >= r.top - 4 && e.clientY <= r.bottom + 4; }
   function sortir(){ location.href = '/?profil'; }   // l'accueil oublie le profil et montre « Qui es-tu ? »
-  function bascule(){ if(P.classList.contains('on')){ P.classList.remove('on'); return; } S.vue = S.avec ? 'conv' : 'liste'; dessine(); P.classList.add('on'); place(); }
+  function replie(){ P.classList.remove('on'); B.classList.add('replie'); }
+  function bascule(){ if(!B.classList.contains('replie')){ replie(); return; } B.classList.remove('replie'); S.vue = S.avec ? 'conv' : 'liste'; dessine(); P.classList.add('on'); place(); }
   function autres(){ var m = moi(); return S.enLigne.filter(function(p){ return p.nom !== m; }); }
   function nonLus(nom){ var lu = luGet(moi()) || {}; return S.msgs.filter(function(m){ return m.nom === nom && m.a === moi() && m.id > (lu[nom] || 0); }).length; }
   function badges(){
@@ -225,7 +228,7 @@
   }
   function clicPanneau(e){ var t = e.target.closest('button,a'); if(!t) return;
     if(t.hasAttribute('data-voix')){ FamilleVoix.basculer(); t.textContent = FamilleVoix.on() ? '🗣️ Voix' : '🔇 Muet'; return; }
-    if(t.hasAttribute('data-f')){ P.classList.remove('on'); return; }
+    if(t.hasAttribute('data-f')){ replie(); return; }
     if(t.hasAttribute('data-r')){ S.avec = null; S.vue = 'liste'; dessine(); place(); return; }
     if(t.dataset.a){ S.avec = t.dataset.a; S.vue = 'conv'; dessine(); place(); var i = P.querySelector('input'); if(i && !('ontouchstart' in window)) i.focus(); return; }
     if(t.dataset.e) envoie(t.dataset.e);
@@ -242,7 +245,7 @@
     d.style.bottom = (innerHeight - r.top + 10) + 'px'; d.style.left = Math.max(8, Math.min(innerWidth - 390, r.left)) + 'px';
     d.innerHTML = '<img alt="" src="' + tete(m.nom) + '"><span>💬 <b></b> : <q></q></span><button type="button">Répondre</button><button type="button" class="x" aria-label="Fermer">✕</button>';
     d.querySelector('b').textContent = m.nom; d.querySelector('q').textContent = m.texte;
-    d.querySelector('button').onclick = function(){ d.remove(); S.avec = m.nom; S.vue = 'conv'; dessine(); P.classList.add('on'); place(); };
+    d.querySelector('button').onclick = function(){ d.remove(); S.avec = m.nom; S.vue = 'conv'; B.classList.remove('replie'); dessine(); P.classList.add('on'); place(); };
     d.querySelector('.x').onclick = function(){ d.remove(); };
     document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 12000);
     lit('Message de ' + m.nom + ' : ' + m.texte);
@@ -253,6 +256,7 @@
     var cle = 'salon-dernier:' + m, dernier = sget(cle, -1);
     var fd = new FormData(); fd.append('action', 'site'); fd.append('client', client); fd.append('nom', m); fd.append('av', (profil && profil.av) || '');
     fd.append('page', (document.title || location.pathname).replace(/\s*[·|–-]\s*Famille Missaoui.*$/i, '').slice(0, 60));
+    fd.append('url', location.pathname.slice(0, 80));
     var plusGrand = S.msgs.length ? S.msgs[S.msgs.length - 1].id : 0; fd.append('depuis', plusGrand);
     fetch(API, { method:'POST', body:fd, cache:'no-store' }).then(function(r){ if(r.status === 401 || r.status === 403){ S.stop = true; return null; } return r.ok ? r.json() : null; }).then(function(j){
       occupe = false; if(!j) return;

@@ -116,6 +116,14 @@ footer{display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;bo
 .tj .det{grid-column:1/-1;font-size:14px;color:var(--soft)}
 .tj .dem{grid-column:1/-1;font-size:15px;font-weight:800;color:var(--ink);background:#fff4cf;border-radius:12px;padding:6px 10px}
 @media (prefers-color-scheme:dark){.tj .dem{background:#3a3214}}
+.tj .en{grid-column:1/-1;font-size:15px;font-weight:800;border-radius:12px;padding:6px 10px;background:var(--line)}
+.tj .en.oui{background:#dcfce7;color:#14532d}.tj .en.joue{background:#fef3c7;color:#713f12}
+@media (prefers-color-scheme:dark){.tj .en.oui{background:#14361f;color:#bbf7d0}.tj .en.joue{background:#3a2e0c;color:#fde68a}}
+/* les pastilles « connecté » sur les avatars (17/11) : vert = sur le site en ce moment, rouge = pas connecté */
+.pres{position:absolute;width:22px;height:22px;border-radius:50%;border:3px solid #fff;background:#ef4444;box-shadow:0 1px 4px #0004;pointer-events:none;z-index:2}
+.pres.on{background:#22c55e;animation:presPulse 2s ease-in-out infinite}
+@keyframes presPulse{50%{box-shadow:0 0 0 6px #22c55e44}}
+@media (prefers-reduced-motion:reduce){.pres.on{animation:none}}
 .tj.essil{--k:var(--essil);--ks:var(--essil-soft)}.tj.salma{--k:var(--salma);--ks:var(--salma-soft)}.tj.amine{--k:var(--amine);--ks:var(--amine-soft)}
 @media (prefers-color-scheme:dark){.tj.amine{--k:#9b8cd9}}
 
@@ -515,7 +523,7 @@ const NOUVEAUTES = [
   const hh = s => String(s || '').replace(':', ' h ');
   function tuile(nom, e){
     const k = nom.toLowerCase(), img = '<img src="jeux/avatars/' + k + '.webp" alt="">';
-    if(!e || e.libre) return '<div class="tj ' + k + '">' + img + '<b>' + nom + '</b><span class="reste">♾️ Pas de limite</span><span class="det">La limite de temps est désactivée dans Progression.</span></div>';
+    if(!e || e.libre) return '<div class="tj ' + k + '">' + img + '<b>' + nom + '</b><span class="reste">♾️ Pas de limite</span><span class="en" data-en="' + nom + '"></span><span class="det">La limite de temps est désactivée dans Progression.</span></div>';
     const n = new Date(), m = n.getHours() * 60 + n.getMinutes(), nuit = hm(e.nuit), matin = hm(e.matin);
     const dort = nuit > matin ? (m >= nuit || m < matin) : (m >= nuit && m < matin);
     const d = e.demande, t = e.now || Date.now() / 1000;
@@ -529,6 +537,7 @@ const NOUVEAUTES = [
     return '<div class="tj ' + k + '">' + img + '<b>' + nom + '</b><span class="reste">' + txt + '</span>' +
       '<span class="det">' + (e.weekend ? 'Week-end' : 'Semaine') + ' · nuit à ' + hh(e.nuit) + '</span>' +
       '<div class="jauge" role="img" aria-label="' + dur(e.utilise) + ' joué sur ' + dur(e.limite) + '"><i class="' + (pc >= 100 ? 'fin' : pc >= 80 ? 'bas' : '') + '" style="width:' + pc + '%"></i></div>' +
+      '<span class="en" data-en="' + nom + '"></span>' +
       '<span class="det">A joué ' + dur(e.utilise) + ' sur ' + dur(e.limite) + (e.bonus ? ' (dont 10 min du défi du jour 🎯)' : '') + '</span>' +
       (d && d.statut === 'attente' && d.ts > t - 7200 ? '<span class="dem">🙋 ' + nom + ' demande plus de temps · réponds sur ntfy ou dans <a href="progression.html">Progression</a></span>' : '') + '</div>';
   }
@@ -536,7 +545,7 @@ const NOUVEAUTES = [
     try{
       const r = await fetch('api/famille.php?action=ecran_tous', { cache:'no-store' }); if(!r.ok) return;
       const j = await r.json(), E = j.enfants || {};
-      G.innerHTML = ['Essil', 'Salma', 'Amine'].map(n => tuile(n, E[n])).join('');
+      ETATS = E; G.innerHTML = ['Essil', 'Salma', 'Amine'].map(n => tuile(n, E[n])).join(''); presences(true);
       const R = {}; ['Essil', 'Salma', 'Amine'].forEach(n => { const e = E[n]; if(!e) return; const d = document.createElement('div'); d.innerHTML = tuile(n, e);
         const r = d.querySelector('.reste'); R[n] = { texte:(r ? r.textContent : '').replace(/^Il reste/, 'Il te reste').replace(/\s+/g, ' ').trim() + (/^Il reste/.test(r ? r.textContent : '') ? ' de jeu aujourd\'hui.' : ''), pc:e.libre ? 0 : Math.min(100, Math.round(100 * e.utilise / Math.max(1, e.limite))) }; });
       window.dispatchEvent(new CustomEvent('famille-temps', { detail:R }));
@@ -544,6 +553,29 @@ const NOUVEAUTES = [
       box.hidden = false;
     }catch(e){}
   }
+  // 17/11 (demande du papa) : qui est connecté (pastilles vertes ou rouges sur les avatars) et, pour chaque enfant, la page
+  // où il est et si son temps de jeu est en train de décompter (une page de jeu, pas la nuit, pas de temps fini).
+  let ETATS = {}, PRES = null;
+  const JEUX_SITE = /^\/(jeux\/(serpent-legendes|ludo-legendes|grimpe-glace|legende-du-jasmin(-2|-3)?|jasmin-stage2|medina-express|ma-houma|zarbia|koora|chkobba|kassar|khyout|yajour|les-ecuries|atelier-du-jasmin)|essil\/les-ecuries|amine\/(serpentin|la-nuit-d-amine(-2)?))\.html$/;   // les pages qui comptent dans le temps de jeu : copie de JEUX dans famille.js (à garder pareil)
+  const sansAccent = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  function decompte(e){ if(!e) return false; if(e.libre) return false; const n = new Date(), m = n.getHours() * 60 + n.getMinutes(), nuit = hm(e.nuit), matin = hm(e.matin);
+    const dort = nuit > matin ? (m >= nuit || m < matin) : (m >= nuit && m < matin), d = e.demande, t = e.now || Date.now() / 1000, grace = d && d.statut === 'oui' ? (d.maj + d.min * 60) - t : 0;
+    return grace > 0 || (!dort && e.limite - e.utilise > 0); }
+  function montrePres(){ if(!PRES) return; const L = {}; PRES.forEach(p => { L[sansAccent(p.nom)] = p; });
+    document.querySelectorAll('#qui [data-nom], .person').forEach(el => { const nom = el.dataset.nom || (el.querySelector('.tag') || {}).textContent || '', p = L[sansAccent(nom)], im = el.querySelector('img'); if(!im) return;
+      let d = el.querySelector(':scope > .pres'); if(!d){ d = document.createElement('i'); d.className = 'pres'; d.setAttribute('aria-hidden', 'true'); el.appendChild(d); if(getComputedStyle(el).position === 'static') el.style.position = 'relative'; }
+      const r = im.getBoundingClientRect(), r0 = el.getBoundingClientRect(); d.style.left = (r.right - r0.left - r.width * .2 - 11) + 'px'; d.style.top = (r.top - r0.top + r.height * .08) + 'px';
+      d.classList.toggle('on', !!p); el.title = nom + (p ? ' est sur le site' + (p.page ? ' : ' + p.page : '') : ' n\'est pas connecté(e)'); });
+    document.querySelectorAll('.tj .en').forEach(el => { const nom = el.dataset.en, p = L[sansAccent(nom)], e = ETATS[nom];
+      if(!p){ el.className = 'en'; el.textContent = '🔴 Pas connecté' + (nom === 'Salma' ? 'e' : ''); return; }
+      const jeu = JEUX_SITE.test(p.url || ''), tourne = jeu && decompte(e);
+      el.className = 'en ' + (tourne ? 'joue' : 'oui');
+      el.textContent = '🟢 Sur ' + (p.page || 'le site') + (tourne ? ' · ⏱️ le temps de jeu décompte' : jeu ? ' · le jeu est en pause' : ' · un cours : le temps ne décompte pas'); });
+  }
+  async function presences(sansReseau){
+    if(!sansReseau || !PRES){ try{ const fd = new FormData(); fd.append('action', 'presents'); const r = await fetch('api/houma.php', { method:'POST', body:fd, cache:'no-store' }); if(r.ok) PRES = (await r.json()).en_ligne || []; }catch(e){} }
+    montrePres(); }
+  presences(); setInterval(() => { if(!document.hidden) presences(); }, 10000); addEventListener('resize', montrePres);
   lit(); setInterval(() => { if(!document.hidden) lit(); }, 60000);
   document.addEventListener('visibilitychange', () => { if(!document.hidden) lit(); });
 })();
