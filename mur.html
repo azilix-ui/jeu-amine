@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&family=Caveat:wght@600;700&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%B1%3C/text%3E%3C/svg%3E">
 <title>Le mur de la famille · Famille Missaoui</title>
 <link rel="stylesheet" href="famille.css?v=6">
@@ -57,6 +57,45 @@
 .palette{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
 .palette .c{width:44px;height:44px;border-radius:50%;border:3px solid #fff;cursor:pointer}.palette .c.on{outline:4px solid var(--gold);outline-offset:2px}
 .palette .t{min-height:44px;padding:0 14px;border-radius:14px;border:0;font:inherit;font-weight:800;cursor:pointer;background:#ffffff22;color:#fff}.palette .t.on{background:var(--gold);color:#3a2600}
+/* 17/11 : les photos polaroid prises avec la caméra (3 par personne et par jour), avec un petit mot écrit à la main */
+.btn.cam{background:linear-gradient(135deg,#ff8fb1,#ffc93c);color:#3a1630;box-shadow:0 4px 0 #c2577a}
+.carte.pola{background:var(--papier,#fff);border:0;border-radius:4px;padding:14px 14px 12px;transform:rotate(var(--r,0deg));box-shadow:0 14px 26px #0000002b,0 2px 4px #0000001f;transition:transform .2s;color:var(--encre,#2a2238)}
+.carte.pola:hover{transform:rotate(0) scale(1.02);z-index:2}
+.carte.pola::before{width:110px;height:30px;margin-left:-55px;top:-14px;border-radius:2px;background:var(--scotch,#f3e2b3cc);box-shadow:0 1px 2px #0002;transform:rotate(calc(var(--r,0deg) * -2))}
+.pola .cadre{position:relative;padding:var(--bord,0);background:var(--motif,none);border-radius:2px}
+.pola .photo{border-radius:2px;aspect-ratio:1;object-fit:cover}
+.pola .mot{font-family:Caveat,'Comic Sans MS',cursive;font-size:30px;line-height:1.05;text-align:center;margin:10px 4px 2px;color:var(--encre,#2a2238);white-space:pre-wrap}
+.pola .de{justify-content:flex-end}.pola .de small{color:inherit;opacity:.65}
+.pola .reac button{background:transparent;border-color:#00000018;color:inherit}
+.pola .sticker,.cab-cadre .sticker{position:absolute;font-size:34px;filter:drop-shadow(0 2px 2px #0003);pointer-events:none}
+.pola .s1,.cab-cadre .s1{left:-12px;bottom:-14px;transform:rotate(-14deg)}.pola .s2,.cab-cadre .s2{right:-10px;top:-16px;transform:rotate(12deg)}
+.deco-jasmin{--papier:#fffaf0;--scotch:#9fd9b4cc}
+.deco-zellige{--papier:#fff;--scotch:#ffc93ccc;--bord:10px;--motif:repeating-conic-gradient(#1f6fd1 0 25%,#fff 0 50%) 0 0/14px 14px}
+.deco-etoiles{--papier:#1d2350;--encre:#ffe08a;--scotch:#c9b6ffcc}
+.deco-mer{--papier:#e9f7ff;--encre:#0f4c75;--scotch:#5fd3e0cc}
+.deco-polaroid{--papier:#fff}
+/* la cabine photo */
+.cabine{position:fixed;inset:0;z-index:1000;background:#14102bf2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));overflow:auto;color:#fff}
+.cabine h2{margin:0;font-family:var(--display);font-size:24px}
+.cabine .reste{margin:0;opacity:.85;font-weight:700}
+.cab-cadre{position:relative;width:min(78vmin,460px);background:var(--papier,#fff);padding:14px 14px 18px;border-radius:4px;box-shadow:0 16px 40px #0009;color:var(--encre,#2a2238)}
+.cab-cadre .cadre{position:relative;padding:var(--bord,0);background:var(--motif,none)}
+.cab-cadre video,.cab-cadre canvas{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:#000;border-radius:2px}
+.cab-cadre video.miroir{transform:scaleX(-1)}
+.cab-cadre input{display:block;width:100%;margin-top:10px;border:0;border-bottom:2px dashed #0002;background:transparent;font-family:Caveat,cursive;font-size:30px;text-align:center;color:inherit;padding:2px 4px}
+.cab-cadre input:focus{outline:none;border-bottom-color:var(--gold)}
+.cab-cadre input::placeholder{color:currentColor;opacity:.45}
+.decompte{position:absolute;inset:0;display:grid;place-items:center;font:800 120px var(--display);color:#fff;text-shadow:0 4px 20px #000a;pointer-events:none}
+.flash{position:fixed;inset:0;background:#fff;z-index:1001;animation:flash .45s forwards;pointer-events:none}
+@keyframes flash{to{opacity:0}}
+.cab-btns{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+.cab-btns .t{min-height:52px;padding:0 18px;border-radius:16px;border:0;font:inherit;font-weight:800;font-size:17px;cursor:pointer;background:#ffffff22;color:#fff}
+.declencheur{width:78px;height:78px;border-radius:50%;border:6px solid #fff;background:#ff5f7e;cursor:pointer;box-shadow:0 0 0 4px #ff5f7e66}
+.declencheur:active{transform:scale(.92)}
+.styles{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.styles button{min-height:46px;padding:0 14px;border-radius:999px;border:2px solid #ffffff44;background:#ffffff14;color:#fff;font:inherit;font-weight:800;cursor:pointer}
+.styles button.on{background:var(--gold);color:#3a2600;border-color:var(--gold)}
+.cab-btns .go{background:var(--mint);color:#0d2a1d;box-shadow:0 5px 0 var(--mint-deep)}
 </style>
 </head>
 <body>
@@ -64,7 +103,7 @@
   <a class="back" href="./">← Famille Missaoui</a>
   <header class="mur-tete">
     <h1>Le mur de la famille<span>.</span></h1>
-    <p>Un mot, un dessin, la photo d'une création dans Ma Houma ou à l'Atelier : tout le monde le voit, la famille et les proches invités.</p>
+    <p>Un mot, un dessin, la photo d'une création dans Ma Houma ou à l'Atelier, ou ta <b>photo du jour</b> (3 par jour) avec un petit mot : tout le monde le voit, la famille et les proches invités.</p>
   </header>
 
   <section class="ecrire" aria-label="Écrire sur le mur">
@@ -72,7 +111,8 @@
     <textarea id="texte" maxlength="500" placeholder="Écris ton message…"></textarea>
     <div class="apercu" id="apercu" hidden><img id="apImg" alt="Image à publier"><button type="button" id="apSuppr" aria-label="Enlever l'image">✕</button></div>
     <div class="outils">
-      <label class="btn" for="photo">📷 Photo<input type="file" id="photo" accept="image/*" hidden></label>
+      <button class="btn cam" id="cabine" type="button">📸 Photo du jour</button>
+      <label class="btn" for="photo">🖼️ Image<input type="file" id="photo" accept="image/*" hidden></label>
       <button class="btn" id="dessiner" type="button">🎨 Dessiner</button>
       <button class="btn go" id="publier" type="button">Épingler sur le mur</button>
     </div>
@@ -135,8 +175,80 @@ $('publier').onclick = async () => {
   finally{ $('publier').disabled = false; $('publier').textContent = 'Épingler sur le mur'; }
 };
 
+/* ---------- 📸 la photo du jour : la caméra de la tablette ou de l'ordinateur, 3 photos par personne et par jour (17/11) ---------- */
+const DECOS = [['polaroid', '🤍 Polaroid', ''], ['jasmin', '🌼 Jasmin', '🌼|🌿'], ['zellige', '🔷 Zellige', ''], ['etoiles', '⭐ Étoiles', '⭐|✨'], ['mer', '🐚 La mer', '🐚|🌊']];
+const stickers = d => { const s = (DECOS.find(x => x[0] === d) || [])[2]; return s ? s.split('|').map((e, i) => '<span class="sticker s' + (i + 1) + '">' + e + '</span>').join('') : ''; };
+async function quota(){ try{ const r = await fetch(API + '?action=quota&auteur=' + encodeURIComponent(qui), { cache:'no-store', credentials:'same-origin' }); const j = await r.json(); return r.ok ? j.restant : 3; }catch(e){ return 3; } }
+$('cabine').onclick = async () => {
+  $('err').textContent = '';
+  if(!qui){ $('qui').click(); return; }
+  const reste = await quota();
+  if(reste <= 0){ $('err').textContent = 'Tu as déjà accroché tes 3 photos aujourd\'hui : à demain ! 📸'; return; }
+  const back = document.createElement('div'); back.className = 'cabine'; document.body.appendChild(back);
+  let flux = null, face = 'user', deco = 'polaroid', photo = null;
+  const coupe = () => { if(flux){ flux.getTracks().forEach(t => t.stop()); flux = null; } };
+  const ferme = () => { coupe(); back.remove(); };
+  const peint = () => { const c = back.querySelector('.cab-cadre'); if(c){ c.className = 'cab-cadre deco-' + deco; c.querySelector('.stk').innerHTML = stickers(deco); } };
+  // 1. la caméra
+  async function camera(){
+    back.innerHTML = '<h2>📸 Ta photo du jour</h2><p class="reste">Il te reste ' + reste + ' photo' + (reste > 1 ? 's' : '') + ' aujourd\'hui</p>' +
+      '<div class="cab-cadre deco-' + deco + '"><div class="cadre"><video playsinline autoplay muted class="' + (face === 'user' ? 'miroir' : '') + '"></video><div class="decompte" id="cdn"></div></div><div class="stk"></div></div>' +
+      '<div class="cab-btns"><button class="t" id="cAnn">✕ Fermer</button><button class="declencheur" id="cClic" aria-label="Prendre la photo"></button><button class="t" id="cTour" hidden>🔄 Retourner</button></div>';
+    peint();
+    back.querySelector('#cAnn').onclick = ferme;
+    const v = back.querySelector('video');
+    try{
+      coupe(); flux = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:face, width:{ ideal:1280 }, height:{ ideal:1280 } }, audio:false });
+      v.srcObject = flux; await v.play().catch(() => {});
+      const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+      if(cams.length > 1){ const t = back.querySelector('#cTour'); t.hidden = false; t.onclick = () => { face = face === 'user' ? 'environment' : 'user'; camera(); }; }
+    }catch(e){   // pas de caméra (ou refusée) : on choisit une photo de l'appareil à la place
+      back.querySelector('.cadre').innerHTML = '<p style="padding:30px 16px;text-align:center;color:#2a2238;font-weight:700">La caméra ne s\'ouvre pas 😕<br>Vérifie que le site a le droit d\'utiliser la caméra, ou prends la photo avec l\'appareil.</p>';
+      const b = back.querySelector('#cClic'); b.outerHTML = '<label class="t" style="display:inline-flex;align-items:center;background:var(--gold);color:#3a2600">📷 Prendre une photo<input type="file" accept="image/*" capture="user" hidden id="cFich"></label>';
+      back.querySelector('#cFich').onchange = ev => { const f = ev.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { photo = carre(im, im.width, im.height, false); edite(); }; im.src = r.result; }; r.readAsDataURL(f); };
+      return;
+    }
+    back.querySelector('#cClic').onclick = async () => {
+      const cdn = back.querySelector('#cdn'); back.querySelector('#cClic').disabled = true;
+      for(const n of [3, 2, 1]){ cdn.textContent = n; await new Promise(r => setTimeout(r, 750)); }
+      cdn.textContent = ''; const f = document.createElement('div'); f.className = 'flash'; document.body.appendChild(f); setTimeout(() => f.remove(), 500);
+      photo = carre(v, v.videoWidth, v.videoHeight, face === 'user'); coupe(); edite();
+    };
+  }
+  // une image carrée de 960 px (comme on la voit : en miroir pour la caméra de face)
+  function carre(src, w, h, miroir){
+    const c = document.createElement('canvas'), k = Math.min(w, h); c.width = c.height = Math.min(960, k); const g = c.getContext('2d');
+    if(miroir){ g.translate(c.width, 0); g.scale(-1, 1); }
+    g.drawImage(src, (w - k) / 2, (h - k) / 2, k, k, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', .88);
+  }
+  // 2. le cadre et le petit mot
+  function edite(){
+    back.innerHTML = '<h2>✏️ Un petit mot ?</h2><div class="styles">' + DECOS.map(d => '<button data-d="' + d[0] + '" class="' + (d[0] === deco ? 'on' : '') + '">' + d[1] + '</button>').join('') + '</div>' +
+      '<div class="cab-cadre deco-' + deco + '"><div class="cadre"><img src="' + photo + '" alt="" style="display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:2px"></div><input id="cMot" maxlength="90" placeholder="Écris ton petit mot…"><div class="stk"></div></div>' +
+      '<div class="cab-btns"><button class="t" id="cRep">↺ Reprendre</button><button class="t" id="cAnn">✕ Annuler</button><button class="t go" id="cOk">📌 Accrocher sur le mur</button></div><p class="msgerr" id="cErr"></p>';
+    peint();
+    back.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { deco = b.dataset.d; back.querySelectorAll('[data-d]').forEach(x => x.classList.toggle('on', x === b)); peint(); });
+    back.querySelector('#cRep').onclick = camera; back.querySelector('#cAnn').onclick = ferme;
+    back.querySelector('#cOk').onclick = async () => {
+      const ok = back.querySelector('#cOk'); ok.disabled = true; ok.textContent = 'J\'accroche…';
+      try{ await api({ action:'poste', auteur:qui, texte:back.querySelector('#cMot').value.trim(), image:photo, genre:'polaroid', deco }); ferme(); await charge(); window.scrollTo({ top:$('fil').offsetTop - 20, behavior:'smooth' }); }
+      catch(e){ back.querySelector('#cErr').textContent = e.message; ok.disabled = false; ok.textContent = '📌 Accrocher sur le mur'; }
+    };
+    setTimeout(() => back.querySelector('#cMot').focus(), 100);
+  }
+  camera();
+};
+
 function carte(m){
   const r = m.reac || {};
+  if(m.genre === 'polaroid'){
+    const rot = ((m.id * 37) % 7 - 3) * 1.1;
+    return '<article class="carte pola deco-' + esc(m.deco || 'polaroid') + '" data-id="' + m.id + '" style="--r:' + rot + 'deg"><div class="cadre"><img class="photo" loading="lazy" src="' + API + '?img=' + m.id + '" alt="Photo de ' + esc(m.auteur) + '"></div>' +
+      (m.texte ? '<p class="mot">' + esc(m.texte) + '</p>' : '') + stickers(m.deco) +
+      '<div class="de"><span style="text-align:right"><b style="font-size:15px">' + esc(m.auteur) + '</b><small>' + quand(m.cree) + '</small></span>' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="" style="width:34px;height:34px">' : '') + '</div>' +
+      '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') +
+      '<button type="button" class="suppr" data-suppr="' + (m.mien ? 'moi' : 'parent') + '">' + (m.mien ? 'Effacer' : '🔒 Retirer') + '</button></div></article>';
+  }
   return '<article class="carte" data-id="' + m.id + '"><div class="de">' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="">' : '') + '<span><b>' + esc(m.auteur) + '</b><small>' + quand(m.cree) + '</small></span></div>' +
     (m.texte ? '<p>' + esc(m.texte) + '</p>' : '') + (m.img ? '<img class="photo" loading="lazy" src="' + API + '?img=' + m.id + '" alt="Image de ' + esc(m.auteur) + '">' : '') +
     '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') +

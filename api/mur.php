@@ -6,6 +6,9 @@
  *   GET  ?action=liste[&avant=ID]                -> 30 messages {id, auteur, texte, img, cree, reac{❤️,👏,😂}, mien, moi[]}
  *   GET  ?img=ID                                 -> l'image d'un message (WebP)
  *   POST action=poste auteur texte [image=dataURL] jeton  -> nouveau message (l'image est réencodée : plus de position GPS ni d'infos de l'appareil)
+ *   POST action=poste … genre=polaroid deco=<style>  -> (17/11) une photo prise avec la caméra + un petit mot, accrochée comme un polaroid ;
+ *                                                3 par personne et par jour (heure de Paris), effacer une photo ne rend pas le droit
+ *   GET  ?action=quota&auteur=X                  -> {restant} : photos polaroid encore permises aujourd'hui
  *   POST action=reagit id emoji jeton            -> met ou enlève une réaction
  *   POST action=supprime id (jeton de l'auteur | pass = mot de passe parent)
  * Le « jeton » est un nombre au hasard gardé dans le navigateur : il dit « c'est moi qui ai écrit ça » (pour pouvoir effacer son message).
@@ -29,6 +32,11 @@ function mur(): PDO {
     $p->exec('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, auteur TEXT NOT NULL, texte TEXT, img INTEGER NOT NULL DEFAULT 0, jeton TEXT NOT NULL, cree INTEGER NOT NULL, ip TEXT)');
     $p->exec('CREATE TABLE IF NOT EXISTS reactions (message INTEGER NOT NULL, jeton TEXT NOT NULL, emoji TEXT NOT NULL, PRIMARY KEY (message, jeton, emoji))');
     $p->exec('CREATE TABLE IF NOT EXISTS envois (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
+    // 17/11 : les photos polaroid (genre, style du cadre) et le compte des photos du jour par personne
+    $cols = array_column($p->query('PRAGMA table_info(messages)')->fetchAll(), 'name');
+    if (!in_array('genre', $cols, true)) $p->exec("ALTER TABLE messages ADD COLUMN genre TEXT NOT NULL DEFAULT ''");
+    if (!in_array('deco', $cols, true)) $p->exec("ALTER TABLE messages ADD COLUMN deco TEXT NOT NULL DEFAULT ''");
+    $p->exec('CREATE TABLE IF NOT EXISTS photos_jour (auteur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (auteur, jour))');
     return $p;
 }
 function auteur($a): string {
@@ -36,6 +44,10 @@ function auteur($a): string {
     if ($a === '' || mb_strlen($a) > 20 || !preg_match("/^[\p{L}][\p{L}\p{M} '\-]*$/u", $a)) fail(400, 'Choisis qui écrit.');
     return mb_strtoupper(mb_substr($a, 0, 1)) . mb_substr($a, 1);
 }
+const MUR_PHOTOS_JOUR = 3;
+const MUR_DECOS = ['polaroid', 'jasmin', 'zellige', 'etoiles', 'mer'];
+function jour(): string { return (new DateTime('now', new DateTimeZone('Europe/Paris')))->format('Y-m-d'); }
+function photos_prises(string $qui): int { $s = mur()->prepare('SELECT n FROM photos_jour WHERE auteur = ? AND jour = ?'); $s->execute([mb_strtolower($qui), jour()]); return (int)$s->fetchColumn(); }
 function jeton(): string { $j = (string)($_POST['jeton'] ?? $_GET['jeton'] ?? ''); return preg_match('/^[0-9a-f]{32,64}$/', $j) ? hash('sha256', $j) : ''; }
 
 try {
@@ -45,9 +57,12 @@ try {
         if (!is_file($f)) { http_response_code(404); exit; }
         header('Content-Type: image/webp'); header('Cache-Control: private, max-age=31536000, immutable'); header('Content-Length: ' . filesize($f)); readfile($f); exit;
     }
+    if ($m === 'GET' && $a === 'quota') {
+        out(200, ['restant' => max(0, MUR_PHOTOS_JOUR - photos_prises(auteur($_GET['auteur'] ?? ''))), 'max' => MUR_PHOTOS_JOUR]);
+    }
     if ($m === 'GET' && $a === 'liste') {
         $avant = (int)($_GET['avant'] ?? 0); $j = jeton();
-        $s = mur()->prepare('SELECT id, auteur, texte, img, cree, jeton FROM messages' . ($avant ? ' WHERE id < ?' : '') . ' ORDER BY id DESC LIMIT 30'); $s->execute($avant ? [$avant] : []);
+        $s = mur()->prepare('SELECT id, auteur, texte, img, cree, jeton, genre, deco FROM messages' . ($avant ? ' WHERE id < ?' : '') . ' ORDER BY id DESC LIMIT 30'); $s->execute($avant ? [$avant] : []);
         $l = $s->fetchAll(); $ids = array_column($l, 'id'); $reac = []; $moi = [];
         if ($ids) {
             $in = implode(',', array_map('intval', $ids));
@@ -55,7 +70,7 @@ try {
             if ($j) { $q = mur()->prepare("SELECT message, emoji FROM reactions WHERE message IN ($in) AND jeton = ?"); $q->execute([$j]); foreach ($q as $r) $moi[$r['message']][] = $r['emoji']; }
         }
         out(200, ['messages' => array_map(fn($x) => ['id' => (int)$x['id'], 'auteur' => $x['auteur'], 'texte' => $x['texte'], 'img' => (bool)$x['img'], 'cree' => (int)$x['cree'],
-            'reac' => $reac[$x['id']] ?? (object)[], 'moi' => $moi[$x['id']] ?? [], 'mien' => $j !== '' && hash_equals($x['jeton'], $j)], $l), 'emojis' => MUR_EMOJIS]);
+            'genre' => $x['genre'], 'deco' => $x['deco'], 'reac' => $reac[$x['id']] ?? (object)[], 'moi' => $moi[$x['id']] ?? [], 'mien' => $j !== '' && hash_equals($x['jeton'], $j)], $l), 'emojis' => MUR_EMOJIS]);
     }
     if ($m !== 'POST') fail(405, 'Action inconnue.');
     $j = jeton();
@@ -75,7 +90,16 @@ try {
             if ($k < 1) { $n = imagecreatetruecolor((int)round($w * $k), (int)round($h * $k)); imagealphablending($n, false); imagesavealpha($n, true); imagecopyresampled($n, $img, 0, 0, 0, 0, imagesx($n), imagesy($n), $w, $h); imagedestroy($img); $img = $n; }
         }
         if ($txt === '' && !$img) fail(400, 'Écris un message ou ajoute une image.');
-        $db->prepare('INSERT INTO messages (auteur, texte, img, jeton, cree, ip) VALUES (?, ?, ?, ?, ?, ?)')->execute([$qui, $txt, $img ? 1 : 0, $j, $t, $ip]);
+        $genre = ($_POST['genre'] ?? '') === 'polaroid' ? 'polaroid' : ''; $deco = '';
+        if ($genre) {
+            if (!$img) fail(400, 'Prends d\'abord ta photo 📸');
+            if (mb_strlen($txt) > 90) $txt = mb_substr($txt, 0, 90);
+            $deco = in_array($_POST['deco'] ?? '', MUR_DECOS, true) ? (string)$_POST['deco'] : 'polaroid';
+            if (photos_prises($qui) >= MUR_PHOTOS_JOUR) fail(429, 'Tu as déjà accroché tes ' . MUR_PHOTOS_JOUR . ' photos aujourd\'hui : à demain ! 📸');
+            $db->prepare('INSERT INTO photos_jour (auteur, jour, n) VALUES (?, ?, 1) ON CONFLICT(auteur, jour) DO UPDATE SET n = n + 1')->execute([mb_strtolower($qui), jour()]);
+            $db->prepare('DELETE FROM photos_jour WHERE jour < ?')->execute([(new DateTime('-7 days', new DateTimeZone('Europe/Paris')))->format('Y-m-d')]);
+        }
+        $db->prepare('INSERT INTO messages (auteur, texte, img, jeton, cree, ip, genre, deco) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')->execute([$qui, $txt, $img ? 1 : 0, $j, $t, $ip, $genre, $deco]);
         $id = (int)$db->lastInsertId();
         if ($img) { imagepalettetotruecolor($img); imagewebp($img, dossier() . '/' . $id . '.webp', 82); imagedestroy($img); }   // réencodée : aucune info cachée de la photo d'origine
         $db->prepare('INSERT INTO envois (ip, ts) VALUES (?, ?)')->execute([$ip, $t]);
