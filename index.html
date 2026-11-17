@@ -20,7 +20,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&family=Amiri:wght@400;700&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E">
 <title>Famille Missaoui</title>
 <meta name="description" content="Les cours et les jeux d'Essil, Salma et Amine, et Serpent Légendes pour toute la famille.">
@@ -86,6 +86,24 @@
 .fam p{margin:0;color:#d6cff0;max-width:52ch}
 .play{display:inline-flex;align-items:center;min-height:60px;padding:12px 30px;border-radius:20px;background:var(--mint);color:#0d2a1d;font-weight:800;font-size:20px;text-decoration:none;box-shadow:0 6px 0 var(--mint-deep)}
 .play:active{transform:translateY(3px);box-shadow:0 3px 0 var(--mint-deep)}
+/* 17/11 : « Se cultiver », la carte bleue sous celle des jeux (dessinée avec Claude Design, option A « Nuit bleue ») */
+.cult{display:flex;flex-wrap:wrap;align-items:center;gap:28px 44px;color:#f4f7ff;border-radius:32px;padding:36px 40px;background-color:#10285a;
+  background-image:radial-gradient(circle at 18px 18px,rgba(255,209,102,.10) 2px,transparent 2.5px),radial-gradient(ellipse at 85% 0%,rgba(120,170,255,.28),transparent 60%);background-size:36px 36px,100% 100%}
+.cult .arche{flex:0 0 300px;height:370px;border-radius:150px 150px 26px 26px;overflow:hidden;border:5px solid #ffd166;box-shadow:0 18px 40px rgba(0,0,0,.35);position:relative;background:#0b1c40}
+.cult .arche img{width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block}
+.cult .arche span{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(transparent,rgba(8,20,48,.9));font-family:Amiri,serif;font-size:26px;text-align:center;color:#ffe29a}
+.cult .txt{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.cult .eyebrow{color:#ffd166}
+.cult h2{font-family:var(--display);font-weight:800;font-size:clamp(38px,5vw,56px);line-height:.95;margin:0;letter-spacing:-.02em}
+.cult p{margin:0;color:#c9d6f5;max-width:52ch;font-size:18px;line-height:1.5}
+.cult .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px}
+.cult .btns a{display:inline-flex;align-items:center;gap:10px;min-height:56px;padding:0 22px;border-radius:18px;font-weight:800;font-size:18px;text-decoration:none}
+.cult .btns a:active{transform:translateY(3px)}
+.cult .b1{background:#ffd166;color:#3a2600;box-shadow:0 6px 0 #c99a00}
+.cult .b2{background:#f4f7ff;color:#10285a;box-shadow:0 6px 0 #8ea4d6}
+.cult .b2 .saw{font-family:Amiri,serif;font-size:20px}
+.cult .bientot{color:#9fb2de;font-size:15px;font-weight:700}
+@media (max-width:640px){ .cult{padding:24px 20px} .cult .arche{flex:1 1 100%;height:300px} }
 footer{display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;border-top:2px solid var(--line);padding-top:14px}
 .propulse{align-self:center;display:flex;align-items:center;gap:14px;padding:10px 22px 10px 10px;border-radius:999px;background:linear-gradient(135deg,#14102b,#2a1f4f 55%,#0f766e);color:#fbf6ea;text-decoration:none;box-shadow:0 8px 0 #0a0820,0 14px 30px #14102b44;transform:rotate(-1.5deg);transition:transform .2s}
 .propulse:hover{transform:rotate(0) scale(1.03)}
@@ -172,7 +190,7 @@ html.choisir main.wrap{display:none}
 /* la vue d'un enfant : seulement ses cours, puis le bandeau des jeux de famille */
 #moi{display:none}
 html.enfant #moi{display:flex}
-html.enfant .hero,html.enfant #espaces,html.enfant .fam{display:none}
+html.enfant .hero,html.enfant #espaces,html.enfant .fam,html.enfant .cult{display:none}
 #moi{flex-direction:column;gap:22px}
 #moi .bande{display:flex;align-items:center;gap:22px;flex-wrap:wrap;background:var(--c);color:#fff;border-radius:30px;padding:22px 26px}
 #moi .bande img{width:112px;height:112px;border-radius:50%;object-fit:cover;border:5px solid var(--c2);background:#fff}
@@ -420,6 +438,21 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
     </div>
     <span style="display:flex;gap:10px;flex-wrap:wrap"><a class="play" href="jeux/serpent-legendes.html">🐉 Serpent</a><a class="play" href="jeux/ludo-legendes.html" style="background:var(--gold);color:#3a2600;box-shadow:0 6px 0 #c99a00">🎲 Ludo</a><a class="play" href="jeux/grimpe-glace.html" style="background:#7fd6ff;color:#062240;box-shadow:0 6px 0 #3a8fc0">❄️ Grimpe-Glace</a><a class="play" href="jeux/legende-du-jasmin-3.html" style="background:#1f5fbf;color:#fff;box-shadow:0 6px 0 #0b3a82">🌼 Jasmin 3</a><a class="play" href="jeux/legende-du-jasmin-2.html" style="background:#cfe0ff;color:#0b3a82;box-shadow:0 6px 0 #6f93d6">🌸 Jasmin 2</a><a class="play" href="jeux/atelier-du-jasmin.html" style="background:#e8438f;color:#fff;box-shadow:0 6px 0 #a3235f">🎨 Atelier</a><a class="play" href="jeux/medina-express.html" style="background:#e8333a;color:#fff;box-shadow:0 6px 0 #a11d24">🚋 Médina Express</a><a class="play" href="jeux/koora.html" style="background:#1f5fbf;color:#fff;box-shadow:0 6px 0 #0b3a82">⚽ Koora</a><a class="play" href="jeux/chkobba.html" style="background:#0f3d2e;color:#fff;box-shadow:0 6px 0 #062218">🃏 Chkobba</a><a class="play" href="jeux/kassar.html" style="background:#123a6b;color:#fff;box-shadow:0 6px 0 #071d38">🧱 Kassar</a><a class="play" href="jeux/khyout.html" style="background:#2a1f6b;color:#fff;box-shadow:0 6px 0 #140e3d">🧶 Khyout</a><a class="play" href="jeux/yajour.html" style="background:#e63946;color:#fff;box-shadow:0 6px 0 #9b1d26">🦸 Yajour</a><a class="play" href="jeux/zarbia.html" style="background:#b0462a;color:#fff;box-shadow:0 6px 0 #7a2c18">🧶 Zarbia</a><a class="play" href="jeux/ma-houma.html" style="background:#fdfdf8;color:#134f86;box-shadow:0 6px 0 #1d6fb8">🏘️ Ma Houma</a><a class="play" href="mur.html" style="background:#ffc93c;color:#3a2600;box-shadow:0 6px 0 #c99a00">🧱 Le mur de la famille</a></span>
   </section>
+
+  <section class="cult" aria-labelledby="cultT">
+    <div class="arche"><img src="eveil/prophete/img/conteurs.webp" width="672" height="384" alt="Papa et maman, les conteurs" loading="lazy"><span lang="ar" dir="rtl">رَبِّ زِدْنِي عِلْمًا</span></div>
+    <div class="txt">
+      <p class="eyebrow">Pour toute la famille</p>
+      <h2 id="cultT">Se cultiver</h2>
+      <p>Les belles histoires qui font grandir : l’éveil religieux raconté par papa et maman, en français et en arabe. Un film, un livre et des jeux pour chacun.</p>
+      <div class="btns">
+        <a class="b1" href="eveil/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>Éveil religieux</a>
+        <a class="b2" href="eveil/prophete.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16"/></svg>La vie du Prophète <span class="saw">ﷺ</span></a>
+      </div>
+      <p class="bientot">Bientôt : les histoires des prophètes · ma vie de petit musulman</p>
+    </div>
+  </section>
+
 
   <div class="inst-back" id="instBox" hidden><div class="inst" role="dialog" aria-modal="true" aria-labelledby="instT">
     <img src="icons/icon-192.png" width="96" height="96" alt="">
