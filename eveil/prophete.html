@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10231f">
+<title>La vie du Prophète ﷺ</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8C%99%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* Éveil religieux · « La vie du Prophète ﷺ » (17/11) : 7 épisodes racontés par papa et maman, en français et en arabe.
+   Règles de la rubrique : on ne montre jamais le Prophète ﷺ, ni aucun prophète, ni les compagnons, ni les anges (même pas
+   en silhouette) ; les versets sont affichés, jamais récités par une voix artificielle ; pas de batailles ; les récits
+   incertains sont marqués « selon la tradition ». Textes relus et validés par le papa. Code : prophete/lecteur.js, textes : prophete/episodes.js */
+:root{ --nuit:#10231f; --nuit2:#173a33; --or:#f2c45a; --creme:#fff8e8; --doux:#d7e6dc; --vert:#1f7a5c; }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+[hidden]{ display:none !important; }
+.saw{ font-family:Amiri, serif; font-size:.7em; }
+html, body{ margin:0; min-height:100%; background:var(--nuit); color:var(--creme); font-family:Nunito, system-ui, sans-serif; }
+body{ background:radial-gradient(ellipse at top, #1f4a40 0%, var(--nuit) 60%) fixed; }
+button{ font:inherit; color:inherit; border:0; cursor:pointer; }
+.ar, [lang=ar]{ font-family:Amiri, 'Traditional Arabic', serif; }
+.ecran{ display:none; min-height:100vh; }
+.ecran.on{ display:block; }
+.boite{ max-width:980px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top)) 16px 40px; }
+.haut{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.pill{ background:#ffffff14; border:2px solid #ffffff26; border-radius:999px; padding:8px 16px; font-weight:800; min-height:48px; display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:var(--creme); }
+.pill img{ width:32px; height:32px; border-radius:50%; object-fit:cover; }
+.esp{ flex:1; }
+.c{ text-align:center; }
+h1, h2, h3{ font-family:'Baloo 2', sans-serif; margin:0; }
+.motif{ background-image:repeating-linear-gradient(45deg, #f2c45a10 0 2px, transparent 2px 22px), repeating-linear-gradient(-45deg, #f2c45a10 0 2px, transparent 2px 22px); }
+
+/* accueil */
+.couv{ position:relative; margin:14px 0 18px; border-radius:26px; overflow:hidden; min-height:260px; background:#173a33 center/cover; box-shadow:0 12px 40px #0008; display:flex; align-items:flex-end; }
+.couv::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, transparent 30%, #0b1a17ee); }
+.couv div{ position:relative; z-index:1; padding:20px 22px; }
+.couv h1{ font-size:clamp(34px, 7vw, 58px); line-height:1.05; color:var(--or); text-shadow:0 3px 12px #000a; }
+.couv .ar{ font-size:clamp(24px, 5vw, 36px); margin:4px 0 0; }
+.couv p{ margin:6px 0 0; font-size:17px; color:var(--doux); }
+.liste{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px; }
+.carte{ display:flex; gap:12px; align-items:center; text-align:left; padding:10px; border-radius:20px; background:#ffffff10; border:2px solid #ffffff1c; transition:transform .15s; }
+.carte:active{ transform:scale(.97); }
+.vign{ flex:0 0 112px; height:84px; border-radius:14px; background:#173a33 center/cover; position:relative; }
+.vign b{ position:absolute; left:6px; top:6px; background:var(--or); color:#3a2500; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-family:'Baloo 2'; }
+.carte h3{ font-size:18px; line-height:1.15; }
+.carte .ar{ margin:2px 0 4px; font-size:19px; color:var(--doux); text-align:left; }
+.et{ font-size:18px; letter-spacing:2px; } .et i{ font-style:normal; color:#ffffff55; }
+.regles{ margin-top:22px; padding:14px 18px; border-radius:18px; background:#00000030; color:var(--doux); font-size:15px; line-height:1.5; }
+
+/* épisode */
+.ep{ display:grid; grid-template-columns:1.2fr 1fr; gap:20px; align-items:center; margin-top:14px; }
+@media (max-width:760px){ .ep{ grid-template-columns:1fr; } }
+.ep-img{ aspect-ratio:16/10; border-radius:24px; background:#173a33 center/cover; box-shadow:0 10px 30px #0008; }
+.ep-num{ color:var(--or); font-weight:800; }
+.ep h2{ font-size:clamp(28px, 5vw, 40px); line-height:1.1; }
+.ep .ar{ font-size:28px; margin:4px 0 10px; }
+.actions{ display:grid; gap:12px; margin-top:14px; }
+.gros{ display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 22px; border-radius:20px; font-weight:800; font-size:20px; background:var(--or); color:#3a2500; box-shadow:0 5px 0 #a87a1c; min-height:60px; }
+.gros.b2{ background:#2f8f6f; color:#fff; box-shadow:0 5px 0 #1b5a45; }
+.gros.b3{ background:#6a5acd; color:#fff; box-shadow:0 5px 0 #3f3591; }
+.gros.fait::after{ content:' ✓'; }
+.gros:active{ transform:translateY(3px); box-shadow:none; }
+
+/* film */
+#e-film{ position:fixed; inset:0; overflow:hidden; background:#000; }
+.f-img{ position:absolute; inset:-6%; background:#000 center/cover; }
+.kb0{ animation:kb0 26s ease-in-out forwards; } .kb1{ animation:kb1 26s ease-in-out forwards; } .kb2{ animation:kb2 26s ease-in-out forwards; } .kb3{ animation:kb3 26s ease-in-out forwards; }
+@keyframes kb0{ from{ transform:scale(1) translate(0, 0); opacity:.2 } 6%{ opacity:1 } to{ transform:scale(1.12) translate(-2%, -1%); } }
+@keyframes kb1{ from{ transform:scale(1.12) translate(2%, 0); opacity:.2 } 6%{ opacity:1 } to{ transform:scale(1) translate(0, 0); } }
+@keyframes kb2{ from{ transform:scale(1.04) translate(-2%, 1%); opacity:.2 } 6%{ opacity:1 } to{ transform:scale(1.14) translate(2%, -1%); } }
+@keyframes kb3{ from{ transform:scale(1.1) translate(0, -2%); opacity:.2 } 6%{ opacity:1 } to{ transform:scale(1.02) translate(0, 1%); } }
+.f-barre{ position:absolute; left:0; right:0; top:0; padding:calc(10px + env(safe-area-inset-top)) 12px 10px; display:flex; gap:8px; align-items:center; background:linear-gradient(#000a, transparent); z-index:3; }
+.rond{ width:52px; height:52px; border-radius:50%; background:#0008; border:2px solid #ffffff44; font-size:22px; display:grid; place-items:center; }
+.f-pos{ font-weight:800; background:#0008; padding:6px 12px; border-radius:999px; }
+.bulle{ position:absolute; left:50%; transform:translateX(-50%); bottom:calc(14px + env(safe-area-inset-bottom)); width:min(940px, calc(100% - 24px)); display:flex; gap:14px; align-items:flex-start; padding:14px 16px; border-radius:24px; background:#0c1f1bdd; border:2px solid #f2c45a66; backdrop-filter:blur(6px); z-index:2; max-height:52vh; overflow:auto; }
+.bulle img{ flex:0 0 86px; width:86px; height:86px; border-radius:50%; object-fit:cover; border:3px solid var(--or); background:#173a33; }
+.bulle .nom{ color:var(--or); font-weight:800; font-size:15px; }
+.bulle .fr{ margin:2px 0 0; font-size:clamp(17px, 2.6vw, 22px); line-height:1.4; }
+.bulle .arb{ margin:8px 0 0; font-size:clamp(20px, 3vw, 27px); line-height:1.7; color:#ffe9b0; direction:rtl; text-align:right; font-family:Amiri, serif; }
+.mot{ display:inline-block; margin-top:8px; padding:4px 18px; border-radius:14px; background:var(--or); color:#3a2500; font-family:Amiri, serif; font-size:30px; font-weight:700; }
+@media (max-width:600px){ .bulle img{ flex-basis:56px; width:56px; height:56px; } }
+.coran{ position:absolute; inset:0; display:grid; place-items:center; padding:80px 14px 20px; background:#071512cc; z-index:2; overflow:auto; }
+.cadre{ max-width:860px; width:100%; padding:20px 22px; border-radius:26px; background:#f8f1dc; color:#24322c; border:6px double #b8892b; box-shadow:0 10px 40px #000a; }
+.cadre .sourate{ margin:0; text-align:center; font-weight:800; color:#7a5a12; }
+.basmala{ text-align:center; font-family:'Amiri Quran', Amiri, serif; font-size:clamp(22px, 3.4vw, 30px); margin:8px 0; color:#1f5a46; }
+.versets{ font-family:'Amiri Quran', Amiri, serif; font-size:clamp(24px, 4vw, 36px); line-height:2.1; text-align:center; color:#14231d; }
+.versets .num{ color:#9a6b12; font-size:.8em; }
+.sens{ margin-top:10px; padding-top:10px; border-top:2px solid #d9c38b; font-size:clamp(15px, 2.2vw, 19px); line-height:1.45; }
+.sens p{ margin:4px 0; }
+.cadre .note{ margin:10px 0 0; font-size:13px; color:#6b6b5d; font-style:italic; }
+.lecon{ position:absolute; inset:0; display:grid; place-items:center; padding:80px 16px 20px; background:#071512bb; z-index:2; text-align:center; }
+.lecon div{ max-width:760px; padding:24px; border-radius:26px; background:#173a33ee; border:3px solid var(--or); }
+.lecon h2{ color:var(--or); font-size:30px; }
+.lecon .fr{ font-size:clamp(20px, 3vw, 26px); margin:10px 0; }
+.lecon .ar{ font-size:clamp(24px, 3.6vw, 32px); color:#ffe9b0; margin:6px 0 14px; }
+.lecon .actions{ grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); }
+
+/* livre */
+#e-livre .boite{ max-width:1100px; }
+.livre{ display:grid; grid-template-columns:1.1fr 1fr; gap:18px; margin-top:12px; align-items:start; }
+@media (orientation:portrait), (max-width:760px){ .livre{ grid-template-columns:1fr; } }
+.l-img{ aspect-ratio:16/10; border-radius:22px; background:#173a33 center/cover; box-shadow:0 10px 30px #0008; }
+.l-texte{ padding:16px 18px; border-radius:22px; background:#fff8e8; color:#24322c; min-height:200px; }
+.l-texte .qui{ margin:0 0 6px; font-weight:800; color:#7a5a12; display:flex; align-items:center; gap:8px; }
+.l-texte .qui img{ width:44px; height:44px; border-radius:50%; object-fit:cover; }
+.l-texte .fr{ font-size:20px; line-height:1.5; margin:6px 0; }
+.l-texte .ar{ font-size:26px; line-height:1.8; margin:10px 0 0; color:#1f5a46; }
+.l-texte .cadre{ border-width:4px; padding:12px; box-shadow:none; }
+.hp{ background:#f2c45a; color:#3a2500; border-radius:999px; padding:2px 10px; font-size:17px; vertical-align:middle; }
+.hp.grand{ font-size:19px; padding:10px 18px; }
+.nav{ display:flex; gap:12px; justify-content:center; align-items:center; margin-top:16px; }
+.nav button:disabled{ opacity:.35; }
+
+/* jeux */
+.niveaux{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:12px 0; }
+.niveaux button{ padding:8px 14px; border-radius:999px; background:#ffffff14; border:2px solid #ffffff26; font-weight:800; }
+.niveaux button.on{ background:var(--or); color:#3a2500; }
+.consigne{ font-size:20px; font-weight:800; text-align:center; margin:6px 0 12px; }
+.consigne .ar{ font-size:24px; color:#ffe9b0; }
+.touche{ position:relative; height:min(70vh, 620px); border-radius:24px; background:#173a33 center/cover; overflow:hidden; box-shadow:0 10px 30px #0008; }
+.touche .consigne{ position:absolute; left:0; right:0; top:0; margin:0; padding:12px; background:linear-gradient(#000b, transparent); }
+.objet{ position:absolute; font-size:clamp(48px, 9vw, 74px); background:none; transform:translate(-50%, -50%); animation:flotte 3s ease-in-out infinite; filter:drop-shadow(0 4px 8px #000a); padding:6px; }
+.objet.pris{ animation:pop .6s forwards; pointer-events:none; }
+@keyframes flotte{ 0%, 100%{ margin-top:0 } 50%{ margin-top:-14px } }
+@keyframes pop{ 50%{ transform:translate(-50%, -50%) scale(1.6); } to{ transform:translate(-50%, -50%) scale(0); opacity:0; } }
+.compte{ position:absolute; right:14px; bottom:12px; font-family:'Baloo 2'; font-size:44px; background:#000a; padding:2px 18px; border-radius:18px; }
+.compte:empty{ display:none; } .compte span{ font-family:Amiri; color:var(--or); margin-left:8px; }
+.cases{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; }
+.case{ aspect-ratio:4/3.4; border-radius:16px; border:3px dashed #ffffff44; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px; text-align:center; font-size:14px; }
+.case b{ font-family:'Baloo 2'; font-size:34px; color:#ffffff55; }
+.case.ok{ border:3px solid var(--or); background:#ffffff10; }
+.case .img{ width:100%; flex:1; border-radius:10px; background:center/cover; }
+.case span{ margin-top:4px; font-weight:800; line-height:1.15; }
+.pioche{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-top:16px; }
+.piece{ aspect-ratio:4/3; border-radius:16px; background:#173a33 center/cover; border:3px solid #ffffff55; box-shadow:0 6px 16px #0008; }
+.piece.non{ animation:non .4s; }
+@keyframes non{ 25%{ transform:translateX(-8px) } 75%{ transform:translateX(8px) } }
+@media (max-width:600px){ .cases, .pioche{ grid-template-columns:repeat(2, 1fr); } }
+.quiz{ max-width:720px; margin:10px auto; padding:18px; border-radius:22px; background:#ffffff10; border:2px solid #ffffff22; }
+.quiz .qn{ margin:0; color:var(--or); font-weight:800; }
+.quiz h3{ font-size:23px; margin:6px 0 12px; line-height:1.25; }
+.choix{ display:grid; gap:10px; }
+.choix button{ padding:14px 16px; border-radius:16px; background:#ffffff1a; border:2px solid #ffffff2a; font-weight:800; font-size:19px; text-align:left; min-height:56px; }
+.choix button.arc{ font-family:Amiri, serif; font-size:24px; }
+.choix button.bon{ background:#2f8f6f; border-color:#7fe0b9; }
+.choix button.faux{ background:#a33a3a; border-color:#ff9a9a; }
+.ex{ min-height:24px; font-size:17px; color:var(--doux); }
+.fin{ text-align:center; } .fin h3{ font-size:28px; }
+.fin .gros{ display:inline-flex; margin:6px; }
+
+/* la fête */
+#fete{ position:fixed; inset:0; pointer-events:none; z-index:50; overflow:hidden; display:none; }
+#fete.on{ display:block; }
+#fete i{ position:absolute; top:-40px; font-style:normal; animation:tombe 2.6s ease-in forwards; }
+@keyframes tombe{ to{ transform:translateY(110vh) rotate(360deg); } }
+</style>
+</head>
+<body class="motif">
+
+<section class="ecran on" id="e-accueil"><div class="boite">
+  <div class="haut"><a class="pill" href="./">← Éveil</a><span class="esp"></span><span class="pill" id="total">⭐ 0</span><button class="pill" id="qui">👤</button></div>
+  <div class="couv" id="couv"><div>
+    <h1>La vie du Prophète <span class="saw">ﷺ</span></h1>
+    <p class="ar" lang="ar" dir="rtl">سِيرَةُ النَّبِيِّ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ</p>
+    <p>Sept histoires racontées par papa et maman, en français et en arabe. Regarde le film, lis le livre, puis joue !</p>
+  </div></div>
+  <div class="liste" id="liste"></div>
+  <p class="regles">🌙 Dans ces histoires, on ne dessine jamais le Prophète ﷺ, ni les autres prophètes, ni ses compagnons, ni les anges : on montre les lieux, la lumière, les animaux et les objets, et on imagine le reste avec le cœur.
+  Quand on entend son nom, on dit : <b>ﷺ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ</b>, « que la prière et la paix d’Allah soient sur lui ».</p>
+</div></section>
+
+<section class="ecran" id="e-episode"><div class="boite">
+  <div class="haut"><button class="pill" data-va="accueil">← Les épisodes</button><span class="esp"></span><span class="pill" id="ep-et"></span></div>
+  <div class="ep">
+    <div class="ep-img" id="ep-img"></div>
+    <div>
+      <div class="ep-num" id="ep-num"></div>
+      <h2 id="ep-titre"></h2>
+      <p class="ar" lang="ar" dir="rtl" id="ep-ar"></p>
+      <div class="actions">
+        <button class="gros" data-va="film" id="ep-film">▶ Regarder le film</button>
+        <button class="gros b2" data-va="livre">📖 Lire le livre</button>
+        <button class="gros b3" data-va="jeu" id="ep-jeu">🎮 Jouer</button>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section class="ecran" id="e-film">
+  <div class="f-img" id="f-img"></div>
+  <div class="f-barre">
+    <button class="rond" data-va="episode" title="Fermer">✕</button>
+    <button class="rond" id="f-prec" title="Image précédente">⏮</button>
+    <button class="rond" id="f-play" title="Pause">⏸</button>
+    <button class="rond" id="f-suiv" title="Image suivante">⏭</button>
+    <span class="esp"></span>
+    <button class="pill" id="f-lang" title="Langue de l’histoire">FR + عربي</button>
+    <span class="f-pos" id="f-pos"></span>
+  </div>
+  <div class="bulle" id="f-bulle" hidden>
+    <img id="f-conteur" alt="">
+    <div><div class="nom" id="f-nom"></div><p class="fr" id="f-fr"></p><p class="arb" lang="ar" id="f-arb"></p><span class="mot" id="f-mot" lang="ar" hidden></span></div>
+  </div>
+  <div class="coran" id="f-coran" hidden></div>
+  <div class="lecon" id="f-lecon" hidden><div>
+    <h2>🌟 Ce que nous retenons</h2>
+    <p class="fr" id="f-lecon-fr"></p>
+    <p class="ar" lang="ar" dir="rtl" id="f-lecon-ar"></p>
+    <div class="actions" id="f-fin" hidden>
+      <button class="gros b3" data-va="jeu">🎮 Jouer</button>
+      <button class="gros b2" data-va="suivant">⏭ Épisode suivant</button>
+    </div>
+  </div></div>
+</section>
+
+<section class="ecran" id="e-livre"><div class="boite">
+  <div class="haut"><button class="pill" data-va="episode">← Retour</button><span class="esp"></span><span class="pill" id="l-pos"></span></div>
+  <div class="livre">
+    <div class="l-img" id="l-img"></div>
+    <div class="l-texte" id="l-texte"></div>
+  </div>
+  <div class="nav"><button class="gros b2" id="l-prec">◀ Page d’avant</button><button class="gros" id="l-suiv">Page suivante ▶</button></div>
+</div></section>
+
+<section class="ecran" id="e-jeu"><div class="boite">
+  <div class="haut"><button class="pill" data-va="episode">← Retour</button><span class="esp"></span>
+    <button class="pill" data-dit-j="1">🔊 Consigne</button></div>
+  <div class="niveaux"><button data-niv="amine">🐣 Toucher (Amine)</button><button data-niv="salma">🧩 Dans l’ordre (Salma)</button><button data-niv="essil">🧠 Quiz (Essil)</button></div>
+  <div id="j-zone"></div>
+</div></section>
+
+<div id="fete"></div>
+<script src="../famille.js"></script>
+<script type="module" src="prophete/lecteur.js?v=1"></script>
+</body>
+</html>

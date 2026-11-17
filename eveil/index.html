@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10231f">
+<title>Éveil religieux</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8C%99%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* Éveil religieux (17/11) : la rubrique où les enfants découvrent l'histoire de l'islam, en français et en arabe, racontée par
+   papa et maman (avatars). Première série : « La vie du Prophète ﷺ » (prophete.html). Ensuite : les histoires des prophètes,
+   et « Ma vie de petit musulman ». Jamais d'image du Prophète ﷺ, des prophètes, des compagnons ni des anges. */
+:root{ --nuit:#10231f; --or:#f2c45a; --creme:#fff8e8; --doux:#d7e6dc; }
+*{ box-sizing:border-box; }
+.saw{ font-family:Amiri, serif; font-size:.7em; }
+body{ margin:0; min-height:100vh; color:var(--creme); font-family:Nunito, system-ui, sans-serif;
+  background:repeating-linear-gradient(45deg, #f2c45a10 0 2px, transparent 2px 22px), repeating-linear-gradient(-45deg, #f2c45a10 0 2px, transparent 2px 22px), radial-gradient(ellipse at top, #1f4a40 0%, var(--nuit) 60%) fixed; background-color:var(--nuit); }
+.boite{ max-width:980px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top)) 16px 40px; }
+.pill{ background:#ffffff14; border:2px solid #ffffff26; border-radius:999px; padding:8px 16px; font-weight:800; min-height:48px; display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:var(--creme); }
+.basmala{ text-align:center; font-family:Amiri, serif; font-size:clamp(26px, 5vw, 38px); color:var(--or); margin:18px 0 0; }
+h1{ font-family:'Baloo 2', sans-serif; text-align:center; font-size:clamp(38px, 8vw, 62px); margin:0; line-height:1.05; }
+.sous{ text-align:center; color:var(--doux); font-size:18px; margin:6px 0 18px; }
+.conteurs{ display:block; width:min(620px, 100%); aspect-ratio:16/9; margin:0 auto 20px; border-radius:26px; object-fit:cover; box-shadow:0 12px 40px #0009; background:#173a33; }
+.series{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; }
+.serie{ display:block; text-decoration:none; color:inherit; border-radius:24px; overflow:hidden; background:#ffffff10; border:2px solid #ffffff22; transition:transform .15s; }
+.serie:active{ transform:scale(.98); }
+.serie .img{ aspect-ratio:16/9; background:#173a33 center/cover; display:grid; place-items:center; font-size:64px; }
+.serie div.t{ padding:12px 16px 16px; }
+.serie h2{ font-family:'Baloo 2'; margin:0; font-size:24px; }
+.serie .ar{ font-family:Amiri, serif; font-size:22px; color:#ffe9b0; margin:2px 0; }
+.serie p{ margin:4px 0 0; color:var(--doux); }
+.bientot{ opacity:.6; pointer-events:none; }
+.bientot h2::after{ content:' · bientôt'; font-size:15px; color:var(--or); }
+</style>
+</head>
+<body><div class="boite">
+  <a class="pill" href="/">← Accueil</a>
+  <p class="basmala" lang="ar" dir="rtl">بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ</p>
+  <h1>Éveil religieux</h1>
+  <p class="sous">Les belles histoires de l’islam, racontées par papa et maman, en français et en arabe.</p>
+  <img class="conteurs" src="prophete/img/conteurs.webp" alt="Papa et maman, les conteurs" onerror="this.remove()">
+  <div class="series">
+    <a class="serie" href="prophete.html"><div class="img" style="background-image:url(prophete/img/e2_d.webp)"></div><div class="t">
+      <h2>La vie du Prophète <span class="saw">ﷺ</span></h2><p class="ar" lang="ar" dir="rtl">سِيرَةُ النَّبِيِّ ﷺ</p><p>7 épisodes : de l’année de l’Éléphant à Médine. Film, livre et jeux.</p></div></a>
+    <div class="serie bientot"><div class="img">🌊</div><div class="t">
+      <h2>Les histoires des prophètes</h2><p class="ar" lang="ar" dir="rtl">قِصَصُ الأَنْبِيَاءِ</p><p>Adam, Nouh, Ibrahim, Youssouf, Moussa, Younous, Issa…</p></div></div>
+    <div class="serie bientot"><div class="img">🤲</div><div class="t">
+      <h2>Ma vie de petit musulman</h2><p class="ar" lang="ar" dir="rtl">حَيَاتِي كَمُسْلِمٍ صَغِيرٍ</p><p>Les ablutions, la prière, les bonnes manières, le Ramadan, l’Aïd.</p></div></div>
+  </div>
+</div>
+<script src="../famille.js"></script>
+</body>
+</html>

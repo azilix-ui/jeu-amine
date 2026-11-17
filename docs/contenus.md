@@ -51,6 +51,18 @@ Sources : `OneDrive\Salma etude\` (English Garden v2 publiée), `exposé\` (phot
 
 Nahki Tounsi : écriture `3` = ع, `7` = ح, `kh` = خ, `q` = ق, `dh` = ض/ظ. Ordre de lecture d'un mot : enregistrement de l'appareil → enregistrement en ligne → voix de synthèse (Edge a « Arabe (Tunisie) »). Sources : `OneDrive\Amine\grande section\`.
 
+## Éveil religieux (dans `eveil/`, 17/11)
+
+- **`eveil/index.html`** : l'accueil de la rubrique (bismillah, papa et maman conteurs, les séries). Séries prévues : « La vie du Prophète ﷺ » (en ligne), « Les histoires des prophètes » et « Ma vie de petit musulman » (bientôt).
+- **`eveil/prophete.html`** · « La vie du Prophète ﷺ », 7 épisodes : l'année de l'Éléphant, l'enfance dans le désert, Al-Amîn, la révélation à Hirâ, les premiers musulmans et la patience, l'Hégire, sa bonté envers les enfants et les animaux. Textes relus et validés par le papa (document claude.ai « La vie du Prophète ﷺ — textes à relire »), rangés dans `eveil/prophete/episodes.js` ; le lecteur : `eveil/prophete/lecteur.js`.
+  - **Film** : les images bougent doucement (Ken Burns), la bulle du conteur (papa = voix Jon `v=jon`, maman = Céline), le texte en français et en arabe (voix Mohammad), réglage FR / عربي / FR + عربي ; à la fin « Ce que nous retenons ».
+  - **Livre** : une page par scène, 🔊 français et 🔊 arabe, on tourne en glissant le doigt.
+  - **Versets** (105, 93:6-9, 96:1-5, 9:40) : texte uthmani (quran-json / quranenc) en police Amiri Quran + sens de Hamidullah ; **jamais récités par la voix artificielle**, seul le sens en français est lu.
+  - **Jeux** : Amine touche des objets (oiseaux, chèvres, étoiles, briques, gouttes…, compte en arabe) ; Salma remet 4 images dans l'ordre puis 2 questions ; Essil a un quiz de 5 questions (dont du vocabulaire arabe). Chacun peut essayer les autres.
+  - **Étoiles** : 3 par épisode (film ou livre fini, jeu réussi, quiz réussi), cours `eveil-prophete`, clé `eveil-prophete:<Prénom>`, carte « 🌙 La vie du Prophète ﷺ » dans Progression.
+  - **Règles de la rubrique** : jamais d'image du Prophète ﷺ, d'un prophète, d'un compagnon ou d'un ange (même en silhouette) ; pas de batailles ; récits incertains marqués « selon la tradition » ; rien de publié sans l'accord du papa.
+  - Images : ComfyUI (FLUX.2 klein, préfixe `ev/`, graines 9100+ ; refaites `_v2` sans route moderne ni coupoles), `docs/eveil/build_images.py`. Conteurs : `__edit` de `houma_anis_jebba.png` / `houma_imen_jebba.png` ; les enfants (dernier épisode) : `__edit` des trois avatars.
+
 ## Pour toute la famille (dans `jeux/`)
 
 - **Serpent Légendes**, **Ludo Légendes**, **Médina Express** (course infinie à 3 voies dans la médina et le long du TGM, records en ligne), **Grimpe-Glace** (tour de glace) et **La Légende du Jasmin** (plateforme 2.5D en Tunisie, blocs savoir) : voir `docs/jeux-3d.md`.
