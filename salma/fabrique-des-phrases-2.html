@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>La Fabrique des Phrases 2</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%A9%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="ollie/cours.css?v=1">
+<style>
+/* La Fabrique des Phrases 2 (18/11) : la suite du français de Salma (CE2), sur le moteur commun ollie/cours.js, avec Ollie.
+   Le sujet et le verbe, l'accord du verbe, la phrase négative, les types de phrases (. ? !), passé / présent / futur,
+   et les homophones on / ont, son / sont, ou / où. Les consignes sont lues par la voix ElevenLabs du site (Céline). */
+.nat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:620px){.nat{grid-template-columns:1fr}}
+.nat div{border-radius:16px;padding:10px 14px;font-weight:700}
+.nat b{font-family:var(--display);font-size:20px;display:block}
+.c-nom{background:#e4f3fd;color:#1d5c84}.c-verbe{background:#ffe9e5;color:#9a3328}.c-adj{background:#dff5ee;color:#0f5c4c}.c-det{background:#f1e8ff;color:#5b34b0}
+.trou{display:inline-block;min-width:2.4em;border-bottom:5px dotted var(--sun);text-align:center;color:var(--mint-deep)}
+.astuce{background:#fff8de;border:3px solid var(--sun);border-radius:16px;padding:10px 14px;font-weight:800}
+.frise{display:flex;gap:8px;justify-content:center;margin-top:8px;font-weight:800}.frise span{padding:4px 12px;border-radius:999px;background:#eef3f8}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const T = '<span class="trou">…</span>';
+function noDup(f, n){ const out = [], seen = new Set(); let g = 0; while(out.length < n && g++ < 300){ const q = f(); const k = (q.body || '') + q.good + (q.words || ''); if(!seen.has(k)){ seen.add(k); out.push(q); } } return out; }
+
+/* ---------- 1 et 2. Le verbe, le sujet : [phrase, index du sujet (tableau d'index), index du verbe] ---------- */
+const SV = [
+  ['Le chat dort sur le canapé.', [0,1], 2], ['Salma monte sur son poney.', [0], 1], ['Les enfants jouent dans la cour.', [0,1], 2], ['Ollie prépare une tarte.', [0], 1],
+  ['Mon petit frère regarde un dessin animé.', [0,1,2], 3], ['Papa répare la porte du garage.', [0], 1], ['La maîtresse écrit au tableau.', [0,1], 2], ['Les oiseaux chantent le matin.', [0,1], 2],
+  ['Essil apprend son allemand.', [0], 1], ['Ma grand-mère prépare le couscous.', [0,1], 2], ['Le vent souffle très fort.', [0,1], 2], ['Les chevaux galopent dans le pré.', [0,1], 2],
+  ['Amine mange une grosse pomme.', [0], 1], ['La chouette vole dans la nuit.', [0,1], 2], ['Nous partons en vacances.', [0], 1], ['Tu ranges ta chambre.', [0], 1],
+];
+function qVerbe(){ const [p, , v] = pick(SV), w = p.slice(0, -1).split(' ');
+  const opts = [...new Set(shuffle(w.map((x, i) => i)).slice(0, 4).concat([v]))].slice(-4);
+  return { t:'choix', q:`Quel est le <b>verbe</b> de cette phrase ?`, voice:`Quel est le verbe de cette phrase ? ${p}`, body:`<div class="big-q">${p}</div>`, opts:shuffle([...new Set(opts)]).map(i => ({ v:String(i), html:w[i] })), cols:2, good:String(v), item:'verbe : ' + w[v],
+    expl:`Le verbe est <b>${w[v]}</b> : il dit ce qui se passe, et il change si on dit « hier » ou « demain ».` }; }
+function qSujet(){ const [p, s, v] = pick(SV), w = p.slice(0, -1).split(' '), suj = s.map(i => w[i]).join(' ');
+  const autres = []; for(let a = v + 1; a < w.length; a++){ autres.push(w.slice(a, Math.min(w.length, a + 2)).join(' ')); }
+  const opts = shuffle([...new Set([suj, w[v], ...shuffle(autres).slice(0, 2)])]);
+  return { t:'choix', q:`Qui est-ce qui <b>${w[v]}</b> ? Trouve le <b>sujet</b>.`, voice:`Qui est-ce qui ${w[v]} ? Trouve le sujet. ${p}`, body:`<div class="big-q">${p}</div>`, opts, cols:2, good:suj, item:'sujet : ' + suj,
+    expl:`On pose la question « Qui est-ce qui ${w[v]} ? » : c'est <b>${suj}</b>. Le sujet est souvent juste avant le verbe.` }; }
+
+/* ---------- 3. L'accord du verbe avec le sujet ---------- */
+const ACC = [['Les enfants', 'jouent', 'joue'], ['Salma', 'chante', 'chantent'], ['Mes cousins', 'arrivent', 'arrive'], ['Le chien', 'aboie', 'aboient'], ['Nous', 'mangeons', 'mangent'],
+  ['Vous', 'dansez', 'danse'], ['Tu', 'parles', 'parle'], ['Je', 'regarde', 'regardes'], ['Ollie et Salma', 'cuisinent', 'cuisine'], ['Les étoiles', 'brillent', 'brille'], ['Amine', 'dessine', 'dessinent'], ['Papa et maman', 'travaillent', 'travaille']];
+function qAccord(){ const [s, g, b] = pick(ACC), plur = /^(les|mes|nous|vous)/i.test(s) || / et /.test(s);
+  return { t:'choix', q:`Choisis la bonne forme du verbe.`, voice:`Choisis la bonne forme du verbe. ${s} ...`, body:`<div class="big-q">${s} ${T} .</div>`, opts:shuffle([g, b]), cols:2, good:g, item:s + ' ' + g,
+    expl:`${s} <b>${g}</b> : ${s === 'Nous' ? 'avec nous, le verbe finit par -ons.' : s === 'Vous' ? 'avec vous, le verbe finit par -ez.' : s === 'Tu' ? 'avec tu, le verbe prend un s.' : s === 'Je' ? 'avec je, pas de s pour les verbes en -er.' : plur ? 'le sujet est au pluriel (ils), le verbe finit par -ent.' : 'le sujet est au singulier (il, elle), pas de -nt.'}` }; }
+
+/* ---------- 4. La phrase négative ---------- */
+const NEG = [['Salma aime les épinards.', 'Salma n\'aime pas les épinards.', 'Salma ne aime pas les épinards.', 'Salma aime pas les épinards.'],
+  ['Amine dort.', 'Amine ne dort pas.', 'Amine dort ne pas.', 'Amine pas dort.'], ['Le chat mange sa pâtée.', 'Le chat ne mange pas sa pâtée.', 'Le chat mange pas sa pâtée.', 'Le chat ne pas mange sa pâtée.'],
+  ['Il pleut.', 'Il ne pleut pas.', 'Il pleut pas.', 'Il ne pas pleut.'], ['Essil écoute la radio.', 'Essil n\'écoute pas la radio.', 'Essil ne écoute pas la radio.', 'Essil écoute ne pas la radio.'],
+  ['Nous jouons dehors.', 'Nous ne jouons pas dehors.', 'Nous jouons pas dehors.', 'Nous ne pas jouons dehors.'], ['Ollie arrive en retard.', 'Ollie n\'arrive pas en retard.', 'Ollie ne arrive pas en retard.', 'Ollie arrive pas en retard.'],
+  ['Le bébé pleure.', 'Le bébé ne pleure pas.', 'Le bébé pleure pas.', 'Le bébé ne pas pleure.']];
+function qNeg(){ const [p, g, ...f] = pick(NEG);
+  return { t:'choix', q:`Mets cette phrase à la <b>forme négative</b>.`, voice:`Mets cette phrase à la forme négative. ${p}`, body:`<div class="big-q">${p}</div>`, opts:shuffle([g, ...f]), cols:1, good:g, item:'négation : ' + p,
+    expl:`« ${g} » : on met <b>ne</b> avant le verbe et <b>pas</b> après${/n'/.test(g) ? ' ; devant une voyelle, ne devient <b>n\'</b>' : ''}.` }; }
+
+/* ---------- 5. Les types de phrases ---------- */
+const TYP = [['Comment t\'appelles-tu', '?'], ['Quelle belle surprise', '!'], ['Le train part à huit heures', '.'], ['Où est mon cartable', '?'], ['Bravo, tu as gagné', '!'], ['Les fraises sont rouges', '.'],
+  ['Veux-tu jouer avec moi', '?'], ['Comme ce gâteau est bon', '!'], ['Amine a perdu une dent', '.'], ['Quand rentre papa', '?'], ['Attention, ça glisse', '!'], ['La mer est calme ce matin', '.']];
+function qType(){ const [p, g] = pick(TYP), nom = { '.':'une phrase qui raconte (déclarative)', '?':'une question (interrogative)', '!':'une émotion, une surprise (exclamative)' };
+  return { t:'choix', q:`Quel signe faut-il à la fin de cette phrase ?`, voice:`Quel signe faut-il à la fin de cette phrase ? ${p}`, body:`<div class="big-q">${p} ${T}</div>`, opts:[{ v:'.', html:'. le point' }, { v:'?', html:'? le point d\'interrogation' }, { v:'!', html:'! le point d\'exclamation' }], cols:1, good:g, item:p + ' ' + g,
+    expl:`« ${p} <b>${g}</b> » : c'est ${nom[g]}.` }; }
+
+/* ---------- 6. Passé, présent, futur ---------- */
+const TPS = [['Hier, nous avons mangé une pizza.', 'passe'], ['Demain, Salma ira à la piscine.', 'futur'], ['Aujourd\'hui, il fait beau.', 'present'], ['L\'an dernier, Essil était en CM2.', 'passe'],
+  ['Maintenant, je range mes crayons.', 'present'], ['La semaine prochaine, nous partirons à Tunis.', 'futur'], ['Autrefois, les gens écrivaient avec une plume.', 'passe'], ['Plus tard, je serai vétérinaire.', 'futur'],
+  ['En ce moment, Amine regarde un livre.', 'present'], ['Ce matin, papa a préparé le café.', 'passe'], ['Bientôt, ce sera l\'Aïd.', 'futur'], ['Ollie lit une histoire.', 'present']];
+function qTemps(){ const [p, g] = pick(TPS), N = { passe:'⏪ Passé (hier)', present:'⏺ Présent (maintenant)', futur:'⏩ Futur (demain)' };
+  return { t:'choix', q:`Quand se passe cette phrase ?`, voice:`Quand se passe cette phrase ? ${p}`, body:`<div class="big-q">${p}</div><div class="frise"><span>hier</span><span>maintenant</span><span>demain</span></div>`, opts:Object.keys(N).map(k => ({ v:k, html:N[k] })), cols:1, good:g, item:p,
+    expl:`C'est au <b>${{ passe:'passé', present:'présent', futur:'futur' }[g]}</b> : regarde les petits mots comme « ${p.split(',')[0]} » et la forme du verbe.` }; }
+
+/* ---------- 7, 8, 9. on / ont, son / sont, ou / où ---------- */
+const ON = [['_ va au parc cet après-midi.', 'On'], ['Mes amis _ un chat noir.', 'ont'], ['_ mange à midi.', 'On'], ['Les enfants _ fini leurs devoirs.', 'ont'], ['Dimanche, _ ira chez mamie.', 'on'], ['Ils _ peur du noir.', 'ont'], ['_ entend la mer.', 'On'], ['Papa et maman _ une surprise.', 'ont']];
+const SON = [['Amine range _ cartable.', 'son'], ['Les fleurs _ belles.', 'sont'], ['Salma promène _ chien.', 'son'], ['Mes cousins _ en vacances.', 'sont'], ['Ollie cherche _ chapeau.', 'son'], ['Les gâteaux _ prêts.', 'sont'], ['Essil monte _ cheval.', 'son'], ['Ils _ très gentils.', 'sont']];
+const OU = [['Veux-tu du lait _ du jus ?', 'ou'], ['_ est ma trousse ?', 'Où'], ['Rouge _ bleu, choisis !', 'ou'], ['La maison _ j\'habite est grande.', 'où'], ['On joue au foot _ au ballon ?', 'ou'], ['_ vas-tu ?', 'Où'], ['Un chien _ un chat ?', 'ou'], ['Je sais _ est caché le trésor.', 'où']];
+function homo(L, a, b, ta, tb, va, vb){ const [p, g] = pick(L), ok = g.toLowerCase();
+  return { t:'choix', q:`<b>${a}</b> ou <b>${b}</b> ?`, voice:`${va} ou ${vb} ?`, body:`<div class="big-q">${p.replace('_', T)}</div>`, opts:[{ v:a, html:a }, { v:b, html:b }], cols:2, good:ok, item:p.replace('_', g),
+    expl:`« ${p.replace('_', '<b>' + g + '</b>')} » : ${ok === a ? ta : tb}` }; }
+const qOn = () => homo(ON, 'on', 'ont', `on peut dire « il » : c'est <b>on</b>.`, `on peut dire « avaient » : c'est le verbe avoir, <b>ont</b>.`, 'o n', 'o n t');
+const qSon = () => homo(SON, 'son', 'sont', `on peut dire « mon » : c'est <b>son</b>.`, `on peut dire « étaient » : c'est le verbe être, <b>sont</b>.`, 's o n', 's o n t');
+const qOu = () => homo(OU, 'ou', 'où', `on peut dire « ou bien » : c'est <b>ou</b> sans accent.`, `c'est le lieu (l'endroit) : <b>où</b> avec un accent.`, 'o u sans accent', 'o u avec accent');
+function qHomo(){ return pick([qOn, qSon, qOu])(); }
+
+window.COURS = {
+  key:'salma-phrases2', track:'salma-phrases2', retour:'La fabrique 2', titre:'La Fabrique des Phrases 2', sous:'Le sujet et le verbe, la négation, les types de phrases, le temps et les pièges on/ont, son/sont, ou/où',
+  bonjour:`Te revoilà dans ma fabrique, Salma ! Aujourd'hui on va plus loin : on trouve le <b>sujet</b> et le <b>verbe</b>, on dit <b>non</b> avec « ne… pas », on choisit le bon signe . ? !, on voyage dans le temps, et on déjoue les pièges <b>on / ont</b>, <b>son / sont</b>, <b>ou / où</b>. Chaque bonne réponse te donne un <b>ticket 🎟️</b> !`,
+  confetti:['🧩','✏️','📖','⭐','🎟️'], revoir:'À revoir',
+  CH:[
+    { id:'verbe', name:'Trouve le verbe', sub:'Ce qui se passe', icon:'🏃', edge:'#c8473a', make:() => noDup(qVerbe, 8),
+      rule:`Le <b>verbe</b> dit ce que l'on fait ou ce qui se passe. Pour le trouver, change le temps : « Le chat <b>dort</b> » → « hier, le chat <b>dormait</b> ». Le mot qui change, c'est le verbe.` },
+    { id:'sujet', name:'Trouve le sujet', sub:'Qui est-ce qui… ?', icon:'🙋', edge:'#2a7fb4', make:() => noDup(qSujet, 8),
+      rule:`Le <b>sujet</b> dit qui fait l'action. On le trouve avec la question « <b>Qui est-ce qui</b> + verbe ? » : Qui est-ce qui dort ? <b>Le chat</b>.` },
+    { id:'accord', name:'Le verbe s\'accorde', sub:'il chante, ils chantent', icon:'🤝', edge:'#147a66', make:() => noDup(qAccord, 8),
+      rule:`Le verbe s'accorde avec son sujet : je chant<b>e</b>, tu chant<b>es</b>, il chant<b>e</b>, nous chant<b>ons</b>, vous chant<b>ez</b>, ils chant<b>ent</b>.` },
+    { id:'neg', name:'Dire non', sub:'ne… pas', icon:'🙅', edge:'#7a4fe0', make:() => noDup(qNeg, 7),
+      rule:`Pour dire non, on encadre le verbe avec <b>ne</b> … <b>pas</b> : Amine <b>ne</b> dort <b>pas</b>. Devant une voyelle, ne devient <b>n'</b> : Salma <b>n'</b>aime <b>pas</b>.` },
+    { id:'types', name: '. ? !', sub:'Raconter, demander, s\'exclamer', icon:'❓', edge:'#e0a100', make:() => noDup(qType, 8),
+      rule:`<b>.</b> la phrase raconte. <b>?</b> la phrase pose une question. <b>!</b> la phrase montre une émotion : la joie, la surprise, la peur.` },
+    { id:'temps', name:'Hier, aujourd\'hui, demain', sub:'Passé, présent, futur', icon:'⏳', edge:'#c2577a', make:() => noDup(qTemps, 8),
+      rule:`Le <b>passé</b>, c'est avant (hier, autrefois). Le <b>présent</b>, c'est maintenant. Le <b>futur</b>, c'est plus tard (demain, bientôt).` },
+    { id:'onont', name:'on / ont, son / sont', sub:'Les trucs d\'Ollie', icon:'🔍', edge:'#2a7fb4', make:() => noDup(() => Math.random() < .5 ? qOn() : qSon(), 10),
+      rule:`<b>ont</b> = avaient (verbe avoir), <b>on</b> = il.<br><b>sont</b> = étaient (verbe être), <b>son</b> = mon.` },
+    { id:'ou', name:'ou / où, la grande révision', sub:'Tous les pièges', icon:'🏆', edge:'#147a66', make:() => noDup(() => Math.random() < .45 ? qOu() : pick([qHomo, qNeg, qAccord, qType])(), 10),
+      rule:`<b>ou</b> = ou bien (un choix). <b>où</b> avec un accent = le lieu : Où est ma trousse ?` },
+  ],
+  fiche:[
+    { h:'Le sujet et le verbe', tag:'G', html:`<div class="nat"><div class="c-nom"><b>Sujet</b>qui fait l'action ?<br>« Qui est-ce qui… ? »</div><div class="c-verbe"><b>Verbe</b>ce qui se passe.<br>Il change avec le temps.</div></div><div class="astuce"><span class="c-nom">Le chat</span> <span class="c-verbe">dort</span> sur le canapé.</div>`,
+      lire:`Le sujet dit qui fait l'action : on le trouve avec la question qui est-ce qui. Le verbe dit ce qui se passe, et il change avec le temps.` },
+    { h:'Accord et négation', tag:'G', html:`<p>je chant<b>e</b>, tu chant<b>es</b>, il chant<b>e</b>, nous chant<b>ons</b>, vous chant<b>ez</b>, ils chant<b>ent</b>.</p><div class="astuce">Amine <b>ne</b> dort <b>pas</b>. Salma <b>n'</b>aime <b>pas</b> les épinards.</div>`,
+      lire:`Le verbe s'accorde avec son sujet. Pour dire non, on met ne avant le verbe et pas après.` },
+    { h:'Les phrases et le temps', tag:'P', html:`<p><b>.</b> raconter · <b>?</b> demander · <b>!</b> s'exclamer</p><div class="frise"><span>⏪ hier : passé</span><span>⏺ maintenant : présent</span><span>⏩ demain : futur</span></div>`,
+      lire:`Le point raconte, le point d'interrogation pose une question, le point d'exclamation montre une émotion. Hier, c'est le passé ; maintenant, le présent ; demain, le futur.` },
+    { h:'Les pièges', tag:'O', html:`<div class="nat"><div class="c-verbe"><b>ont / on</b>ont = avaient · on = il</div><div class="c-adj"><b>sont / son</b>sont = étaient · son = mon</div><div class="c-det"><b>ou / où</b>ou = ou bien · où = le lieu</div></div>`,
+      lire:`o n t, on peut dire avaient. o n, on peut dire il. s o n t, on peut dire étaient. s o n, on peut dire mon. o u sans accent, on peut dire ou bien. o u avec accent, c'est le lieu.` },
+  ],
+};
+</script>
+<script src="ollie/cours.js?v=4"></script>
+</body></html>
