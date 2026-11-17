@@ -15,6 +15,24 @@ const melange = a => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ con
 const CHIFFRES = '٠١٢٣٤٥٦٧٨٩', arabe = n => String(n).replace(/\d/g, d => CHIFFRES[d]);
 const NOMBRES_AR = ['', 'وَاحِد', 'اِثْنَان', 'ثَلَاثَة', 'أَرْبَعَة', 'خَمْسَة', 'سِتَّة', 'سَبْعَة', 'ثَمَانِيَة', 'تِسْعَة', 'عَشَرَة', 'أَحَدَ عَشَرَ'];
 const DEBUT_VERSET = { 93:6, 9:40 };
+/* 18/11 (demande du papa) : les versets sont récités par un vrai récitant, cheikh Mahmoud Khalil Al-Husary (murattal),
+   enregistrements offerts en accès libre par Islamic Network (cdn.islamic.network, « an open CDN serving ayah audio »).
+   Le numéro d'un verset dans tout le Coran = AVANT[sourate] + numéro du verset. La voix artificielle ne lit toujours que le sens. */
+const AVANT = { 2:7, 9:1235, 11:1473, 12:1596, 19:2250, 20:2348, 21:2483, 93:6079, 96:6106, 105:6188 };
+const RECIT = n => 'https://cdn.islamic.network/quran/audio/128/ar.husary/' + n + '.mp3';
+async function recite(q, carte){   // joue les versets l'un après l'autre (le verset entendu s'allume) ; false si on a été interrompu
+  stop(); const moi = jeton, d = q.d || DEBUT_VERSET[q.s] || 1;
+  if(AVANT[q.s] == null) return true;
+  for(let k = 0; k < q.v.length; k++){
+    if(jeton !== moi) return false;
+    const vs = carte ? carte.querySelectorAll('.vs') : []; vs.forEach((e, j) => e.classList.toggle('lit', j === k));
+    const ok = await new Promise(res => { const a = audio = new Audio(RECIT(AVANT[q.s] + d + k)); let f = false; const fin = r => { if(!f){ f = true; res(r); } };
+      a.onended = () => fin(true); a.onerror = () => fin(false); a.play().catch(() => fin(false)); });
+    if(!ok && jeton === moi){ (carte ? carte.querySelectorAll('.vs') : []).forEach(e => e.classList.remove('lit')); return true; }   // pas de réseau : on continue sans la récitation
+  }
+  (carte ? carte.querySelectorAll('.vs') : []).forEach(e => e.classList.remove('lit'));
+  return jeton === moi;
+}
 
 /* ---------- le joueur et ses étoiles ---------- */
 let joueur = null, sv = { ep:{}, lang:'deux', t:0 };
@@ -121,9 +139,10 @@ function carteCoran(q){
   const d = q.d || DEBUT_VERSET[q.s] || 1;
   return `<div class="cadre"><p class="sourate">📖 Sourate ${esc(q.nom)}</p>
     <p class="basmala" lang="ar" dir="rtl">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</p>
-    <div class="versets" lang="ar" dir="rtl">${q.v.map((v, k) => `${esc(v[0])} <span class="num">﴿${arabe(d + k)}﴾</span>`).join(' ')}</div>
+    <div class="versets" lang="ar" dir="rtl">${q.v.map((v, k) => `<span class="vs">${esc(v[0])} <span class="num">﴿${arabe(d + k)}﴾</span></span>`).join(' ')}</div>
+    ${AVANT[q.s] != null ? '<p class="c"><button class="hp grand" data-recite>▶ Écouter la récitation</button></p>' : ''}
     <div class="sens">${q.v.map(v => `<p>${esc(v[1])}</p>`).join('')}</div>
-    <p class="note">Le Coran ne se récite pas avec une voix d’ordinateur : récitez-le ensemble, avec papa ou maman. La voix lit seulement le sens en français.</p></div>`;
+    <p class="note">Récitation : cheikh Mahmoud Khalil Al-Husary (enregistrement en accès libre, Islamic Network). Le Coran n’est jamais lu par une voix d’ordinateur : elle lit seulement le sens en français. Répétez après le récitant, avec papa ou maman.</p></div>`;
 }
 async function joueScene(){
   const sc = scenesFilm(), s = sc[F.i]; if(!s) return;
@@ -136,7 +155,9 @@ async function joueScene(){
     if(sv.lang !== 'ar') ok = await dire(s.fr, s.qui);
     if(ok && encore() && sv.lang !== 'fr' && s.ar){ await pause(350); ok = encore() && await dire(s.ar, 'ar'); }
   } else if(s.coran){
-    ok = await dire('Allah dit dans le Coran, dans la sourate ' + s.coran.nom.replace(/\(.*\)/, '') + '. Voici ce que cela veut dire : ' + s.coran.v.map(v => v[1]).join(' '), 'maman');
+    ok = await dire('Écoutons le Coran, dans la sourate ' + s.coran.nom.replace(/\(.*\)/, '').replace(/,.*$/, '') + '.', 'maman');
+    if(ok && encore() && !voixCoupee()) ok = await recite(s.coran, $('f-coran'));
+    if(ok && encore()) ok = await dire('Voici ce que cela veut dire : ' + s.coran.v.map(v => v[1]).join(' '), 'maman');
     if(ok) await pause(2500);
   } else if(s.lecon){
     ok = await dire('Ce que nous retenons : ' + s.lecon.fr, 'maman');
@@ -258,6 +279,7 @@ function fete(){
 document.addEventListener('click', e => {
   const b = e.target.closest('button, [data-ep]'); if(!b) return;
   if(b.dataset.ep) return episode(+b.dataset.ep);
+  if(b.hasAttribute('data-recite')){ const c = b.closest('.cadre'), sc = $('e-film').classList.contains('on') ? scenesFilm()[F.i] : scenesFilm()[L]; if(sc && sc.coran){ if($('e-film').classList.contains('on')){ F.enPause = true; $('f-play').textContent = '▶'; } recite(sc.coran, c); } return; }
   if(b.dataset.dit) return ditPage(b.dataset.dit);
   if(b.dataset.ditJ) return J && J.dit && J.dit();
   if(b.dataset.niv) return jeu(b.dataset.niv);
