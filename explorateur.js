@@ -134,6 +134,18 @@
     var h = 0; for(var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; return '/jeux/avatars/mascotte-' + ['nour', 'yasmine', 'fares'][h % 3] + '.webp'; }
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function lit(t){ try{ if(!explo && 'speechSynthesis' in window){ var u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; speechSynthesis.speak(u); } }catch(e){} }
+  /* 18/11 (demande du papa) : les messages du salon sont lus avec la voix ElevenLabs DE CELUI QUI ÉCRIT
+     (Anis = Jon, Imen = Céline, Amine = Lulu, Essil et Salma = leur voix, voir api/voix.php VX_AUTRES ; les invités = Céline),
+     et les messages vocaux (🎤, surtout pour Amine qui n'écrit pas encore) se réécoutent d'un toucher. */
+  var VOIX_DE = { anis:'anis', imen:'imen', amine:'amine', essil:'essil', salma:'salma' }, sonSalon = null;
+  function stopSon(){ if(sonSalon){ try{ sonSalon.pause(); }catch(e){} sonSalon = null; } try{ speechSynthesis.cancel(); }catch(e){} }
+  function joueListe(urls, i){ i = i || 0; if(i >= urls.length){ sonSalon = null; return; } var a = sonSalon = new Audio(urls[i]);
+    a.onended = function(){ if(sonSalon === a) joueListe(urls, i + 1); }; a.onerror = function(){ if(sonSalon === a) joueListe(urls, i + 1); }; a.play().catch(function(){}); }
+  function urlVoix(t, nom){ var v = VOIX_DE[sansAccent(nom || '')] || ''; return '/api/voix.php?l=fr&t=' + encodeURIComponent(String(t).slice(0, 380)) + (v ? '&v=' + v : ''); }
+  function litMessage(x, annonce){ if(!FamilleVoix.on()) return; stopSon(); var u = [];
+    if(annonce) u.push('/api/voix.php?l=fr&t=' + encodeURIComponent((x.type === 'v' ? 'Message vocal de ' : 'Message de ') + x.nom) + (moi() === 'Amine' ? '&p=amine' : ''));
+    if(x.type === 'v') u.push(API + '?son=' + x.id); else { var t = String(x.texte || '').replace(/[\u{1F000}-\u{1FAFF}☀-➿️]/gu, ' ').trim(); if(t) u.push(urlVoix(t, x.nom)); }
+    if(u.length) joueListe(u); }
   var sget = function(k, d){ try{ var v = sessionStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } };
   var sset = function(k, v){ try{ sessionStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
   // ce qui a été lu est gardé dans le vrai localStorage de l'appareil (avant : sessionStorage, oublié à chaque visite → la pastille revenait)
@@ -158,6 +170,8 @@
     '#famSalon .pied{display:flex;gap:8px;justify-content:space-between;padding:10px;border-top:1px solid #e2e8f0}#famSalon .pied .g{background:#e2e8f0;color:#18202e}' +
     '#famSalon .m{max-width:82%;padding:7px 11px;border-radius:16px;background:#f1f5f9;align-self:flex-start;word-break:break-word}#famSalon .m.moi{align-self:flex-end;background:#d1fae5}#famSalon .m small{display:block;font-size:11px;color:#64748b}' +
     '#famSalon .emo{display:flex;gap:4px;flex-wrap:wrap;padding:6px 10px 0}#famSalon .emo button{all:unset;cursor:pointer;font-size:22px;min-width:40px;min-height:40px;display:grid;place-items:center;border-radius:10px;background:#f1f5f9}' +
+    '#famSalon .m .hp{all:unset;cursor:pointer;font-size:15px;padding:0 4px;opacity:.75}#famSalon .m .vo{all:unset;cursor:pointer;font-weight:800;padding:6px 4px;display:inline-block}' +
+    '#famSalon form .mic{min-width:52px;background:#ff8c1a;font-size:22px;padding:0 8px}#famSalon form .mic.on{background:#d7263d;font-size:15px;animation:famMic 1s infinite}@keyframes famMic{50%{box-shadow:0 0 0 6px #d7263d44}}' +
     '#famSalon form{display:flex;gap:6px;padding:10px}#famSalon input{flex:1;min-width:0;height:46px;border:2px solid #cbd5e1;border-radius:14px;padding:0 12px;font:600 16px Nunito,system-ui,sans-serif}' +
     '#famBulle{position:fixed;z-index:2147483002;left:12px;max-width:min(380px,calc(100vw - 24px));display:flex;align-items:center;gap:10px;background:#fff;color:#18202e;border-radius:18px;padding:8px 10px;box-shadow:0 10px 30px #0004,0 0 0 3px #ffd23f;font:800 15px/1.25 Nunito,system-ui,sans-serif}#famBulle img{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:none}#famBulle span{flex:1}#famBulle button{min-height:42px;border:0;border-radius:12px;background:#0f766e;color:#fff;font:800 14px Nunito,system-ui,sans-serif;padding:0 10px;cursor:pointer}#famBulle .x{background:#e2e8f0;color:#18202e}' +
     '@media (prefers-color-scheme:dark){#famSalon,#famBulle{background:#1a2130;color:#eef1f6}#famSalon .qui,#famSalon .m,#famSalon .emo button{background:#232c3d}#famSalon .m.moi{background:#14463f}#famSalon input{background:#10141c;color:#eef1f6;border-color:#2a3447}#famSalon .pied .g,#famBulle .x{background:#2a3447;color:#eef1f6}#famSalon .qui small,#famSalon .vide{color:#a3aec2}}';
@@ -211,9 +225,9 @@
       var a = S.avec, p = S.enLigne.filter(function(x){ return x.nom === a; })[0];
       var L = S.msgs.filter(function(x){ return (x.nom === a && x.a === m) || (x.nom === m && x.a === a); });
       P.innerHTML = '<header><button type="button" data-r aria-label="Retour">←</button><img alt="" src="' + tete(a, p && p.av) + '"><b>' + esc(a) + (p ? '' : ' <small style="font-weight:600;opacity:.8">(parti)</small>') + '</b><button type="button" data-f aria-label="Fermer">✕</button></header>' +
-        '<div class="corps">' + (L.length ? L.map(function(x){ var d = new Date(x.ts * 1000); return '<div class="m' + (x.nom === m ? ' moi' : '') + '"><small>' + esc(x.nom) + ' · ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0') + '</small>' + esc(x.texte) + '</div>'; }).join('') : '<p class="vide">Écris le premier message à ' + esc(a) + ' 👋</p>') + '</div>' +
+        '<div class="corps">' + (L.length ? L.map(function(x){ var d = new Date(x.ts * 1000); return '<div class="m' + (x.nom === m ? ' moi' : '') + '"><small>' + esc(x.nom) + ' · ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0') + '</small>' + (x.type === 'v' ? '<button type="button" class="vo" data-ecoute="' + x.id + '">▶ 🎤 Message vocal · ' + (x.duree || 1) + ' s</button>' : esc(x.texte) + ' <button type="button" class="hp" data-ecoute="' + x.id + '" aria-label="Écouter">🔊</button>') + '</div>'; }).join('') : '<p class="vide">Écris le premier message à ' + esc(a) + ' 👋</p>') + '</div>' +
         '<div class="emo">' + ['👋', '😀', '😂', '❤️', '👍', '🎉', '⭐', '🏠'].map(function(e){ return '<button type="button" data-e="' + e + '">' + e + '</button>'; }).join('') + '</div>' +
-        '<form><input maxlength="300" placeholder="Ton message à ' + esc(a) + '…" autocomplete="off" enterkeyhint="send"><button type="submit">Envoyer</button></form>';
+        '<form>' + (REC ? '<button type="button" class="mic' + (S.rec ? ' on' : '') + '" data-mic aria-label="Message vocal">' + (S.rec ? '⏹ ' + S.rec.s + ' s' : '🎤') + '</button>' : '') + '<input maxlength="300" placeholder="' + (moi() === 'Amine' ? '🎤 Touche le micro' : 'Ton message à ' + esc(a) + '…') + '" autocomplete="off" enterkeyhint="send"><button type="submit">Envoyer</button></form>';
       var c = P.querySelector('.corps'); c.scrollTop = c.scrollHeight;
       var lu = luGet(m) || {}; L.forEach(function(x){ if(x.nom === a) lu[a] = Math.max(lu[a] || 0, x.id); }); luSet(m, lu); badges();
       return;
@@ -232,7 +246,27 @@
     if(t.hasAttribute('data-r')){ S.avec = null; S.vue = 'liste'; dessine(); place(); return; }
     if(t.dataset.a){ S.avec = t.dataset.a; S.vue = 'conv'; dessine(); place(); var i = P.querySelector('input'); if(i && !('ontouchstart' in window)) i.focus(); return; }
     if(t.dataset.e) envoie(t.dataset.e);
+    if(t.dataset.ecoute){ var x = S.msgs.filter(function(y){ return y.id === +t.dataset.ecoute; })[0]; if(x){ if(x.type === 'v' && !FamilleVoix.on()){ stopSon(); joueListe([API + '?son=' + x.id]); } else litMessage(x, false); } return; }
+    if(t.hasAttribute('data-mic')){ if(S.rec) finEnregistre(true); else enregistre(); return; }
   }
+  // 🎤 le message vocal : on touche le micro, on parle (30 s au plus), on touche ⏹ : il part tout seul
+  var REC = !!(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  function majMic(){ var b = P.querySelector('[data-mic]'); if(b){ b.classList.toggle('on', !!S.rec); b.textContent = S.rec ? '⏹ ' + S.rec.s + ' s' : '🎤'; } }
+  function enregistre(){ stopSon();
+    navigator.mediaDevices.getUserMedia({ audio:true }).then(function(flux){
+      var types = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg'], ty = types.filter(function(x){ return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(x); })[0] || '';
+      var mr = new MediaRecorder(flux, ty ? { mimeType:ty } : undefined), bouts = [], r = S.rec = { mr:mr, flux:flux, s:0, t0:Date.now(), envoie:false };
+      mr.ondataavailable = function(e){ if(e.data && e.data.size) bouts.push(e.data); };
+      mr.onstop = function(){ flux.getTracks().forEach(function(k){ k.stop(); }); clearInterval(r.tic); var a = S.avec; S.rec = null; majMic();
+        if(!r.envoie || !a) return; var duree = Math.max(1, Math.round((Date.now() - r.t0) / 1000)); if(duree < 1) return;
+        var fd = new FormData(); fd.append('action', 'voix'); fd.append('nom', moi()); fd.append('a', a); fd.append('duree', duree); fd.append('audio', new Blob(bouts, { type:mr.mimeType || 'audio/webm' }), 'vocal');
+        fetch(API, { method:'POST', body:fd }).then(function(x){ return x.json().then(function(j){ if(!x.ok) throw new Error(j.error || 'Erreur'); }); }).then(salut)
+          .catch(function(err){ var i = P.querySelector('input'); if(i) i.placeholder = err.message; }); };
+      r.tic = setInterval(function(){ r.s = Math.round((Date.now() - r.t0) / 1000); majMic(); if(r.s >= 30) finEnregistre(true); }, 250);
+      mr.start(); majMic();
+    }).catch(function(){ var i = P.querySelector('input'); if(i) i.placeholder = 'Le micro n\'est pas autorisé 🎤'; });
+  }
+  function finEnregistre(envoyer){ var r = S.rec; if(!r) return; r.envoie = envoyer; try{ r.mr.stop(); }catch(e){} }
   function envoie(texte){ texte = String(texte || '').trim(); if(!texte || !S.avec) return;
     var fd = new FormData(); fd.append('action', 'ecrit'); fd.append('de', moi()); fd.append('a', S.avec); fd.append('texte', texte);
     fetch(API, { method:'POST', body:fd }).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error || 'Erreur'); }); })
@@ -244,11 +278,11 @@
     var r = B.getBoundingClientRect(), d = document.createElement('div'); d.id = 'famBulle';
     d.style.bottom = (innerHeight - r.top + 10) + 'px'; d.style.left = Math.max(8, Math.min(innerWidth - 390, r.left)) + 'px';
     d.innerHTML = '<img alt="" src="' + tete(m.nom) + '"><span>💬 <b></b> : <q></q></span><button type="button">Répondre</button><button type="button" class="x" aria-label="Fermer">✕</button>';
-    d.querySelector('b').textContent = m.nom; d.querySelector('q').textContent = m.texte;
+    d.querySelector('b').textContent = m.nom; d.querySelector('q').textContent = m.type === 'v' ? '🎤 un message vocal' : m.texte;
     d.querySelector('button').onclick = function(){ d.remove(); S.avec = m.nom; S.vue = 'conv'; B.classList.remove('replie'); dessine(); P.classList.add('on'); place(); };
     d.querySelector('.x').onclick = function(){ d.remove(); };
     document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 12000);
-    lit('Message de ' + m.nom + ' : ' + m.texte);
+    litMessage(m, true);
   }
   var occupe = false;
   function salut(){
@@ -265,7 +299,7 @@
       if(nv.length){ S.msgs = S.msgs.concat(nv).slice(-200);
         if(luGet(m) === null){ var lu0 = {}, vieux = Date.now() / 1000 - 86400; S.msgs.forEach(function(x){ if(x.a === m && x.ts < vieux) lu0[x.nom] = Math.max(lu0[x.nom] || 0, x.id); }); luSet(m, lu0); }   // nouvel appareil : les messages de plus d'un jour ne comptent pas
         var max = S.msgs[S.msgs.length - 1].id;
-        if(dernier >= 0) nv.filter(function(x){ return x.a === m && x.id > dernier; }).forEach(function(x){ if(!(P.classList.contains('on') && S.vue === 'conv' && S.avec === x.nom)) bulle(x); });
+        if(dernier >= 0) nv.filter(function(x){ return x.a === m && x.id > dernier; }).forEach(function(x){ if(!(P.classList.contains('on') && S.vue === 'conv' && S.avec === x.nom)) bulle(x); else litMessage(x, false); });
         sset(cle, Math.max(max, dernier));
       } else if(dernier < 0) sset(cle, 0);
       var sig = JSON.stringify(S.enLigne) + '|' + S.msgs.length, change = sig !== S.sig; S.sig = sig;

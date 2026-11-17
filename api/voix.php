@@ -24,7 +24,9 @@ $t = trim(preg_replace('/\s+/u', ' ', (string)($_GET['t'] ?? '')));
 if ($t === '' || mb_strlen($t) > 400) vx_fin(400);
 $lulu = $l === 'fr' && ($_GET['p'] ?? '') === 'amine';
 // d'autres voix françaises choisies par le papa (v=…) : Jon, la voix de papa dans « La vie du Prophète ﷺ » (17/11)
-const VX_AUTRES = ['jon' => 'bJ4Wa440PU9c765nkJkn'];
+// 18/11 : le salon du site lit chaque message avec la voix de celui qui l'a écrit (explorateur.js, v=<prénom>) :
+// Anis = Jon, Amine = Lulu ; Imen et les invités = la voix française du site (Céline) ; Essil et Salma : leur voix quand le papa l'aura choisie
+const VX_AUTRES = ['jon' => 'bJ4Wa440PU9c765nkJkn', 'anis' => 'bJ4Wa440PU9c765nkJkn', 'amine' => VX_LULU];
 $autre = $l === 'fr' ? (VX_AUTRES[(string)($_GET['v'] ?? '')] ?? '') : '';
 $voix = $lulu ? VX_LULU : ($autre ?: vx_voix($l));
 $dir = ga_donnees() . '/voix-cache/' . $voix;

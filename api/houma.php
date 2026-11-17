@@ -8,7 +8,7 @@
  *   POST action=salut client nom lieu chez depuis     -> {en_ligne:[{nom, lieu, chez}], msgs:[…id > depuis], trocs:[…], dernier}
  *        (à renvoyer toutes les 3 secondes ; on disparaît après 15 secondes sans nouvelles)
  *   POST action=dit nom texte                         -> {id}                        message écrit (300 caractères)
- *   POST action=voix nom duree audio(fichier)         -> {id}                        message vocal (60 s, 1,5 Mo)
+ *   POST action=voix nom duree audio(fichier) [a]     -> {id}                        message vocal (60 s, 1,5 Mo) ; avec a = privé, dans le salon du site (18/11)
  *   POST action=montre nom lieu titre                 -> {id}                        « Viens voir ! » : les autres peuvent venir dans ce lieu
  *   GET  ?son=ID                                      -> le message vocal
  * Le troc (les deux enfants valident) :
@@ -161,7 +161,9 @@ try {
         $h = (string)file_get_contents($f['tmp_name'], false, null, 0, 12);
         $x = substr($h, 0, 4) === "\x1A\x45\xDF\xA3" ? 'webm' : (substr($h, 4, 4) === 'ftyp' ? 'mp4' : (substr($h, 0, 4) === 'OggS' ? 'ogg' : (substr($h, 0, 4) === 'RIFF' && substr($h, 8, 4) === 'WAVE' ? 'wav' : '')));
         if ($x === '') fail(400, 'Ce son n\'est pas reconnu.');
-        limite(); $id = ajoute($nom, 'v', '', '', $x, max(1, min(60, (int)($_POST['duree'] ?? 0))));
+        // 18/11 : un message vocal peut aussi être privé (le salon du site : a = le destinataire)
+        $vers = trim((string)($_POST['a'] ?? '')) !== '' ? nom($_POST['a']) : ''; if ($vers !== '' && $vers === $nom) fail(400, 'Choisis à qui parler.');
+        limite(); $id = ajoute($nom, 'v', '', '', $x, max(1, min(60, (int)($_POST['duree'] ?? 0))), $vers);
         if (!move_uploaded_file($f['tmp_name'], hl_dossier() . '/' . $id . '.' . $x)) { hl()->prepare('DELETE FROM messages WHERE id = ?')->execute([$id]); fail(500, 'Le serveur n\'a pas pu garder le son.'); }
         out(200, ['id' => $id]);
     }
