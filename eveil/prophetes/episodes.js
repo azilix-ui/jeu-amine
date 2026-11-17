@@ -1013,7 +1013,8 @@ export const EPISODES = [
     "img": "p7_d",
     "qui": "papa",
     "fr": "Issa grandit et devint un grand prophète. Par la permission d’Allah, il guérissait les malades, et il façonna des oiseaux en argile qui s’envolèrent ! Il annonça aussi qu’un prophète viendrait après lui, nommé Ahmad : c’est notre Prophète Mohammed ﷺ. Les musulmans aiment Issa et sa maman Maryam.",
-    "ar": "كَانَ عِيسَى يَشْفِي المَرْضَى بِإِذْنِ اللهِ، وَأَخْبَرَ أَنَّ نَبِيًّا سَيَأْتِي بَعْدَهُ، هُوَ أَحْمَدُ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ."
+    "ar": "كَانَ عِيسَى يَشْفِي المَرْضَى بِإِذْنِ اللهِ، وَأَخْبَرَ أَنَّ نَبِيًّا سَيَأْتِي بَعْدَهُ، هُوَ أَحْمَدُ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ.",
+    "vid": true
    }
   ],
   "lecon": {
