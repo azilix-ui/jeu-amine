@@ -1,0 +1,11 @@
+Kelma (missaoui-family.com) - les lexiques du jeu, un mot par ligne, normalisés (voir jeux/kelma/regles.js).
+Fabriqués par docs/kelma/lexiques.mjs le 18/11/2026.
+
+fr.txt : d'après « an-array-of-french-words » 2.0.0 (licence MIT, © Titus Wormer), liste dérivée de celle de Letterpress.
+         Mots de 3 à 9 lettres, sans accents (É = E, Œ = OE), sans apostrophe ni trait d'union.
+en.txt : d'après « an-array-of-english-words » 2.0.0 (licence MIT, © Titus Wormer). Mots de 3 à 9 lettres, en minuscules à l'origine (pas de noms propres).
+ar.txt : d'après Arramooz Alwaseet (dictionnaire arabe de Taha Zerrouki, https://github.com/linuxscout/arramooz),
+         licence GNU GPL version 2. Noms et verbes (formes de base), sans harakât ; أ إ آ ٱ → ا, ى → ي, ؤ → و, ئ → ي.
+         Ce fichier dérivé reste sous la même licence GPL v2 ; la source complète est sur le dépôt indiqué.
+Mots grossiers retirés avec la liste « naughty-words » (LDNOOBW, licence CC BY 4.0).
+Les « mots en images » du jeu (regles.js, MOTS_IMAGES) sont ajoutés aux trois listes.
