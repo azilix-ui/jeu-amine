@@ -121,7 +121,7 @@ async function makeModele(){
   const m = g.scene; const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
   const piv = new THREE.Group(), inner = new THREE.Group(); inner.add(m); piv.add(inner);
   const ROT = window.__cevRot != null ? window.__cevRot : CROT;   // le modèle sort de profil : on le tourne pour qu'il regarde vers +Z
-  const long = Math.max(size.x, size.z), k = 2.5 / long; m.position.set(-c.x, -box.min.y, -c.z); inner.scale.setScalar(k); inner.rotation.y = ROT;
+  const long = Math.max(size.x, size.z), k = 2.7 / long; m.position.set(-c.x, -box.min.y, -c.z); inner.scale.setScalar(k); inner.rotation.y = ROT;
   m.traverse(o => { if(o.isMesh){ o.castShadow = false; if(o.material){ o.material.side = THREE.FrontSide; } } });
   const sh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 3), new THREE.MeshBasicMaterial({ map:shadowTex, transparent:true, depthWrite:false })); sh.rotation.x = -Math.PI / 2; sh.position.y = .03;
   const root = new THREE.Group(); root.add(piv); let ph = 0;
@@ -131,7 +131,7 @@ async function makeModele(){
       piv.rotation.x = st.air != null ? -Math.sin(Math.PI * st.air) * .38 + .1 * st.air : Math.sin(ph * (g3 ? .5 : 1)) * (g3 ? .07 : .03); },
     jump(){}, land(){} };
 }
-const CROT = Math.PI / 2;
+const CROT = -Math.PI / 2;   // le modèle « cavalière » (cav9752) regarde vers -X
 
 /* ---------------- la partie ---------------- */
 let R = null, version = 'A', horse = null, raf = 0, last = 0;
