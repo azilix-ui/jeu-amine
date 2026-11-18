@@ -4,12 +4,11 @@
    Céline (Essil, Salma) ; encouragements en arabe = Mohammad. La voix artificielle ne dit jamais un verset. */
 import { SOURATE, VERSETS, PHRASES } from './fatiha.js';
 import { aligne, score, verdict, ecouter, peutReconnaitre } from './ecoute.js';
-import { parties } from '../mots-arabes.js';   // les mots arabes des explications, dits par la voix arabe (18/11)
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
-const pause = ms => new Promise(r => setTimeout(r, ms)).then(() => gate());
+const pause = ms => new Promise(r => setTimeout(r, ms));
 const arabe = n => String(n);   // chiffres 1, 2, 3 (demande du papa, 18/11)
 const RECIT = [k => 'https://cdn.islamic.network/quran/audio/128/ar.husary/' + (SOURATE.avant + k) + '.mp3',
                k => 'https://mirrors.quranicaudio.com/everyayah/Husary_128kbps/' + String(SOURATE.n).padStart(3, '0') + String(k).padStart(3, '0') + '.mp3'];
@@ -20,8 +19,7 @@ const voixCoupee = () => !!(window.FamilleVoix && FamilleVoix.on && !FamilleVoix
 /* ---------- le joueur et ses progrès ---------- */
 let joueur = null, sv = null;
 const COURS = 'eveil-sourates', cle = () => COURS + ':' + joueur;
-// réglages (18/11) : expl = les explications de papa / maman ; auto = passer seul au verset suivant ; rep = l'enfant répète
-const vide = () => ({ s:{ [SOURATE.n]:{ v:[], seul:0 } }, com:'fr', expl:true, auto:true, rep:true, t:0 });
+const vide = () => ({ s:{ [SOURATE.n]:{ v:[], seul:0 } }, com:'fr', t:0 });
 const S = () => { sv.s[SOURATE.n] = sv.s[SOURATE.n] || { v:[], seul:0 }; return sv.s[SOURATE.n]; };
 function sauve(){ if(!joueur) return; sv.t = Date.now(); store.set(cle(), sv); }
 async function setJoueur(n){
@@ -43,37 +41,20 @@ const conteur = () => mode === 'amine' ? 'papa' : 'maman';
 
 /* ---------- les voix ---------- */
 let jeton = 0, audio = null;
-/* la pause (18/11) : le son s'arrête où il en est, l'écoute du micro s'arrête et reprendra, tout le reste attend gate() */
-let enPause = false, coupee = false; const reprises = [];
-const gate = () => enPause ? new Promise(r => reprises.push(r)) : Promise.resolve();
-function basculePause(force){
-  enPause = force === undefined ? !enPause : force;
-  if(enPause){ if(audio) try{ audio.pause(); }catch(e){} try{ speechSynthesis.pause(); }catch(e){} if(arreteEcoute){ coupee = true; arreteEcoute(); } try{ $('vid').pause(); }catch(e){} }
-  else { if(audio && audio.__joue && !audio.ended) audio.play().catch(() => {}); try{ speechSynthesis.resume(); }catch(e){} reprises.splice(0).forEach(r => r()); if(mode === 'amine') try{ $('vid').play().catch(() => {}); }catch(e){} }
-  const b = $('pause'); if(b){ b.textContent = enPause ? '▶ Reprendre' : '⏸ Pause'; b.classList.toggle('or', enPause); }
-}
-function stop(){ if(enPause) basculePause(false); jeton++; if(audio){ try{ audio.pause(); }catch(e){} audio = null; } try{ speechSynthesis.cancel(); }catch(e){} allume(-1, -1); micro(''); }
-function joue(src, moi, pendant){   // un mp3 (adresse ou Audio déjà chargé) jusqu'au bout ; false si interrompu, null si introuvable
-  return gate().then(() => new Promise(res => { const a = audio = typeof src === 'string' ? new Audio(src) : src; let f = false, raf = 0;
+function stop(){ jeton++; if(audio){ try{ audio.pause(); }catch(e){} audio = null; } try{ speechSynthesis.cancel(); }catch(e){} allume(-1, -1); micro(''); }
+function joue(url, moi, pendant){   // un mp3 jusqu'au bout ; false si interrompu ou introuvable
+  return new Promise(res => { const a = audio = new Audio(url); let f = false, raf = 0;
     const fin = r => { if(!f){ f = true; cancelAnimationFrame(raf); res(r); } };
-    const tic = () => { if(jeton !== moi){ try{ a.pause(); }catch(e){} return fin(false); }
-      if(enPause && !a.paused) try{ a.pause(); }catch(e){}
-      if(pendant) pendant(a.currentTime * 1000); raf = requestAnimationFrame(tic); };
-    a.onended = () => fin(true); a.onerror = () => fin(null);
-    if(jeton !== moi) return fin(false);
-    a.play().then(() => { a.__joue = true; raf = requestAnimationFrame(tic); }).catch(() => fin(null)); }));
+    const tic = () => { if(jeton !== moi){ try{ a.pause(); }catch(e){} return fin(false); } if(pendant) pendant(a.currentTime * 1000); raf = requestAnimationFrame(tic); };
+    a.onended = () => fin(true); a.onerror = () => fin(null); a.play().then(() => { raf = requestAnimationFrame(tic); }).catch(() => fin(null)); });
 }
 async function dire(t, qui){   // qui : 'papa' | 'maman' | 'ar'
   const moi = jeton; if(!t) return true; montre(qui === 'ar' ? '' : t, qui === 'ar' ? t : '');
   if(voixCoupee()){ await pause(Math.max(1500, t.length * 55)); return jeton === moi; }
-  // dans un texte français, les mots arabes (Allah, Ar-Raḥmân, Al-Fâtiḥa…) sont dits par Mohammad ; tout est demandé d'avance
-  const v = qui === 'papa' ? '&v=jon' : '';
-  const segs = (qui === 'ar' ? [[t, 'ar']] : parties(t)).map(([x, l]) => { const a = new Audio('/api/voix.php?l=' + l + '&t=' + encodeURIComponent(x.slice(0, 380)) + (l === 'fr' ? v : '')); a.preload = 'auto'; return { x, l, a }; });
-  for(const g of segs){
-    const r = await joue(g.a, moi); if(jeton !== moi) return false;
-    if(r === null){   // pas de voix du site : celle de la tablette
-      await new Promise(res => { try{ const u = new SpeechSynthesisUtterance(g.x); u.lang = g.l === 'ar' ? 'ar' : 'fr-FR'; u.onend = u.onerror = () => res(); speechSynthesis.speak(u); setTimeout(res, Math.max(2500, g.x.length * 90)); }catch(e){ res(); } });
-    }
+  const l = qui === 'ar' ? 'ar' : 'fr', v = qui === 'papa' ? '&v=jon' : '';
+  const r = await joue('/api/voix.php?l=' + l + '&t=' + encodeURIComponent(t.slice(0, 380)) + v, moi);
+  if(r === null && jeton === moi){   // pas de voix du site : celle de la tablette
+    await new Promise(res => { try{ const u = new SpeechSynthesisUtterance(t); u.lang = l === 'ar' ? 'ar' : 'fr-FR'; u.onend = u.onerror = () => res(); speechSynthesis.speak(u); setTimeout(res, Math.max(3000, t.length * 90)); }catch(e){ res(); } });
   }
   return jeton === moi;
 }
@@ -102,7 +83,7 @@ function dessine(){
   const v = VERSETS[cur - 1], s = S();
   $('lecon').className = 'lecon ' + mode;
   document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
-  $('com').textContent = sv.com === 'ar' ? 'عربي' : 'FR'; reglages();
+  $('com').textContent = sv.com === 'ar' ? 'عربي' : 'FR';
   $('scene').hidden = mode !== 'amine';
   if(mode === 'amine'){
     const vid = $('vid'), src = 'sourate/vid/' + v.scene + '.mp4';
@@ -124,10 +105,6 @@ function dessine(){
     `<button class="tout${s.seul >= .6 ? ' ok' : ''}" data-v="0">${s.seul >= .6 ? '🌟' : '☆'} Toute la sourate</button>`;
   const vc = document.querySelector('.v.cur'); if(vc && vc.scrollIntoView) try{ vc.scrollIntoView({ block:'nearest', behavior:'smooth' }); }catch(e){}
   $('note').textContent = peutReconnaitre() ? '' : 'Cet appareil ne sait pas reconnaître la voix : tu t\'enregistres, puis tu te réécoutes.';
-}
-function reglages(){   // les 3 interrupteurs (18/11)
-  const T = { expl:['🗣️ Explications', '🔇 Sans explication'], auto:['⏭ Avance tout seul', '👆 Verset par verset'], rep:['🎤 Je répète', '🎧 J’écoute seulement'] };
-  document.querySelectorAll('[data-regle]').forEach(b => { const on = sv[b.dataset.regle] !== false; b.textContent = T[b.dataset.regle][on ? 0 : 1]; b.classList.toggle('on', on); });
 }
 function micro(etat){ const m = $('micro'); m.classList.toggle('ecoute', etat === 'ecoute'); m.classList.toggle('attend', etat === 'attend'); }
 function etoile(t = '⭐'){ const e = document.createElement('div'); e.className = 'etoile'; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.remove(), 1200); }
@@ -154,16 +131,11 @@ let istiadha = false;
 async function lecon(k, auto = true){
   stop(); const moi = jeton; cur = k; dessine(); const v = VERSETS[k - 1];
   if(k === 1 && !istiadha){ istiadha = true; montre('', 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ'); await joue(ISTIADHA, moi); if(jeton !== moi) return; }
-  if(sv.expl !== false){
-    if(k === 1 && !S().v.some(Boolean)){ if(!await phrase('debut')) return; }
-    // le sens d'abord (Amine : papa ; Essil : l'explication ; Salma : le sens)
-    const sens = mode === 'amine' ? v.amine : mode === 'essil' ? v.essil : 'Le sens : ' + v.fr + '.';
-    if(!await dire(sens, conteur())) return;
-  }
-  if(sv.rep === false){   // seulement écouter le cheikh, verset par verset
-    montre('🎧 Cheikh Al-Husary récite…', ''); if(!await recite(k)) return;
-  }
-  else for(let essai = 1; essai <= 2; essai++){
+  if(k === 1 && !S().v.some(Boolean)){ if(!await phrase('debut')) return; }
+  // le sens d'abord (Amine : papa ; Essil : l'explication ; Salma : le sens)
+  const sens = mode === 'amine' ? v.amine : mode === 'essil' ? v.essil : 'Le sens : ' + v.fr + '.';
+  if(!await dire(sens, conteur())) return;
+  for(let essai = 1; essai <= 2; essai++){
     if(!await phrase('ecoute')) return;
     montre(mode === 'amine' ? '🎧 Écoute le cheikh…' : '🎧 Cheikh Al-Husary récite…', '');
     if(!await recite(k)) return;
@@ -173,21 +145,17 @@ async function lecon(k, auto = true){
     else { await phrase('continue'); }
   }
   if(jeton !== moi) return;
-  if(auto && sv.auto !== false && k < VERSETS.length){ await pause(500); if(jeton === moi) lecon(k + 1); }
-  else if(k < VERSETS.length){ montre('Touche « Verset suivant ⏭ » quand tu es prêt.', ''); }
+  if(auto && k < VERSETS.length){ await pause(500); if(jeton === moi) lecon(k + 1); }
   else if(k === VERSETS.length){ dessine(); montre('Bravo ! Tu peux maintenant écouter toute la sourate, ou la réciter tout seul 🌟', ''); }
 }
 // « À toi ! » : on écoute l'enfant ; rend 'bravo' | 'moitie' | 'rien'
 async function repete(k, moi){
   const v = VERSETS[k - 1], duree = (v.seg[v.seg.length - 1][1] * 1.7) + 3500;
   if(!await phrase('atoi')) return 'rien';
-  let r;
-  do { coupee = false; await gate(); if(jeton !== moi) return 'rien';
-    montre('🎤 À toi ! Répète…', ''); micro('ecoute'); marqueDits(k, []);
-    const signal = {}; arreteEcoute = () => { signal.stop = true; };
-    r = await ecouter({ duree, onPartiel:t => marqueDits(k, aligne(v.mots, t)), signal });
-    micro(''); arreteEcoute = null; if(jeton !== moi) return 'rien';
-  } while(coupee);   // mis en pause pendant l'écoute : on réécoute à la reprise
+  montre('🎤 À toi ! Répète…', ''); micro('ecoute'); marqueDits(k, []);
+  const signal = {}; arreteEcoute = () => { signal.stop = true; };
+  const r = await ecouter({ duree, onPartiel:t => marqueDits(k, aligne(v.mots, t)), signal });
+  micro(''); arreteEcoute = null; if(jeton !== moi) return 'rien';
   if(r.mode === 'sr'){ const sc = score(v.mots, r.textes); marqueDits(k, aligne(v.mots, r.textes)); return verdict(sc, joueur, r.aParle); }
   // sans reconnaissance : l'enfant se réécoute
   if(r.mode === 'rec' && r.url && r.aParle){ montre('👂 Écoute-toi !', ''); await joue(r.url, moi); }
@@ -208,13 +176,10 @@ async function seul(){   // l'enfant récite toute la sourate ; les mots reconnu
   dessine(); if(!await phrase('seul')) return;
   const tous = VERSETS.flatMap(v => v.mots), pos = VERSETS.flatMap(v => v.mots.map((_, i) => [v.n, i]));
   const marque = vus => pos.forEach(([n, i], j) => { const e = document.querySelector(`.w[data-v="${n}"][data-i="${i}"]`); if(e) e.classList.toggle('dit', !!vus[j]); });
-  let r;
-  do { coupee = false; await gate(); if(jeton !== moi) return;
-    montre('🎤 Je t’écoute… récite toute la sourate.', ''); micro('ecoute');
-    const signal = {}; arreteEcoute = () => { signal.stop = true; };
-    r = await ecouter({ duree:75000, silence:4000, onPartiel:t => marque(aligne(tous, t)), signal });
-    micro(''); arreteEcoute = null; if(jeton !== moi) return;
-  } while(coupee);
+  montre('🎤 Je t’écoute… récite toute la sourate.', ''); micro('ecoute');
+  const signal = {}; arreteEcoute = () => { signal.stop = true; };
+  const r = await ecouter({ duree:75000, silence:4000, onPartiel:t => marque(aligne(tous, t)), signal });
+  micro(''); arreteEcoute = null; if(jeton !== moi) return;
   let sc = r.mode === 'sr' ? score(tous, r.textes) : r.aParle ? .6 : 0;
   if(r.mode === 'sr') marque(aligne(tous, r.textes));
   const seuil = joueur === 'Amine' ? .3 : .6;
@@ -231,15 +196,12 @@ document.addEventListener('click', e => {
   if(b.dataset.mode){ mode = b.dataset.mode; stop(); dessine(); return; }
   if(b.id === 'retour') return accueil();
   if(b.id === 'com'){ sv.com = sv.com === 'ar' ? 'fr' : 'ar'; sauve(); dessine(); return; }
-  if(b.id === 'pause') return basculePause();
-  if(b.dataset.regle){ const k = b.dataset.regle; sv[k] = sv[k] === false; sauve(); reglages(); return; }
   if(b.id === 'go'){ return lecon(cur || 1); }
   if(b.id === 'reecoute'){ stop(); const moi = jeton; recite(cur).then(() => { if(jeton === moi) montre('À toi quand tu veux : touche le micro 🎤', ''); }); return; }
   if(b.id === 'suivant'){ return lecon(cur < VERSETS.length ? cur + 1 : 1, false); }
   if(b.id === 'tout') return toute();
   if(b.id === 'seul') return seul();
   if(b.id === 'micro'){
-    if(enPause) basculePause(false);
     if(arreteEcoute){ arreteEcoute(); return; }   // l'enfant a fini : on arrête d'écouter
     stop(); const moi = jeton, k = cur;
     repete(k, moi).then(async r => { if(jeton !== moi) return;
@@ -248,7 +210,7 @@ document.addEventListener('click', e => {
   }
   if(b.closest('#points')){ const n = +b.dataset.v; if(n === 0){ return toute(); } stop(); cur = n; dessine(); return lecon(n, false); }
 });
-document.addEventListener('keydown', e => { if(e.key === 'Escape') stop(); if((e.key === 'p' || e.key === 'P' || e.key === ' ') && $('e-lecon').classList.contains('on') && !e.target.closest('input,textarea')){ e.preventDefault(); basculePause(); } });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') stop(); });
 window.__sourate = { VERSETS, get sv(){ return sv; }, get mode(){ return mode; }, lecon, stop, setJoueur };
 
 // au départ : le joueur de la tablette, sinon « Qui récite ? »
