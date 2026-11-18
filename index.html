@@ -13,7 +13,10 @@
 // « Qui es-tu ? » (14/11) : à chaque entrée sur le site, on choisit son avatar (le choix dure le temps de la visite, voir explorateur.js)
 (function(){ var P = window.FamilleProfil && FamilleProfil.actuel(), h = document.documentElement;
   if(!P || /[?&]profil\b/.test(location.search)) h.classList.add('choisir');
-  else if(P.type === 'enfant') h.classList.add('enfant', 'enfant-' + P.nom.toLowerCase());
+  else if(P.type === 'enfant'){ var k = P.nom.toLowerCase();
+    // 18/11 (demande du papa) : un enfant arrive directement dans SON espace animé (essil/, salma/, amine/)
+    if(/^(essil|salma|amine)$/.test(k)){ location.replace('/' + k + '/'); return; }
+    h.classList.add('enfant', 'enfant-' + k); }
   else h.classList.add('explo'); })();
 </script>
 <meta name="theme-color" content="#1f3c88">

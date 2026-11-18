@@ -106,6 +106,7 @@ Maquettes Claude Design « Les espaces des enfants — propositions » (artifact
 - **Essil (A, « le cartable et la cour »)** : « Mon cartable » rangé par matière (allemand, latin, maths en vidéo, équitation) et « La cour de récré » (ses jeux puis ceux de la famille), bandeau « Se cultiver ».
 - **Salma (B, « mon monde en étagères »)** : une étagère par matière (anglais, français, maths, le cheval), puis Jouer et Se cultiver, chaque cours en couverture de livre.
 - **Amine (C, « mon chemin »)** : un chemin de 6 étapes (Je lis, nombres, épicerie, ardoise, derja, Monsieur Loup), chacune avec un bouton 🔊 lu par Lulu ; bulles « Jouer » et « Se cultiver ».
+- **Arrivée** : quand un enfant choisit son avatar sur « Qui es-tu ? », l'accueil l'envoie directement dans son espace (`index.html`, script du haut) ; le lien du haut devient « ⇄ Changer d'avatar » (`/?profil`) et une pastille dit son temps de jeu du jour (`api/famille.php?action=ecran_tous`, mis à jour chaque minute). L'ancienne vue « enfant » de l'accueil (`#moi`) reste en secours.
 - Bouton **Reprendre / Continuer** : le cours dont la sauvegarde (`t`) est la plus récente (liens marqués `data-cle`).
 - **Accueil** : dans les colonnes des enfants, les liens sont regroupés en Apprendre (par matière), Mes jeux, Se cultiver. Les autres jeux de famille sont dans une liste cachée (`ul.famille-cache`) pour que la vue « enfant » continue de les proposer.
 - Le moteur scroll-craft a quitté `eveil/livre/` pour `/lib/scrollcraft/` (le livre animé Nouh pointe vers le nouvel endroit).
