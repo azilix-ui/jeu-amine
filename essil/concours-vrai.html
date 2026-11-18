@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#1f3c88">
+<title>Concours en vrai · essai</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%87%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;700;800&display=swap">
+<style>
+/* « Concours en vrai » (19/11, essai demandé par le papa) : une épreuve de CSO (Club 3, 6 obstacles) dans une carrière en vrai (ComfyUI),
+   en trois versions à comparer : A le cheval filmé (Wan 2.2), B le cheval 3D des Écuries, C un cheval 3D en vrai (TRELLIS.2).
+   Le jeu des Écuries (les-ecuries.html) n'est pas touché. Code : concours-vrai/jeu.js ; images : docs/concours-vrai/build_images.py */
+:root{ --navy:#1f3c88; --navy2:#143068; --red:#d7263d; --gold:#ffc928; --cream:#fff8e9; --ink:#1c2340; --mist:#5d6686; --ok:#1f9a6b;
+  --display:"Baloo 2",system-ui,sans-serif; --body:Nunito,system-ui,sans-serif; --shadow:0 5px 0 rgba(28,35,64,.25); }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#0f1d3b;color:var(--ink);font-family:var(--body);font-weight:700;user-select:none;-webkit-user-select:none;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
+h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1.05}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.scr{position:fixed;inset:0;display:none;flex-direction:column;padding:max(12px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+.scr.on{display:flex}
+.pill{height:50px;min-width:50px;padding:0 16px;border-radius:25px;background:var(--cream);box-shadow:var(--shadow);font-weight:800;font-size:17px;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--navy2);text-decoration:none;flex:none}
+.pill:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(28,35,64,.25)}
+/* le menu */
+#menu{background:linear-gradient(180deg,rgba(15,29,59,.15),rgba(15,29,59,.25) 30%,rgba(15,29,59,.82) 70%);overflow:auto;gap:14px}
+#menu .top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#menu h1{color:#fff;font-size:clamp(34px,6vw,58px);text-shadow:0 4px 0 var(--navy2),0 10px 30px #0008;margin-top:clamp(20px,9vh,90px)}
+#menu h1 small{display:inline-block;font-size:.42em;background:var(--gold);color:#4a3200;padding:2px 12px;border-radius:14px;vertical-align:middle;text-shadow:none;margin-left:8px}
+#menu .intro{color:#fff;font-size:clamp(16px,2.2vw,20px);max-width:44em;margin:0;text-shadow:0 2px 6px #000a}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:14px;max-width:1100px;width:100%}
+.card{background:var(--cream);border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 8px 0 rgba(0,0,0,.25)}
+.card .vue{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;background:#cdb88e}
+.card .l{font-family:var(--display);font-size:44px;line-height:1;color:var(--navy);display:flex;align-items:center;gap:10px}
+.card .l span{font-size:22px;color:var(--ink)}
+.card p{margin:0;color:var(--mist);font-size:16px;flex:1}
+.card .go{height:56px;border-radius:28px;background:var(--ok);color:#fff;font-family:var(--display);font-size:24px;box-shadow:0 5px 0 #11694a}
+.card .go:active{transform:translateY(3px);box-shadow:0 2px 0 #11694a}
+.card .pref{font-size:15px;color:var(--red);min-height:20px}
+.card.fav{outline:4px solid var(--gold)}
+#menu .note{color:#fff;opacity:.85;font-size:14px;max-width:60em;margin:0}
+/* la course */
+#hud{pointer-events:none;justify-content:space-between}
+#hud > *{pointer-events:auto}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{height:46px;padding:0 14px;border-radius:23px;background:rgba(15,29,59,.78);color:#fff;font-family:var(--display);font-size:22px;display:inline-flex;align-items:center;gap:6px}
+.chip.pen{background:rgba(215,38,61,.85)}
+#msg{position:fixed;left:50%;top:22%;transform:translateX(-50%);background:rgba(15,29,59,.85);color:#fff;font-family:var(--display);font-size:clamp(22px,4vw,36px);padding:8px 24px;border-radius:24px;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center;max-width:90vw}
+#msg.on{opacity:1}#msg.good{background:rgba(31,154,107,.92)}#msg.bad{background:rgba(215,38,61,.92)}
+#count{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-family:var(--display);font-size:120px;color:#fff;text-shadow:0 6px 0 var(--navy2);pointer-events:none}
+.ctl{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.allure{display:flex;flex-direction:column;gap:10px}
+.allure button{width:120px;height:62px;border-radius:20px;background:var(--cream);box-shadow:var(--shadow);font-size:19px;font-weight:800;color:var(--navy2)}
+.allure button.on{background:var(--gold);color:#4a3200}
+#saute{width:clamp(150px,26vw,210px);height:clamp(150px,26vw,210px);border-radius:50%;background:var(--red);color:#fff;font-family:var(--display);font-size:clamp(30px,5vw,40px);box-shadow:0 9px 0 #8f1626,0 0 0 0 rgba(255,201,40,.0);transition:background .15s}
+#saute.zone{background:var(--ok);box-shadow:0 9px 0 #11694a,0 0 0 12px rgba(255,201,40,.55)}
+#saute:active{transform:translateY(5px)}
+/* les résultats */
+#fin{align-items:center;justify-content:center;background:rgba(15,29,59,.6)}
+.box{background:var(--cream);border-radius:28px;padding:22px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px;text-align:center;box-shadow:0 12px 40px #0008}
+.box h2{font-size:38px;color:var(--navy)}
+.box .res{font-size:20px}
+.box .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.box .pill.go{background:var(--ok);color:#fff}.box .pill.red{background:var(--red);color:#fff}
+#load{position:fixed;inset:0;display:none;align-items:center;justify-content:center;color:#fff;font-family:var(--display);font-size:28px;background:rgba(15,29,59,.7)}
+#load.on{display:flex}
+@media (max-height:520px){ .allure button{height:50px;width:104px} #saute{width:130px;height:130px;font-size:28px} #count{font-size:90px} }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<section class="scr on" id="menu">
+  <div class="top"><a class="pill" href="./">← Espace d'Essil</a><a class="pill" href="les-ecuries.html">🐴 Les Écuries</a><button class="pill" id="son" type="button">🔊 Son</button></div>
+  <h1>Concours en vrai <small>essai</small></h1>
+  <p class="intro">Une épreuve de CSO, Club 3 : 6 obstacles dans une vraie carrière. Il y a trois façons de montrer le cheval. Essil, essaie les trois, puis touche « C'est ma préférée » sur celle que tu aimes le plus.</p>
+  <div class="cards">
+    <div class="card" data-v="A"><img class="vue" src="concours-vrai/img/v_a.webp" alt="" loading="lazy"><div class="l">A <span>Le cheval filmé</span></div><p>Un vrai cheval bai et sa cavalière, filmés de dos (vidéo faite avec ComfyUI). Le plus réaliste.</p><div class="pref"></div><button class="go" type="button">En selle ▶</button></div>
+    <div class="card" data-v="B"><img class="vue" src="concours-vrai/img/v_b.webp" alt="" loading="lazy"><div class="l">B <span>Le décor en vrai</span></div><p>La carrière et les obstacles en vrai, avec le cheval 3D des Écuries qui bouge ses jambes.</p><div class="pref"></div><button class="go" type="button">En selle ▶</button></div>
+    <div class="card" data-v="C"><img class="vue" src="concours-vrai/img/v_c.webp" alt="" loading="lazy"><div class="l">C <span>Le cheval 3D en vrai</span></div><p>Un cheval 3D fabriqué par l'IA à partir d'une photo (TRELLIS). Très réel, mais ses jambes ne bougent pas.</p><div class="pref"></div><button class="go" type="button">En selle ▶</button></div>
+  </div>
+  <p class="note">Comment jouer : le cheval suit le parcours tout seul. Choisis le trot ou le galop, et touche « Saute ! » quand le bouton devient vert, juste avant l'obstacle (ou la barre d'espace). Trop tôt ou trop tard, la barre tombe : 4 points. Sans sauter, c'est un refus.</p>
+</section>
+
+<section class="scr" id="hud">
+  <div class="bar"><button class="pill" id="quit" type="button">✕</button><span class="chip" id="hObs">1 / 6</span><span class="chip" id="hTime">0,0 s</span><span class="chip pen" id="hPen">0 pt</span></div>
+  <div class="ctl">
+    <div class="allure"><button id="bGal" type="button" class="on">🐎 Galop</button><button id="bTrot" type="button">🐢 Trot</button></div>
+    <button id="saute" type="button">Saute !</button>
+  </div>
+</section>
+<div id="msg"></div>
+<div id="count" hidden></div>
+<div id="load">Préparation de la carrière…</div>
+
+<section class="scr" id="fin">
+  <div class="box">
+    <h2 id="fT">Bravo !</h2>
+    <div class="res" id="fR"></div>
+    <div class="row"><button class="pill red" id="fFav" type="button">❤️ C'est ma préférée</button></div>
+    <div class="row"><button class="pill go" id="fAgain" type="button">🔁 Rejouer</button><button class="pill" id="fMenu" type="button">Les 3 versions</button></div>
+  </div>
+</section>
+
+<script type="module" src="concours-vrai/jeu.js?v=1"></script>
+</body>
+</html>
