@@ -62,7 +62,8 @@ export const peutReconnaitre = () => !!SR && !srCasse;
 /* écoute pendant au plus `duree` ms (et s'arrête après un silence quand quelque chose a été dit).
    onPartiel(textes) à chaque morceau entendu. Rend { mode:'sr', textes, aParle } ou { mode:'rec', aParle, url } (enregistrement). */
 export function ecouter({ duree = 8000, silence = 1800, onPartiel, signal } = {}){
-  if(peutReconnaitre()) return ecouterSR({ duree, silence, onPartiel, signal }).catch(e => { srCasse = true; return enregistrer({ duree, signal }); });
+  if(peutReconnaitre()) return ecouterSR({ duree, silence, onPartiel, signal }).catch(e => {   // « not-allowed » peut venir d'un départ sans toucher l'écran (iPad) : on réessaiera au prochain 🎤
+    if(String(e && e.message) !== 'not-allowed') srCasse = true; return enregistrer({ duree, signal }); });
   return enregistrer({ duree, signal });
 }
 function ecouterSR({ duree, silence, onPartiel, signal }){
