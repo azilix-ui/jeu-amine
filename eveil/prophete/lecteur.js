@@ -5,6 +5,7 @@
 // une même page pour chaque série : <body data-serie="prophete"> (la vie du Prophète ﷺ) ou "prophetes" (les histoires des prophètes)
 const SERIE = document.body.dataset.serie || 'prophete';
 const { EPISODES, COUVERTURE } = await import('../' + SERIE + '/episodes.js');
+const { parties } = await import('../mots-arabes.js');   // les mots arabes dits par la voix arabe (18/11)
 
 const $ = id => document.getElementById(id);
 const IMG = n => (n === 'papa' || n === 'maman' ? 'prophete' : SERIE) + '/img/' + n + '.webp';
@@ -12,7 +13,7 @@ const VID = n => SERIE + '/vid/' + n + '.mp4';   // le dessin animé (saison 2) 
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const melange = a => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const CHIFFRES = '٠١٢٣٤٥٦٧٨٩', arabe = n => String(n).replace(/\d/g, d => CHIFFRES[d]);
+const arabe = n => String(n);   // chiffres 1, 2, 3 (demande du papa, 18/11)
 const NOMBRES_AR = ['', 'وَاحِد', 'اِثْنَان', 'ثَلَاثَة', 'أَرْبَعَة', 'خَمْسَة', 'سِتَّة', 'سَبْعَة', 'ثَمَانِيَة', 'تِسْعَة', 'عَشَرَة', 'أَحَدَ عَشَرَ'];
 const DEBUT_VERSET = { 93:6, 9:40 };
 /* 18/11 (demande du papa) : les versets sont récités par un vrai récitant, cheikh Mahmoud Khalil Al-Husary (murattal),
@@ -69,18 +70,25 @@ const pause = ms => new Promise(r => setTimeout(r, ms));
 async function dire(t, qui){
   stop(); const moi = jeton; if(!t) return true;
   if(voixCoupee()){ await pause(Math.max(2500, t.length * 60)); return jeton === moi; }
-  const l = qui === 'ar' ? 'ar' : 'fr', v = qui === 'papa' ? '&v=jon' : '';
+  const v = qui === 'papa' ? '&v=jon' : '';
   for(const m of morceaux(t)){
     if(jeton !== moi) return false;
-    const ok = await new Promise(res => {
-      const a = audio = new Audio('/api/voix.php?l=' + l + '&t=' + encodeURIComponent(m) + v);
-      let fini = false; const fin = r => { if(!fini){ fini = true; res(r); } };
-      a.onended = () => fin(true); a.onerror = () => fin(false);
-      a.play().catch(() => fin(false));
-    });
-    if(jeton !== moi) return false;
-    if(!ok){   // pas de voix du site (hors ligne, plafond du mois) : la voix de la tablette
-      await new Promise(res => { try{ const u = new SpeechSynthesisUtterance(m); u.lang = l === 'ar' ? 'ar' : 'fr-FR'; u.onend = u.onerror = () => res(); speechSynthesis.speak(u); setTimeout(res, Math.max(4000, m.length * 90)); }catch(e){ res(); } });
+    // les mots arabes d'un texte français (Allah, Khadîdja, Hirâ…) sont dits par la voix arabe (mots-arabes.js) ;
+    // tous les bouts sont demandés d'avance pour qu'il n'y ait pas de blanc entre eux
+    const segs = (qui === 'ar' ? [[m, 'ar']] : parties(m)).map(([x, l]) => ({ x, l, a:new Audio('/api/voix.php?l=' + l + '&t=' + encodeURIComponent(x) + (l === 'fr' ? v : '')) }));
+    segs.forEach(g => { g.a.preload = 'auto'; });
+    for(const g of segs){
+      if(jeton !== moi) return false;
+      const ok = await new Promise(res => {
+        const a = audio = g.a;
+        let fini = false; const fin = r => { if(!fini){ fini = true; res(r); } };
+        a.onended = () => fin(true); a.onerror = () => fin(false);
+        a.play().catch(() => fin(false));
+      });
+      if(jeton !== moi) return false;
+      if(!ok){   // pas de voix du site (hors ligne, plafond du mois) : la voix de la tablette
+        await new Promise(res => { try{ const u = new SpeechSynthesisUtterance(g.x); u.lang = g.l === 'ar' ? 'ar' : 'fr-FR'; u.onend = u.onerror = () => res(); speechSynthesis.speak(u); setTimeout(res, Math.max(2500, g.x.length * 90)); }catch(e){ res(); } });
+      }
     }
   }
   return jeton === moi;
