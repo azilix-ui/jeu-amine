@@ -1,0 +1,29 @@
+/* Les espaces des enfants (18/11, maquettes Claude Design « Les espaces des enfants — propositions », artifact RaXQxMd3PTQQ8GSG66NaUR) :
+   A « le cartable et la cour » pour Essil, B « mon monde en étagères » pour Salma, C « mon chemin » pour Amine.
+   En haut, le monde de l'enfant : une image ComfyUI devenue un petit film Wan 2.2 en boucle, qui glisse doucement quand on fait
+   défiler (moteur scroll-craft, MIT, /lib/scrollcraft/). Le reste : des liens rangés (apprendre / jouer / se cultiver). */
+:root{ --sc-font-display:"Baloo 2", system-ui, sans-serif; --sc-font-text:Nunito, system-ui, sans-serif; }
+*{ box-sizing:border-box; }
+body.espace{ margin:0; font-family:Nunito, system-ui, sans-serif; -webkit-text-size-adjust:100%; }
+.espace a{ color:inherit; text-decoration:none; }
+.espace h1, .espace h2, .espace h3{ font-family:'Baloo 2', system-ui, sans-serif; margin:0; }
+.boite{ max-width:1240px; margin:0 auto; padding:0 20px; }
+/* le haut : le monde de l'enfant qui bouge */
+.monde{ position:relative; min-height:clamp(330px, 48vh, 520px); display:flex; align-items:flex-end; overflow:hidden; color:#fff; }
+.monde .media{ position:absolute; inset:-8% 0 -8% 0; }
+.monde .media img, .monde .media video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.monde .media video{ opacity:0; transition:opacity .8s; }
+.monde .media video.pret{ opacity:1; }
+.monde .voile{ position:absolute; inset:0; }
+.monde .t{ position:relative; width:100%; padding:calc(18px + env(safe-area-inset-top)) 20px 34px; max-width:1240px; margin:0 auto; display:flex; flex-direction:column; gap:12px; }
+.monde .retour{ align-self:flex-start; font-weight:800; font-size:15px; padding:8px 14px; border-radius:999px; background:rgba(0,0,0,.28); min-height:44px; display:inline-flex; align-items:center; }
+.monde .qui{ display:flex; gap:16px; align-items:center; }
+.monde .qui img{ width:88px; height:88px; border-radius:50%; object-fit:cover; border:4px solid var(--accent); background:#fff3; }
+.monde h1{ font-size:clamp(38px, 6.4vw, 62px); line-height:1; text-shadow:0 3px 18px rgba(0,0,0,.35); }
+.monde .sous{ font-size:clamp(16px, 2vw, 19px); opacity:.95; max-width:520px; margin:0; }
+.reprendre{ align-self:flex-start; display:inline-flex; gap:10px; align-items:center; min-height:52px; padding:0 22px; border-radius:999px; background:var(--accent); color:#fff; font-weight:800; font-size:17px; box-shadow:0 8px 20px rgba(0,0,0,.25); }
+.reprendre[hidden]{ display:none; }
+#defi{ margin:22px auto 0; max-width:1240px; padding:0 20px; }
+.pied{ text-align:center; font-size:13px; opacity:.7; margin:28px 0 24px; }
+.nouveau{ display:inline-block; background:#d7263d; color:#fff; font-weight:800; font-size:12px; border-radius:999px; padding:3px 10px; margin-left:6px; vertical-align:middle; }
+@media (prefers-reduced-motion:reduce){ .monde .media video{ display:none; } }

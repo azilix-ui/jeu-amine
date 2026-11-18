@@ -11,185 +11,110 @@
 <script src="/site.js" defer></script>
 <script src="/famille.js" defer></script>
 <script src="/defi.js" defer></script>
-<meta name="theme-color" content="#1f3c88">
+<meta name="theme-color" content="#1b1438">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Les jeux d'Amine · Famille Missaoui</title>
-<meta name="description" content="Petits jeux éducatifs pour enfants de 5 ans : Halloween, compter, mémoire, et apprendre le tunisien.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%83%3C/text%3E%3C/svg%3E">
+<meta name="description" content="L'espace d'Amine, 5 ans : apprendre à lire, compter, écrire, la derja, et jouer.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%9A%80%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Fredoka:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&family=Amiri:wght@700&display=swap">
+<link rel="stylesheet" href="/lib/scrollcraft/scrollcraft.css">
+<link rel="stylesheet" href="/espaces/espace.css">
 <style>
-/* Accueil : une nuit étoilée, trois grandes cartes — deux portes Halloween, une porte bleue de Sidi Bou Saïd. */
-:root{
-  --night:#16122a; --dusk:#241c44; --card:#30265a;
-  --pumpkin:#ff8c1a; --pumpkin-deep:#c95a08; --moon:#fff1bf; --slime:#8be08f;
-  --door:#1d5fa5; --door-deep:#123d6e; --sun:#f2b632;
-  --ink:#fbf3e4; --mist:#b6aad6;
-  --display:'Sniglet','Fredoka',ui-rounded,'Arial Rounded MT Bold',system-ui,sans-serif;
-  --body:'Fredoka',ui-rounded,system-ui,-apple-system,'Segoe UI',sans-serif;
-  color-scheme:dark;
-}
-*{box-sizing:border-box}
-html,body{min-height:100%;margin:0}
-body{
-  background:
-    radial-gradient(circle at 88% 8%, var(--moon) 0 40px, rgba(255,241,191,.16) 41px 74px, transparent 75px),
-    radial-gradient(1.5px 1.5px at 12% 20%, var(--ink) 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 35% 8%, var(--ink) 50%, transparent 51%),
-    radial-gradient(1px 1px at 60% 15%, var(--ink) 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 72% 30%, var(--ink) 50%, transparent 51%),
-    linear-gradient(180deg, var(--dusk), var(--night) 60%);
-  background-attachment:fixed; background-color:var(--night);
-  color:var(--ink); font-family:var(--body); font-size:18px; line-height:1.45;
-}
-.wrap{max-width:960px;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 48px max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:28px}
-h1{font-family:var(--display);font-weight:800;font-size:clamp(38px,8vw,64px);line-height:1;margin:0;color:var(--pumpkin);text-shadow:0 4px 0 var(--pumpkin-deep);text-wrap:balance}
-.lead{margin:10px 0 0;color:var(--mist);font-size:20px;max-width:46ch}
-.games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-@media (max-width:640px){.games{grid-template-columns:1fr}}
-.game{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:var(--ink);background:var(--card);border-radius:28px;padding:22px;border:4px solid var(--c);box-shadow:0 7px 0 var(--c);transition:transform .15s}
-.game:hover{transform:translateY(-4px)}
-.game:active{transform:translateY(4px);box-shadow:0 2px 0 var(--c)}
-.game:focus-visible{outline:4px solid var(--moon);outline-offset:4px}
-.game .big{font-size:64px;line-height:1.1}
-.game{position:relative}
-.game .new{position:absolute;top:16px;right:16px;background:var(--moon);color:var(--night);font-weight:600;font-size:14px;border-radius:999px;padding:4px 12px;transform:rotate(4deg)}
-.game b{font-family:var(--display);font-size:28px;font-weight:800;line-height:1.1}
-.game p{margin:0;color:var(--mist);font-size:16px}
-.game .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:8px}
-.game .tags span{font-size:13px;font-weight:600;background:rgba(255,255,255,.08);border-radius:999px;padding:3px 10px}
-.game.tn{background:var(--door);border-color:var(--door-deep);box-shadow:0 7px 0 var(--door-deep);border-radius:160px 160px 28px 28px;padding-top:44px;text-align:center;align-items:center}
-.game.tn p{color:#dbe8f7}
-.game.tn .ar{font-size:24px;color:var(--sun);direction:rtl}
-.game.tn .tags{justify-content:center}
-footer{color:var(--mist);font-size:14px}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* L'espace d'Amine (18/11) : proposition C « mon chemin », choisie par le papa. Presque rien à lire : de gros ronds à toucher,
+   un 🔊 pour entendre (voix de Lulu, par la couche commune d'explorateur.js). */
+body{ background:#1b1438; color:#fff6e0; --accent:#ff8c1a; }
+.monde .voile{ background:linear-gradient(180deg, rgba(27,20,56,.15) 0%, rgba(27,20,56,0) 45%, #1b1438 100%); }
+.monde .qui img{ background:#2a1f4f; }
+.parle{ width:58px; height:58px; flex:none; border-radius:50%; border:0; background:#ff8c1a; color:#2a1f05; display:grid; place-items:center; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,.35); }
+.parle.petit{ width:44px; height:44px; background:rgba(255,208,138,.18); color:#ffd08a; box-shadow:none; }
+.zone{ max-width:860px; margin:0 auto; padding:24px 20px 10px; }
+.zone h2{ font-size:32px; color:#ffd08a; display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+/* le chemin : des ronds en zigzag, reliés par des pointillés */
+.chemin{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; isolation:isolate; }
+.chemin li{ position:relative; display:flex; align-items:center; gap:14px; width:min(100%, 520px); padding:10px 0; }
+.chemin li:nth-child(even){ align-self:flex-end; flex-direction:row-reverse; text-align:right; }
+.chemin li:not(:last-child)::after{ content:''; position:absolute; top:62%; left:60px; right:60px; height:96px; border-bottom:8px dotted rgba(255,208,138,.4); border-radius:0 0 60px 60px; pointer-events:none; z-index:-1; }
+.rond{ flex:none; width:clamp(110px, 24vw, 140px); aspect-ratio:1; border-radius:50%; overflow:hidden; border:6px solid var(--c); background:var(--c);
+  box-shadow:0 0 0 8px rgba(255,140,26,.12), 0 14px 26px rgba(0,0,0,.45); display:grid; place-items:center; font-family:'Baloo 2', sans-serif; font-size:60px; color:#fff; transition:transform .2s; }
+.rond img{ width:100%; height:100%; object-fit:cover; }
+.rond.ar{ font-family:Amiri, serif; }
+.chemin a:hover .rond, .chemin a:focus-visible .rond{ transform:scale(1.06) rotate(-3deg); }
+.chemin a{ display:flex; align-items:center; gap:14px; }
+.chemin li:nth-child(even) a{ flex-direction:row-reverse; }
+.chemin b{ font-size:24px; }
+.bulles{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:16px; }
+.bulles a{ display:flex; flex-direction:column; gap:6px; align-items:center; text-align:center; font-weight:800; font-size:18px; }
+.bulles .img{ width:100%; aspect-ratio:1; border-radius:30px; overflow:hidden; border:4px solid var(--c, #ff8c1a); background:var(--c, #2a1f4f); display:grid; place-items:center; font-family:'Baloo 2', sans-serif; font-size:54px; transition:transform .2s; }
+.bulles .img img{ width:100%; height:100%; object-fit:cover; }
+.bulles a:hover .img{ transform:scale(1.05); }
+#defi{ max-width:860px; }
 </style>
 </head>
-<body>
-<main class="wrap">
-  <a href="../" style="color:var(--mist);font-weight:600;text-decoration:none;font-size:16px">← Famille Missaoui</a>
-  <header>
-    <h1>Les jeux d'Amine</h1>
-    <p class="lead">Des petits jeux pour apprendre en s'amusant, pensés pour un enfant de 5 ans. Montez le son : les consignes sont lues à voix haute.</p>
-  </header>
-
-  <div id="defi" data-enfant="Amine"></div>
-
-  <div class="games">
-    <a class="game" href="../eveil/sourate.html" style="--c:#1d4f7a">
-      <span class="big">📖</span><span class="new">Nouveau !</span>
-      <b>Al-Fâtiḥa</b>
-      <p>Un petit dessin animé pour chaque verset. Écoute le cheikh, puis répète dans le micro : la tablette t'écoute !</p>
-      <div class="tags"><span>Coran</span><span>Écouter</span><span>Répéter</span></div>
-    </a>
-    <a class="game" href="../eveil/prophete.html" style="--c:#1f7a5c">
-      <span class="big">🌙</span><span class="new">Nouveau !</span>
-      <b>La vie du Prophète ﷺ</b>
-      <p>Papa et maman te racontent sept belles histoires, en français et en arabe. Regarde le film, puis touche les petits oiseaux, les étoiles ou les gouttes d'eau !</p>
-      <div class="tags"><span>Histoires</span><span>Arabe</span><span>Toucher</span></div>
-    </a>
-    <a class="game" href="monsieur-loup.html" style="--c:#ff8c1a">
-      <span class="big">🐺</span><span class="new">Nouveau !</span>
-      <b>Monsieur Loup chez moi</b>
-      <p>Le week-end de Monsieur Loup, la mascotte de ma classe, à la maison : mon histoire (on peut l'écouter) et des dessins de ce qu'on a imaginé ensemble.</p>
-      <div class="tags"><span>Mon histoire</span><span>École</span><span>Dessins</span></div>
-    </a>
-    <a class="game" href="epicerie-de-lulu.html" style="--c:#c4622d">
-      <span class="big">🧺</span><span class="new">Nouveau !</span>
-      <b>L'Épicerie de Lulu</b>
-      <p>Fais les courses chez Lulu : compte les fruits, mets-en juste ce qu'il faut dans le panier, lis le nom des fruits et les étiquettes, et fais tes premières additions.</p>
-      <div class="tags"><span>Compter</span><span>Lire</span><span>Plus / moins</span><span>Additions</span></div>
-    </a>
-    <a class="game" href="je-lis.html" style="--c:#1f8fd1">
-      <span class="big">📖</span>
-      <b>Je lis !</b>
-      <p>Apprends à lire avec les sons, comme à l'école : les voyelles, les sons qui chantent, les syllabes (M + A = MA), puis tes premiers mots… et les prénoms de toute la famille !</p>
-      <div class="tags"><span>Voyelles</span><span>Sons</span><span>Syllabes</span><span>Premiers mots</span></div>
-    </a>
-    <a class="game" href="planete-des-nombres.html" style="--c:#7a4fd8">
-      <span class="big">👽</span>
-      <b>La Planète des Nombres</b>
-      <p>Joue avec les nombres chez les aliens : compte-les, trouve le nombre que tu entends, celui d'après, le plus grand… Tout est dit à voix haute.</p>
-      <div class="tags"><span>Compter</span><span>0 à 60</span><span>Avant · après</span><span>Plus grand</span></div>
-    </a>
-    <a class="game" href="ardoise-magique.html" style="--c:#2e9e6e">
-      <span class="big">✏️</span>
-      <b>L'Ardoise magique</b>
-      <p>Apprends à écrire les lettres : regarde, repasse sur les points, puis écris tout seul. Gagne des cartes pour le serpent !</p>
-      <div class="tags"><span>Attaché</span><span>MAJUSCULES</span><span>minuscules</span><span>Mon prénom</span></div>
-    </a>
-    <a class="game" href="../jeux/atelier-du-jasmin.html" style="--c:#e8438f">
-      <span class="big">🎨</span>
-      <b>L'Atelier du Jasmin</b>
-      <p>Colorie la Tunisie, habille Nour, Yasmine et Farès, et invente ton serpent !</p>
-      <div class="tags"><span>Nouveau</span><span>2D ou 3D</span></div>
-    </a>
-    <a class="game" href="../jeux/ma-houma.html" style="--c:#1d6fb8">
-      <span class="big">🏘️</span>
-      <b>Ma Houma</b>
-      <p>La maison, le café, l'école, le souk et la plage : déplace toute la famille, baigne-toi et caresse les animaux !</p>
-      <div class="tags"><span>Nouveau</span><span>Monde libre</span></div>
-    </a>
-    <a class="game" href="../jeux/les-ecuries.html" style="--c:#8a5a2b">
-      <span class="big">🐴</span>
-      <b>Les Écuries</b>
-      <p>Brosse et nourris tes chevaux, puis saute les obstacles ! (Avec un grand pour lire les leçons.)</p>
-      <div class="tags"><span>Nouveau</span><span>3D</span></div>
-    </a>
-    <a class="game" href="../jeux/legende-du-jasmin-3.html" style="--c:#1f5fbf">
-      <span class="big">🌼</span>
-      <b>La Légende du Jasmin</b>
-      <p>Cours, saute sur les scorpions et retrouve les jasmins dorés dans le village bleu, l'oasis et le désert !</p>
-      <div class="tags"><span>Nouveau</span><span>Avec ton avatar</span></div>
-    </a>
-    <a class="game" href="../jeux/grimpe-glace.html" style="--c:#3a8fc0">
-      <span class="big">❄️</span>
-      <b>Grimpe-Glace</b>
-      <p>Cours sur la glace, saute tout seul au bord et grimpe la tour magique le plus haut possible !</p>
-      <div class="tags"><span>Nouveau</span><span>Avec ton avatar</span></div>
-    </a>
-    <a class="game" href="../jeux/ludo-legendes.html" style="--c:#f5b301">
-      <span class="big">🎲</span>
-      <b>Ludo Légendes</b>
-      <p>Le jeu des petits chevaux en 3D : lance le dé, sors tes pions avec un 6 et ramène-les à la maison !</p>
-      <div class="tags"><span>3D</span><span>Avec papa, maman, Essil et Salma</span></div>
-    </a>
-    <a class="game" href="../jeux/serpent-legendes.html" style="--c:#7b5cff">
-      <span class="big">🐉</span>
-      <b>Serpent Légendes</b>
-      <p>Le grand serpent en 3D : gagne des pièces, ouvre des coffres et collectionne les skins !</p>
-      <div class="tags"><span>3D</span><span>Coffres</span><span>Skins rares</span></div>
-    </a>
-    <a class="game" href="serpentin.html" style="--c:#2ec4b6">
-      <span class="big">🐍</span>
-      <b>Serpentin</b>
-      <p>Le jeu du serpent, pour la tablette : on glisse le doigt pour le diriger.</p>
-      <div class="tags"><span>4 mondes</span><span>3 vitesses</span><span>Compter de 1 à 10</span></div>
-    </a>
-    <a class="game" href="la-nuit-d-amine.html" style="--c:var(--pumpkin)">
-      <span class="big">🎃</span>
-      <b>La Nuit d'Amine</b>
-      <p>Le premier jeu d'Halloween : quatre petits jeux faciles.</p>
-      <div class="tags"><span>Mémoire</span><span>Compter jusqu'à 10</span><span>Couleurs</span><span>Suites</span></div>
-    </a>
-    <a class="game" href="la-nuit-d-amine-2.html" style="--c:var(--slime)">
-      <span class="big">🧛</span>
-      <b>La Nuit d'Amine 2</b>
-      <p>Plus difficile, avec une histoire à vivre : où est passé Minuit, le chat noir ?</p>
-      <div class="tags"><span>Mémoire 10 paires</span><span>Jusqu'à 20</span><span>Additions</span><span>Histoire</span></div>
-    </a>
-    <a class="game tn" href="nahki-tounsi.html" style="--c:var(--door)">
-      <span class="big"><svg viewBox="0 0 60 40" width="84" height="56" aria-hidden="true" style="vertical-align:middle;border-radius:4px"><rect width="60" height="40" fill="#e70013"/><circle cx="30" cy="20" r="11" fill="#fff"/><circle cx="31" cy="20" r="8" fill="#e70013"/><circle cx="33.2" cy="20" r="6.4" fill="#fff"/><path fill="#e70013" d="M34.4 16.6l1.1 2.4 2.6.3-1.9 1.8.5 2.6-2.3-1.3-2.3 1.3.5-2.6-1.9-1.8 2.6-.3z"/></svg></span>
-      <b>Nahki Tounsi</b>
-      <span class="ar">نحكي تونسي</span>
-      <p>Apprendre la derja tunisienne : les mots, écouter, la mémoire et compter.</p>
-      <div class="tags"><span>56 mots</span><span>Ta voix</span></div>
-    </a>
+<body class="espace">
+<header class="monde" data-sc-act="flow">
+  <div class="media" data-sc-parallax="-0.35">
+    <img src="/espaces/img/amine.webp" alt="">
+    <video src="/espaces/vid/amine.mp4" muted loop playsinline autoplay preload="auto" poster="/espaces/img/amine.webp"></video>
   </div>
+  <div class="voile"></div>
+  <div class="t">
+    <a class="retour" href="../">← Famille Missaoui</a>
+    <div class="qui"><img src="/jeux/avatars/qui/amine.webp" alt=""><h1>Bonjour Amine !</h1>
+      <button class="parle" data-dit="Bonjour Amine ! Touche un rond pour apprendre, ou une image pour jouer." aria-label="Écouter"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg></button></div>
+  </div>
+</header>
 
-  <footer>Fait avec amour pour Amine · Grande section<br><small>© 2026 Anis Missaoui · Famille Missaoui · Tous droits réservés</small></footer>
-</main>
+<div id="defi" data-enfant="Amine"></div>
+
+<section class="zone">
+  <h2>Mon chemin pour apprendre</h2>
+  <ol class="chemin" data-sc-in data-sc-stagger="90">
+    <li><a href="je-lis.html"><span class="rond" style="--c:#e2574c">A</span><b>Je lis !</b></a><button class="parle petit" data-dit="Je lis ! Les sons et les syllabes." aria-label="Écouter : Je lis"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button></li>
+    <li><a href="planete-des-nombres.html"><span class="rond" style="--c:#3aa76d"><img src="nombres/a1.webp" alt=""></span><b>Les nombres</b></a><button class="parle petit" data-dit="La planète des nombres. On compte avec les aliens !" aria-label="Écouter : les nombres"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button></li>
+    <li><a href="epicerie-de-lulu.html"><span class="rond" style="--c:#ff8c1a"><img src="epicerie/img/fond.webp" alt=""></span><b>L’épicerie</b></a><button class="parle petit" data-dit="L'épicerie de Lulu. On compte les fruits !" aria-label="Écouter : l’épicerie"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button></li>
+    <li><a href="ardoise-magique.html"><span class="rond" style="--c:#3b82c4"><img src="ardoise-amine.webp" alt=""></span><b>L’ardoise</b></a><button class="parle petit" data-dit="L'ardoise magique. On écrit les lettres !" aria-label="Écouter : l’ardoise"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button></li>
+    <li><a href="nahki-tounsi.html"><span class="rond ar" style="--c:#c2477f">ع</span><b>La derja</b></a><button class="parle petit" data-dit="Nahki tounsi. Les mots de chez nous !" aria-label="Écouter : la derja"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button></li>
+    <li><a href="monsieur-loup.html"><span class="rond" style="--c:#8a6d3b"><img src="loup/histoire.webp" alt=""></span><b>Monsieur Loup</b></a><button class="parle petit" data-dit="L'histoire de Monsieur Loup chez moi." aria-label="Écouter : Monsieur Loup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></button></li>
+  </ol>
+</section>
+
+<section class="zone">
+  <h2>Jouer</h2>
+  <div class="bulles" data-sc-in data-sc-stagger="50">
+    <a href="serpentin.html" style="--c:#3aa76d"><span class="img">🐍</span>Serpentin</a>
+    <a href="la-nuit-d-amine.html" style="--c:#ff8c1a"><span class="img">🎃</span>La Nuit d’Amine</a>
+    <a href="la-nuit-d-amine-2.html" style="--c:#7a5cd6"><span class="img">🧛</span>La Nuit 2</a>
+    <a href="../jeux/ma-houma.html"><span class="img"><img src="/jeux/houma/reel/carte.webp" alt="" loading="lazy"></span>Ma Houma</a>
+    <a href="../jeux/atelier-du-jasmin.html" style="--c:#e2574c"><span class="img"><img src="/jeux/atelier/titre.webp" alt="" loading="lazy"></span>Colorier</a>
+    <a href="../jeux/legende-du-jasmin-3.html" style="--c:#f2c45a"><span class="img"><img src="/jeux/jasmin/titre.webp" alt="" loading="lazy"></span>Le Jasmin</a>
+    <a href="../jeux/les-ecuries.html" style="--c:#d7263d"><span class="img"><img src="/essil/ecuries/img/fond-ecurie.webp" alt="" loading="lazy"></span>Les chevaux</a>
+    <a href="../jeux/serpent-legendes.html" style="--c:#3b82c4"><span class="img"><img src="/jeux/cartes/arcenciel.webp" alt="" loading="lazy"></span>Serpent</a>
+    <a href="../jeux/ludo-legendes.html" style="--c:#3aa76d"><span class="img"><img src="/jeux/avatars/ludo-famille.webp" alt="" loading="lazy"></span>Ludo</a>
+    <a href="../jeux/grimpe-glace.html" style="--c:#5aaedc"><span class="img"><img src="/jeux/avatars/grimpe-glace.webp" alt="" loading="lazy"></span>Grimpe-Glace</a>
+    <a href="../jeux/koora.html" style="--c:#ff8c1a"><span class="img"><img src="/jeux/koora/img/menu.webp" alt="" loading="lazy"></span>Koora</a>
+    <a href="../jeux/khyout.html" style="--c:#c2477f"><span class="img"><img src="/jeux/khyout/img/fond-paysage.webp" alt="" loading="lazy"></span>Khyout</a>
+  </div>
+</section>
+
+<section class="zone">
+  <h2>Se cultiver</h2>
+  <div class="bulles" data-sc-in data-sc-stagger="60">
+    <a href="../eveil/sourate.html" style="--c:#f2c45a"><span class="img"><img src="/eveil/sourate/img/cover.webp" alt="" loading="lazy"></span>Al-Fâtiḥa</a>
+    <a href="../eveil/livre-nouh.html" style="--c:#5aaedc"><span class="img"><img src="/eveil/livre/img/arche.webp" alt="" loading="lazy"></span>Nouh</a>
+    <a href="../eveil/prophete.html" style="--c:#1f7a5c"><span class="img"><img src="/eveil/prophete/img/e2_d.webp" alt="" loading="lazy"></span>Le Prophète ﷺ</a>
+    <a href="../eveil/prophetes.html" style="--c:#143a5a"><span class="img"><img src="/eveil/prophetes/img/p2_c.webp" alt="" loading="lazy"></span>Les prophètes</a>
+  </div>
+</section>
+
+<p class="pied">© 2026 Anis Missaoui · Famille Missaoui · Tous droits réservés</p>
+<script src="/lib/scrollcraft/scrollcraft.js"></script>
+<script src="/espaces/espace.js" defer></script>
+<script>
+// le 🔊 : la phrase est dite par la voix du site (Lulu pour Amine, couche commune d'explorateur.js)
+document.addEventListener('click', function(e){ var b = e.target.closest('.parle'); if(!b) return;
+  try{ speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(b.getAttribute('data-dit')); u.lang = 'fr-FR'; speechSynthesis.speak(u); }catch(err){} });
+</script>
 </body>
 </html>

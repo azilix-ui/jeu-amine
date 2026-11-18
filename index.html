@@ -67,6 +67,11 @@
 .spaces{display:flex;flex-direction:column;gap:20px}
 .spaces h2.sec,.fam h2{font-family:var(--display);font-weight:800;font-size:clamp(30px,4vw,40px);line-height:1;margin:0}
 .kids{gap:22px}
+.kid h3.rub{font-family:inherit;font-size:13px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;opacity:.85;margin:14px 0 2px;display:flex;align-items:center;gap:8px}
+.kid h3.rub::after{content:"";flex:1;height:2px;background:rgba(255,255,255,.22);border-radius:2px}
+.kid ul[hidden]{display:none}
+.kid p.mat{margin:6px 0 4px;font-size:13px;font-weight:800;opacity:.75}
+
 .kid{min-height:0;padding-top:24px}
 .kid .who{display:flex;align-items:center;gap:14px}
 .kid .who .av{--s:56px;border-color:rgba(255,255,255,.9);box-shadow:0 0 0 3px rgba(255,255,255,.25),0 8px 14px -6px rgba(0,0,0,.5)}
@@ -339,85 +344,114 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
         <span class="initial" aria-hidden="true">E</span>
         <div class="who"><img class="av" src="jeux/avatars/essil.webp" width="320" height="320" alt=""><h2><a href="essil/">Essil</a></h2><span class="lvl">Collège</span></div>
         <p class="what">Allemand, latin, géométrie et fractions</p>
+        <h3 class="rub">Apprendre</h3>
+        <p class="mat">Allemand</p>
         <ul>
-          <li><a href="essil/les-ecuries.html"><span>🐴</span>Les Écuries d'Essil</a></li>
-          <li><a href="essil/videos-fractions.html"><span>🍰</span>Pas à pas · Les fractions</a></li>
-          <li><a href="essil/videos-geometrie.html"><span>🎬</span>Pas à pas · Géométrie</a></li>
-          <li><a href="essil/deutsch-express-2.html"><span>🚆</span>Deutsch Express 2<em>Nouveau</em></a></li>
-          <li><a href="essil/via-romana-2.html"><span>🏛️</span>Via Romana II<em>Nouveau</em></a></li>
-          <li><a href="essil/deutsch-express.html"><span>🚆</span>Deutsch Express</a></li>
-          <li><a href="essil/via-romana.html"><span>🏛️</span>Via Romana</a></li>
-          <li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li>
-          <li><a href="jeux/ludo-legendes.html"><span>🎲</span>Ludo Légendes<em>3D</em></a></li>
-          <li><a href="jeux/ma-houma.html"><span>🏘️</span>Ma Houma<em>Nouveau</em></a></li>
-          <li><a href="jeux/atelier-du-jasmin.html"><span>🎨</span>L'Atelier du Jasmin<em>Nouveau</em></a></li>
-          <li><a href="jeux/legende-du-jasmin-3.html"><span>🌼</span>La Légende du Jasmin<em>Nouveau</em></a></li>
-          <li><a href="eveil/"><span>🌙</span>Éveil religieux<em>Nouveau</em></a></li><li><a href="jeux/kelma.html"><span>🔤</span>Kelma<em>Nouveau</em></a></li><li><a href="jeux/yajour.html"><span>🦸</span>Yajour<em>Nouveau</em></a></li><li><a href="jeux/khyout.html"><span>🧶</span>Khyout<em>Nouveau</em></a></li><li><a href="jeux/kassar.html"><span>🧱</span>Kassar<em>Nouveau</em></a></li>
-          <li><a href="jeux/chkobba.html"><span>🃏</span>Chkobba<em>Nouveau</em></a></li>
-          <li><a href="jeux/koora.html"><span>⚽</span>Koora<em>Nouveau</em></a></li>
-          <li><a href="jeux/zarbia.html"><span>🧶</span>Zarbia</a></li>
-          <li><a href="jeux/medina-express.html"><span>🚋</span>Médina Express</a></li>
-          <li><a href="jeux/grimpe-glace.html"><span>❄️</span>Grimpe-Glace</a></li>
+  <li><a href="essil/deutsch-express-2.html"><span>🚆</span>Deutsch Express 2<em>Nouveau</em></a></li>
+  <li><a href="essil/deutsch-express.html"><span>🚆</span>Deutsch Express</a></li>
         </ul>
+        <p class="mat">Latin</p>
+        <ul>
+  <li><a href="essil/via-romana-2.html"><span>🏛️</span>Via Romana II<em>Nouveau</em></a></li>
+  <li><a href="essil/via-romana.html"><span>🏛️</span>Via Romana</a></li>
+        </ul>
+        <p class="mat">Maths en vidéo</p>
+        <ul>
+  <li><a href="essil/videos-geometrie.html"><span>🎬</span>Pas à pas · Géométrie</a></li>
+  <li><a href="essil/videos-fractions.html"><span>🍰</span>Pas à pas · Les fractions</a></li>
+        </ul>
+        <p class="mat">Équitation</p>
+        <ul>
+  <li><a href="essil/les-ecuries.html"><span>🐴</span>Les Écuries d'Essil</a></li>
+        </ul>
+        <h3 class="rub">Mes jeux</h3>
+        <ul>
+  <li><a href="jeux/legende-du-jasmin-3.html"><span>🌼</span>La Légende du Jasmin<em>Nouveau</em></a></li>
+  <li><a href="jeux/ma-houma.html"><span>🏘️</span>Ma Houma<em>Nouveau</em></a></li>
+  <li><a href="jeux/atelier-du-jasmin.html"><span>🎨</span>L'Atelier du Jasmin<em>Nouveau</em></a></li>
+        </ul>
+        <h3 class="rub">Se cultiver</h3>
+        <ul>
+  <li><a href="eveil/"><span>🌙</span>Éveil religieux<em>Nouveau</em></a></li>
+        </ul>
+        <ul hidden class="famille-cache"><li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li><li><a href="jeux/ludo-legendes.html"><span>🎲</span>Ludo Légendes<em>3D</em></a></li><li><a href="jeux/kelma.html"><span>🔤</span>Kelma<em>Nouveau</em></a></li><li><a href="jeux/yajour.html"><span>🦸</span>Yajour<em>Nouveau</em></a></li><li><a href="jeux/khyout.html"><span>🧶</span>Khyout<em>Nouveau</em></a></li><li><a href="jeux/kassar.html"><span>🧱</span>Kassar<em>Nouveau</em></a></li><li><a href="jeux/chkobba.html"><span>🃏</span>Chkobba<em>Nouveau</em></a></li><li><a href="jeux/koora.html"><span>⚽</span>Koora<em>Nouveau</em></a></li><li><a href="jeux/zarbia.html"><span>🧶</span>Zarbia</a></li><li><a href="jeux/medina-express.html"><span>🚋</span>Médina Express</a></li><li><a href="jeux/grimpe-glace.html"><span>❄️</span>Grimpe-Glace</a></li></ul>
         <a class="go" href="essil/">Voir l'espace d'Essil →</a>
       </div>
       <div class="kid salma">
         <span class="initial" aria-hidden="true">S</span>
         <div class="who"><img class="av" src="jeux/avatars/salma.webp" width="320" height="320" alt=""><h2><a href="salma/">Salma</a></h2><span class="lvl">CE2</span></div>
         <p class="what">Anglais, français, maths et son exposé</p>
+        <h3 class="rub">Apprendre</h3>
+        <p class="mat">Anglais</p>
         <ul>
-          <li><a href="salma/ollies-house.html"><span>🏠</span>Ollie's House<em>Nouveau</em></a></li>
-          <li><a href="salma/patisserie-d-ollie.html"><span>🥧</span>La Pâtisserie d'Ollie<em>Nouveau</em></a></li>
-          <li><a href="salma/fabrique-des-phrases-2.html"><span>🧩</span>La Fabrique des Phrases 2<em>Nouveau</em></a></li><li><a href="salma/fabrique-des-phrases.html"><span>🧩</span>La Fabrique des Phrases</a></li>
-          <li><a href="salma/weather-station.html"><span>⛅</span>Weather Station</a></li>
-          <li><a href="salma/english-garden.html"><span>🦉</span>English Garden</a></li>
-          <li><a href="salma/jardin-des-nombres.html"><span>➖</span>Le Jardin des Nombres</a></li>
-          <li><a href="salma/marche-d-ollie.html"><span>🪙</span>Le Marché d'Ollie</a></li>
-          <li><a href="salma/miroir-magique.html"><span>🪞</span>Le Miroir Magique<em>Nouveau</em></a></li>
-          <li><a href="salma/atelier-des-formes.html"><span>🔷</span>L'Atelier des Formes</a></li>
-          <li><a href="salma/atelier-des-verbes.html"><span>✍️</span>L'Atelier des Verbes</a></li>
-          <li><a href="salma/le-grand-galop.html"><span>🐴</span>Le Grand Galop</a></li>
-          <li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li>
-          <li><a href="jeux/ludo-legendes.html"><span>🎲</span>Ludo Légendes<em>3D</em></a></li>
-          <li><a href="jeux/ma-houma.html"><span>🏘️</span>Ma Houma<em>Nouveau</em></a></li>
-          <li><a href="jeux/atelier-du-jasmin.html"><span>🎨</span>L'Atelier du Jasmin<em>Nouveau</em></a></li>
-          <li><a href="jeux/legende-du-jasmin-3.html"><span>🌼</span>La Légende du Jasmin<em>Nouveau</em></a></li>
-          <li><a href="jeux/les-ecuries.html"><span>🐴</span>Les Écuries<em>Nouveau</em></a></li>
-          <li><a href="eveil/"><span>🌙</span>Éveil religieux<em>Nouveau</em></a></li><li><a href="jeux/kelma.html"><span>🔤</span>Kelma<em>Nouveau</em></a></li><li><a href="jeux/yajour.html"><span>🦸</span>Yajour<em>Nouveau</em></a></li><li><a href="jeux/khyout.html"><span>🧶</span>Khyout<em>Nouveau</em></a></li><li><a href="jeux/kassar.html"><span>🧱</span>Kassar<em>Nouveau</em></a></li>
-          <li><a href="jeux/chkobba.html"><span>🃏</span>Chkobba<em>Nouveau</em></a></li>
-          <li><a href="jeux/koora.html"><span>⚽</span>Koora<em>Nouveau</em></a></li>
-          <li><a href="jeux/zarbia.html"><span>🧶</span>Zarbia</a></li>
-          <li><a href="jeux/medina-express.html"><span>🚋</span>Médina Express</a></li>
-          <li><a href="jeux/grimpe-glace.html"><span>❄️</span>Grimpe-Glace</a></li>
+  <li><a href="salma/ollies-house.html"><span>🏠</span>Ollie's House<em>Nouveau</em></a></li>
+  <li><a href="salma/weather-station.html"><span>⛅</span>Weather Station</a></li>
+  <li><a href="salma/english-garden.html"><span>🦉</span>English Garden</a></li>
         </ul>
+        <p class="mat">Français</p>
+        <ul>
+  <li><a href="salma/fabrique-des-phrases-2.html"><span>🧩</span>La Fabrique des Phrases 2<em>Nouveau</em></a></li>
+  <li><a href="salma/fabrique-des-phrases.html"><span>🧩</span>La Fabrique des Phrases</a></li>
+  <li><a href="salma/atelier-des-verbes.html"><span>✍️</span>L'Atelier des Verbes</a></li>
+        </ul>
+        <p class="mat">Maths</p>
+        <ul>
+  <li><a href="salma/patisserie-d-ollie.html"><span>🥧</span>La Pâtisserie d'Ollie<em>Nouveau</em></a></li>
+  <li><a href="salma/jardin-des-nombres.html"><span>➖</span>Le Jardin des Nombres</a></li>
+  <li><a href="salma/marche-d-ollie.html"><span>🪙</span>Le Marché d'Ollie</a></li>
+  <li><a href="salma/atelier-des-formes.html"><span>🔷</span>L'Atelier des Formes</a></li>
+  <li><a href="salma/miroir-magique.html"><span>🪞</span>Le Miroir Magique<em>Nouveau</em></a></li>
+        </ul>
+        <p class="mat">Le cheval</p>
+        <ul>
+  <li><a href="salma/le-grand-galop.html"><span>🐴</span>Le Grand Galop</a></li>
+        </ul>
+        <h3 class="rub">Mes jeux</h3>
+        <ul>
+  <li><a href="jeux/ma-houma.html"><span>🏘️</span>Ma Houma<em>Nouveau</em></a></li>
+  <li><a href="jeux/les-ecuries.html"><span>🐴</span>Les Écuries<em>Nouveau</em></a></li>
+  <li><a href="jeux/legende-du-jasmin-3.html"><span>🌼</span>La Légende du Jasmin<em>Nouveau</em></a></li>
+  <li><a href="jeux/atelier-du-jasmin.html"><span>🎨</span>L'Atelier du Jasmin<em>Nouveau</em></a></li>
+        </ul>
+        <h3 class="rub">Se cultiver</h3>
+        <ul>
+  <li><a href="eveil/"><span>🌙</span>Éveil religieux<em>Nouveau</em></a></li>
+        </ul>
+        <ul hidden class="famille-cache"><li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li><li><a href="jeux/ludo-legendes.html"><span>🎲</span>Ludo Légendes<em>3D</em></a></li><li><a href="jeux/kelma.html"><span>🔤</span>Kelma<em>Nouveau</em></a></li><li><a href="jeux/yajour.html"><span>🦸</span>Yajour<em>Nouveau</em></a></li><li><a href="jeux/khyout.html"><span>🧶</span>Khyout<em>Nouveau</em></a></li><li><a href="jeux/kassar.html"><span>🧱</span>Kassar<em>Nouveau</em></a></li><li><a href="jeux/chkobba.html"><span>🃏</span>Chkobba<em>Nouveau</em></a></li><li><a href="jeux/koora.html"><span>⚽</span>Koora<em>Nouveau</em></a></li><li><a href="jeux/zarbia.html"><span>🧶</span>Zarbia</a></li><li><a href="jeux/medina-express.html"><span>🚋</span>Médina Express</a></li><li><a href="jeux/grimpe-glace.html"><span>❄️</span>Grimpe-Glace</a></li></ul>
         <a class="go" href="salma/">Voir l'espace de Salma →</a>
       </div>
       <div class="kid amine">
         <span class="initial" aria-hidden="true">A</span>
         <div class="who"><img class="av" src="jeux/avatars/amine.webp" width="320" height="320" alt=""><h2><a href="amine/">Amine</a></h2></div>
         <p class="what">Jeux de grande section et derja</p>
+        <h3 class="rub">Apprendre</h3>
+        <p class="mat">Lire et écrire</p>
         <ul>
-          <li><a href="amine/epicerie-de-lulu.html"><span>🧺</span>L'Épicerie de Lulu<em>Nouveau</em></a></li>
-          <li><a href="amine/je-lis.html"><span>📖</span>Je lis !<em>Nouveau</em></a></li>
-          <li><a href="amine/planete-des-nombres.html"><span>👽</span>La Planète des Nombres</a></li>
-          <li><a href="amine/ardoise-magique.html"><span>✏️</span>L'Ardoise magique</a></li>
-          <li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li>
-          <li><a href="jeux/ludo-legendes.html"><span>🎲</span>Ludo Légendes<em>3D</em></a></li>
-          <li><a href="jeux/ma-houma.html"><span>🏘️</span>Ma Houma<em>Nouveau</em></a></li>
-          <li><a href="jeux/atelier-du-jasmin.html"><span>🎨</span>L'Atelier du Jasmin<em>Nouveau</em></a></li>
-          <li><a href="jeux/legende-du-jasmin-3.html"><span>🌼</span>La Légende du Jasmin<em>Nouveau</em></a></li>
-          <li><a href="jeux/les-ecuries.html"><span>🐴</span>Les Écuries<em>Nouveau</em></a></li>
-          <li><a href="eveil/"><span>🌙</span>Éveil religieux<em>Nouveau</em></a></li><li><a href="jeux/kelma.html"><span>🔤</span>Kelma<em>Nouveau</em></a></li><li><a href="jeux/yajour.html"><span>🦸</span>Yajour<em>Nouveau</em></a></li><li><a href="jeux/khyout.html"><span>🧶</span>Khyout<em>Nouveau</em></a></li><li><a href="jeux/kassar.html"><span>🧱</span>Kassar<em>Nouveau</em></a></li>
-          <li><a href="jeux/chkobba.html"><span>🃏</span>Chkobba<em>Nouveau</em></a></li>
-          <li><a href="jeux/koora.html"><span>⚽</span>Koora<em>Nouveau</em></a></li>
-          <li><a href="jeux/zarbia.html"><span>🧶</span>Zarbia</a></li>
-          <li><a href="jeux/medina-express.html"><span>🚋</span>Médina Express</a></li>
-          <li><a href="jeux/grimpe-glace.html"><span>❄️</span>Grimpe-Glace</a></li>
-          <li><a href="amine/serpentin.html"><span>🐍</span>Serpentin</a></li>
-          <li><a href="amine/la-nuit-d-amine.html"><span>🎃</span>La Nuit d'Amine</a></li>
-          <li><a href="amine/la-nuit-d-amine-2.html"><span>🧛</span>La Nuit d'Amine 2</a></li>
-          <li><a href="amine/nahki-tounsi.html"><span><svg viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" style="vertical-align:middle;border-radius:4px"><rect width="60" height="40" fill="#e70013"/><circle cx="30" cy="20" r="11" fill="#fff"/><circle cx="31" cy="20" r="8" fill="#e70013"/><circle cx="33.2" cy="20" r="6.4" fill="#fff"/><path fill="#e70013" d="M34.4 16.6l1.1 2.4 2.6.3-1.9 1.8.5 2.6-2.3-1.3-2.3 1.3.5-2.6-1.9-1.8 2.6-.3z"/></svg></span>Nahki Tounsi</a></li>
+  <li><a href="amine/je-lis.html"><span>📖</span>Je lis !<em>Nouveau</em></a></li>
+  <li><a href="amine/ardoise-magique.html"><span>✏️</span>L'Ardoise magique</a></li>
         </ul>
+        <p class="mat">Les nombres</p>
+        <ul>
+  <li><a href="amine/planete-des-nombres.html"><span>👽</span>La Planète des Nombres</a></li>
+  <li><a href="amine/epicerie-de-lulu.html"><span>🧺</span>L'Épicerie de Lulu<em>Nouveau</em></a></li>
+        </ul>
+        <p class="mat">La derja</p>
+        <ul>
+  <li><a href="amine/nahki-tounsi.html"><span><svg viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" style="vertical-align:middle;border-radius:4px"><rect width="60" height="40" fill="#e70013"/><circle cx="30" cy="20" r="11" fill="#fff"/><circle cx="31" cy="20" r="8" fill="#e70013"/><circle cx="33.2" cy="20" r="6.4" fill="#fff"/><path fill="#e70013" d="M34.4 16.6l1.1 2.4 2.6.3-1.9 1.8.5 2.6-2.3-1.3-2.3 1.3.5-2.6-1.9-1.8 2.6-.3z"/></svg></span>Nahki Tounsi</a></li>
+        </ul>
+        <h3 class="rub">Mes jeux</h3>
+        <ul>
+  <li><a href="amine/serpentin.html"><span>🐍</span>Serpentin</a></li>
+  <li><a href="amine/la-nuit-d-amine.html"><span>🎃</span>La Nuit d'Amine</a></li>
+  <li><a href="amine/la-nuit-d-amine-2.html"><span>🧛</span>La Nuit d'Amine 2</a></li>
+  <li><a href="jeux/ma-houma.html"><span>🏘️</span>Ma Houma<em>Nouveau</em></a></li>
+  <li><a href="jeux/atelier-du-jasmin.html"><span>🎨</span>L'Atelier du Jasmin<em>Nouveau</em></a></li>
+        </ul>
+        <h3 class="rub">Se cultiver</h3>
+        <ul>
+  <li><a href="eveil/"><span>🌙</span>Éveil religieux<em>Nouveau</em></a></li>
+        </ul>
+        <ul hidden class="famille-cache"><li><a href="jeux/serpent-legendes.html"><span>🐉</span>Serpent Légendes<em>3D</em></a></li><li><a href="jeux/ludo-legendes.html"><span>🎲</span>Ludo Légendes<em>3D</em></a></li><li><a href="jeux/legende-du-jasmin-3.html"><span>🌼</span>La Légende du Jasmin<em>Nouveau</em></a></li><li><a href="jeux/les-ecuries.html"><span>🐴</span>Les Écuries<em>Nouveau</em></a></li><li><a href="jeux/kelma.html"><span>🔤</span>Kelma<em>Nouveau</em></a></li><li><a href="jeux/yajour.html"><span>🦸</span>Yajour<em>Nouveau</em></a></li><li><a href="jeux/khyout.html"><span>🧶</span>Khyout<em>Nouveau</em></a></li><li><a href="jeux/kassar.html"><span>🧱</span>Kassar<em>Nouveau</em></a></li><li><a href="jeux/chkobba.html"><span>🃏</span>Chkobba<em>Nouveau</em></a></li><li><a href="jeux/koora.html"><span>⚽</span>Koora<em>Nouveau</em></a></li><li><a href="jeux/zarbia.html"><span>🧶</span>Zarbia</a></li><li><a href="jeux/medina-express.html"><span>🚋</span>Médina Express</a></li><li><a href="jeux/grimpe-glace.html"><span>❄️</span>Grimpe-Glace</a></li></ul>
         <a class="go" href="amine/">Voir l'espace d'Amine →</a>
       </div>
     </nav>
@@ -473,6 +507,7 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
 <script>
 // Le mur des nouveautés (14/11) : à compléter ici à chaque nouveauté (la plus récente en premier). « pour » : tous, explo, ou des prénoms.
 const NOUVEAUTES = [
+  { d:'18/11', e:'🏡', t:'Vos espaces font peau neuve', x:'Chacun a maintenant son monde qui bouge en haut de sa page : le cartable et la cour de récré pour Essil, les étagères de livres pour Salma, le chemin des étoiles pour Amine. Les cours et les jeux sont bien rangés.', p:'#efe6ff', pin:'#6a3fb5' },
   { d:'18/11', e:'⛵', t:'Le livre animé : Nouh et l’arche', x:'Fais défiler l\'histoire avec ton doigt : les films avancent, les animaux montent deux par deux dans l\'arche, la mer monte pendant le déluge. Ou touche « Raconte-moi » et papa et maman racontent.', l:'eveil/livre-nouh.html', p:'#e3f0f6', pin:'#1d5f86' },
   { d:'18/11', e:'📖', t:'Sourate Al-Fâtiḥa', x:'Dans l\'éveil religieux, apprends Al-Fâtiḥa verset par verset : cheikh Al-Husary récite, puis tu répètes et la tablette t\'écoute. Tajwid en couleurs pour Essil, lettres françaises pour Salma, dessin animé pour Amine.', l:'eveil/sourate.html', p:'#e3eefc', pin:'#1d4f7a' },
   { d:'18/11', e:'🔤', t:'Kelma (كلمة) : nouveau jeu !', x:'La tour des mots : trace des mots en français, en anglais ou en arabe dans une tour de céramique, et les lettres tombent. 7 modes, 24 niveaux de Sidi Bou Saïd à Djerba, et le trésor des images pour Amine.', l:'jeux/kelma.html', p:'#e0eeff', pin:'#1f6fd1' },

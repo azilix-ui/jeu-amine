@@ -16,12 +16,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
-<link rel="stylesheet" href="livre/scrollcraft.css">
+<link rel="stylesheet" href="../lib/scrollcraft/scrollcraft.css">
 <style>
 /* Éveil religieux · le livre animé « Nouh et l'arche » (18/11, demande du papa). On fait défiler l'histoire comme un livre :
    les films ComfyUI avancent sous le doigt, les animaux montent deux par deux dans l'arche, la mer monte pendant le déluge.
    Ou bien on touche « Raconte-moi » : la page défile toute seule pendant que papa et maman racontent.
-   Moteur : scroll-craft de Nate Herk (licence MIT, livre/scrollcraft-LICENSE.txt), pas modifié. Textes : ceux de la saison 2,
+   Moteur : scroll-craft de Nate Herk (licence MIT, lib/scrollcraft/LICENSE.txt), pas modifié. Textes : ceux de la saison 2,
    déjà validés par le papa (prophetes/episodes.js, épisode 2). Aucune personne dans les images (règle de la rubrique). */
 :root{
   --sc-canvas:#0d2230; --sc-surface:#14364a; --sc-ink:#fff8ea; --sc-ink-soft:#cfe0e6;
@@ -211,7 +211,7 @@ body{ background:var(--sc-canvas); }
   </section>
 </main>
 
-<script src="livre/scrollcraft.js"></script>
+<script src="../lib/scrollcraft/scrollcraft.js"></script>
 <script type="module" src="livre/livre.js?v=1"></script>
 </body>
 </html>

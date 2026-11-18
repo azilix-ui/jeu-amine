@@ -97,3 +97,15 @@ Nahki Tounsi : écriture `3` = ع, `7` = ح, `kh` = خ, `q` = ق, `dh` = ض/ظ. 
 - `index.html` : nouvelle accueil (maquette validée dans Claude Design le 01/11/2026, canevas « Accueil Famille Missaoui ») ; avatars petits qui grandissent ×1,9 au survol ou au toucher ; toucher un enfant ouvre son espace.
 - `indexancien.html` : l'ancienne accueil (photos aimantées sur la porte du frigo), lien en pied de page.
 - `progression.html` : tableau de bord des parents ; une carte par cours et par jeu (voir `docs/serveur.md`).
+
+
+## Les espaces des enfants, nouvelle version (18/11, soir)
+
+Maquettes Claude Design « Les espaces des enfants — propositions » (artifact `RaXQxMd3PTQQ8GSG66NaUR`), choix du papa : **A pour Essil, B pour Salma, C pour Amine**.
+- **En haut de chaque espace** : le monde de l'enfant, image ComfyUI (FLUX.2 klein, 1344×576, `espaces/img/<enfant>.webp`) devenue un petit film Wan 2.2 en boucle (`espaces/vid/<enfant>.mp4`, fondu de boucle `docs/eveil/boucle.sh`, vérifié image par image : aucun personnage). Le film glisse en parallaxe au défilement (scroll-craft, `/lib/scrollcraft/`), se met en pause hors écran, et l'image reste si la vidéo ne charge pas ou si « moins d'animations » est demandé. Code commun : `espaces/espace.css`, `espaces/espace.js`.
+- **Essil (A, « le cartable et la cour »)** : « Mon cartable » rangé par matière (allemand, latin, maths en vidéo, équitation) et « La cour de récré » (ses jeux puis ceux de la famille), bandeau « Se cultiver ».
+- **Salma (B, « mon monde en étagères »)** : une étagère par matière (anglais, français, maths, le cheval), puis Jouer et Se cultiver, chaque cours en couverture de livre.
+- **Amine (C, « mon chemin »)** : un chemin de 6 étapes (Je lis, nombres, épicerie, ardoise, derja, Monsieur Loup), chacune avec un bouton 🔊 lu par Lulu ; bulles « Jouer » et « Se cultiver ».
+- Bouton **Reprendre / Continuer** : le cours dont la sauvegarde (`t`) est la plus récente (liens marqués `data-cle`).
+- **Accueil** : dans les colonnes des enfants, les liens sont regroupés en Apprendre (par matière), Mes jeux, Se cultiver. Les autres jeux de famille sont dans une liste cachée (`ul.famille-cache`) pour que la vue « enfant » continue de les proposer.
+- Le moteur scroll-craft a quitté `eveil/livre/` pour `/lib/scrollcraft/` (le livre animé Nouh pointe vers le nouvel endroit).

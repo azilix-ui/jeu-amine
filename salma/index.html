@@ -11,158 +11,128 @@
 <script src="/site.js" defer></script>
 <script src="/famille.js" defer></script>
 <script src="/defi.js" defer></script>
-<meta name="theme-color" content="#1f3c88">
+<meta name="theme-color" content="#1f6b44">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&display=swap">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;700;800&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A6%89%3C/text%3E%3C/svg%3E">
 <title>Salma · Famille Missaoui</title>
-<link rel="stylesheet" href="../famille.css?v=5">
-<style>.course{position:relative}.course .new{position:absolute;top:14px;right:16px;background:#d7263d;color:#fff;font-weight:800;font-size:14px;border-radius:999px;padding:4px 12px;transform:rotate(4deg);box-shadow:0 3px 0 #0002}</style>
-
+<link rel="stylesheet" href="/lib/scrollcraft/scrollcraft.css">
+<link rel="stylesheet" href="/espaces/espace.css">
+<style>
+/* L'espace de Salma (18/11) : proposition B « mon monde en étagères », choisie par le papa. */
+body{ background:#f3f8ef; color:#17251c; --accent:#1f6b44; }
+.monde{ color:#17251c; }
+.monde .voile{ background:linear-gradient(90deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.6) 38%, rgba(255,255,255,0) 64%); }
+.monde h1{ color:#1f6b44; text-shadow:0 2px 14px rgba(255,255,255,.6); }
+.monde .retour{ background:rgba(255,255,255,.7); color:#1f6b44; }
+.monde .qui img{ border-color:#5aaedc; background:#fff; }
+.etageres{ max-width:1240px; margin:0 auto; padding:30px 20px 40px; display:flex; flex-direction:column; gap:34px; }
+.etagere{ display:flex; flex-direction:column; gap:10px; }
+.etagere header{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.etagere h2{ font-size:30px; color:var(--c); }
+.etagere header span{ font-size:15px; color:#4f6656; }
+.rayon{ display:flex; gap:16px; overflow-x:auto; padding:8px 4px 2px; scroll-snap-type:x proximity; }
+.livre{ flex:0 0 168px; scroll-snap-align:start; }
+.livre .couv{ position:relative; display:block; width:168px; height:216px; border-radius:6px 14px 14px 6px; overflow:hidden; background:linear-gradient(160deg, var(--f, #6aa), #0000 150%), var(--f, #6aa);
+  box-shadow:0 10px 18px rgba(20,40,25,.22), inset 6px 0 0 rgba(0,0,0,.14); transition:transform .2s; }
+.livre:hover .couv{ transform:translateY(-6px) rotate(-1deg); }
+.livre img{ width:100%; height:100%; object-fit:cover; display:block; }
+.livre .titre{ position:absolute; left:10px; right:10px; bottom:10px; padding:6px 8px; border-radius:10px; background:rgba(255,255,255,.93); font-weight:800; font-size:14px; line-height:1.2; color:#17251c; }
+.livre .lettre{ position:absolute; top:18px; left:0; right:0; text-align:center; font-family:'Baloo 2', sans-serif; font-size:64px; color:rgba(255,255,255,.9); }
+.livre .nouveau{ position:absolute; top:10px; right:10px; margin:0; }
+.planche{ height:14px; border-radius:4px; background:linear-gradient(#c79a5d, #9c6e35); box-shadow:0 6px 10px rgba(80,50,20,.25); }
+</style>
 </head>
-<body>
-<main class="wrap">
-  <a class="back" href="../">← Famille Missaoui</a>
-  <header class="band salma">
-    <h1>Salma</h1>
-    <p>L'anglais, les maths et son exposé sur le cheval, avec Ollie la chouette : on écoute, on essaie, on gagne des étoiles.</p>
-  </header>
-
-  <div id="defi" data-enfant="Salma"></div>
-
-  <div class="courses">
-    <a class="course salma" href="../eveil/sourate.html">
-      <div class="head"><span class="icon">📖</span><div><h2>Sourate Al-Fâtiḥa</h2><div class="subject">Éveil religieux · apprendre une sourate</div></div></div>
-      <p>Chaque mot arabe avec ses sons en lettres françaises. Écoute cheikh Al-Husary, puis répète : la tablette t'écoute et t'encourage !</p>
-      <div class="units"><span>7 versets</span><span>Arabe</span><span>Lettres françaises</span><span>Je répète</span></div>
-      <span class="open">Apprendre →</span>
-    </a>
-    <a class="course salma" href="../eveil/prophete.html">
-      <div class="head"><span class="icon">🌙</span><div><h2>La vie du Prophète ﷺ</h2><div class="subject">Éveil religieux · en français et en arabe</div></div></div>
-      <p>Sept histoires racontées par papa et maman : l'année de l'Éléphant, Al-Amîn, la grotte de Hirâ, l'Hégire… Regarde le film, lis le livre, puis remets l’histoire dans l’ordre !</p>
-      <div class="units"><span>7 épisodes</span><span>Film</span><span>Livre</span><span>Images dans l’ordre</span><span>عربي</span></div>
-      <span class="open">Regarder →</span>
-    </a>
-    <a class="course salma" href="../jeux/atelier-du-jasmin.html">
-      <div class="head"><span class="icon">🎨</span><div><h2>L'Atelier du Jasmin</h2><div class="subject">Coloriage en 2D ou en 3D · pour toute la famille</div></div></div>
-      <p>Colorie dix-huit paysages de Tunisie, crée les costumes de Nour, Yasmine et Farès, puis invente ton propre serpent pour Serpent Légendes. Tes dessins prennent vie dans le spectacle !</p>
-      <div class="units"><span>24 paysages</span><span>14 animaux</span><span>9 costumes</span><span>Mon serpent</span><span>Spectacle</span></div>
-      <span class="open">Dessiner →</span>
-    </a>
-    <a class="course salma" href="../jeux/legende-du-jasmin-3.html">
-      <div class="head"><span class="icon">🌼</span><div><h2>La Légende du Jasmin</h2><div class="subject">Jeu de plateforme · pour toute la famille</div></div></div>
-      <p>Traverse la Tunisie avec ton avatar : vingt-quatre mondes, de Sidi Bou Saïd à Kairouan, Zaghouan, Ichkeul, Tamerza, Djerba, Matmata et jusqu'au palais du Scorpion d'Or, avec des passages secrets. Les blocs savoir 📚 posent des questions et rapportent des tickets 🎟️.</p>
-      <div class="units"><span>24 mondes</span><span>Blocs savoir</span><span>Jasmins cachés</span><span>Boss final</span></div>
-      <span class="open">Jouer →</span>
-    </a>
-    <a class="course salma" href="../jeux/ma-houma.html">
-      <div class="head"><span class="icon">🏘️</span><div><h2>Ma Houma</h2><div class="subject">Le quartier du Jasmin · monde libre pour toute la famille</div></div></div>
-      <p>Un quartier tunisien miniature : la maison, le café, l'école, le souk et la plage. Déplace toute la famille, Nour, Yasmine et Farès, habille-les, prépare le thé, va à l'école, fais le marché, baigne-toi et caresse les animaux. Pas de score : tu inventes tes histoires.</p>
-      <div class="units"><span>5 lieux</span><span>8 personnages</span><span>110 objets</span><span>Animaux</span><span>Découvertes ⭐</span></div>
-      <span class="open">Entrer dans le quartier →</span>
-    </a>
-    <a class="course salma" href="../jeux/les-ecuries.html">
-      <div class="head"><span class="icon">🐴</span><div><h2>Les Écuries</h2><div class="subject">Club hippique en 3D · pour toute la famille</div></div></div>
-      <p>Ton club hippique : apprends le filet, la selle, les robes et les races, panse et nourris tes chevaux, équipe-les à la sellerie et pars en concours de saut, de cross et de dressage.</p>
-      <div class="units"><span>Leçons et quiz</span><span>Écurie en 3D</span><span>Sellerie</span><span>3 concours</span></div>
-      <span class="open">Entrer au club →</span>
-    </a>
-    <a class="course salma" href="../jeux/grimpe-glace.html">
-      <div class="head"><span class="icon">❄️</span><div><h2>Grimpe-Glace</h2><div class="subject">Jeu de plateformes · pour toute la famille</div></div></div>
-      <p>Grimpe une tour de glace magique avec ton avatar : prends de l'élan, enchaîne les combos, traverse six mondes fantastiques et bats les records de la famille.</p>
-      <div class="units"><span>Combos</span><span>6 mondes</span><span>Tenues magiques</span><span>Records</span></div>
-      <span class="open">Jouer →</span>
-    </a>
-    <a class="course salma" href="../jeux/ludo-legendes.html">
-      <div class="head"><span class="icon">🎲</span><div><h2>Ludo Légendes</h2><div class="subject">Jeu en 3D · en famille ou contre la machine</div></div></div>
-      <p>Le Ludo en 3D : chacun sur sa tablette avec un code de partie, ou contre la machine. Pions, dés et plateaux à collectionner, et les cartes légendes.</p>
-      <div class="units"><span>En ligne</span><span>Contre la machine</span><span>Coffres</span><span>Pions légendaires</span></div>
-      <span class="open">Jouer →</span>
-    </a>
-    <a class="course salma" href="../jeux/serpent-legendes.html">
-      <div class="head"><span class="icon">🐉</span><div><h2>Serpent Légendes</h2><div class="subject">Jeu en 3D · pour toute la famille</div></div></div>
-      <p>Le serpent en 3D : deux caméras, quatre mondes, des pièces à gagner et des coffres pour collectionner les skins, jusqu'aux légendaires.</p>
-      <div class="units"><span>Vue du dessus</span><span>Derrière le serpent</span><span>18 skins</span><span>Défis légendaires</span></div>
-      <span class="open">Jouer →</span>
-    </a>
-    <a class="course salma" href="weather-station.html">
-      <div class="head"><span class="icon">⛅</span><div><h2>Salma's Weather Station</h2><div class="subject">Anglais · la météo</div></div></div>
-      <p>Salma devient présentatrice météo : les mots du temps et des saisons, avec de vraies voix anglaises et des tickets 🎟️ à gagner.</p>
-      <div class="units"><span>Learn</span><span>Listen!</span><span>Memory</span><span>Dress up!</span><span>On air!</span></div>
-      <span class="open">Entrer dans le studio →</span>
-    </a>
-    <a class="course salma" href="english-garden.html">
-      <div class="head"><span class="icon">🦉</span><div><h2>Salma's English Garden</h2><div class="subject">Anglais</div></div></div>
-      <p>8 thèmes de vocabulaire, du bonjour aux mois de l'année.</p>
-      <div class="units"><span>Hello!</span><span>Animals</span><span>Colours</span><span>Numbers</span><span>Fruits</span><span>Family</span><span>Days</span><span>Months</span></div>
-      <span class="open">Entrer dans le jardin →</span>
-    </a>
-    <a class="course salma" href="ollies-house.html"><span class="new">Nouveau !</span>
-      <div class="head"><span class="icon">🏠</span><div><h2>Ollie's House</h2><div class="subject">Anglais · La maison</div></div></div>
-      <p>La suite d'English Garden : on visite la maison d'Ollie, on apprend les pièces et les meubles, on retrouve son chat (in, on, under, next to, behind), on dit There is / There are et on épelle. Des tickets 🎟️ pour Serpent Légendes.</p>
-      <div class="units"><span>The rooms</span><span>The furniture</span><span>Where is the cat?</span><span>Listen and find</span><span>There is / There are</span><span>Spell it!</span></div>
-      <span class="open">Entrer dans la maison →</span>
-    </a>
-    <a class="course salma" href="patisserie-d-ollie.html"><span class="new">Nouveau !</span>
-      <div class="head"><span class="icon">🥧</span><div><h2>La Pâtisserie d'Ollie</h2><div class="subject">Maths · Fractions et soustraction</div></div></div>
-      <p>On coupe des tartes en parts égales pour comprendre les fractions (demi, tiers, quart, ¾), puis on soustrait en sautant, en posant l'opération, et dans les petits problèmes de la pâtisserie.</p>
-      <div class="units"><span>Parts égales</span><span>Demi, tiers, quart</span><span>Colorier</span><span>Lire ¾</span><span>La moitié</span><span>En sautant</span><span>Posée</span><span>Problèmes</span></div>
-      <span class="open">Entrer dans la pâtisserie →</span>
-    </a>
-    <a class="course salma" href="fabrique-des-phrases-2.html"><span class="new">Nouveau !</span>
-      <div class="head"><span class="icon">🧩</span><div><h2>La Fabrique des Phrases 2</h2><div class="subject">Français · Grammaire et orthographe · la suite</div></div></div>
-      <p>Le sujet et le verbe, l'accord du verbe, dire non avec « ne… pas », les phrases . ? !, hier, aujourd'hui, demain, et les pièges on / ont, son / sont, ou / où.</p>
-      <div class="units"><span>Le verbe</span><span>Le sujet</span><span>L'accord</span><span>Ne… pas</span><span>. ? !</span><span>Le temps</span><span>on / ont, son / sont</span><span>ou / où</span></div>
-      <span class="open">Entrer dans la fabrique →</span>
-    </a>
-    <a class="course salma" href="fabrique-des-phrases.html"><span class="new">Nouveau !</span>
-      <div class="head"><span class="icon">🧩</span><div><h2>La Fabrique des Phrases</h2><div class="subject">Français · Grammaire et orthographe</div></div></div>
-      <p>La phrase (majuscule, point, ordre des mots), la nature des mots, le, la, les, le pluriel en -s et -x, le féminin des adjectifs, et les pièges a / à, et / est.</p>
-      <div class="units"><span>La phrase</span><span>L'ordre des mots</span><span>Nom, verbe, adjectif</span><span>Déterminants</span><span>Pluriel</span><span>Féminin</span><span>a / à</span><span>et / est</span></div>
-      <span class="open">Entrer dans la fabrique →</span>
-    </a>
-    <a class="course salma" href="jardin-des-nombres.html">
-      <div class="head"><span class="icon">🦉</span><div><h2>Le Jardin des Nombres</h2><div class="subject">Maths · CE2</div></div></div>
-      <p>La soustraction avec retenue, en 8 étapes : Ollie explique, Salma s'entraîne, jusqu'aux petits problèmes.</p>
-      <div class="units"><span>Échauffement</span><span>Le secret de la retenue</span><span>Pas à pas</span><span>À toi de jouer</span><span>Les centaines</span><span>Double retenue</span><span>Le piège du zéro</span><span>Petits problèmes</span></div>
-      <span class="open">Entrer dans le jardin des nombres →</span>
-    </a>
-    <a class="course salma" href="atelier-des-verbes.html">
-      <div class="head"><span class="icon">✍️</span><div><h2>L'Atelier des Verbes</h2><div class="subject">Français · Conjugaison</div></div></div>
-      <p>Les groupes du verbe et le présent (fiches C58 et C59), en 8 étapes avec Ollie. Chaque bonne réponse donne un ticket 🎟️ pour Serpent Légendes.</p>
-      <div class="units"><span>Les trois groupes</span><span>Le test du « nous »</span><span>1er, 2e, 3e groupe</span><span>Les 12 verbes</span><span>-cer / -ger</span><span>Phrases à trous</span></div>
-      <span class="open">Entrer dans l'atelier →</span>
-    </a>
-    <a class="course salma" href="marche-d-ollie.html">
-      <div class="head"><span class="icon">🪙</span><div><h2>Le Marché d'Ollie</h2><div class="subject">Maths · La monnaie</div></div></div>
-      <p>L'euro et la valeur des centimes (MES 1 et MES 2) sur un comptoir de marché en 3D : reconnaître, ranger, compter, payer le prix exact. Des tickets 🎟️ pour Serpent Légendes.</p>
-      <div class="units"><span>Billet ou pièce ?</span><span>100 ct = 1 €</span><span>La tirelire</span><span>Faire l'appoint</span><span>Assez d'argent ?</span></div>
-      <span class="open">Entrer au marché →</span>
-    </a>
-    <a class="course salma" href="miroir-magique.html">
-      <div class="head"><span class="icon">🪞</span><div><h2>Le Miroir Magique</h2><div class="subject">Maths · La symétrie</div></div></div>
-      <p>La symétrie en 7 étapes avec Ollie : plier une figure, trouver son axe, colorier son reflet sur le quadrillage, le tracer point par point. Et un miroir magique pour dessiner des rosaces. Des tickets 🎟️ pour Serpent Légendes.</p>
-      <div class="units"><span>Symétrique ou pas ?</span><span>Où est l'axe ?</span><span>Combien d'axes ?</span><span>Le bon reflet</span><span>Colorie le reflet</span><span>Le reflet dans l'eau</span><span>Point par point</span></div>
-      <span class="open">Entrer dans le miroir →</span>
-    </a>
-    <a class="course salma" href="atelier-des-formes.html">
-      <div class="head"><span class="icon">🔷</span><div><h2>L'Atelier des Formes</h2><div class="subject">Maths · Géométrie</div></div></div>
-      <p>Les polygones (leçon GEOM 6) en 7 étapes avec Ollie, l'équerre et la règle, plus une ardoise pour tracer ses figures : Ollie les corrige. Des tickets 🎟️ pour Serpent Légendes.</p>
-      <div class="units"><span>Polygone ou pas ?</span><span>Sommets et côtés</span><span>L'angle droit</span><span>Carré ou rectangle</span><span>Qui suis-je ?</span><span>Décris-moi</span><span>Construis-la</span></div>
-      <span class="open">Entrer dans l'atelier →</span>
-    </a>
-    <a class="course salma" href="le-grand-galop.html">
-      <div class="head"><span class="icon">🐴</span><div><h2>Le Grand Galop</h2><div class="subject">Mon exposé · Le cheval</div></div></div>
-      <p>Le quiz de l'exposé sur le cheval : 6 obstacles pour gagner ses Galops, puis le Grand Prix. Avec la fiche pour réviser l'oral.</p>
-      <div class="units"><span>Carte d'identité</span><span>Super-pouvoirs</span><span>La famille</span><span>Au menu</span><span>Robes et allures</span><span>Vie et soins</span><span>Grand Prix</span></div>
-      <span class="open">Entrer sur le parcours →</span>
-    </a>
+<body class="espace">
+<header class="monde" data-sc-act="flow">
+  <div class="media" data-sc-parallax="-0.35">
+    <img src="/espaces/img/salma.webp" alt="">
+    <video src="/espaces/vid/salma.mp4" muted loop playsinline autoplay preload="auto" poster="/espaces/img/salma.webp"></video>
   </div>
+  <div class="voile"></div>
+  <div class="t">
+    <a class="retour" href="../">← Famille Missaoui</a>
+    <div class="qui"><img src="/jeux/avatars/qui/salma.webp" alt=""><div><h1>Le monde de Salma</h1><p class="sous">Chaque étagère est une matière. Prends un livre, Ollie t’attend dedans.</p></div></div>
+    <a class="reprendre" id="reprendre" data-mot="Continuer" hidden href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Continuer</span></a>
+  </div>
+</header>
 
-  <p class="note">Les étoiles gagnées sont gardées dans le navigateur : pour les retrouver, utilise toujours le même appareil.</p>
-  <p style="margin:18px 0 0;text-align:center;font-size:13px;opacity:.7">© 2026 Anis Missaoui · Famille Missaoui · Tous droits réservés</p>
+<div id="defi" data-enfant="Salma"></div>
+
+<main class="etageres">
+  <section class="etagere" style="--c:#2368a2">
+    <header><h2>Anglais</h2><span>avec Ollie le hibou</span></header>
+    <div class="rayon" data-sc-in data-sc-stagger="60">
+      <a class="livre" href="ollies-house.html" data-cle="salma-house" data-titre="Ollie’s House"><span class="couv"><img src="/salma/ollie/img/r-kitchen.webp" alt="" loading="lazy"><span class="titre">Ollie’s House</span></span></a>
+      <a class="livre" href="weather-station.html" data-cle="salma-meteo" data-titre="Weather Station"><span class="couv"><img src="/salma/meteo/cloudy.webp" alt="" loading="lazy"><span class="titre">Weather Station</span></span></a>
+      <a class="livre" href="english-garden.html" data-cle="salma-stars" data-titre="English Garden"><span class="couv" style="--f:#3d8bd1"><span class="lettre">Hi!</span><span class="titre">English Garden</span></span></a>
+    </div>
+    <div class="planche"></div>
+  </section>
+  <section class="etagere" style="--c:#a3366b">
+    <header><h2>Français</h2><span>les verbes et les phrases</span></header>
+    <div class="rayon" data-sc-in data-sc-stagger="60">
+      <a class="livre" href="fabrique-des-phrases-2.html" data-cle="salma-phrases2" data-titre="La Fabrique des Phrases 2"><span class="couv" style="--f:#c2477f"><span class="nouveau">Nouveau</span><span class="lettre">Aa</span><span class="titre">La Fabrique des Phrases 2</span></span></a>
+      <a class="livre" href="fabrique-des-phrases.html" data-cle="salma-phrases" data-titre="La Fabrique des Phrases"><span class="couv" style="--f:#d26a98"><span class="lettre">Aa</span><span class="titre">La Fabrique des Phrases</span></span></a>
+      <a class="livre" href="atelier-des-verbes.html" data-cle="salma-verbes" data-titre="L’Atelier des Verbes"><span class="couv" style="--f:#9b3fb5"><span class="lettre">-er</span><span class="titre">L’Atelier des Verbes</span></span></a>
+    </div>
+    <div class="planche"></div>
+  </section>
+  <section class="etagere" style="--c:#b8621b">
+    <header><h2>Maths</h2><span>compter, partager, mesurer</span></header>
+    <div class="rayon" data-sc-in data-sc-stagger="60">
+      <a class="livre" href="patisserie-d-ollie.html" data-cle="salma-patisserie" data-titre="La Pâtisserie d’Ollie"><span class="couv"><img src="/salma/ollie/img/pat-tarte.webp" alt="" loading="lazy"><span class="titre">La Pâtisserie d’Ollie</span></span></a>
+      <a class="livre" href="jardin-des-nombres.html" data-cle="salma-maths" data-titre="Le Jardin des Nombres"><span class="couv" style="--f:#3f9a5d"><span class="lettre">52−7</span><span class="titre">Le Jardin des Nombres</span></span></a>
+      <a class="livre" href="marche-d-ollie.html" data-cle="salma-monnaie" data-titre="Le Marché d’Ollie"><span class="couv" style="--f:#d49a22"><span class="lettre">2 €</span><span class="titre">Le Marché d’Ollie</span></span></a>
+      <a class="livre" href="atelier-des-formes.html" data-cle="salma-geometrie" data-titre="L’Atelier des Formes"><span class="couv" style="--f:#3a6fd8"><span class="lettre">▲■</span><span class="titre">L’Atelier des Formes</span></span></a>
+      <a class="livre" href="miroir-magique.html" data-cle="salma-symetrie" data-titre="Le Miroir Magique"><span class="couv" style="--f:#7a5cd6"><span class="lettre">◐</span><span class="titre">Le Miroir Magique</span></span></a>
+    </div>
+    <div class="planche"></div>
+  </section>
+  <section class="etagere" style="--c:#8a4b1f">
+    <header><h2>Le cheval</h2><span>mon exposé et mes chevaux</span></header>
+    <div class="rayon" data-sc-in data-sc-stagger="60">
+      <a class="livre" href="le-grand-galop.html" data-cle="salma-cheval" data-titre="Le Grand Galop"><span class="couv"><img src="/salma/cheval/galop-480.webp" alt="" loading="lazy"><span class="titre">Le Grand Galop</span></span></a>
+      <a class="livre" href="../jeux/les-ecuries.html" data-cle="ecuries:Salma" data-titre="Les Écuries"><span class="couv"><img src="/essil/ecuries/img/fond-ecurie.webp" alt="" loading="lazy"><span class="titre">Les Écuries</span></span></a>
+    </div>
+    <div class="planche"></div>
+  </section>
+  <section class="etagere" style="--c:#1f6b44">
+    <header><h2>Jouer</h2><span>mes jeux et ceux de toute la famille</span></header>
+    <div class="rayon" data-sc-in data-sc-stagger="50">
+      <a class="livre" href="../jeux/ma-houma.html"><span class="couv"><img src="/jeux/houma/reel/carte.webp" alt="" loading="lazy"><span class="titre">Ma Houma</span></span></a>
+      <a class="livre" href="../jeux/legende-du-jasmin-3.html"><span class="couv"><img src="/jeux/jasmin/titre.webp" alt="" loading="lazy"><span class="titre">La Légende du Jasmin</span></span></a>
+      <a class="livre" href="../jeux/atelier-du-jasmin.html"><span class="couv"><img src="/jeux/atelier/titre.webp" alt="" loading="lazy"><span class="titre">L’Atelier du Jasmin</span></span></a>
+      <a class="livre" href="../jeux/ludo-legendes.html"><span class="couv"><img src="/jeux/avatars/ludo-famille.webp" alt="" loading="lazy"><span class="titre">Ludo Légendes</span></span></a>
+      <a class="livre" href="../jeux/serpent-legendes.html"><span class="couv"><img src="/jeux/cartes/arcenciel.webp" alt="" loading="lazy"><span class="titre">Serpent Légendes</span></span></a>
+      <a class="livre" href="../jeux/grimpe-glace.html"><span class="couv"><img src="/jeux/avatars/grimpe-glace.webp" alt="" loading="lazy"><span class="titre">Grimpe-Glace</span></span></a>
+      <a class="livre" href="../jeux/kelma.html"><span class="couv"><img src="/jeux/kelma/img/menu.webp" alt="" loading="lazy"><span class="titre">Kelma</span></span></a>
+      <a class="livre" href="../jeux/khyout.html"><span class="couv"><img src="/jeux/khyout/img/fond-paysage.webp" alt="" loading="lazy"><span class="titre">Khyout</span></span></a>
+      <a class="livre" href="../jeux/kassar.html"><span class="couv"><img src="/jeux/kassar/img/menu.webp" alt="" loading="lazy"><span class="titre">Kassar</span></span></a>
+      <a class="livre" href="../jeux/yajour.html"><span class="couv"><img src="/jeux/yajour/img/pano-sidibou.webp" alt="" loading="lazy"><span class="titre">Yajour</span></span></a>
+      <a class="livre" href="../jeux/koora.html"><span class="couv"><img src="/jeux/koora/img/menu.webp" alt="" loading="lazy"><span class="titre">Koora</span></span></a>
+      <a class="livre" href="../jeux/zarbia.html"><span class="couv"><img src="/jeux/zarbia/img/menu.webp" alt="" loading="lazy"><span class="titre">Zarbia</span></span></a>
+      <a class="livre" href="../jeux/chkobba.html"><span class="couv"><img src="/jeux/chkobba/img/monde-tunis.webp" alt="" loading="lazy"><span class="titre">Chkobba</span></span></a>
+      <a class="livre" href="../jeux/medina-express.html"><span class="couv"><img src="/jeux/jasmin3/m6/fond.webp" alt="" loading="lazy"><span class="titre">Médina Express</span></span></a>
+    </div>
+    <div class="planche"></div>
+  </section>
+  <section class="etagere" style="--c:#143a5a">
+    <header><h2>Se cultiver</h2><span>l’éveil religieux</span></header>
+    <div class="rayon" data-sc-in data-sc-stagger="60">
+      <a class="livre" href="../eveil/sourate.html"><span class="couv"><img src="/eveil/sourate/img/cover.webp" alt="" loading="lazy"><span class="titre">Sourate Al-Fâtiḥa</span></span></a>
+      <a class="livre" href="../eveil/prophete.html"><span class="couv"><img src="/eveil/prophete/img/e2_d.webp" alt="" loading="lazy"><span class="titre">La vie du Prophète ﷺ</span></span></a>
+      <a class="livre" href="../eveil/prophetes.html"><span class="couv"><img src="/eveil/prophetes/img/p2_c.webp" alt="" loading="lazy"><span class="titre">Les histoires des prophètes</span></span></a>
+      <a class="livre" href="../eveil/livre-nouh.html"><span class="couv"><img src="/eveil/livre/img/arche.webp" alt="" loading="lazy"><span class="titre">Livre animé : Nouh</span></span></a>
+    </div>
+    <div class="planche"></div>
+  </section>
 </main>
+
+<p class="pied">© 2026 Anis Missaoui · Famille Missaoui · Tous droits réservés</p>
+<script src="/lib/scrollcraft/scrollcraft.js"></script>
+<script src="/espaces/espace.js" defer></script>
 </body>
 </html>
