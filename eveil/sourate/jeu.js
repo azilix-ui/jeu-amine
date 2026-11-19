@@ -41,8 +41,13 @@ const conteur = () => mode === 'amine' ? 'papa' : 'maman';
 
 /* ---------- les voix ---------- */
 let jeton = 0, audio = null;
-function stop(){ jeton++; if(audio){ try{ audio.pause(); }catch(e){} audio = null; } try{ speechSynthesis.cancel(); }catch(e){} allume(-1, -1); micro(''); }
-function joue(url, moi, pendant){   // un mp3 jusqu'au bout ; false si interrompu ou introuvable
+function stop(){ jeton++; if(window.FamilleSon) FamilleSon.stop(); if(audio){ try{ audio.pause(); }catch(e){} audio = null; } try{ speechSynthesis.cancel(); }catch(e){} allume(-1, -1); micro(''); }
+const precharge = url => { if(window.FamilleSon) FamilleSon.precharge(url); };
+function joue(url, moi, pendant){   // un mp3 jusqu'au bout ; false si interrompu, null si introuvable
+  if(window.FamilleSon){   // 19/11 : sur la tablette, le lecteur unique du site (débloqué au premier toucher, voir explorateur.js)
+    if(jeton !== moi) return Promise.resolve(false);
+    return FamilleSon.joue(url, { onTemps:pendant }).then(r => jeton !== moi ? false : r);
+  }
   return new Promise(res => { const a = audio = new Audio(url); let f = false, raf = 0;
     const fin = r => { if(!f){ f = true; cancelAnimationFrame(raf); res(r); } };
     const tic = () => { if(jeton !== moi){ try{ a.pause(); }catch(e){} return fin(false); } if(pendant) pendant(a.currentTime * 1000); raf = requestAnimationFrame(tic); };
@@ -134,6 +139,7 @@ async function lecon(k, auto = true){
   if(k === 1 && !S().v.some(Boolean)){ if(!await phrase('debut')) return; }
   // le sens d'abord (Amine : papa ; Essil : l'explication ; Salma : le sens)
   const sens = mode === 'amine' ? v.amine : mode === 'essil' ? v.essil : 'Le sens : ' + v.fr + '.';
+  precharge(RECIT[0](k)); if(k < VERSETS.length) precharge(RECIT[0](k + 1));
   if(!await dire(sens, conteur())) return;
   for(let essai = 1; essai <= 2; essai++){
     if(!await phrase('ecoute')) return;
@@ -154,8 +160,11 @@ async function repete(k, moi){
   if(!await phrase('atoi')) return 'rien';
   montre('🎤 À toi ! Répète…', ''); micro('ecoute'); marqueDits(k, []);
   const signal = {}; arreteEcoute = () => { signal.stop = true; };
+  if(window.FamilleSon) FamilleSon.avantMicro();
   const r = await ecouter({ duree, onPartiel:t => marqueDits(k, aligne(v.mots, t)), signal });
-  micro(''); arreteEcoute = null; if(jeton !== moi) return 'rien';
+  micro(''); arreteEcoute = null;
+  if(window.FamilleSon) await FamilleSon.apresMicro();
+  if(jeton !== moi) return 'rien';
   if(r.mode === 'sr'){ const sc = score(v.mots, r.textes); marqueDits(k, aligne(v.mots, r.textes)); return verdict(sc, joueur, r.aParle); }
   // sans reconnaissance : l'enfant se réécoute
   if(r.mode === 'rec' && r.url && r.aParle){ montre('👂 Écoute-toi !', ''); await joue(r.url, moi); }
@@ -178,8 +187,11 @@ async function seul(){   // l'enfant récite toute la sourate ; les mots reconnu
   const marque = vus => pos.forEach(([n, i], j) => { const e = document.querySelector(`.w[data-v="${n}"][data-i="${i}"]`); if(e) e.classList.toggle('dit', !!vus[j]); });
   montre('🎤 Je t’écoute… récite toute la sourate.', ''); micro('ecoute');
   const signal = {}; arreteEcoute = () => { signal.stop = true; };
+  if(window.FamilleSon) FamilleSon.avantMicro();
   const r = await ecouter({ duree:75000, silence:4000, onPartiel:t => marque(aligne(tous, t)), signal });
-  micro(''); arreteEcoute = null; if(jeton !== moi) return;
+  micro(''); arreteEcoute = null;
+  if(window.FamilleSon) await FamilleSon.apresMicro();
+  if(jeton !== moi) return;
   let sc = r.mode === 'sr' ? score(tous, r.textes) : r.aParle ? .6 : 0;
   if(r.mode === 'sr') marque(aligne(tous, r.textes));
   const seuil = joueur === 'Amine' ? .3 : .6;

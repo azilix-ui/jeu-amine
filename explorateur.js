@@ -67,6 +67,74 @@
   }catch(e){}
 
 
+  /* ---------- FamilleSon : UN seul lecteur de son pour les voix (19/11, tablettes) ----------
+     Sur tablette (surtout iPad), chaque nouveau « new Audio() » lancé sans toucher l'écran peut être refusé, et des dizaines
+     de lecteurs ouverts finissent par faire taire la tablette. Ici : un seul lecteur, « débloqué » au premier toucher,
+     réutilisé pour toutes les voix (consignes, conteurs, récitation). Un son refusé fait apparaître « 🔊 Touche pour entendre ».
+     FamilleSon.joue(url, {onStart, onTemps(ms), volume}) → true (fini), false (arrêté), null (impossible) ;
+     stop(), pause(), reprend(), precharge(url) ; avantMicro() / apresMicro() autour de l'écoute au micro
+     (iPad : le son repasse sur le haut-parleur, à plein volume, après le micro). */
+  (function(){
+    var SILENCE = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAACAAAA/oAR0dHR0dHR0dHR0dHYmJiYmJiYmJiYmJifHx8fHx8fHx8fHx8fJaWlpaWlpaWlpaWlrGxsbGxsbGxsbGxsbHLy8vLy8vLy8vLy8vl5eXl5eXl5eXl5eXl////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQC1AAAAAAAAAP6yysejgAAAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NCxKMAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NAxKQAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/80LEowAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/80DEpAAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsSjAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
+    var el = document.createElement('audio'); el.preload = 'auto'; el.setAttribute('playsinline', ''); el.setAttribute('webkit-playsinline', '');
+    var debloque = false, gen = 0, courant = null, bouton = null, enAttente = null, vus = {};
+    function session(t){ try{ if(navigator.audioSession && navigator.audioSession.type !== t) navigator.audioSession.type = t; }catch(e){} }
+    session('playback');
+    function deverrouille(){
+      if(debloque || courant) return;
+      try{ el.src = SILENCE; var p = el.play(); if(p && p.then) p.then(function(){ debloque = true; }, function(){}); else debloque = true; }catch(e){}
+    }
+    ['touchend', 'click', 'keydown'].forEach(function(t){ document.addEventListener(t, deverrouille, true); });
+    function cacheBouton(){ if(bouton){ bouton.remove(); bouton = null; } enAttente = null; }
+    function montreBouton(){   // le son a été refusé : un toucher le relance (c'est le toucher qui l'autorise)
+      if(bouton) return; bouton = document.createElement('button'); bouton.type = 'button'; bouton.textContent = '🔊 Touche pour entendre';
+      bouton.style.cssText = 'position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147483646;font:800 20px Nunito,system-ui,sans-serif;padding:14px 24px;border:0;border-radius:30px;background:#0f766e;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.35)';
+      bouton.onclick = function(){ var f = enAttente; cacheBouton(); debloque = true; if(f) f(); };
+      (document.body || document.documentElement).appendChild(bouton);
+    }
+    function joue(url, o){
+      o = o || {}; stop(); var g = ++gen;
+      return new Promise(function(res){
+        var fini = false, raf = 0, minu = 0, parti = false;
+        var fin = function(r){ if(fini) return; fini = true; cancelAnimationFrame(raf); clearTimeout(minu); if(courant === fin) courant = null; if(enAttente) cacheBouton(); res(r); };
+        courant = fin;
+        var tic = function(){ if(fini || g !== gen) return; if(o.onTemps) try{ o.onTemps(el.currentTime * 1000); }catch(e){} raf = requestAnimationFrame(tic); };
+        el.onended = function(){ if(g === gen) fin(true); };
+        el.onerror = function(){ if(g === gen && el.src !== SILENCE) fin(null); };
+        el.onplaying = function(){ if(g !== gen || parti) return; parti = true; clearTimeout(minu); if(o.onStart) try{ o.onStart(); }catch(e){} };
+        var lance = function(){
+          if(fini || g !== gen) return;
+          var p; try{ p = el.play(); }catch(e){ return fin(null); }
+          if(p && p.then) p.then(function(){ if(g === gen && !fini){ debloque = true; raf = requestAnimationFrame(tic); } }, function(err){
+            if(g !== gen || fini) return;
+            if(err && err.name === 'NotAllowedError'){ enAttente = lance; montreBouton(); }   // on attend le toucher, sans passer à la suite
+            else if(err && err.name === 'AbortError'){ /* src changé : rien */ }
+            else fin(null); });
+          else raf = requestAnimationFrame(tic);
+          minu = setTimeout(function(){ if(!parti && !enAttente && g === gen) fin(null); }, o.attente || 20000);
+        };
+        try{ el.pause(); }catch(e){}
+        el.volume = o.volume == null ? 1 : Math.max(0, Math.min(1, +o.volume));
+        el.src = url; vus[url] = 1;
+        lance();
+      });
+    }
+    function stop(){ gen++; cacheBouton(); try{ el.pause(); }catch(e){} var c = courant; courant = null; if(c) c(false); }
+    function precharge(url){   // prépare le son suivant pendant que celui-ci joue (la voix arrive tout de suite, en phase avec le texte)
+      if(!url || vus[url]) return; vus[url] = 1;
+      try{ var meme = url.charAt(0) === '/' || url.indexOf(location.origin) === 0; fetch(url, meme ? { credentials:'same-origin' } : { mode:'no-cors' }).catch(function(){}); }catch(e){}
+    }
+    window.FamilleSon = {
+      joue: joue, stop: stop, precharge: precharge,
+      pause: function(){ try{ el.pause(); }catch(e){} },
+      reprend: function(){ if(courant) try{ el.play().catch(function(){}); }catch(e){} },
+      enCours: function(){ return !!courant; },
+      avantMicro: function(){ stop(); session('play-and-record'); },
+      apresMicro: function(){ session('playback'); return new Promise(function(r){ setTimeout(r, 450); }); },
+      element: el
+    };
+  })();
+
   /* ---------- la voix des consignes (16/11, demandé par le papa) ----------
      Toutes les pages qui parlent avec la voix de la tablette (speechSynthesis) parlent désormais avec les voix ElevenLabs
      du site (api/voix.php, la clé API du papa ; chaque phrase n'est fabriquée qu'une fois puis gardée sur le serveur) :
@@ -85,24 +153,27 @@
     function pourAmine(){ var m = ''; try{ m = moi(); }catch(e){} return m === 'Amine' || (m !== 'Anis' && m !== 'Imen' && /^\/amine\//.test(location.pathname)); }
     function morceaux(t){ var out = [], c = ''; String(t).split(/(?<=[.!?;:])\s+/).forEach(function(p){ while(p.length > 330){ out.push(p.slice(0, 330)); p = p.slice(330); } if((c + ' ' + p).trim().length > 330){ if(c) out.push(c.trim()); c = p; } else c = (c + ' ' + p).trim(); }); if(c.trim()) out.push(c.trim()); return out; }
     function nettoie(t){ return String(t || '').replace(/<[^>]+>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}☀-➿️◀▶▲▼←→↑↓]/gu, ' ').replace(/\s+/g, ' ').trim(); }
-    function prepare(it){ var l = it.l, a = pourAmine() && l === 'fr' ? '&p=amine' : '';
-      it.audios = morceaux(it.t).map(function(m){ var x = new Audio('/api/voix.php?l=' + l + '&t=' + encodeURIComponent(m) + a); x.preload = 'auto'; x.volume = Math.max(0, Math.min(1, it.u.volume == null ? 1 : +it.u.volume)); return x; }); }
-    function suivant(){ cur = file.shift() || null; if(!cur) return; var it = cur, j = jeton, i = 0;
-      var secours = function(){ if(j !== jeton) return; it.audios.forEach(function(x){ try{ x.pause(); }catch(e){} });   // le serveur n'a pas pu : la voix de la tablette
+    function adresses(it){ var l = it.l, a = pourAmine() && l === 'fr' ? '&p=amine' : '';
+      return morceaux(it.t).map(function(m){ return '/api/voix.php?l=' + l + '&t=' + encodeURIComponent(m) + a; }); }
+    function suivant(){ cur = file.shift() || null; if(!cur) return; var it = cur, j = jeton, i = 0, urls = it.urls;
+      if(file[0]) FamilleSon.precharge(file[0].urls[0]);
+      var secours = function(){ if(j !== jeton) return;   // le serveur n'a pas pu : la voix de la tablette
         if(natSpeak){ it.u.addEventListener('end', function(){ if(j === jeton && cur === it) suivant(); }, { once:true }); it.u.addEventListener('error', function(){ if(j === jeton && cur === it) suivant(); }, { once:true }); try{ natSpeak(it.u); }catch(e){ suivant(); } }
         else { suivant(); fire(it.u, 'end'); } };
-      var joue = function(){ if(j !== jeton) return; if(i >= it.audios.length){ suivant(); fire(it.u, 'end'); return; }
-        var x = it.audios[i++]; x.onended = joue; x.onerror = function(){ if(i === 1) secours(); else joue(); };
-        var p = x.play(); if(p && p.then) p.then(function(){ if(i === 1) fire(it.u, 'start'); }, function(err){ if(err && err.name === 'NotAllowedError'){ suivant(); fire(it.u, 'end'); } else if(i === 1) secours(); else joue(); }); };
-      joue(); }
+      var un = function(){ if(j !== jeton) return; if(i >= urls.length){ suivant(); fire(it.u, 'end'); return; }
+        var k = i++; if(urls[k + 1]) FamilleSon.precharge(urls[k + 1]);
+        FamilleSon.joue(urls[k], { volume:it.u.volume == null ? 1 : +it.u.volume, onStart:k === 0 ? function(){ fire(it.u, 'start'); } : null }).then(function(r){
+          if(j !== jeton) return;
+          if(r === true) un(); else if(r === false){ if(cur === it){ cur = null; fire(it.u, 'end'); } } else if(k === 0) secours(); else un(); }); };
+      un(); }
     var api = {
       speak: function(u){ if(!u) return; var t = nettoie(u.text), l = String(u.lang || 'fr').slice(0, 2).toLowerCase();
         if(off || !t){ setTimeout(function(){ fire(u, 'end'); }, 0); return; }
         if(['fr', 'en', 'de', 'ar'].indexOf(l) < 0){ if(natSpeak) natSpeak(u); else setTimeout(function(){ fire(u, 'end'); }, 0); return; }   // l'arabe, la derja… : la tablette
-        var it = { u:u, t:t, l:l }; prepare(it); file.push(it); if(!cur) suivant(); },
-      cancel: function(){ jeton++; if(cur && cur.audios) cur.audios.forEach(function(x){ try{ x.pause(); }catch(e){} }); file.forEach(function(it){ it.audios.forEach(function(x){ x.src = ''; }); }); file = []; cur = null; if(natCancel) try{ natCancel(); }catch(e){} },
-      pause: function(){ if(cur) cur.audios.forEach(function(x){ try{ x.pause(); }catch(e){} }); if(NAT) try{ NAT.pause(); }catch(e){} },
-      resume: function(){ if(cur){ var x = cur.audios.filter(function(a){ return a.currentTime > 0 && !a.ended; })[0]; if(x) x.play().catch(function(){}); } if(NAT) try{ NAT.resume(); }catch(e){} },
+        var it = { u:u, t:t, l:l }; it.urls = adresses(it); file.push(it); if(!cur) suivant(); },
+      cancel: function(){ jeton++; if(cur) FamilleSon.stop(); file = []; cur = null; if(natCancel) try{ natCancel(); }catch(e){} },
+      pause: function(){ if(cur) FamilleSon.pause(); if(NAT) try{ NAT.pause(); }catch(e){} },
+      resume: function(){ if(cur) FamilleSon.reprend(); if(NAT) try{ NAT.resume(); }catch(e){} },
       getVoices: function(){ return NAT ? NAT.getVoices() : []; }
     };
     if(NAT){ ['speak', 'cancel', 'pause', 'resume'].forEach(function(k){ try{ NAT[k] = api[k]; }catch(e){} });

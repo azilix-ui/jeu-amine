@@ -20,15 +20,24 @@ const DEBUT_VERSET = { 93:6, 9:40 };
    Le numéro d'un verset dans tout le Coran = AVANT[sourate] + numéro du verset. La voix artificielle ne lit toujours que le sens. */
 const AVANT = { 2:7, 9:1235, 11:1473, 12:1596, 19:2250, 20:2348, 21:2483, 93:6079, 96:6106, 105:6188 };
 const RECIT = n => 'https://cdn.islamic.network/quran/audio/128/ar.husary/' + n + '.mp3';
+/* Jouer un son (19/11) : sur la tablette, le lecteur unique du site (FamilleSon, explorateur.js) ; sinon un lecteur à nous.
+   Rend true (fini), false (arrêté), null (impossible). */
+function son(url, o = {}){
+  if(window.FamilleSon) return FamilleSon.joue(url, o);
+  return new Promise(res => { const a = audio = new Audio(url); let f = false; const fin = r => { if(!f){ f = true; res(r); } };
+    a.onplaying = () => o.onStart && o.onStart(); a.onended = () => fin(true); a.onerror = () => fin(null); a.play().catch(() => fin(null)); });
+}
+const precharge = url => { if(window.FamilleSon) FamilleSon.precharge(url); };
 async function recite(q, carte){   // joue les versets l'un après l'autre (le verset entendu s'allume) ; false si on a été interrompu
   stop(); const moi = jeton, d = q.d || DEBUT_VERSET[q.s] || 1;
   if(AVANT[q.s] == null) return true;
   for(let k = 0; k < q.v.length; k++){
     if(jeton !== moi) return false;
     const vs = carte ? carte.querySelectorAll('.vs') : []; vs.forEach((e, j) => e.classList.toggle('lit', j === k));
-    const ok = await new Promise(res => { const a = audio = new Audio(RECIT(AVANT[q.s] + d + k)); let f = false; const fin = r => { if(!f){ f = true; res(r); } };
-      a.onended = () => fin(true); a.onerror = () => fin(false); a.play().catch(() => fin(false)); });
-    if(!ok && jeton === moi){ (carte ? carte.querySelectorAll('.vs') : []).forEach(e => e.classList.remove('lit')); return true; }   // pas de réseau : on continue sans la récitation
+    if(k + 1 < q.v.length) precharge(RECIT(AVANT[q.s] + d + k + 1));
+    const r = await son(RECIT(AVANT[q.s] + d + k)), ok = r !== null;
+    if(jeton !== moi) return false;
+    if(!ok){ (carte ? carte.querySelectorAll('.vs') : []).forEach(e => e.classList.remove('lit')); return true; }   // pas de réseau : on continue sans la récitation
   }
   (carte ? carte.querySelectorAll('.vs') : []).forEach(e => e.classList.remove('lit'));
   return jeton === moi;
@@ -63,21 +72,18 @@ function morceaux(t){   // api/voix.php prend 400 caractères au plus : on coupe
   for(const p of ph){ if((cur + p).length > 380 && cur){ out.push(cur.trim()); cur = ''; } cur += p; }
   if(cur.trim()) out.push(cur.trim()); return out;
 }
-function stop(){ jeton++; if(audio){ try{ audio.pause(); }catch(e){} audio = null; } try{ speechSynthesis.cancel(); }catch(e){} }
+function stop(){ jeton++; if(window.FamilleSon) FamilleSon.stop(); if(audio){ try{ audio.pause(); }catch(e){} audio = null; } try{ speechSynthesis.cancel(); }catch(e){} }
 const pause = ms => new Promise(r => setTimeout(r, ms));
 // dit un texte : qui = 'papa' | 'maman' | 'ar'. Rend une promesse finie quand la voix a fini (ou le temps de lire, voix coupée)
 async function dire(t, qui){
   stop(); const moi = jeton; if(!t) return true;
   if(voixCoupee()){ await pause(Math.max(2500, t.length * 60)); return jeton === moi; }
   const l = qui === 'ar' ? 'ar' : 'fr', v = qui === 'papa' ? '&v=jon' : '';
-  for(const m of morceaux(t)){
-    if(jeton !== moi) return false;
-    const ok = await new Promise(res => {
-      const a = audio = new Audio('/api/voix.php?l=' + l + '&t=' + encodeURIComponent(m) + v);
-      let fini = false; const fin = r => { if(!fini){ fini = true; res(r); } };
-      a.onended = () => fin(true); a.onerror = () => fin(false);
-      a.play().catch(() => fin(false));
-    });
+  const ms = morceaux(t), url = m => '/api/voix.php?l=' + l + '&t=' + encodeURIComponent(m) + v;
+  for(let i = 0; i < ms.length; i++){
+    const m = ms[i]; if(jeton !== moi) return false;
+    if(ms[i + 1]) precharge(url(ms[i + 1]));
+    const ok = (await son(url(m))) === true;
     if(jeton !== moi) return false;
     if(!ok){   // pas de voix du site (hors ligne, plafond du mois) : la voix de la tablette
       await new Promise(res => { try{ const u = new SpeechSynthesisUtterance(m); u.lang = l === 'ar' ? 'ar' : 'fr-FR'; u.onend = u.onerror = () => res(); speechSynthesis.speak(u); setTimeout(res, Math.max(4000, m.length * 90)); }catch(e){ res(); } });
@@ -147,6 +153,9 @@ function carteCoran(q){
 async function joueScene(){
   const sc = scenesFilm(), s = sc[F.i]; if(!s) return;
   montreScene(s); const t = ++F.tok;
+  const voixDe = (x, qui) => '/api/voix.php?l=' + (qui === 'ar' ? 'ar' : 'fr') + '&t=' + encodeURIComponent(morceaux(x)[0]) + (qui === 'papa' ? '&v=jon' : '');
+  if(s.qui){ if(sv.lang !== 'ar') precharge(voixDe(s.fr, s.qui)); if(sv.lang !== 'fr' && s.ar) precharge(voixDe(s.ar, 'ar')); }
+  const apres = sc[F.i + 1]; if(apres && apres.qui && sv.lang !== 'ar') precharge(voixDe(apres.fr, apres.qui));
   $('f-play').textContent = F.enPause ? '▶' : '⏸';
   if(F.enPause) return;
   const encore = () => t === F.tok && !F.enPause && $('e-film').classList.contains('on');

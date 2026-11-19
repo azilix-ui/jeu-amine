@@ -22,9 +22,13 @@ majLangue();
 $('langue').onclick = () => { langue = langue === 'ar' ? 'fr' : 'ar'; try{ localStorage.setItem('livre-langue', langue); }catch(e){} majLangue(); };
 const voixCoupee = () => !!(window.FamilleVoix && FamilleVoix.on && !FamilleVoix.on());
 let audio = null, jeton = 0;
-const coupe = () => { jeton++; if(audio){ try{ audio.pause(); }catch(e){} audio = null; } };
+const coupe = () => { jeton++; if(window.FamilleSon) FamilleSon.stop(); if(audio){ try{ audio.pause(); }catch(e){} audio = null; } };
 // joue un son ; onDuree(ms) dès que la durée est connue ; rend quand c'est fini (false si interrompu)
 function joue(url, moi, onDuree){
+  if(window.FamilleSon){   // 19/11 : le lecteur unique du site (tablettes), voir explorateur.js
+    const el = FamilleSon.element, d = () => { if(onDuree && isFinite(el.duration)) onDuree(el.duration * 1000); };
+    return FamilleSon.joue(url, { onStart:d }).then(r => jeton !== moi ? false : r);
+  }
   return new Promise(res => { const a = audio = new Audio(url); let fini = false; const fin = r => { if(!fini){ fini = true; res(r); } };
     a.onloadedmetadata = () => onDuree && isFinite(a.duration) && onDuree(a.duration * 1000);
     a.onended = () => fin(true); a.onerror = () => fin(null);
