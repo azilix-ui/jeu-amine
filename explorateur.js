@@ -89,6 +89,10 @@
   }catch(e){}
 
 
+  /* ---------- 21/11 : l'aide de chaque jeu + le badge « Jeu propulsé par Anis Missaoui » (jeux/aide.js) ---------- */
+  if(/^\/(jeux\/[\w-]+|essil\/(les-ecuries|concours-vrai|concours-epreuves)|amine\/(serpentin|la-nuit-d-amine(-2)?))\.html$/.test(location.pathname)) (function(){
+    var sc = document.createElement('script'); sc.src = '/jeux/aide.js?v=1'; sc.defer = true; (document.head || document.documentElement).appendChild(sc); })();
+
   /* ---------- 20/11 : le bandeau « Papa fait des essais » (prise de main d'Anis, ou « voir le site comme… ») ---------- */
   if(profil && profil.ctrl) (function(){
     var c = profil.ctrl, d = document.createElement('div'); d.id = 'famCtrl';
