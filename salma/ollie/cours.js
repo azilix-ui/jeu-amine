@@ -44,7 +44,7 @@ function voices(){ try{ const vs = speechSynthesis.getVoices(), nice = v => /goo
   VF = best(/^fr-FR/i) || best(/^fr/i); VE = best(/^en-GB/i) || best(/^en/i); VD = best(/^de-DE/i) || best(/^de/i); VI = best(/^it/i); }catch(e){} }
 let VD = null, VI = null;
 if('speechSynthesis' in window){ voices(); speechSynthesis.onvoiceschanged = voices; }
-const clean = t => String(t).replace(/<small>.*?<\/small>/g,'').replace(/<[^>]+>/g,'').replace(/_{2,}|…{1}(?=\s|$)/g,' ... ').replace(/«|»/g,'').replace(/🎟️|⭐|🔊|→/g,'').replace(/&amp;/g,'&').replace(/&#39;/g,"'").trim();
+const clean = t => String(t).replace(/<small>.*?<\/small>/g,'').replace(/<[^>]+>/g,'').replace(/_{2,}|…{1}(?=\s|$)/g,' ... ').replace(/«|»/g,'').replace(/🎟️|⭐|🔊|→/g,'').replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ').replace(/(\d) +\/ +(\d)/g,'$1 divisé par $2').replace(/(\d)\s*×\s*(\d)/g,'$1 fois $2').replace(/✔/g,'').trim();   // 20/11 : « 70 / 2 » se lit « 70 divisé par 2 »
 function segments(html){ const out = [], re = /<(\w+)[^>]*\blang="?(en|de|la)"?[^>]*>([\s\S]*?)<\/\1>/g; let m, last = 0; html = String(html);
   while((m = re.exec(html))){ if(m.index > last) out.push([html.slice(last, m.index), 'fr']); out.push([m[3], m[2]]); last = re.lastIndex; }
   if(last < html.length) out.push([html.slice(last), 'fr']); return out.map(([t, l]) => [clean(t), l]).filter(([t]) => t && /[\p{L}\p{N}]/u.test(t)); }
