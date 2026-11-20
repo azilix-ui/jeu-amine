@@ -63,7 +63,7 @@ window.S2 = {
     difficile: { nom:'Difficile', ic:'🔥', garde:1, vit:1.1, coeurs:4, vies:3, boss:5 }
   },
 
-  /* les 20 mondes (11 à 20 ajoutés le 16/11). amb = ambiance ElevenLabs du Stage 2 (stage2/son.php), ambJ = ambiance du Jasmin en secours (sons/jasmin-amb-<n>.mp3). img = les images propres au monde (dossier m<n>/ ; ce qui manque est pris dans m1/),
+  /* les 23 mondes (11 à 20 ajoutés le 16/11, 21 à 23 le 20/11). amb = ambiance ElevenLabs du Stage 2 (stage2/son.php), ambJ = ambiance du Jasmin en secours (sons/jasmin-amb-<n>.mp3). img = les images propres au monde (dossier m<n>/ ; ce qui manque est pris dans m1/),
      sombre = il fait noir (on voit autour du héros et des lanternes), sprites = images d'ennemis propres au monde,
      plat = plateformes mobiles (dist en cases, vit), platImg = image des plateformes (barque…), ciel = dégradé */
   MONDES: [
@@ -271,6 +271,36 @@ window.S2 = {
         'La porte est fermée à clé : touche-la en portant la clé.',
         'Le levier ouvre la grille.',
         'Le Scorpion d’Or ! Lance-lui les jarres… ou attrape un garde et lance-le sur lui !'
+      ] },
+    // 20/11 (demande du papa) : trois mondes de plus, après la revanche : les derniers jasmins cachés par les voleurs du Scorpion
+    { n:21, nom:'La médina de Sfax', lieu:'Sfax', pret:true, ciel:['#7ab8ea', '#f8e6c8'], amb:'ambguellala', ambJ:6,
+      img:['fond', 'maisons', 't_mur', 't_dessus', 't_planche', 't_glisse', 'pic'],
+      histoire:"Le Scorpion d'Or s'est enfui, mais ses voleurs ont caché trois jasmins dans la médina de Sfax, derrière ses grands remparts. Au souk de l'huile d'olive, ça glisse !",
+      panneaux:[
+        'La médina de Sfax et ses grands remparts ! Les voleurs du Scorpion se cachent ici.',
+        'Le souk de l’huile d’olive : le sol glisse, vas-y doucement.',
+        'La clé de Bab Diwan est sur le chemin de ronde : monte par l’échelle.',
+        'Bab Diwan est fermée à clé : touche-la en portant la clé.',
+        'Un mur fissuré : lance la caisse dessus pour le casser.'
+      ] },
+    { n:22, nom:'Le cap de Mahdia', lieu:'Mahdia', pret:true, ciel:['#6ab8ea', '#f2f6ee'], amb:'ambkelibia', ambJ:7, plat:{ dist:5, vit:.75 }, platImg:'barque',
+      img:['fond', 'maisons', 't_mur', 't_dessus', 't_planche', 't_glisse', 't_eau', 't_rebond', 'pic'],
+      histoire:"À Mahdia, on passe sous la Skifa Kahla, la grande porte noire, pour rejoindre le cap et le port des pêcheurs. Saute de barque en barque jusqu'au phare !",
+      panneaux:[
+        'Mahdia ! Le quai est mouillé : attention, ça glisse.',
+        'La Skifa Kahla, la porte noire de la ville. Passe dessous… gare au garde !',
+        'Saute sur la barque quand elle arrive.',
+        'Les filets des pêcheurs font rebondir : garde ↑ appuyé !',
+        'Le phare de Mahdia : la sortie est au bout du quai !'
+      ] },
+    { n:23, nom:'Les villas de Bulla Regia', lieu:'Jendouba', pret:true, ciel:['#7ab0e0', '#f4e8d0'], amb:'ambmatmata', ambJ:19,
+      img:['fond', 'maisons', 't_mur', 't_dessus', 't_planche', 't_effondre', 'pic'],
+      histoire:"À Bulla Regia, les Romains vivaient sous la terre pour avoir frais l'été. Le dernier jasmin est caché dans leurs villas aux mosaïques. C'est la fin du voyage !",
+      panneaux:[
+        'Bulla Regia : les maisons romaines sont sous la terre ! Gare aux serpents cachés dans le sable.',
+        'Descends dans la villa de la chasse : la pierre t’attend en bas de l’échelle.',
+        'Un mur fissuré : lance la pierre dessus.',
+        'Les vieilles dalles tremblent et s’effondrent : passe vite !'
       ] }
   ]
 };

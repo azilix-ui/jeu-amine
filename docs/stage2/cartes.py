@@ -342,7 +342,49 @@ def m20():
     c.put(107, 18, 'P'); c.row(111, 114, 16, '='); c.put(112, 15, '$'); c.put(124, 18, 'y'); c.rect(147, 149, 3, 18); c.put(144, 18, 'E')
     return c
 
-MONDES = { 1:(m1, 4), 2:(m2, 4), 3:(m3, 5), 4:(m4, 4), 5:(m5, 4), 6:(m6, 5), 7:(m7, 4), 8:(m8, 4), 9:(m9, 4), 10:(m10, 4), 11:(m11, 4), 12:(m12, 4), 13:(m13, 4), 14:(m14, 4), 15:(m15, 4), 16:(m16, 5), 17:(m17, 4), 18:(m18, 4), 19:(m19, 5), 20:(m20, 4) }
+# ------------------------------------------------------------------ monde 21 : la médina de Sfax (les remparts, le souk de l'huile d'olive) — 20/11
+def m21():
+    c = Carte(170)
+    c.rect(0, 169, 19, 21)
+    c.put(2, 18, '@'); c.put(5, 18, '!'); c.row(8, 12, 16, '$'); c.put(14, 18, 'a'); c.put(18, 18, 'c')
+    c.put(22, 18, '!'); c.row(24, 34, 19, 'I'); c.put(30, 18, 'S'); c.put(36, 18, 'l'); c.row(26, 32, 16, '='); c.put(29, 15, '*')        # le souk de l'huile : ça glisse
+    c.put(40, 18, '!'); c.col(44, 12, 18); c.rect(45, 70, 12, 12); c.put(48, 11, 'p'); c.put(56, 11, 'z'); c.put(64, 11, 'K'); c.row(50, 54, 9, '$'); c.col(71, 12, 18)   # le chemin de ronde des remparts, la clé
+    c.put(52, 18, 'a'); c.put(60, 18, 'C'); c.put(66, 18, 'g')
+    c.put(74, 18, 'c'); c.put(76, 18, '!'); c.rect(80, 80, 3, 14); c.rect(80, 80, 15, 18, 'D')                                      # Bab Diwan : la porte fermée à clé
+    c.put(84, 18, 'l'); c.row(86, 98, 19, 'I'); c.put(90, 18, 'S'); c.put(96, 18, 'p'); c.rect(100, 103, 16, 18); c.row(100, 103, 13, '='); c.put(101, 12, '*')
+    c.put(106, 18, '!'); c.put(110, 18, 'C'); c.rect(114, 114, 14, 18, 'B'); c.put(118, 18, 'a'); c.put(124, 18, 'c')               # un mur fissuré : la caisse le casse
+    c.rect(128, 140, 15, 18); c.col(127, 15, 18); c.put(132, 14, 'g'); c.row(134, 138, 12, '='); c.put(136, 11, '*'); c.row(130, 133, 12, '$')
+    c.put(146, 18, 'z'); c.put(150, 18, 'l'); c.row(152, 156, 16, '$'); c.put(164, 18, 'E')
+    return c
+
+# ------------------------------------------------------------------ monde 22 : Mahdia (la Skifa Kahla, le cap et le port des pêcheurs) — 20/11
+def m22():
+    c = Carte(166)
+    c.rect(0, 165, 18, 21, 'W')
+    quai = lambda x0, x1, top=15: c.rect(x0, x1, top, 21)
+    quai(0, 30); c.put(2, 14, '@'); c.put(5, 14, '!'); c.row(8, 12, 12, '$'); c.put(14, 14, 'x'); c.put(18, 14, 'c'); c.rect(22, 22, 9, 11); c.row(20, 26, 8, '#'); c.put(24, 14, 'g'); c.put(27, 14, '!')   # la Skifa Kahla, la porte noire
+    c.put(31, 17, 'M'); c.row(33, 36, 13, '$')
+    quai(40, 62); c.row(42, 52, 15, 'I'); c.put(46, 14, 'x'); c.put(50, 8, 'm'); c.row(54, 60, 10, '='); c.put(57, 9, '*'); c.col(54, 11, 14); c.put(60, 14, '!')
+    c.put(63, 17, 'M'); c.put(72, 17, 'M'); c.put(76, 8, 'm'); c.row(66, 70, 14, '$')
+    quai(81, 112); c.put(84, 14, 'c'); c.put(88, 14, 'J'); c.put(92, 14, 'x'); c.put(98, 14, 'z'); c.row(100, 101, 15, 'U'); c.row(102, 108, 9, '='); c.put(105, 8, '*'); c.put(110, 14, '!')
+    c.put(113, 17, 'M'); c.put(122, 17, 'M'); c.put(126, 9, 'm')
+    quai(131, 165); c.put(134, 14, 'c'); c.put(138, 14, 'x'); c.row(140, 150, 15, 'I'); c.put(146, 14, 'g'); c.put(152, 14, '!'); c.row(154, 158, 12, '$'); c.put(160, 14, 'E')
+    return c
+
+# ------------------------------------------------------------------ monde 23 : Bulla Regia (les villas romaines sous la terre) — 20/11
+def m23():
+    c = Carte(168)
+    c.rect(0, 167, 19, 21)
+    c.put(2, 18, '@'); c.put(5, 18, '!'); c.row(8, 12, 16, '$'); c.put(14, 18, 's'); c.put(18, 18, 'c'); c.put(24, 18, 'n'); c.put(28, 18, 'R')
+    c.put(32, 18, '!'); c.rect(36, 70, 8, 13); c.rect(37, 69, 9, 12, '.'); c.col(38, 9, 18); c.put(42, 12, 'b'); c.put(48, 12, 'P'); c.put(56, 12, 's'); c.row(52, 58, 10, '$'); c.put(66, 12, '*'); c.col(68, 13, 18)   # la villa de la chasse, sous la terre
+    c.put(46, 18, 'h'); c.put(58, 18, 'R')
+    c.put(74, 18, 'c'); c.rect(78, 78, 14, 18, 'B'); c.put(76, 18, '!')                                                              # un mur fissuré : la pierre du dessous le casse
+    c.rect(82, 120, 15, 18); c.col(81, 15, 18); c.put(86, 14, 'n'); c.row(96, 104, 11, '='); c.put(100, 10, '*'); c.col(96, 11, 14); c.put(108, 14, 's'); c.put(114, 14, 'h')
+    c.put(124, 18, 'c'); c.put(128, 18, 'R'); c.put(132, 18, '!'); c.put(136, 18, 'b'); c.row(140, 146, 15, 'X'); c.rect(140, 146, 16, 18, '.'); c.col(147, 15, 18); c.put(143, 14, '*'); c.col(139, 15, 18)
+    c.put(150, 18, 'n'); c.row(152, 156, 16, '$'); c.put(162, 18, 'E')
+    return c
+
+MONDES = { 1:(m1, 4), 2:(m2, 4), 3:(m3, 5), 4:(m4, 4), 5:(m5, 4), 6:(m6, 5), 7:(m7, 4), 8:(m8, 4), 9:(m9, 4), 10:(m10, 4), 11:(m11, 4), 12:(m12, 4), 13:(m13, 4), 14:(m14, 4), 15:(m15, 4), 16:(m16, 5), 17:(m17, 4), 18:(m18, 4), 19:(m19, 5), 20:(m20, 4), 21:(m21, 4), 22:(m22, 5), 23:(m23, 4) }
 if __name__ == '__main__':
     racine = os.path.join(os.path.dirname(__file__), '..', '..')
     tout = []

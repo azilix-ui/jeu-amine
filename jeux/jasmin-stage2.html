@@ -77,7 +77,7 @@ body.touch.joue #tactile{display:block}
 </div>
 
 <div class="screen on" id="menu"><div class="box">
-  <h1>La Légende du Jasmin<small>Stage 2 · 20 mondes</small></h1>
+  <h1>La Légende du Jasmin<small>Stage 2 · 23 mondes</small></h1>
   <button id="who" type="button"><img id="whoImg" alt="" src="avatars/mascotte-nour.webp"><span id="whoNom">Qui joue ?</span></button>
   <div class="diff" role="radiogroup" aria-label="Difficulté">
     <button data-d="facile" role="radio">🌼 Facile</button><button data-d="normal" role="radio">⭐ Normal</button><button data-d="difficile" role="radio">🔥 Difficile</button>
@@ -126,7 +126,7 @@ body.touch.joue #tactile{display:block}
 
 <script src="../famille.js"></script>
 <script src="sons/sons.js"></script>
-<script src="stage2/niveaux.js?v=4"></script>
+<script src="stage2/niveaux.js?v=5"></script>
 <script src="stage2/cartes/m1.js?v=2"></script>
 <script src="stage2/cartes/m2.js?v=2"></script>
 <script src="stage2/cartes/m3.js?v=2"></script>
@@ -147,6 +147,9 @@ body.touch.joue #tactile{display:block}
 <script src="stage2/cartes/m18.js?v=1"></script>
 <script src="stage2/cartes/m19.js?v=1"></script>
 <script src="stage2/cartes/m20.js?v=1"></script>
+<script src="stage2/cartes/m21.js?v=1"></script>
+<script src="stage2/cartes/m22.js?v=1"></script>
+<script src="stage2/cartes/m23.js?v=1"></script>
 <script src="stage2/heros/heros.js?v=11"></script>
 <script src="stage2/moteur.js?v=5"></script>
 <script>
@@ -210,7 +213,7 @@ S2J.surFin = ({ perdu, g }) => {
     const suivant = S2.MONDES.find(x => x.n === g.n + 1);
     $('finBox').innerHTML = `<h2>Bravo ${joueur} ! 🎉</h2><p>Tu as traversé « ${m.nom} ».</p><p style="font-size:34px">${'🌼'.repeat(j)}${'⚪'.repeat(3 - j)}</p><p>🪙 ${g.dinars} dinars${typeof js.bourse === 'number' ? ' (ajoutés à ta bourse du Jasmin)' : ''} · ⏱ ${Math.floor(g.t / 60)} min ${String(Math.round(g.t % 60)).padStart(2, '0')} s · ${g.chasses || 0} ennemis chassés</p>
       ${j < 3 ? `<p style="color:var(--mist)">Il reste ${3 - j} jasmin${3 - j > 1 ? 's' : ''} d’or caché${3 - j > 1 ? 's' : ''} : cherche les passages secrets !</p>` : ''}
-      <div class="rang">${suivant && suivant.pret ? `<button class="btn" id="fSuite">Monde ${suivant.n} ▶</button>` : (g.n === 20 ? `<p style="color:var(--gold);font-weight:800">🏆 Tu as fini les 20 mondes du Stage 2 ! Le Scorpion d’Or s’est enfui pour de bon et la Tunisie a retrouvé tous ses jasmins.</p>` : `<p style="color:var(--gold);font-weight:800">Le monde ${g.n + 1} arrive bientôt !</p>`)}<button class="btn bleu" id="fRe">↺ Rejouer</button><button class="btn gris" id="fMenu">Menu</button></div>`;
+      <div class="rang">${suivant && suivant.pret ? `<button class="btn" id="fSuite">Monde ${suivant.n} ▶</button>` : (g.n === 23 ? `<p style="color:var(--gold);font-weight:800">🏆 Tu as fini les 23 mondes du Stage 2 ! Le Scorpion d’Or s’est enfui pour de bon et la Tunisie a retrouvé tous ses jasmins.</p>` : `<p style="color:var(--gold);font-weight:800">Le monde ${g.n + 1} arrive bientôt !</p>`)}<button class="btn bleu" id="fRe">↺ Rejouer</button><button class="btn gris" id="fMenu">Menu</button></div>`;
     dire(`Bravo ${joueur} ! Tu as trouvé ${j} jasmin${j > 1 ? 's' : ''} d'or.`); if(window.Famille && Famille.score) try{ Famille.score('jasmin', joueur, g.dinars * 10 + j * 500); }catch(e){} }
   montre('fin');
   const re = $('fRe'), mn = $('fMenu'), su = $('fSuite');
