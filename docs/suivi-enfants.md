@@ -21,6 +21,7 @@ Le papa a demandé à Claude d'être « le professeur des enfants » : suivre le
 
 ## Salma (8 ans, CE2)
 **Nouveau (20/11)** : deux cours qui commencent par un dessin animé : **Les Doubles d'Ollie** (doubles → moitiés → divisions par 2 et par 4) et **La Machine du Futur** (le futur simple). Tous les cours d'Ollie ont maintenant le contrôle : temps de lecture, indice à la 1ʳᵉ erreur, correction et question qui revient à la 2ᵉ, pause « Doucement » si elle répond trop vite.
+**Nouveau (20/11, après-midi)** : **Les Tables du Souk** (la multiplication, et multiplier pour diviser, avec la notation « / ») et **My First English** 1 à 5 (débuter l'anglais : elle répète à voix haute et la tablette l'écoute).
 **À observer** : les étapes 5 à 8 des Doubles (grands doubles, moitiés de 30, 50, 70 : les nombres impairs de dizaines sont le piège) ; dans le futur, les verbes « voyageurs » (irai, ferai, viendrai, verrai).
 **Plan des 2 semaines** :
 1. Les Doubles : une étape par jour, jusqu'à 3 étoiles partout. Puis réciter la table des doubles à l'oral avec papa (2 minutes).
@@ -34,4 +35,5 @@ Le papa a demandé à Claude d'être « le professeur des enfants » : suivre le
 **Prochaines activités à créer** : pour ses cours, un dessin animé d'introduction pour chaque nouvelle leçon d'allemand et de latin, comme pour Salma.
 
 ## Journal du professeur
+- **20/11 (après-midi)** : 3 nouveaux cours pour Salma (Tables, anglais) ; dans « Répète ! », regarder si la tablette l'entend bien (sinon elle passe sans faute après 3 essais).
 - **20/11** : mise en place du contrôle des réponses pour Amine et Salma ; 2 cours pour Salma ; 2 épisodes pour Amine ; 5 épreuves pour Essil. Aucune donnée de progression lue (il faut le mot de passe parent).
