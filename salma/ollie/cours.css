@@ -216,3 +216,11 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(36px,6.5vw,62px);l
 .ha-go::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.65))}
 .ha-go>*{position:relative}.ha-go span{font-size:64px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.92);color:#1f3c88;display:flex;align-items:center;justify-content:center;margin-bottom:auto;margin-top:auto;padding-left:10px}
 .ha-go b{font-family:var(--display);font-size:clamp(24px,4vw,34px);text-shadow:0 2px 6px #000}.ha-go small{font-size:17px;font-weight:700;text-shadow:0 2px 6px #000}
+/* 20/11 : répéter à voix haute */
+.dis{text-align:center;margin:10px 0}.dis b{display:block;font-family:var(--display);font-size:clamp(40px,8vw,66px);color:var(--mint-deep);line-height:1.1}.dis small{display:block;font-size:20px;color:#6b7a90;margin-top:4px}
+.btn.micro{font-size:22px;min-height:60px}.btn.micro.ecoute{animation:micro 1s ease-in-out infinite;background:#ff6b6b;color:#fff}
+@keyframes micro{50%{transform:scale(1.07)}}
+.entendu{text-align:center;font-weight:700;color:#4a5470;min-height:1.4em}
+.emo{font-size:clamp(70px,14vw,110px);text-align:center;line-height:1.1}
+.answers .ans .emo2{font-size:52px;line-height:1}
+.mots-l{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.mots-l span{background:#eef3f8;border-radius:14px;padding:6px 12px;font-weight:800}.mots-l small{display:block;font-weight:600;color:#6b7a90}

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Les Tables du Souk</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%9C%96%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="ollie/cours.css?v=4">
+<style>
+/* Les Tables du Souk (20/11) : la multiplication pour Salma (CE2), demandée par le papa (« un autre cours de maths pour CE2 avec
+   dessin animé »). Dessin animé au début (Salma et Ollie au souk : images ComfyUI, films Wan 2.2, voix Céline), puis 8 étapes
+   contrôlées (C.controle, réponses au pavé) : les rangées, de l'addition à la multiplication, les tables de 2, 5 et 10, 3, 4,
+   l'ordre ne change rien, et multiplier pour diviser (notation « / », comme le veut le papa). */
+.grille{display:inline-grid;gap:4px;background:#fff7e6;border:3px solid #e9c98a;border-radius:16px;padding:10px;margin:6px auto}
+.grille img{width:clamp(24px,5vw,40px);height:auto}
+.centre{text-align:center}
+.table2{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-weight:800;text-align:center}.table2 span{background:#eef3f8;border-radius:12px;padding:6px 2px}.table2 b{display:block;color:var(--mint-deep);font-size:20px}
+.astuce{background:#fff8de;border:3px solid var(--sun);border-radius:16px;padding:10px 14px;font-weight:800}
+.sauts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px}.sauts span{background:#e4f3fd;border-radius:10px;padding:4px 10px;font-weight:800}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const rnd = (a, b) => a + Math.floor(Math.random()*(b - a + 1));
+function noDup(f, n){ const out = [], seen = new Set(); let g = 0; while(out.length < n && g++ < 400){ const q = f(); if(!seen.has(q.item)){ seen.add(q.item); out.push(q); } } return out; }
+const FR = { orange:['orange', 'oranges'], citron:['citron', 'citrons'], oeuf:['œuf', 'œufs'], datte:['datte', 'dattes'], pomme:['pomme', 'pommes'] };
+const IMG = k => `<img src="../amine/epicerie/img/${k}.webp" alt="">`;
+const grille = (r, c, k) => `<div class="centre"><div class="grille" style="grid-template-columns:repeat(${c},auto)">${IMG(k).repeat(r * c)}</div></div>`;
+const Q = o => Object.assign({ t:'nombre' }, o);
+const sauts = (n, k) => `<div class="sauts">${Array.from({ length:k }, (_, i) => `<span>${n * (i + 1)}</span>`).join('')}</div>`;
+
+/* 1. Les rangées du souk : r rangées de c fruits */
+function qRangees(){ const r = rnd(2, 4), c = rnd(2, 5), k = pick(Object.keys(FR));
+  return Q({ q:`Le marchand range ses ${FR[k][1]} : <b>${r} rangées</b> de <b>${c}</b>. Combien y en a-t-il ?`, voice:`Le marchand range ses ${FR[k][1]} : ${r} rangées de ${c}. Combien y en a-t-il en tout ?`,
+    body:grille(r, c, k), good:r * c, item:`${r}x${c}`, indice:`Compte une rangée (${c}), puis ajoute ${c} pour chaque rangée : ${Array.from({ length:r }, () => c).join(' + ')}.`,
+    expl:`${Array.from({ length:r }, () => c).join(' + ')} = <b>${r * c}</b>. C'est <b>${r} × ${c}</b> : ${r} rangées de ${c}.` }); }
+/* 2. De l'addition à la multiplication */
+function qAddition(){ const r = rnd(2, 5), c = rnd(2, 6), add = Array.from({ length:r }, () => c).join(' + ');
+  if(Math.random() < .5) return Q({ q:`<b>${add}</b>, c'est <b>${r} × ?</b>`, voice:`${add.replace(/\+/g, 'plus')}, c'est ${r} fois combien ?`, body:`<div class="big-q">${add} = ${r} × ?</div>`, good:c, item:`a${r}x${c}`,
+    indice:`Quel nombre est répété ? Il est répété ${r} fois.`, expl:`${c} est répété ${r} fois : ${add} = <b>${r} × ${c}</b>.` });
+  return Q({ q:`Calcule <b>${r} × ${c}</b> en pensant à l'addition.`, voice:`Calcule ${r} fois ${c}.`, body:`<div class="big-q">${r} × ${c} = ?</div><div class="astuce">${r} × ${c} = ${add}</div>`, good:r * c, item:`m${r}x${c}`,
+    indice:`Additionne ${c} ${r} fois : compte de ${c} en ${c}.`, expl:`${add} = <b>${r * c}</b>.${sauts(c, r)}` }); }
+/* une question de table : n × k (n = la table) */
+const qTable = (tables, astuce) => () => { const n = pick(tables), k = rnd(1, 10), [a, b] = Math.random() < .5 ? [n, k] : [k, n];
+  return Q({ q:`Calcule <b>${a} × ${b}</b>`, voice:`Calcule ${a} fois ${b}.`, body:`<div class="big-q">${a} × ${b} = ?</div>`, good:n * k, item:`t${a}x${b}`,
+    indice:astuce(n, k), expl:`${a} × ${b} = <b>${n * k}</b>.${sauts(n, k)}` }); };
+const astuce = (n, k) => n === 2 ? `× 2, c'est le double : ${k} + ${k}.` : n === 5 ? `Compte de 5 en 5 : 5, 10, 15… ${k} fois. Ou la moitié de ${k} × 10.` : n === 10 ? `× 10 : on ajoute un zéro à ${k}.`
+  : n === 4 ? `× 4, c'est le double du double : le double de ${k} = ${2 * k}, puis le double de ${2 * k}.` : n === 3 ? `× 3 : ${k} + ${k} + ${k}. Ou le double de ${k} (${2 * k}), plus ${k}.` : `Compte de ${n} en ${n}, ${k} fois.`;
+/* 7. L'ordre ne change rien, et les problèmes du souk */
+function qOrdre(){ const a = rnd(2, 5), b = rnd(6, 10);
+  if(Math.random() < .5) return Q({ q:`Sachant que <b>${a} × ${b} = ${a * b}</b>, combien font <b>${b} × ${a}</b> ?`, voice:`Sachant que ${a} fois ${b} égale ${a * b}, combien font ${b} fois ${a} ?`, body:`<div class="big-q">${b} × ${a} = ?</div>`, good:a * b, item:`o${a}x${b}`,
+    indice:`On peut tourner les rangées : ${a} rangées de ${b}, ou ${b} rangées de ${a}, c'est le même nombre.`, expl:`${b} × ${a} = ${a} × ${b} = <b>${a * b}</b>. L'ordre ne change rien !` });
+  const k = pick(['orange', 'citron', 'oeuf', 'datte']), pb = pick([
+    [`Ollie achète <b>${a} sacs</b> de <b>${b} ${FR[k][1]}</b>. Combien de ${FR[k][1]} en tout ?`, `Ollie achète ${a} sacs de ${b} ${FR[k][1]}. Combien de ${FR[k][1]} en tout ?`],
+    [`Il y a <b>${a} caisses</b>. Dans chaque caisse, <b>${b} ${FR[k][1]}</b>. Combien en tout ?`, `Il y a ${a} caisses, avec ${b} ${FR[k][1]} dans chaque caisse. Combien en tout ?`]]);
+  return Q({ q:pb[0], voice:pb[1], body:`<div class="big-q">${a} × ${b} = ?</div>`, good:a * b, item:`p${a}x${b}`, indice:`${a} fois ${b} : ${b} ${FR[k][1]}, répété ${a} fois.`, expl:`${a} × ${b} = <b>${a * b}</b> ${FR[k][1]}.` }); }
+/* 8. Multiplier pour diviser : 12 / 3 = ? car 3 × 4 = 12 */
+function qDivise(){ const d = pick([2, 3, 4, 5, 10]), q = rnd(2, 10), n = d * q;
+  if(Math.random() < .5) return Q({ q:`On partage <b>${n} oranges</b> dans <b>${d} paniers</b>, autant dans chaque panier. Combien par panier ?`, voice:`On partage ${n} oranges dans ${d} paniers, autant dans chaque panier. Combien par panier ?`,
+    body:`<div class="big-q">${n} / ${d} = ?</div><div class="astuce">${d} × ? = ${n}</div>`, good:q, item:`d${n}/${d}`, indice:`Cherche dans la table de ${d} : ${d} fois combien font ${n} ?`, expl:`${d} × ${q} = ${n}, donc <b>${n} / ${d} = ${q}</b>.` });
+  return Q({ q:`Calcule <b>${n} / ${d}</b>`, voice:`Calcule ${n} divisé par ${d}.`, body:`<div class="big-q">${n} / ${d} = ?</div><div class="astuce">${d} × ? = ${n}</div>`, good:q, item:`e${n}/${d}`,
+    indice:`Récite la table de ${d} jusqu'à trouver ${n} : ${d}, ${2 * d}, ${3 * d}…`, expl:`${d} × ${q} = ${n}, donc <b>${n} / ${d} = ${q}</b>.` }); }
+function qRevision(){ return pick([qRangees, qOrdre, qDivise, qTable([2, 3, 4, 5, 10], astuce)])(); }
+const T = n => `<div class="table2" style="margin-top:8px">${Array.from({ length:10 }, (_, i) => `<span>${n}×${i + 1}<b>${n * (i + 1)}</b></span>`).join('')}</div>`;
+
+window.COURS = {
+  key:'salma-tables', track:'salma-tables', retour:'Les Tables du Souk', titre:'Les Tables du Souk', sous:'La multiplication : les rangées, les tables, et multiplier pour diviser',
+  controle:true, reflexion:1500,
+  histoire:{ titre:'Le souk des tables', scenes:[
+    { img:'ollie/img/h-mt1.webp', vid:'ollie/img/h-mt1.mp4', txt:`Aujourd'hui, Salma et Ollie vont au souk. Devant l'étal du marchand, les oranges sont rangées en <b>rangées</b> bien droites : 3 rangées de 4 oranges. « Pas besoin de les compter une par une, dit Ollie : 4 + 4 + 4, c'est <b>3 fois 4</b>. On écrit <b>3 × 4 = 12</b>. »` },
+    { img:'ollie/img/h-mt2.webp', vid:'ollie/img/h-mt2.mp4', txt:`Chez le marchand d'œufs, une boîte a 2 rangées de 6 œufs. Salma compte en sautant : 6, 12 ! « Bravo, dit Ollie : <b>2 × 6 = 12</b>. Et si on tourne la boîte, 6 rangées de 2, c'est toujours 12 : <b>l'ordre ne change rien</b>. »` },
+    { img:'ollie/img/h-mt3.webp', vid:'ollie/img/h-mt3.mp4', txt:`À la pâtisserie, Salma pose des makrouds sur un grand plateau : 5 rangées de 5. « 5, 10, 15, 20, 25 ! » Ollie applaudit : « Tu récites <b>la table de 5</b>. Les tables, ce sont des sauts réguliers : de 2 en 2, de 5 en 5, de 10 en 10. »` },
+    { img:'ollie/img/h-mt4.webp', vid:'ollie/img/h-mt4.mp4', txt:`Pour finir, Salma partage 12 oranges dans 3 paniers. « Je cherche 3 × ? = 12… 3 × 4 = 12 ! Donc <b>12 / 3 = 4</b>. » Ollie est ravi : « Avec les tables, tu sais aussi <b>diviser</b>. » À toi, Salma ! Réfléchis bien avant de répondre.` },
+  ] },
+  bonjour:`Bienvenue au souk, Salma ! Ici, on apprend <b>la multiplication</b> : les rangées, les tables de 2, 3, 4, 5 et 10, et comment <b>multiplier pour diviser</b>. Les réponses s'écrivent au pavé. Si tu te trompes, je te donne un indice. Chaque bonne réponse du premier coup = un <b>ticket 🎟️</b> !`,
+  confetti:['🍊','✖️','⭐','🎟️','🧺'], revoir:'Mes calculs à revoir',
+  CH:[
+    { id:'rangees', name:'Les rangées du souk', sub:'3 rangées de 4', icon:'🍊', edge:'#e0a100', make:() => noDup(qRangees, 7),
+      rule:`Des objets rangés en <b>rangées</b> égales : on n'a pas besoin de tout compter. 3 rangées de 4, c'est 4 + 4 + 4 = <b>12</b>.` },
+    { id:'addition', name:'De + à ×', sub:'4 + 4 + 4 = 3 × 4', icon:'➕', edge:'#c2577a', make:() => noDup(qAddition, 8),
+      rule:`Quand on ajoute plusieurs fois <b>le même nombre</b>, on peut <b>multiplier</b> : 4 + 4 + 4 = <b>3 × 4</b> (« 3 fois 4 ») = 12.` },
+    { id:'t2', name:'La table de 2', sub:'le double', icon:'✌️', edge:'#2a7fb4', make:() => noDup(qTable([2], astuce), 8),
+      rule:`Multiplier par 2, c'est prendre <b>le double</b> (comme dans la boulangerie d'Ollie !).` + T(2) },
+    { id:'t510', name:'Les tables de 5 et 10', sub:'5, 10, 15… · 10, 20, 30…', icon:'🖐️', edge:'#147a66', make:() => noDup(qTable([5, 10], astuce), 8),
+      rule:`<b>× 10</b> : on ajoute un zéro (7 × 10 = 70). <b>× 5</b> : on compte de 5 en 5, et c'est la moitié de × 10 (7 × 5 = la moitié de 70 = 35).` + T(5) },
+    { id:'t3', name:'La table de 3', sub:'3, 6, 9, 12…', icon:'🌿', edge:'#7a4fe0', make:() => noDup(qTable([3], astuce), 8),
+      rule:`× 3 : le double, plus encore une fois. 6 × 3 = 6 + 6 + 6 = 12 + 6 = <b>18</b>.` + T(3) },
+    { id:'t4', name:'La table de 4', sub:'le double du double', icon:'🍀', edge:'#c8473a', make:() => noDup(qTable([4], astuce), 8),
+      rule:`× 4, c'est <b>le double du double</b> : 7 × 4 → double de 7 = 14 → double de 14 = <b>28</b>.` + T(4) },
+    { id:'ordre', name:'L\'ordre ne change rien', sub:'3 × 8 = 8 × 3, et les problèmes', icon:'🔄', edge:'#2a7fb4', make:() => noDup(qOrdre, 8),
+      rule:`On peut tourner les rangées : <b>3 × 8 = 8 × 3 = 24</b>. Choisis le calcul le plus facile ! Dans un problème, cherche « combien de fois » et « combien dans chaque ».` },
+    { id:'divise', name:'Multiplier pour diviser', sub:'12 / 3 = ? car 3 × 4 = 12', icon:'🧺', edge:'#147a66', make:() => noDup(qDivise, 10),
+      rule:`Diviser, c'est l'inverse de multiplier. <b>12 / 3</b> ? Je cherche <b>3 × ? = 12</b> : 3 × 4 = 12, donc <b>12 / 3 = 4</b>.` },
+  ],
+  fiche:[
+    { h:'Multiplier', tag:'1', html:`<p>4 + 4 + 4 = <b>3 × 4</b> = 12 &nbsp;(3 rangées de 4)</p><div class="astuce">3 × 4 = 4 × 3 : l'ordre ne change rien</div>`, lire:`4 plus 4 plus 4, c'est 3 fois 4, 12. L'ordre ne change rien : 3 fois 4, c'est 4 fois 3.` },
+    { h:'Mes tables', tag:'2', html:T(2) + T(3) + T(4) + T(5), lire:`La table de 2 : 2, 4, 6, 8, 10, 12, 14, 16, 18, 20. La table de 5 : 5, 10, 15, 20, 25, 30, 35, 40, 45, 50.` },
+    { h:'Multiplier pour diviser', tag:'3', html:`<div class="astuce">12 / 3 = ? → 3 × ? = 12 → 3 × 4 = 12 → <b>12 / 3 = 4</b></div>`, lire:`12 divisé par 3 : je cherche 3 fois combien font 12. 3 fois 4, 12. Donc 12 divisé par 3 égale 4.` },
+  ],
+};
+</script>
+<script src="ollie/cours.js?v=7"></script>
+</body></html>

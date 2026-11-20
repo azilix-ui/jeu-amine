@@ -287,6 +287,42 @@ const ASK = {
     attendre(card);
     card.querySelector('#eff').onclick = () => { const b = used.pop(); if(b) b.disabled = false; phr.classList.remove('ok', 'ko'); show(); };
   },
+  /* 20/11 : RÉPÉTER à voix haute (prononciation) : { q, en:'Hello', body, item, expl, aussi:['hallo'] }
+     Ollie dit le mot, l'enfant touche 🎤 et le répète ; la reconnaissance vocale de la tablette (iPad : celle d'Apple, en anglais)
+     écoute et compare, avec indulgence. 3 essais au plus, puis on passe sans compter de faute (la tablette entend parfois mal).
+     Sans reconnaissance (ou micro refusé) : l'enfant écoute, répète, et touche « Je l'ai dit ✔ ». */
+  repete(q){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition, lang = q.lang || 'en';
+    const card = frame(q.q, (q.body || '') + `<div class="dis"><b lang="${lang}">${esc(q.en)}</b>${q.phon ? `<small>${esc(q.phon)}</small>` : ''}</div>
+      <div class="choices"><button class="btn" data-ecoute data-lock>🔊 Écouter</button><button class="btn go micro" id="mic" data-lock>🎤 À toi !</button></div><p class="entendu" aria-live="polite"></p>`, q.help, ecoute(q));
+    const mic = card.querySelector('#mic'), ent = card.querySelector('.entendu'); let essais = 0, fini = false;
+    card.querySelector('[data-ecoute]').onclick = () => en(q.en, lang);
+    const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+    const dist = (a, b) => { const d = Array.from({ length:a.length + 1 }, (_, i) => [i]); for(let j = 1; j <= b.length; j++) d[0][j] = j;
+      for(let i = 1; i <= a.length; i++) for(let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[a.length][b.length]; };
+    const bon = alts => { const cibles = [q.en, ...(q.aussi || [])].map(norm); return alts.some(t => { t = norm(t); return cibles.some(c => t === c || t.includes(c) || dist(t, c) <= Math.max(1, Math.floor(c.length / 4))); }); };
+    const passe = (ok, txt) => { fini = true; mic.disabled = true;
+      if(ok) return answered(true, q.item, q.expl);
+      note(q.item, false); save(); say(txt + ' ' + (q.expl || ''));
+      card.insertAdjacentHTML('beforeend', `<button class="btn ok" id="nx">${S.k + 1 < S.list.length ? 'Suivant →' : 'Terminer'}</button>`);
+      document.getElementById('nx').onclick = () => { sfx.tap(); hush(); S.k++; next(); }; };
+    if(!SR){ mic.textContent = '✔ Je l\'ai dit'; mic.onclick = () => { if(fini) return; passe(true); }; attendre(card); return; }
+    mic.onclick = async () => { if(fini) return; hush(); mic.disabled = true; mic.classList.add('ecoute'); mic.textContent = '👂 J\'écoute…'; ent.textContent = '';
+      try{ if(window.FamilleSon) FamilleSon.avantMicro(); }catch(e){}
+      const r = new SR(); r.lang = lang === 'en' ? 'en-GB' : lang; r.interimResults = false; r.maxAlternatives = 5; let eu = false;
+      const fin = async alts => { if(eu) return; eu = true; mic.classList.remove('ecoute'); mic.textContent = '🎤 À toi !'; try{ if(window.FamilleSon) await FamilleSon.apresMicro(); }catch(e){}
+        if(alts === null){ mic.textContent = '✔ Je l\'ai dit'; mic.disabled = false; mic.onclick = () => { if(!fini) passe(true); }; say('Je n\'arrive pas à utiliser le micro. Répète à voix haute, puis touche « Je l\'ai dit ».'); return; }
+        essais++; if(alts.length) ent.textContent = '👂 J\'ai entendu : « ' + alts[0] + ' »';
+        if(bon(alts)) return passe(true);
+        if(essais >= 3) return passe(false, 'La tablette a du mal à t\'entendre. Ce n\'est pas grave, on continue !');
+        sfx.no(); say('Presque ! Écoute encore, puis répète bien fort : <i lang="' + lang + '">' + esc(q.en) + '</i>'); mic.disabled = false; };
+      r.onresult = e => { const alts = []; for(const res of e.results) for(let i = 0; i < res.length; i++) alts.push(res[i].transcript); fin(alts); };
+      r.onerror = e => fin(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? null : []);
+      r.onend = () => fin([]);
+      try{ r.start(); }catch(e){ fin(null); }
+      setTimeout(() => { try{ r.stop(); }catch(e){} }, 6000); setTimeout(() => fin([]), 8500); };
+    attendre(card);
+  },
 };
 
 function finish(){
