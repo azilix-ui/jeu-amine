@@ -11,19 +11,19 @@
 <script src="/site.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#14204a">
-<title>Les dessins animés de Zib</title>
+<title>Les dessins animés de Lumi</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%AD%90%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
 <style>
-/* Les dessins animés de Zib (20/11) : pour Amine (5 ans), demandé par le papa : « un dessin animé avec Comfy et ElevenLabs pour
+/* Les dessins animés de Lumi (20/11) : pour Amine (5 ans), demandé par le papa : « un dessin animé avec Comfy et ElevenLabs pour
    apprendre à compter jusqu'aux grands nombres de façon ludique, et lire aussi ; qu'il compte de façon méthodique, et des jeux
    avec plus de contrôle (il peut toucher les trois propositions au hasard) ».
-   Deux épisodes : « Zib compte les étoiles » (une étoile à la fois, les paquets de 10, les caisses de 100) et « Le train des
+   Deux épisodes : « Lumi compte les étoiles » (une étoile à la fois, les paquets de 10, les caisses de 100) et « Le train des
    syllabes » (accrocher les wagons-syllabes dans l'ordre). Chaque épisode : le dessin animé (images ComfyUI FLUX.2, petits films
    Wan 2.2, voix Lulu d'ElevenLabs par api/voix.php), puis des jeux contrôlés par amine/controle.js.
-   Sauvegarde « amine-zib » (tablette + serveur). Images : docs/cours/build_histoires.py. */
+   Sauvegarde « amine-lumi » (tablette + serveur). Images : docs/cours/build_histoires.py. */
 :root{ --nuit:#14204a; --panel:rgba(255,255,255,.95); --encre:#23324a; --or:#ffd23f; --menthe:#3ddc97; --rose:#ff5fa8; --ciel:#5cc8f5; --ombre:0 7px 0 rgba(0,0,0,.3) }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--nuit);color:#fff;font-family:Nunito,system-ui,sans-serif;font-weight:800;touch-action:manipulation;user-select:none;-webkit-user-select:none}
@@ -82,7 +82,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 /* le train */
 .voie{display:flex;align-items:flex-end;gap:4px;min-height:150px;width:min(96vw,980px);justify-content:flex-start;padding:10px;border-bottom:8px solid #8a6a4a;overflow:hidden}
 .loco{font-size:clamp(70px,11vw,110px);line-height:1;transform:scaleX(-1)}
-.wagon{position:relative;width:clamp(110px,17vw,170px);height:clamp(90px,13vw,120px);background:url(zib/img/wagon.webp) center bottom/contain no-repeat;display:flex;align-items:center;justify-content:center;font-family:"Baloo 2";font-size:clamp(30px,5vw,46px);color:#23324a}
+.wagon{position:relative;width:clamp(110px,17vw,170px);height:clamp(90px,13vw,120px);background:url(lumi/img/wagon.webp) center bottom/contain no-repeat;display:flex;align-items:center;justify-content:center;font-family:"Baloo 2";font-size:clamp(30px,5vw,46px);color:#23324a}
 .wagon span{background:#fff;border-radius:14px;padding:0 10px;margin-bottom:22%;box-shadow:0 3px 0 #0003}
 .wagon.vide span{background:#fff6;color:transparent;min-width:2.2em}
 .quai{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
@@ -108,7 +108,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 <div id="fete"></div>
 
 <section class="scr on" id="accueil">
-  <div class="haut"><a class="rond" href="./" aria-label="Retour">←</a><h1 class="titre">⭐ Les dessins animés de Zib</h1><span class="etoiles" id="total">⭐ 0</span></div>
+  <div class="haut"><a class="rond" href="./" aria-label="Retour">←</a><h1 class="titre">⭐ Les dessins animés de Lumi</h1><span class="etoiles" id="total">⭐ 0</span></div>
   <div class="episodes" id="episodes"></div>
 </section>
 
@@ -135,9 +135,10 @@ const $ = id => document.getElementById(id);
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const shuffle = a => { a = [...a]; for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const IMG = n => `zib/img/${n}.webp`;
-const KEY = 'amine-zib';
+const IMG = n => `lumi/img/${n}.webp`;
+const KEY = 'amine-lumi';
 let S = { et:{}, niv:{}, vus:{}, t:0 };
+try{ if(!localStorage.getItem(KEY) && localStorage.getItem('amine-zib')) localStorage.setItem(KEY, localStorage.getItem('amine-zib')); }catch(e){}   // l'ancien nom (changé le 20/11 : « Zib » est vulgaire en tunisien)
 try{ Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); }catch(e){}
 function save(){ S.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -159,15 +160,15 @@ function ecran(id){ document.querySelectorAll('.scr').forEach(s => s.classList.t
 
 /* ---------- les épisodes ---------- */
 const EPISODES = [
-  { id:'nombres', titre:'Zib compte les étoiles', scenes:[
-    { img:'h-az1', txt:`Voici <b>Zib</b>, une petite étoile venue de très loin dans sa soucoupe. Ce soir, plein d'étoiles sont tombées dans l'herbe. Zib veut toutes les ramasser. Mais combien y en a-t-il ?` },
-    { img:'h-az2', txt:`Zib compte bien : il touche <b>une</b> étoile et dit « un ». Puis une autre : « deux ». « Trois ! » Il n'en saute <b>aucune</b>, et il ne compte jamais deux fois la même.` },
-    { img:'h-az3', txt:`Oh là là, il y en a beaucoup ! Alors Zib fait des <b>paquets</b> : quand il a dix étoiles, il les attache avec un ruban rouge. Un paquet, c'est <b>dix</b>. Deux paquets, <b>vingt</b>. Trois paquets, <b>trente</b> !` },
-    { img:'h-az4', txt:`Et quand il a dix paquets, il les range dans une grande <b>caisse</b>. Dans une caisse, il y a <b>cent</b> étoiles ! Avec des caisses, des paquets et des étoiles, Zib peut compter très, très loin.` },
-    { img:'h-az5', txt:`Zib repart dans le ciel avec sa soucoupe toute pleine. À toi, Amine ! Compte bien, <b>une étoile à la fois</b>, et fais des <b>paquets de dix</b>.` },
+  { id:'nombres', titre:'Lumi compte les étoiles', scenes:[
+    { img:'h-az1', txt:`Voici <b>Lumi</b>, une petite étoile venue de très loin dans sa soucoupe. Ce soir, plein d'étoiles sont tombées dans l'herbe. Lumi veut toutes les ramasser. Mais combien y en a-t-il ?` },
+    { img:'h-az2', txt:`Lumi compte bien : il touche <b>une</b> étoile et dit « un ». Puis une autre : « deux ». « Trois ! » Il n'en saute <b>aucune</b>, et il ne compte jamais deux fois la même.` },
+    { img:'h-az3', txt:`Oh là là, il y en a beaucoup ! Alors Lumi fait des <b>paquets</b> : quand il a dix étoiles, il les attache avec un ruban rouge. Un paquet, c'est <b>dix</b>. Deux paquets, <b>vingt</b>. Trois paquets, <b>trente</b> !` },
+    { img:'h-az4', txt:`Et quand il a dix paquets, il les range dans une grande <b>caisse</b>. Dans une caisse, il y a <b>cent</b> étoiles ! Avec des caisses, des paquets et des étoiles, Lumi peut compter très, très loin.` },
+    { img:'h-az5', txt:`Lumi repart dans le ciel avec sa soucoupe toute pleine. À toi, Amine ! Compte bien, <b>une étoile à la fois</b>, et fais des <b>paquets de dix</b>.` },
   ], jeux:['une', 'paquets', 'caisses'] },
   { id:'lecture', titre:'Le train des syllabes', scenes:[
-    { img:'h-al1', txt:`Tchou, tchou ! Zib conduit un petit train. Chaque wagon transporte un morceau de mot : une <b>syllabe</b>. « LU »… « NE »… Quand les wagons sont bien accrochés, on entend le mot : <b>LUNE</b> !` },
+    { img:'h-al1', txt:`Tchou, tchou ! Lumi conduit un petit train. Chaque wagon transporte un morceau de mot : une <b>syllabe</b>. « LU »… « NE »… Quand les wagons sont bien accrochés, on entend le mot : <b>LUNE</b> !` },
     { img:'h-al2', txt:`Mais attention ! Si on accroche les wagons dans le désordre, le mot ne veut plus rien dire : « NE-LU » ? Non ! On lit <b>de gauche à droite</b>, comme le train qui avance.` },
     { img:'h-al3', txt:`Voilà le train à la gare. Tous les amis attendent les mots ! À toi, Amine : écoute bien, et accroche les wagons <b>dans le bon ordre</b>.` },
   ], jeux:['wagons', 'lis'] },
@@ -196,7 +197,7 @@ function film(i){
 }
 async function scene(k){
   const E = F.E; if(k >= E.scenes.length){ finFilm(); return; } F.k = Math.max(0, k); const sc = E.scenes[F.k], t = ++F.tok, v = $('video');
-  v.poster = IMG(sc.img); v.onerror = () => v.removeAttribute('src'); v.src = `zib/img/${sc.img}.mp4`; v.play().catch(() => {});
+  v.poster = IMG(sc.img); v.onerror = () => v.removeAttribute('src'); v.src = `lumi/img/${sc.img}.mp4`; v.play().catch(() => {});
   $('fTexte').innerHTML = sc.txt; $('fNum').textContent = (F.k + 1) + ' / ' + E.scenes.length;
   await parle([sc.txt.replace(/<[^>]+>/g, '')]); if(t !== F.tok || F.pause) return;
   setTimeout(() => { if(t === F.tok && !F.pause) scene(F.k + 1); }, 900);
@@ -254,7 +255,7 @@ const FAIRE = {
     parle([`Fabrique le nombre ${n}.`, `${Math.floor(n / 10) ? 'Combien de paquets de dix ? ' : ''}Et combien d'étoiles ?`]);
     const pile = []; const maj = () => { $('depot').innerHTML = `${'<img class="paquet" src="' + IMG('paquet') + '" alt="">'.repeat(d)}${'<img class="etoile" src="' + IMG('etoile') + '" alt="">'.repeat(u)}`; };
     $('addP').onclick = () => { if(d >= 9) return; d++; pile.push('d'); maj(); sfx.ding(d * 3); chut(); dit(String(d * 10 + u)); };
-    $('addE').onclick = () => { if(u >= 9){ parle(['Avec dix étoiles, Zib fait un paquet ! Touche le paquet de dix.'], false); return; } u++; pile.push('u'); maj(); sfx.ding(u); chut(); dit(String(d * 10 + u)); };
+    $('addE').onclick = () => { if(u >= 9){ parle(['Avec dix étoiles, Lumi fait un paquet ! Touche le paquet de dix.'], false); return; } u++; pile.push('u'); maj(); sfx.ding(u); chut(); dit(String(d * 10 + u)); };
     $('moins').onclick = () => { const x = pile.pop(); if(x === 'd') d--; else if(x === 'u') u--; maj(); sfx.tape(); };
     $('ok').onclick = () => { if(P.fini) return; const v = d * 10 + u;
       if(v === n){ reussi([`${d} paquet${d > 1 ? 's' : ''} de dix et ${u} étoile${u > 1 ? 's' : ''} : ${n}.`]); return; }
@@ -267,7 +268,7 @@ const FAIRE = {
     const niv = S.niv.caisses || 0; let c, d, u;
     do { c = rnd(1, [1, 2, 3, 5, 9][niv]); d = rnd(0, 9); u = rnd(0, 9); } while(d === u || (niv < 2 && d > 5));
     const n = c * 100 + d * 10 + u, pieges = shuffle([...new Set([c * 100 + u * 10 + d, d * 100 + c * 10 + u, c * 100 + d * 10 + u + (u < 9 ? 1 : -1), c * 100 + (d < 9 ? d + 1 : d - 1) * 10 + u])].filter(x => x !== n && x > 0)).slice(0, 2);
-    $('plateau').innerHTML = consigne('Combien d\'étoiles Zib a-t-il rangées ?') + `<div class="depot">${`<img class="caisse" src="${IMG('caisse')}" alt="cent">`.repeat(c)}${`<img class="paquet" src="${IMG('paquet')}" alt="dix">`.repeat(d)}${`<img class="etoile" src="${IMG('etoile')}" alt="un">`.repeat(u)}</div>
+    $('plateau').innerHTML = consigne('Combien d\'étoiles Lumi a-t-il rangées ?') + `<div class="depot">${`<img class="caisse" src="${IMG('caisse')}" alt="cent">`.repeat(c)}${`<img class="paquet" src="${IMG('paquet')}" alt="dix">`.repeat(d)}${`<img class="etoile" src="${IMG('etoile')}" alt="un">`.repeat(u)}</div>
       <div class="compteur" id="cpt">caisses : ? · paquets : ? · étoiles : ?</div><div class="choix-l" id="rep"></div>`;
     // on compte d'abord les caisses, puis les paquets, puis les étoiles (méthodique) ; les réponses arrivent après
     const objs = [...document.querySelectorAll('.depot img')]; let nc = 0, nd = 0, nu = 0;
@@ -323,7 +324,7 @@ const SYLS = ['MA', 'PO', 'RI', 'LO', 'TU', 'BE', 'NA', 'SO', 'FI', 'CA'];
 
 accueil();
 if(window.Famille){ Famille.track(KEY, 'Amine', [KEY]); Famille.load(KEY, 'Amine').then(r => { const d = r && r[KEY]; if(d && (d.t || 0) > (S.t || 0)){ S = Object.assign({ et:{}, niv:{}, vus:{} }, d); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} if($('accueil').classList.contains('on')) accueil(); } }); }
-window.__zib = { S, FAIRE, jouer, get P(){ return P; } };
+window.__lumi = { S, FAIRE, jouer, get P(){ return P; } };
 </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /* Le contrôle des réponses pour Amine (20/11), demandé par le papa : « il peut cliquer les trois propositions au hasard
-   et tomber sur la bonne réponse ». Utilisé par la Planète des Nombres, l'Épicerie de Lulu, Je lis et le dessin animé de Zib.
+   et tomber sur la bonne réponse ». Utilisé par la Planète des Nombres, l'Épicerie de Lulu, Je lis et le dessin animé de Lumi.
    - Controle.arme(zone, sel, occupe) : les réponses restent grises pendant la consigne, puis encore un petit moment (une barre
      « 👂 J'écoute… » se remplit) ; occupe() dit si la voix parle encore.
    - Controle.faux(bouton, zone, sel) : la réponse fausse est barrée et ne peut plus être touchée. Renvoie 'encore'

@@ -20,6 +20,7 @@
 
 # Les jeux d'Amine ont déménagé dans /amine/ : les anciens liens continuent de marcher.
 Redirect 301 /la-nuit-d-amine.html /amine/la-nuit-d-amine.html
+Redirect 301 /amine/zib.html /amine/lumi.html
 Redirect 301 /la-nuit-d-amine-2.html /amine/la-nuit-d-amine-2.html
 Redirect 301 /nahki-tounsi.html /amine/nahki-tounsi.html
 

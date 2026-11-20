@@ -11,13 +11,13 @@ Le papa a demandé à Claude d'être « le professeur des enfants » : suivre le
 - **Le temps d'écran** dans les jeux par rapport aux cours.
 
 ## Amine (5 ans, grande section)
-**Nouveau (20/11)** : les dessins animés de Zib (compter une étoile à la fois, les paquets de 10, les caisses de 100, et le train des syllabes). La Planète des Nombres, l'Épicerie de Lulu et Je lis sont maintenant **contrôlées** : les réponses s'allument après la consigne, une réponse fausse est barrée, on compte chaque objet avant de répondre, et la tortue « Doucement ! » arrive s'il touche trop vite.
-**À observer** : est-ce que la tortue apparaît souvent ? (= il clique encore au hasard). Dans Zib, le niveau des paquets de 10 monte-t-il ?
+**Nouveau (20/11)** : les dessins animés de Lumi (compter une étoile à la fois, les paquets de 10, les caisses de 100, et le train des syllabes). La Planète des Nombres, l'Épicerie de Lulu et Je lis sont maintenant **contrôlées** : les réponses s'allument après la consigne, une réponse fausse est barrée, on compte chaque objet avant de répondre, et la tortue « Doucement ! » arrive s'il touche trop vite.
+**À observer** : est-ce que la tortue apparaît souvent ? (= il clique encore au hasard). Dans Lumi, le niveau des paquets de 10 monte-t-il ?
 **Plan des 2 semaines** :
-1. Tous les jours, 1 épisode de Zib (5 questions), en alternant nombres et lecture.
+1. Tous les jours, 1 épisode de Lumi (5 questions), en alternant nombres et lecture.
 2. Planète des Nombres jusqu'à 20 sans erreur, puis jusqu'à 30.
 3. Je lis : les sons simples (a, o, i, u, é) puis les syllabes ma, pa, la.
-4. **Prochaine activité à créer** : un 3ᵉ épisode de Zib « Plus et moins » (ajouter et enlever des étoiles avec les paquets), et un épisode de lecture « Les mots-étiquettes » (lire 2 mots, les associer).
+4. **Prochaine activité à créer** : un 3ᵉ épisode de Lumi « Plus et moins » (ajouter et enlever des étoiles avec les paquets), et un épisode de lecture « Les mots-étiquettes » (lire 2 mots, les associer).
 
 ## Salma (8 ans, CE2)
 **Nouveau (20/11)** : deux cours qui commencent par un dessin animé : **Les Doubles d'Ollie** (doubles → moitiés → divisions par 2 et par 4) et **La Machine du Futur** (le futur simple). Tous les cours d'Ollie ont maintenant le contrôle : temps de lecture, indice à la 1ʳᵉ erreur, correction et question qui revient à la 2ᵉ, pause « Doucement » si elle répond trop vite.
