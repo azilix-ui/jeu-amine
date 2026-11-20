@@ -159,6 +159,7 @@ try {
         limite(); out(200, ['id' => ajoute($nom, 'm', court($_POST['titre'] ?? '', 60), $l)]);
     }
     if ($a === 'voix') {
+        fail(403, 'Les messages vocaux sont arrêtés : écris un message ou envoie un émoji.');   // 20/11, décision du papa
         $nom = nom($_POST['nom'] ?? ''); $f = $_FILES['audio'] ?? null;
         if (!$f || ($f['error'] ?? 1) !== UPLOAD_ERR_OK) fail(400, 'Le message vocal n\'est pas arrivé.');
         if ($f['size'] < 800 || $f['size'] > HL_SON_MAX) fail(400, 'Le message vocal est trop long.');

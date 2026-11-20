@@ -233,7 +233,7 @@
   function joueListe(urls, i){ i = i || 0; if(i >= urls.length){ sonSalon = null; return; } var a = sonSalon = new Audio(urls[i]);
     a.onended = function(){ if(sonSalon === a) joueListe(urls, i + 1); }; a.onerror = function(){ if(sonSalon === a) joueListe(urls, i + 1); }; a.play().catch(function(){}); }
   function urlVoix(t, nom){ var v = VOIX_DE[sansAccent(nom || '')] || ''; return '/api/voix.php?l=fr&t=' + encodeURIComponent(String(t).slice(0, 380)) + (v ? '&v=' + v : ''); }
-  function litMessage(x, annonce){ if(!FamilleVoix.on()) return; stopSon(); var u = [];
+  function litMessage(x, annonce){ return; if(!FamilleVoix.on()) return; stopSon(); var u = [];
     if(annonce) u.push('/api/voix.php?l=fr&t=' + encodeURIComponent((x.type === 'v' ? 'Message vocal de ' : 'Message de ') + x.nom) + (moi() === 'Amine' ? '&p=amine' : ''));
     if(x.type === 'v') u.push(API + '?son=' + x.id); else { var t = String(x.texte || '').replace(/[\u{1F000}-\u{1FAFF}☀-➿️]/gu, ' ').trim(); if(t) u.push(urlVoix(t, x.nom)); }
     if(u.length) joueListe(u); }
@@ -323,7 +323,7 @@
       var a = S.avec, p = S.enLigne.filter(function(x){ return x.nom === a; })[0];
       var L = conv(a, m);
       P.innerHTML = '<header><button type="button" data-r aria-label="Retour">←</button>' + (a === 'Famille' ? '<span style="font-size:28px">👨‍👩‍👧‍👦</span><b>Toute la famille</b>' : '<img alt="" src="' + tete(a, p && p.av) + '"><b>' + esc(NOMS[a] || a) + (p ? ' <small style="font-weight:600;opacity:.8">● en ligne</small>' : ' <small style="font-weight:600;opacity:.8">(lira plus tard)</small>') + '</b>') + '<button type="button" data-f aria-label="Fermer">✕</button></header>' +
-        '<div class="corps">' + (L.length ? L.map(function(x){ var d = new Date(x.ts * 1000); return '<div class="m' + (x.nom === m ? ' moi' : '') + '"><small>' + esc(x.nom) + ' · ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0') + '</small>' + (x.type === 'v' ? '<button type="button" class="vo" data-ecoute="' + x.id + '">▶ 🎤 Message vocal · ' + (x.duree || 1) + ' s</button>' : esc(x.texte) + ' <button type="button" class="hp" data-ecoute="' + x.id + '" aria-label="Écouter">🔊</button>') + '</div>'; }).join('') : '<p class="vide">' + (a === 'Famille' ? 'Ici, tout le monde lit tout le monde : papa, maman, Essil, Salma et Amine 👋' : 'Écris le premier message à ' + esc(NOMS[a] || a) + ' 👋') + '</p>') + '</div>' +
+        '<div class="corps">' + (L.length ? L.map(function(x){ var d = new Date(x.ts * 1000); return '<div class="m' + (x.nom === m ? ' moi' : '') + '"><small>' + esc(x.nom) + ' · ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0') + '</small>' + (x.type === 'v' ? '<i>🎤 ancien message vocal</i>' : esc(x.texte)) + '</div>'; }).join('') : '<p class="vide">' + (a === 'Famille' ? 'Ici, tout le monde lit tout le monde : papa, maman, Essil, Salma et Amine 👋' : 'Écris le premier message à ' + esc(NOMS[a] || a) + ' 👋') + '</p>') + '</div>' +
         '<div class="emo">' + ['👋', '😀', '😂', '❤️', '👍', '🎉', '⭐', '🏠'].map(function(e){ return '<button type="button" data-e="' + e + '">' + e + '</button>'; }).join('') + '</div>' +
         '<div class="emo ph">' + ['Je t\'aime ❤️', 'Viens jouer avec moi ! 🎮', 'Bravo ! 👏', 'J\'ai fini mes devoirs ✅', 'Tu me manques 🥰', 'J\'arrive ! 🏃'].map(function(e){ return '<button type="button" data-e="' + esc(e) + '">' + esc(e) + '</button>'; }).join('') + '</div>' +
         '<form>' + (REC ? '<button type="button" class="mic' + (S.rec ? ' on' : '') + '" data-mic aria-label="Message vocal">' + (S.rec ? '⏹ ' + S.rec.s + ' s' : '🎤') + '</button>' : '') + '<input maxlength="300" placeholder="' + (moi() === 'Amine' ? '🎤 Touche le micro' : 'Ton message à ' + (a === 'Famille' ? 'toute la famille' : esc(NOMS[a] || a)) + '…') + '" autocomplete="off" enterkeyhint="send"><button type="submit">Envoyer</button></form>';
@@ -354,7 +354,8 @@
     if(t.hasAttribute('data-mic')){ if(S.rec) finEnregistre(true); else enregistre(); return; }
   }
   // 🎤 le message vocal : on touche le micro, on parle (30 s au plus), on touche ⏹ : il part tout seul
-  var REC = !!(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  // 20/11 (soir, décision du papa) : plus de messages vocaux ni de lecture à voix haute dans le salon : du texte et des émojis seulement
+  var REC = false;
   function majMic(){ var b = P.querySelector('[data-mic]'); if(b){ b.classList.toggle('on', !!S.rec); b.textContent = S.rec ? '⏹ ' + S.rec.s + ' s' : '🎤'; } }
   function enregistre(){ stopSon();
     navigator.mediaDevices.getUserMedia({ audio:true }).then(function(flux){
@@ -382,7 +383,7 @@
     var r = B.getBoundingClientRect(), d = document.createElement('div'); d.id = 'famBulle';
     d.style.bottom = (innerHeight - r.top + 10) + 'px'; d.style.left = Math.max(8, Math.min(innerWidth - 390, r.left)) + 'px';
     d.innerHTML = '<img alt="" src="' + tete(m.nom) + '"><span>💬 <b></b> : <q></q></span><button type="button">Répondre</button><button type="button" class="x" aria-label="Fermer">✕</button>';
-    d.querySelector('b').textContent = (NOMS[m.nom] || m.nom) + (m.a === 'Famille' ? ' (à toute la famille)' : ''); d.querySelector('q').textContent = m.type === 'v' ? '🎤 un message vocal' : m.texte;
+    d.querySelector('b').textContent = (NOMS[m.nom] || m.nom) + (m.a === 'Famille' ? ' (à toute la famille)' : ''); d.querySelector('q').textContent = m.type === 'v' ? '🎤 (ancien message vocal)' : m.texte;
     d.querySelector('button').onclick = function(){ d.remove(); S.avec = m.a === 'Famille' ? 'Famille' : m.nom; S.vue = 'conv'; B.classList.remove('replie'); dessine(); P.classList.add('on'); place(); };
     d.querySelector('.x').onclick = function(){ d.remove(); };
     document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 12000);

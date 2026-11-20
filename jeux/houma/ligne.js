@@ -224,13 +224,13 @@ function chat(){
   panel(`<h2>💬 On discute</h2><div class="hlmsgs" id="hlMsgs" aria-live="polite"></div>
     <div class="hlquick">${EMOJIS.map(e => `<button data-q="${e}">${e}</button>`).join('')}</div>
     <div class="hlquick">${PHRASES.map(p => `<button class="ph" data-q="${esc(p)}">${esc(p)}</button>`).join('')}</div>
-    <div class="hlsaisie"><input id="hlTxt" maxlength="300" placeholder="Écris ici…" enterkeyhint="send" autocomplete="off"><button id="hlEnv" aria-label="Envoyer">➤</button><button class="mic" id="hlMic" aria-label="Enregistrer un message vocal">🎤</button></div>
+    <div class="hlsaisie"><input id="hlTxt" maxlength="300" placeholder="Écris ici…" enterkeyhint="send" autocomplete="off"><button id="hlEnv" aria-label="Envoyer">➤</button></div>
     <p id="hlMsgErr" style="color:var(--red);min-height:1.2em;margin:4px 0"></p><button class="pill ghost" data-close>Fermer</button>`);
   listeMsgs();
   $('panel').querySelectorAll('[data-q]').forEach(b => b.onclick = () => envoie(b.dataset.q));
   $('hlEnv').onclick = () => envoie($('hlTxt').value);
   $('hlTxt').onkeydown = e => { if(e.key === 'Enter'){ e.preventDefault(); envoie($('hlTxt').value); } };
-  $('hlMic').onclick = micro;
+  // 20/11 : plus de messages vocaux (décision du papa)
   $('hlMsgs').onclick = e => { const b = e.target.closest('button'); if(!b) return;
     if(b.dataset.son) joue(+b.dataset.son); else if(b.dataset.lit) say(b.dataset.lit); else if(b.dataset.va){ const m = HL.msgs.find(x => x.id === +b.dataset.va); if(m){ closePanel(); visite(m.nom, m.lieu); } } };
 }
