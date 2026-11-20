@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b3a82">
+<title>Tebni · تبني</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%B1%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* Tebni (تبني, « tu construis ») : le jeu de briques de la famille, comme le classique (7 pièces, lignes à compléter),
+   mais en carreaux de zellige, sur une terrasse de Sidi Bou Saïd, avec l'avatar « en vrai » du joueur qui réagit,
+   et un commentaire en arabe (voix Mohammad) ou en français. Demandé par le papa le 20/11.
+   Code : tebni/regles.js (les règles, testées : docs/tebni/test-regles.mjs), tebni/jeu.js (dessin, commandes, sons, sauvegarde). */
+:root{ --bleu:#1f5fbf; --bleuF:#0b3a82; --or:#f2b632; --nuit:#14213d; --ombre:0 4px 0 rgba(0,0,0,.2); }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body{ margin:0; height:100%; overflow:hidden; background:#0b2244; font-family:Nunito, system-ui, sans-serif; color:var(--nuit); touch-action:none; user-select:none; -webkit-user-select:none; }
+button{ font:inherit; cursor:pointer; border:0; color:inherit; }
+#fond{ position:fixed; inset:0; background:#0b3a82 url(tebni/img/fond-l.webp) center/cover; }
+@media (orientation:portrait){ #fond{ background-image:url(tebni/img/fond-p.webp); } }
+#fond::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(8,24,52,.35), rgba(8,24,52,.55)); }
+#cv{ position:fixed; inset:0; width:100%; height:100%; display:block; }
+.ecran{ position:fixed; inset:0; display:none; overflow:auto; touch-action:pan-y; z-index:3; }
+.ecran.on{ display:block; }
+.boite{ max-width:760px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top)) 16px 30px; color:#fff; }
+.haut{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.pill{ background:#fff; color:var(--nuit); border-radius:999px; padding:10px 16px; font-weight:800; box-shadow:var(--ombre); min-height:48px; display:inline-flex; align-items:center; gap:8px; text-decoration:none; font-size:16px; }
+.pill img{ width:34px; height:34px; border-radius:50%; object-fit:cover; background:#e8eef7; }
+h1{ font-family:'Aref Ruqaa', serif; font-size:clamp(70px, 16vw, 120px); line-height:1; margin:14px 0 0; text-align:center; color:#ffd56a; text-shadow:0 4px 0 #8a5a00, 0 10px 30px rgba(0,0,0,.6); }
+.nom{ text-align:center; font-family:'Baloo 2', sans-serif; font-size:40px; letter-spacing:6px; margin:-8px 0 0; text-shadow:0 3px 0 var(--bleuF), 0 6px 14px rgba(0,0,0,.5); }
+.sous{ text-align:center; font-size:18px; margin:4px 0 16px; text-shadow:0 2px 6px rgba(0,0,0,.8); }
+.modes{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.mode{ background:rgba(255,255,255,.95); color:var(--nuit); border-radius:22px; padding:16px; text-align:left; box-shadow:0 6px 0 rgba(0,0,0,.25); min-height:120px; }
+.mode b{ display:block; font-family:'Baloo 2', sans-serif; font-size:26px; }
+.mode span{ font-size:15px; color:#4a5470; }
+.mode.on{ outline:4px solid var(--or); }
+.go{ display:block; width:100%; margin:16px 0 0; height:70px; border-radius:35px; background:linear-gradient(#ffcf4a, #f2a51e); color:#4a2d00; font-family:'Baloo 2', sans-serif; font-size:32px; box-shadow:0 7px 0 #b3700a; }
+.go:active{ transform:translateY(4px); box-shadow:0 3px 0 #b3700a; }
+.cartes{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
+.carte{ background:rgba(8,24,52,.72); border-radius:20px; padding:12px 14px; font-size:15px; }
+.carte h3{ margin:0 0 6px; font-family:'Baloo 2', sans-serif; font-size:20px; color:#ffd56a; }
+.carte ol{ margin:0; padding-left:22px; } .carte li{ margin:3px 0; }
+.carte .moi{ color:#ffd56a; }
+.regle{ margin-top:12px; font-size:15px; line-height:1.45; }
+@media (max-width:560px){ .modes, .cartes{ grid-template-columns:1fr; } }
+/* pendant la partie */
+#hud{ position:fixed; z-index:2; pointer-events:none; inset:0; display:none; }
+body.jeu #hud{ display:block; }
+#barre{ position:fixed; top:calc(8px + env(safe-area-inset-top)); left:10px; right:10px; display:flex; gap:8px; pointer-events:auto; z-index:4; }
+.rond{ width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,.95); box-shadow:var(--ombre); font-size:22px; display:inline-flex; align-items:center; justify-content:center; }
+#ctl{ position:fixed; left:0; right:0; bottom:calc(10px + env(safe-area-inset-bottom)); display:none; justify-content:space-between; align-items:flex-end; padding:0 12px; pointer-events:none; z-index:4; }
+body.jeu #ctl{ display:flex; }
+.grp{ display:flex; gap:min(10px, 1.6vw); pointer-events:auto; }
+.bt{ width:min(clamp(64px, 9vh, 82px), 15vw); height:min(clamp(64px, 9vh, 82px), 15vw); border-radius:50%; background:rgba(255,255,255,.92); box-shadow:0 5px 0 rgba(0,0,0,.3); font-size:30px; font-weight:800; display:flex; align-items:center; justify-content:center; touch-action:none; }
+.bt.gros{ background:var(--or); }
+.bt:active, .bt.app{ transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.3); }
+#modal{ position:fixed; inset:0; z-index:6; display:none; align-items:center; justify-content:center; background:rgba(8,20,45,.6); padding:20px; }
+#modal.on{ display:flex; }
+.fen{ background:#fffaf0; border-radius:28px; padding:22px; max-width:440px; width:100%; text-align:center; box-shadow:0 14px 40px rgba(0,0,0,.5); }
+.fen h2{ font-family:'Baloo 2', sans-serif; font-size:36px; margin:0; color:var(--bleuF); }
+.fen p{ font-size:18px; margin:10px 0; }
+.fen .row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+.fen .pill.or{ background:var(--or); }
+.reg{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eee3cc; font-size:17px; }
+.reg .seg{ display:flex; gap:6px; }
+.reg .seg button{ min-height:44px; padding:0 12px; border-radius:22px; background:#eef1f8; font-weight:800; }
+.reg .seg button.on{ background:var(--bleu); color:#fff; }
+</style>
+</head>
+<body>
+<div id="fond"></div>
+<canvas id="cv"></canvas>
+
+<section class="ecran on" id="menu"><div class="boite">
+  <div class="haut"><a class="pill" href="../">← Accueil</a><button class="pill" id="who" type="button">Qui joue ?</button><button class="pill" id="reglages" type="button">⚙️</button></div>
+  <h1>تبني</h1>
+  <div class="nom">TEBNI</div>
+  <p class="sous">Empile les carreaux de zellige et complète les lignes de la terrasse !</p>
+  <div class="modes">
+    <button class="mode" data-m="tranquille" type="button"><b>🐢 Tranquille</b><span>Les pièces tombent doucement. Pour apprendre (Amine).</span></button>
+    <button class="mode" data-m="champion" type="button"><b>🐆 Champion</b><span>Comme le vrai : de plus en plus vite toutes les 10 lignes.</span></button>
+  </div>
+  <button class="go" id="jouer" type="button">▶ Jouer</button>
+  <div class="cartes">
+    <div class="carte"><h3>🏆 Records · <span id="recMode"></span></h3><ol id="records"><li>…</li></ol></div>
+    <div class="carte"><h3>⭐ Mes exploits</h3><div id="moi"></div></div>
+  </div>
+  <div class="carte regle"><h3>Comment jouer</h3>
+    ◀ ▶ déplacer · ⟳ tourner (ou toucher la grille) · ⬇ descendre plus vite · ⤓ poser d'un coup · 📦 garder la pièce pour plus tard.<br>
+    Au clavier : flèches, ↑ ou X tourner, Espace poser, C garder, P pause. Une ligne pleine disparaît ; 4 lignes d'un coup, c'est un <b>Tebni !</b>
+  </div>
+</div></section>
+
+<div id="hud"><div id="barre"><button class="rond" id="pause" type="button" aria-label="Pause">⏸</button><button class="rond" id="son" type="button" aria-label="Son">🔊</button></div></div>
+<div id="ctl">
+  <div class="grp"><button class="bt" id="bG" type="button" aria-label="Gauche">◀</button><button class="bt" id="bD" type="button" aria-label="Droite">▶</button></div>
+  <div class="grp"><button class="bt" id="bR" type="button" aria-label="Garder">📦</button><button class="bt" id="bB" type="button" aria-label="Descendre">⬇</button><button class="bt" id="bH" type="button" aria-label="Poser">⤓</button><button class="bt gros" id="bT" type="button" aria-label="Tourner">⟳</button></div>
+</div>
+<div id="modal"><div class="fen" id="fen"></div></div>
+
+<script src="../famille.js"></script>
+<script type="module" src="tebni/jeu.js?v=1"></script>
+</body>
+</html>

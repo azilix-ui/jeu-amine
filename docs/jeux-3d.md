@@ -291,6 +291,17 @@ D'après le cahier des charges du papa (`grande section\paperio\Number_Fusion_Ru
 - **Bruitages ElevenLabs** (même méthode que Zarbia, sans téléchargement) : `fusion`, `plus`, `moins`, `rebond`, `casse` (bab qui s'écroule), `chute`, `perdu` (petit air d'oud), `coup` (coup de pied au départ), 4 versions chacun → `famille-data/koora-sons/`, servis par `jeux/koora/son.php` ; la fanfare `victoire` et le `tap` viennent de Zarbia.
 - Pour tester : `window.__koora` ({G, partie(n), fin, demarre}) ; le test Playwright pilote le ballon vers le meilleur couloir de la rangée suivante.
 
+## Tebni (تبني, « tu construis ») — `jeux/tebni.html` (le jeu de briques de la famille) (20/11)
+
+Demandé par le papa : « un jeu de Tetris amusant ressemblant au classique, avec nos avatars, à la tunisienne ». Nom et dessins à nous : des **carreaux de zellige** (ceux de Kassar) empilés sur une **terrasse de Sidi Bou Saïd** (2 fonds ComfyUI, `docs/tebni/build_images.py`).
+- **Règles** (`jeux/tebni/regles.js`, sans dessin) : grille 10 × 20 (+ 2 rangées cachées), 7 pièces, rotation SRS avec décalages contre les murs, **sac de 7** (chaque pièce revient une fois par sac), pièce gardée (📦, une fois par pièce), pièce fantôme, chute douce (+1/rangée) et rapide (+2/rangée), verrouillage après 0,5 s au sol (15 mouvements au plus), 100 / 300 / 500 / 800 points × niveau pour 1 à 4 lignes, combos, + 1000 × niveau si la grille est vidée. Niveau +1 toutes les 10 lignes (courbe de vitesse classique). Graine fixe = même suite de pièces.
+- **Deux modes** : 🐢 Tranquille (deux fois plus lent, vitesse plafonnée ; proposé d'office à Amine) et 🐆 Champion. Records `Famille.score('tebni', mode)`.
+- **Commandes** : boutons ◀ ▶ (répétition 170 ms puis 45 ms), ⟳, ⬇, ⤓, 📦 ; sur la grille : toucher = tourner, glisser = déplacer, glisser vite vers le bas = poser ; clavier (flèches, ↑/X, Z, Espace, C, P) ; manette.
+- **La famille** : l'avatar « en vrai » du joueur à côté de la grille, qui saute de joie à chaque ligne (bulle « بهي ! », « Bravo ! »), danse pour un « Tebni ! » (4 lignes, grand mot doré en français et en arabe) et tremble à la fin. Commentaire **en arabe par défaut** (voix Mohammad), ⚙️ Français ; Amine en français (Lulu).
+- **Sons** fabriqués par le navigateur : clics, darbouka (doum, tek) quand on pose, arpèges en mode hijaz pour les lignes.
+- Sauvegarde `tebni:<Prénom>` {best:{champion, tranquille}, lignes, parties, tebni, t} ; cours `tebni` (GAMES, COURSES, READABLE, COURSE_GAME) ; carte dans Progression ; temps d'écran (`JEUX`, `JEUX_SITE`).
+- **Tests** : `node docs/tebni/test-regles.mjs` (731 : formes, sac, graine, lignes et points, « Tebni ! », murs, réserve, gravité, vitesses, et un robot qui pose 300 pièces sans perdre sur 5 graines). Pour tester dans la page : `window.__tebni`.
+
 ## Kelma (كلمة) — `jeux/kelma.html` (la tour des mots, jeu de lettres multilingue) (18/11)
 
 D'après le cahier des charges du papa (`grande section\paperio\Cahier_des_charges_Jeu_Lettres_Multilingue_Claude.pdf`), adapté au site : pas de framework ni de compilation, modules JS et DOM/SVG ; univers tunisien original. Nom : **Kelma** (« mot »).
