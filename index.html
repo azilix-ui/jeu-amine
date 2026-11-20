@@ -15,7 +15,8 @@
   if(!P || /[?&]profil\b/.test(location.search)) h.classList.add('choisir');
   else if(P.type === 'enfant'){ var k = P.nom.toLowerCase();
     // 18/11 (demande du papa) : un enfant arrive directement dans SON espace animé (essil/, salma/, amine/)
-    if(/^(essil|salma|amine)$/.test(k)){ location.replace('/' + k + '/'); return; }
+    // (20/11 : sauf avec « ?accueil », le bouton « 🏠 Accueil de la famille » de son espace)
+    if(/^(essil|salma|amine)$/.test(k) && !/[?&]accueil\b/.test(location.search)){ location.replace('/' + k + '/'); return; }
     h.classList.add('enfant', 'enfant-' + k); }
   else h.classList.add('explo'); })();
 </script>
@@ -297,7 +298,7 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
     <div class="bande">
       <img id="moiImg" src="" width="320" height="320" alt="">
       <div class="t"><h1 id="moiT"></h1><p class="reste" id="moiReste"></p><div class="jauge" aria-hidden="true"><i id="moiJauge"></i></div></div>
-      <button class="change" type="button" id="moiChange">⇄ Changer d'avatar</button>
+      <div style="display:flex;flex-direction:column;gap:8px"><a class="change" id="moiEspace" href="#" style="text-decoration:none;text-align:center">🏠 Mon espace</a><button class="change" type="button" id="moiChange">⇄ Changer d'avatar</button></div>
     </div>
     <h2 id="moiCoursT">Mes cours et mes jeux pour apprendre</h2>
     <ul class="cours" id="moiCours"></ul>
@@ -589,6 +590,7 @@ const NOUVEAUTES = [
     fetch('api/famille.php', { method:'POST', body:fd }).catch(() => {}).finally(() => location.replace('/' + location.hash));
   };
   document.getElementById('moiChange').onclick = () => { location.href = '/?profil'; };
+  { const P = window.FamilleProfil && FamilleProfil.actuel(), e = document.getElementById('moiEspace'); if(P && e && /^(Essil|Salma|Amine)$/.test(P.nom)) e.href = '/' + P.nom.toLowerCase() + '/'; else if(e) e.remove(); }
   if(/[?&]profil\b/.test(location.search) && window.FamilleProfil) FamilleProfil.oublier();
   const P = window.FamilleProfil && FamilleProfil.actuel();
   if(!P || P.type !== 'enfant' || !h.classList.contains('enfant')) return;
