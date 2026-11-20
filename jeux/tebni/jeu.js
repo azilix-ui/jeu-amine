@@ -11,9 +11,16 @@ const ok = i => i && i.complete && i.naturalWidth > 0;
 const COUL = { I:'turquoise', O:'jaune', T:'violet', S:'vert', Z:'rouge', J:'bleu', L:'sable' };
 const TEINTE = { I:'#2fc6c0', O:'#f0b52a', T:'#6b3fb0', S:'#18865a', Z:'#c9542f', J:'#1f3fa8', L:'#d8b46a' };
 const TUILE = {}; for(const p of PIECES) TUILE[p] = img(KASSAR + 'z-' + COUL[p] + '.webp');
+// le style « Classique en vrai » (20/11, demandé par le papa) : les 7 couleurs du jeu classique, en blocs de verre photographiés (ComfyUI, docs/tebni/build_images.py)
+const IMGT = new URL('./img/', import.meta.url).href;
+const TEINTE_C = { I:'#22d3ee', O:'#facc15', T:'#a855f7', S:'#22c55e', Z:'#ef4444', J:'#2563eb', L:'#f97316' };
+const TUILE_C = {}; for(const p of PIECES) TUILE_C[p] = img(IMGT + 'c-' + p + '.webp');
+const classique = () => REG().style === 'classique';
+const teinte = t => (classique() ? TEINTE_C : TEINTE)[t];
+function appliqueStyle(){ document.body.classList.toggle('classique', classique()); document.querySelectorAll('[data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === (REG().style || 'zellige'))); if($('sous')) $('sous').textContent = classique() ? 'Le jeu de briques classique, en vrais blocs de verre : complète les lignes !' : 'Empile les carreaux de zellige et complète les lignes de la terrasse !'; }
 
 /* ---------- réglages ---------- */
-const REG = () => Object.assign({ lang:'ar', son:true, vib:true, fantome:true }, store.get('tebni-reg', {}));
+const REG = () => Object.assign({ lang:'ar', son:true, vib:true, fantome:true, style:'zellige' }, store.get('tebni-reg', {}));
 const setReg = (k, v) => { const r = REG(); r[k] = v; store.set('tebni-reg', r); };
 
 /* ---------- les sons (fabriqués par le navigateur : courts, nets, sans téléchargement) ---------- */
@@ -56,7 +63,7 @@ function montre(id){ document.querySelectorAll('.ecran').forEach(e => e.classLis
 function menu(){
   document.body.classList.remove('jeu'); montre('menu'); $('modal').classList.remove('on'); P = null;
   $('who').innerHTML = joueur ? (tete(joueur) ? `<img src="${tete(joueur)}" alt="">` : '🙂') + esc(joueur) : 'Qui joue ?';
-  document.querySelectorAll('.mode').forEach(b => b.classList.toggle('on', b.dataset.m === MODE));
+  document.querySelectorAll('.mode[data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === MODE));
   const s = sv || neuf();
   $('moi').innerHTML = joueur ? `Meilleur score : <b>${(s.best[MODE] || 0).toLocaleString('fr-FR')}</b><br>Lignes en tout : <b>${s.lignes}</b><br>« Tebni ! » (4 lignes) : <b>${s.tebni}</b><br>Parties : <b>${s.parties}</b>` : 'Choisis qui joue.';
   records();
@@ -64,10 +71,12 @@ function menu(){
 async function records(){ $('recMode').textContent = MODE === 'tranquille' ? 'Tranquille' : 'Champion';
   const rows = window.Famille ? await Famille.highscores('tebni', MODE, 8).catch(() => null) : null;
   $('records').innerHTML = rows && rows.length ? rows.map(r => `<li class="${r.player === joueur ? 'moi' : ''}">${esc(r.player)} · ${Number(r.score).toLocaleString('fr-FR')}</li>`).join('') : '<li>Pas encore de record</li>'; }
-document.querySelectorAll('.mode').forEach(b => b.onclick = () => { MODE = b.dataset.m; if(joueur) store.set('tebni-mode:' + joueur, MODE); menu(); });
+document.querySelectorAll('.mode[data-m]').forEach(b => b.onclick = () => { MODE = b.dataset.m; if(joueur) store.set('tebni-mode:' + joueur, MODE); menu(); });
 $('who').onclick = () => choisirJoueur();
 $('jouer').onclick = async () => { ac(); if(!joueur && !(await choisirJoueur())) return; partie(); };
 $('reglages').onclick = () => reglages();
+document.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { setReg('style', b.dataset.s); appliqueStyle(); });
+appliqueStyle();
 
 function reglages(){
   const r = REG(), seg = (k, opts) => `<div class="seg">${opts.map(([v, t]) => `<button data-k="${k}" data-v="${v}" class="${String(r[k]) === String(v) ? 'on' : ''}">${t}</button>`).join('')}</div>`;
@@ -76,9 +85,10 @@ function reglages(){
     <div class="reg">Les sons ${seg('son', [[true, 'Oui'], [false, 'Non']])}</div>
     <div class="reg">Vibrations ${seg('vib', [[true, 'Oui'], [false, 'Non']])}</div>
     <div class="reg">Pièce fantôme ${seg('fantome', [[true, 'Oui'], [false, 'Non']])}</div>
+    <div class="reg">Le style ${seg('style', [['zellige', '🇹🇳 Zellige'], ['classique', '🎮 Classique']])}</div>
     <div class="row"><button class="pill or" id="ferme">OK</button></div>`;
   $('modal').classList.add('on');
-  $('fen').querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const v = b.dataset.v; setReg(b.dataset.k, v === 'true' ? true : v === 'false' ? false : v); reglages(); });
+  $('fen').querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const v = b.dataset.v; setReg(b.dataset.k, v === 'true' ? true : v === 'false' ? false : v); appliqueStyle(); reglages(); });
   $('ferme').onclick = () => { $('modal').classList.remove('on'); if(P && P.pause && !P.fini) reprendre(); };
 }
 
@@ -154,8 +164,8 @@ function resize(){ const dpr = Math.min(2, devicePixelRatio || 1); cv.width = in
   if(!port && innerWidth < 900){ G.x = Math.floor((innerWidth - c * L) / 2); } }
 addEventListener('resize', resize); resize();
 function tuile(t, x, y, c, alpha = 1){
-  ctx.globalAlpha = alpha; const im = TUILE[t];
-  if(ok(im)) ctx.drawImage(im, x, y, c, c); else { ctx.fillStyle = TEINTE[t]; ctx.fillRect(x, y, c, c); }
+  ctx.globalAlpha = alpha; const im = (classique() ? TUILE_C : TUILE)[t];
+  if(ok(im)) ctx.drawImage(im, x, y, c, c); else { ctx.fillStyle = teinte(t); ctx.fillRect(x, y, c, c); }
   ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1; ctx.strokeRect(x + .5, y + .5, c - 1, c - 1);
   ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.moveTo(x + c - .5, y + 1); ctx.lineTo(x + c - .5, y + c - .5); ctx.lineTo(x + 1, y + c - .5); ctx.stroke();
   ctx.globalAlpha = 1; }
@@ -169,14 +179,15 @@ function dessine(t){
   const { c } = G; let { x, y } = G;
   if(secousse > 0){ y += Math.sin(t / 20) * secousse; secousse = Math.max(0, secousse - .6); }
   // le cadre : un encadrement de faïence, et la grille sur fond nuit
-  ctx.fillStyle = 'rgba(255,255,255,.92)'; arrondi(x - 8, y - 8, G.W + 16, G.Hh + 16, 14); ctx.fill();
-  ctx.fillStyle = '#0d1f3f'; ctx.fillRect(x, y, G.W, G.Hh);
+  ctx.fillStyle = classique() ? '#3a3f4b' : 'rgba(255,255,255,.92)'; arrondi(x - 8, y - 8, G.W + 16, G.Hh + 16, 14); ctx.fill();
+  if(classique()){ ctx.strokeStyle = '#8a93a6'; ctx.lineWidth = 2; arrondi(x - 7, y - 7, G.W + 14, G.Hh + 14, 13); ctx.stroke(); }
+  ctx.fillStyle = classique() ? '#05070d' : '#0d1f3f'; ctx.fillRect(x, y, G.W, G.Hh);
   ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
   for(let i = 1; i < L; i++){ ctx.beginPath(); ctx.moveTo(x + i * c + .5, y); ctx.lineTo(x + i * c + .5, y + G.Hh); ctx.stroke(); }
   for(let j = 1; j < H; j++){ ctx.beginPath(); ctx.moveTo(x, y + j * c + .5); ctx.lineTo(x + G.W, y + j * c + .5); ctx.stroke(); }
   const g = visible(P); for(let j = 0; j < H; j++) for(let i = 0; i < L; i++) if(g[j][i]) tuile(g[j][i], x + i * c, y + j * c, c);
   if(!P.fini){ const p = P.piece;
-    if(REG().fantome){ const oy = ombre(P); for(const [a, b] of cases(p, p.r, p.x, oy)) if(b >= 2){ ctx.strokeStyle = TEINTE[p.t]; ctx.lineWidth = 2; ctx.globalAlpha = .7; ctx.strokeRect(x + a * c + 2, y + (b - 2) * c + 2, c - 4, c - 4); ctx.globalAlpha = .18; ctx.fillStyle = TEINTE[p.t]; ctx.fillRect(x + a * c + 2, y + (b - 2) * c + 2, c - 4, c - 4); ctx.globalAlpha = 1; } }
+    if(REG().fantome){ const oy = ombre(P); for(const [a, b] of cases(p, p.r, p.x, oy)) if(b >= 2){ ctx.strokeStyle = teinte(p.t); ctx.lineWidth = 2; ctx.globalAlpha = .7; ctx.strokeRect(x + a * c + 2, y + (b - 2) * c + 2, c - 4, c - 4); ctx.globalAlpha = .18; ctx.fillStyle = teinte(p.t); ctx.fillRect(x + a * c + 2, y + (b - 2) * c + 2, c - 4, c - 4); ctx.globalAlpha = 1; } }
     for(const [a, b] of cases(p)) if(b >= 2) tuile(p.t, x + a * c, y + (b - 2) * c, c); }
   // les lignes qui partent (éclairs blancs) et les étincelles
   effets = effets.filter(e => (e.v -= 1 / 40) > 0);

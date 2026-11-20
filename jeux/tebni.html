@@ -27,6 +27,9 @@ html, body{ margin:0; height:100%; overflow:hidden; background:#0b2244; font-fam
 button{ font:inherit; cursor:pointer; border:0; color:inherit; }
 #fond{ position:fixed; inset:0; background:#0b3a82 url(tebni/img/fond-l.webp) center/cover; }
 @media (orientation:portrait){ #fond{ background-image:url(tebni/img/fond-p.webp); } }
+body.classique #fond{ background:#05070d url(tebni/img/fond-cl-l.webp) center/cover; }
+@media (orientation:portrait){ body.classique #fond{ background-image:url(tebni/img/fond-cl-p.webp); } }
+.styles{ margin-top:12px; } .mode[data-s].on{ outline:4px solid var(--or); }
 #fond::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(8,24,52,.35), rgba(8,24,52,.55)); }
 #cv{ position:fixed; inset:0; width:100%; height:100%; display:block; }
 .ecran{ position:fixed; inset:0; display:none; overflow:auto; touch-action:pan-y; z-index:3; }
@@ -84,11 +87,13 @@ body.jeu #ctl{ display:flex; }
   <div class="haut"><a class="pill" href="../">← Accueil</a><button class="pill" id="who" type="button">Qui joue ?</button><button class="pill" id="reglages" type="button">⚙️</button></div>
   <h1>تبني</h1>
   <div class="nom">TEBNI</div>
-  <p class="sous">Empile les carreaux de zellige et complète les lignes de la terrasse !</p>
+  <p class="sous" id="sous">Empile les carreaux de zellige et complète les lignes de la terrasse !</p>
   <div class="modes">
     <button class="mode" data-m="tranquille" type="button"><b>🐢 Tranquille</b><span>Les pièces tombent doucement. Pour apprendre (Amine).</span></button>
     <button class="mode" data-m="champion" type="button"><b>🐆 Champion</b><span>Comme le vrai : de plus en plus vite toutes les 10 lignes.</span></button>
   </div>
+  <div class="modes styles"><button class="mode" data-s="zellige" type="button"><b>🇹🇳 Zellige</b><span>Les carreaux de faïence, sur la terrasse de Sidi Bou Saïd.</span></button>
+    <button class="mode" data-s="classique" type="button"><b>🎮 Classique en vrai</b><span>Les 7 couleurs du jeu classique, en vrais blocs de verre.</span></button></div>
   <button class="go" id="jouer" type="button">▶ Jouer</button>
   <div class="cartes">
     <div class="carte"><h3>🏆 Records · <span id="recMode"></span></h3><ol id="records"><li>…</li></ol></div>
@@ -108,6 +113,6 @@ body.jeu #ctl{ display:flex; }
 <div id="modal"><div class="fen" id="fen"></div></div>
 
 <script src="../famille.js"></script>
-<script type="module" src="tebni/jeu.js?v=1"></script>
+<script type="module" src="tebni/jeu.js?v=2"></script>
 </body>
 </html>
