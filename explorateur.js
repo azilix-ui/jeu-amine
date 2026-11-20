@@ -81,10 +81,14 @@
     function session(t){ try{ if(navigator.audioSession && navigator.audioSession.type !== t) navigator.audioSession.type = t; }catch(e){} }
     session('playback');
     function deverrouille(){
-      if(debloque || courant) return;
+      if(courant){ if(el.paused && !enAttente) try{ el.play().catch(function(){}); }catch(e){} return; }   // une voix coupée par un appel reprend au toucher
+      if(debloque) return;
       try{ el.src = SILENCE; var p = el.play(); if(p && p.then) p.then(function(){ debloque = true; }, function(){}); else debloque = true; }catch(e){}
     }
     ['touchend', 'click', 'keydown'].forEach(function(t){ document.addEventListener(t, deverrouille, true); });
+    // 20/11 : après un appel FaceTime (ou Siri, une alarme), l'iPad reprend le son à la page sans le lui rendre : on redébloque au prochain toucher
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden){ debloque = false; session('playback'); } });
+    window.addEventListener('pageshow', function(){ debloque = false; session('playback'); });
     function cacheBouton(){ if(bouton){ bouton.remove(); bouton = null; } enAttente = null; }
     function montreBouton(){   // le son a été refusé : un toucher le relance (c'est le toucher qui l'autorise)
       if(bouton) return; bouton = document.createElement('button'); bouton.type = 'button'; bouton.textContent = '🔊 Touche pour entendre';
@@ -133,6 +137,22 @@
       apresMicro: function(){ session('playback'); return new Promise(function(r){ setTimeout(r, 450); }); },
       element: el
     };
+  })();
+
+  /* ---------- les moteurs audio des pages (Web Audio) après une interruption (20/11) ----------
+     Sur iPad, un appel FaceTime met chaque AudioContext en « interrupted » ou « suspended », et il ne repart pas tout seul :
+     la page reste muette jusqu'au rechargement. On garde la liste des moteurs créés par la page et on les relance
+     au retour sur la page et au premier toucher (c'est le toucher qui l'autorise). Vaut pour tous les jeux et cours du site. */
+  (function(){
+    var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return; var tous = [];
+    function Moteur(o){ var c = o ? new AC(o) : new AC(); tous.push(c); return c; }
+    Moteur.prototype = AC.prototype;
+    try{ window.AudioContext = Moteur; if(window.webkitAudioContext) window.webkitAudioContext = Moteur; }catch(e){ return; }
+    function reveille(){ tous = tous.filter(function(c){ return c.state !== 'closed'; });
+      tous.forEach(function(c){ if(c.state !== 'running') try{ c.resume().catch(function(){}); }catch(e){} }); }
+    ['touchend', 'click', 'keydown'].forEach(function(t){ document.addEventListener(t, reveille, true); });
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) reveille(); });
+    window.addEventListener('pageshow', reveille); window.addEventListener('focus', reveille);
   })();
 
   /* ---------- la voix des consignes (16/11, demandé par le papa) ----------

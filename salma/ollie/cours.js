@@ -58,7 +58,16 @@ const fichier = t => { const k = cle(t); return SONS.has(k) ? `../amine/lire/son
 const enLigne = (t, l) => `/api/voix.php?l=${l}&t=${encodeURIComponent(t)}`;
 const morceaux = (t, n = 330) => { if(t.length <= n) return [t]; const out = []; let cur = ''; for(const p of t.split(/(?<=[.!?:;])\s+/)){ if((cur + ' ' + p).trim().length > n && cur){ out.push(cur.trim()); cur = p; } else cur = (cur + ' ' + p).trim(); } if(cur) out.push(cur); return out; };
 const tampons = {};
-function actx(){ try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.state === 'suspended') ac.resume(); }catch(e){} return ac; }
+function actx(){ try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.state !== 'running') ac.resume().catch(() => {}); }catch(e){} return ac; }
+/* 20/11 : sur iPad, un appel FaceTime (ou une alarme, Siri…) « interrompt » le son de la page ; après l'appel, le moteur audio reste
+   bloqué (état « interrupted » ou « suspended ») : le texte avançait sans voix. Au premier toucher on le relance ; s'il refuse, on en
+   refait un neuf (les sons déjà chargés restent bons). Et une phrase qui ne peut pas passer par lui passe par le lecteur commun. */
+function reveilleAc(){ if(!ac || ac.state === 'running') return; const vieux = ac;
+  try{ vieux.resume().then(() => { if(ac === vieux && vieux.state !== 'running'){ try{ vieux.close(); }catch(e){} ac = null; actx(); } }, () => { if(ac === vieux){ try{ vieux.close(); }catch(e){} ac = null; actx(); } }); }catch(e){ ac = null; } }
+['touchend', 'click', 'keydown'].forEach(t => document.addEventListener(t, reveilleAc, true));
+document.addEventListener('visibilitychange', () => { if(!document.hidden) reveilleAc(); });
+addEventListener('pageshow', reveilleAc);
+const pret = async a => { if(a.state === 'running') return true; try{ await Promise.race([a.resume(), new Promise(r => setTimeout(r, 400))]); }catch(e){} return a.state === 'running'; };
 function tampon(f){ if(tampons[f]) return tampons[f]; const a = actx(); if(!a) return Promise.reject();
   return tampons[f] = fetch(f).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); }).then(b => new Promise((ok, ko) => { const p = a.decodeAudioData(b, ok, ko); if(p && p.catch) p.catch(ko); })).catch(e => { delete tampons[f]; throw e; }); }
 let jeton = 0, joueur = null;
@@ -68,14 +77,16 @@ function speak(html){
   for(const [t, l] of segments(html)) for(const m of (l === 'en' && fichier(t) ? [t] : morceaux(t))) segs.push([m, l, (l === 'en' && fichier(m)) || enLigne(m, l)]);
   segs.forEach(([, , f]) => tampon(f).catch(() => {}));   // tout se charge en même temps, puis se joue dans l'ordre
   return (async () => { for(const [t, l, f] of segs){ if(j !== jeton) return;
-    try{ const b = await tampon(f); if(j !== jeton) return; await new Promise(res => { const a = actx(), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); joueur = s; s.onended = res; setTimeout(res, b.duration * 1000 + 400); s.start(); }); continue; }catch(e){}
+    try{ const b = await tampon(f); if(j !== jeton) return;
+      if(!(await pret(actx()))){ if(j !== jeton) return; if(window.FamilleSon){ const r = await FamilleSon.joue(f); if(j !== jeton || r === false) return; if(r) continue; } throw 0; }   // moteur bloqué : le lecteur commun (avec « 🔊 Touche pour entendre » si l'iPad refuse)
+      await new Promise(res => { const a = actx(), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); joueur = s; s.onended = res; setTimeout(res, b.duration * 1000 + 400); s.start(); }); continue; }catch(e){}
     await dire(t, l, j); } })();
 }
 function dire(t, l, j){ return new Promise(res => { if(!('speechSynthesis' in window) || j !== jeton) return res();
   try{ const u = new SpeechSynthesisUtterance(t); if(l === 'en'){ u.lang = 'en-GB'; if(VE) u.voice = VE; u.rate = .82; } else if(l === 'de'){ u.lang = 'de-DE'; if(VD) u.voice = VD; u.rate = .85; } else if(l === 'la'){ u.lang = 'it-IT'; if(VI) u.voice = VI; u.rate = .85; } else { u.lang = 'fr-FR'; if(VF) u.voice = VF; u.rate = .95; } u.pitch = 1.1;
     let fait = false; const fin = () => { if(!fait){ fait = true; res(); } }; u.onend = fin; u.onerror = fin; setTimeout(fin, 1500 + t.length * 120); speechSynthesis.speak(u); }catch(e){ res(); } }); }
 const en = (t, l = 'en') => speak(`<i lang="${l}">${t}</i>`);
-function hush(){ jeton++; try{ speechSynthesis.cancel(); }catch(e){} if(joueur){ try{ joueur.onended = null; joueur.stop(); }catch(e){} joueur = null; } }
+function hush(){ jeton++; try{ speechSynthesis.cancel(); }catch(e){} if(window.FamilleSon && FamilleSon.enCours()) FamilleSon.stop(); if(joueur){ try{ joueur.onended = null; joueur.stop(); }catch(e){} joueur = null; } }
 function talk(){ document.querySelectorAll('.owl').forEach(o => { o.classList.remove('talk'); void o.offsetWidth; o.classList.add('talk'); }); }
 function confetti(){ for(let i=0;i<10;i++){ const s=document.createElement('span'); s.className='float'; s.textContent=pick(C.confetti || ['⭐','🎟️','🌷','🍀','🎉']); s.style.left=rnd(5,90)+'vw'; s.style.top=rnd(55,90)+'vh'; s.style.animationDelay=(i*60)+'ms'; document.body.appendChild(s); setTimeout(()=>s.remove(),1800); } }
 function topbar(back){
