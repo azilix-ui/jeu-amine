@@ -291,6 +291,19 @@ D'après le cahier des charges du papa (`grande section\paperio\Number_Fusion_Ru
 - **Bruitages ElevenLabs** (même méthode que Zarbia, sans téléchargement) : `fusion`, `plus`, `moins`, `rebond`, `casse` (bab qui s'écroule), `chute`, `perdu` (petit air d'oud), `coup` (coup de pied au départ), 4 versions chacun → `famille-data/koora-sons/`, servis par `jeux/koora/son.php` ; la fanfare `victoire` et le `tap` viennent de Zarbia.
 - Pour tester : `window.__koora` ({G, partie(n), fin, demarre}) ; le test Playwright pilote le ballon vers le meilleur couloir de la rangée suivante.
 
+## Les épreuves en vrai — `essil/concours-epreuves.html` (20/11)
+
+La suite du Concours en vrai : Essil devait choisir une version, le papa a dit « façon B » (le décor en vrai, le cheval 3D des Écuries `essil/ecuries/cheval.js`, non modifié). Code : `essil/concours-vrai/epreuves.js` (le CSO reste dans `jeu.js`).
+- **Le principe** : le cheval suit un chemin (courbe Catmull-Rom) tout seul ; on choisit l'allure (pas, trot, galop selon l'épreuve) et le moment du saut (zone d'appel 2,4 à 4,6 m, le bouton devient vert).
+- **Cross** : campagne (`p_cross`, sol `t_pre`), 8 obstacles naturels détourés (tronc, haie, stère, barrière fleurie), galop 7,6 m/s, temps idéal 52 s (1 pt par seconde de plus), refus 20 pts, 3 refus = éliminée ; un saut hors zone est « maladroit » (sans points).
+- **Hunter** : même parcours que le CSO, sur l'herbe, décor `p_hunter` ; note du juge sur 100 : abord raté −10, rupture d'allure −5, refus −30.
+- **Dressage** : rectangle 20 × 60 en sable (`t_piste`), lettres A K E H C M B F (K à gauche en entrant par A), 6 figures (A trot, C pas, E trot, F galop, M trot + diagonale H-X-F, F pas jusqu'à X). Chaque figure notée sur 10 = part du temps passé à la bonne allure ; une consigne annonce la prochaine lettre et la distance (le cheval change d'allure lentement : il faut anticiper).
+- **Course de galop** : un tour de piste ovale (275 m, lice blanche), 3 adversaires (chevaux des Écuries alezan, gris, noir) ; barre de souffle : galop −1,25/s, trot +6/s, « 🔥 Pousse ! » (10 m/s, −9/s) ; à 0, le cheval ne peut plus que trotter. Place 1 à 4.
+- **Western** : barrel race dans un ranch (`p_west`, sol `t_ranch`, lice en bois), 3 tonneaux en trèfle, cercles orange : au-dessus de 5,4 m/s dans un cercle, le tonneau tombe (+5 s).
+- **Images** : `docs/concours-vrai/build_epreuves.py <output/nuit>` : panoramas mis en boucle (image + son miroir, raccords fondus), sols, obstacles détourés (sur le tronc et le stère, le petit cavalier dessiné par FLUX est coupé).
+- Records sur la tablette : `cev2:<épreuve>`. Tests : `window.__ep.avance(sec, true)` (un robot saute, suit la reprise, ralentit aux tonneaux, gère le souffle : cross 0 pt, hunter 100, dressage 100 %, western 24,8 s).
+- **À faire plus tard** : une 2e reprise de dressage (cercles, galop à droite/à gauche), sauvegarde sur le serveur, sons propres (sabots sur le sable, foule de la course).
+
 ## Tebni (تبني, « tu construis ») — `jeux/tebni.html` (le jeu de briques de la famille) (20/11)
 
 Demandé par le papa : « un jeu de Tetris amusant ressemblant au classique, avec nos avatars, à la tunisienne ». Nom et dessins à nous : des **carreaux de zellige** (ceux de Kassar) empilés sur une **terrasse de Sidi Bou Saïd** (2 fonds ComfyUI, `docs/tebni/build_images.py`).
