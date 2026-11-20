@@ -243,7 +243,7 @@
      est envoyé chaque minute au serveur, qui renvoie la limite du jour (réglée par les parents dans Progression, + 10 min si le
      défi du jour est réussi). Limite atteinte ou heure du coucher : un écran doux « C'est l'heure de faire une pause » couvre le jeu ;
      un parent peut débloquer 15 minutes avec le mot de passe parent. */
-  var JEUX = /^\/(jeux\/(serpent-legendes|ludo-legendes|grimpe-glace|legende-du-jasmin(-2|-3)?|jasmin-stage2|medina-express|ma-houma|zarbia|koora|chkobba|kassar|khyout|yajour|kelma|tebni|les-ecuries|atelier-du-jasmin)|essil\/les-ecuries|amine\/(serpentin|la-nuit-d-amine(-2)?))\.html$/;
+  var JEUX = /^\/(jeux\/(serpent-legendes|ludo-legendes|grimpe-glace|legende-du-jasmin(-2|-3)?|jasmin-stage2|medina-express|ma-houma|zarbia|koora|chkobba|kassar|khyout|yajour|kelma|tebni|les-ecuries|atelier-du-jasmin)|essil\/les-ecuries|essil\/concours-(vrai|epreuves)|amine\/(serpentin|la-nuit-d-amine(-2)?))\.html$/;
   var ESPACE = {Essil:'/essil/', Salma:'/salma/', Amine:'/amine/'};
   function hm(s){ var p = String(s || '').split(':'); return (+p[0] || 0) * 60 + (+p[1] || 0); }
   function ecranWatch(){
