@@ -121,6 +121,7 @@ h1,h2{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-heig
 
 <script src="../famille.js"></script>
 <script src="lire/voix.php"></script>
+<script src="controle.js?v=1"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -288,7 +289,7 @@ let E = 0, k = 0, bons = 0, Q = null, essais = 0;
 function joue(i){ E = i; k = 0; bons = 0; ecran('jeu'); casse(); suivante(); }
 function barre(){ $('barre').innerHTML = Array.from({ length:TOUR }, (_, i) => `<i class="${i < k ? 'ok' : i === k ? 'la' : ''}"></i>`).join(''); }
 function suivante(){
-  Q = question(ETAPES[E].id); essais = 0; barre();
+  Q = question(ETAPES[E].id); essais = 0; barre(); Controle.nouvelle();
   const T = $('tableau');
   let h = `<div class="consigne"><span class="hp" aria-hidden="true">🔊</span><span>${Q.consigne}</span></div>`;
   if(Q.fusion) h += `<div class="fusion" id="fus"><span class="l l1">${Q.fusion[0]}</span><span class="plus">+</span><span class="l l2">${Q.fusion[1]}</span></div>`;
@@ -300,7 +301,7 @@ function suivante(){
   T.querySelector('.consigne').onclick = () => parle(dernier, false);
   T.querySelectorAll('.mot button').forEach(b => b.onclick = () => { sfx.tape(); parle([b.dataset.s], false); });
   T.querySelectorAll('.choix').forEach(b => b.onclick = () => repond(b));
-  parle(Q.dit);
+  parle(Q.dit); Controle.arme(T.querySelector('.choixs'), () => !!joueur || file.length > 0 || !!(window.speechSynthesis && speechSynthesis.speaking));
   if(Q.fusion) setTimeout(() => { const f = $('fus'); if(f) f.classList.add('colle'); }, 1600);
 }
 function repond(b){
@@ -312,7 +313,11 @@ function repond(b){
     setTimeout(() => { k++; k < TOUR ? suivante() : fin(); }, 2600);
   } else {
     essais++; b.classList.add('non'); b.disabled = true; sfx.non();
-    parle(['Essaie encore !'].concat(Q.dit.length > 1 ? Q.dit.slice(-2) : Q.dit), false);
+    // 20/11 : 2e erreur (ou une seule réponse restante) : on montre la bonne, on la lit, et on passe ; pas de 3e essai au hasard
+    const reste = [...document.querySelectorAll('.choix:not(.ctl-barree)')].length - 1;
+    if(Controle.faux(b) === 'fini' || reste <= 1){ const g = document.querySelector(`.choix[data-c="${CSS.escape(Q.bonne)}"]`); document.querySelectorAll('.choix').forEach(x => x.disabled = true); if(g) g.classList.add('oui');
+      parle(['Regarde, c\'est celle-ci.'].concat(Q.apres), false); setTimeout(() => { k++; k < TOUR ? suivante() : fin(); }, 3600); return; }
+    parle(['Essaie encore !', 'Touche les sons pour les entendre.'].concat(Q.dit.length > 1 ? Q.dit.slice(-2) : Q.dit), false);
   }
 }
 function fin(){

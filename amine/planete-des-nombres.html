@@ -165,6 +165,7 @@ body::before{content:"";position:fixed;inset:0;background:#14102b url(nombres/fo
 <div id="party"></div>
 
 <script src="../famille.js"></script>
+<script src="controle.js?v=1"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -225,16 +226,19 @@ $('gBack').onclick = () => { sfx.tap(); stopVoice(); clearTimeout(nextT); showMe
 let G = null, nextT = null;
 function startGame(id){ G = { id, i:0, res:[], q:null }; go('game'); ask(); }
 function dots(){ $('dots').innerHTML = Array.from({ length:ROUND }, (_, k) => `<i class="${k < G.res.length ? (G.res[k] ? 'ok' : 'no') : k === G.i ? 'cur' : ''}"></i>`).join(''); }
-function ask(){ dots(); $('stage').innerHTML = ''; $('ask').innerHTML = ''; G.tries = 0; G.locked = false; MAKE[G.id](); }
+function ask(){ dots(); $('stage').innerHTML = ''; $('ask').innerHTML = ''; G.tries = 0; G.locked = false; Controle.nouvelle(); MAKE[G.id](); }
+// la voix parle-t-elle encore ? (pour le contrôle : les réponses s'allument après la consigne)
+const occupe = () => !!cur || queue.length > 0;
 // fin d'une question : ok = trouvé du premier coup
 function done(ok, delay = 1500){ G.locked = true; G.res.push(ok); dots(); clearTimeout(nextT); nextT = setTimeout(() => { G.i++; if(G.i >= ROUND) endRound(); else ask(); }, delay); }
 function good(n){ sfx.yes(); party(14); say([pick(['bravo1', 'bravo2', 'bravo3', 'bravo4'])].concat(n === undefined ? [] : [n])); }
 // réponses à choisir parmi des nombres
 function choices(nums, right, opt = {}){
   const box = $('ask'); box.innerHTML = nums.map(n => `<button class="num" data-n="${n}">${n}</button>`).join('');
+  Controle.arme(box, occupe);
   box.onclick = e => { const b = e.target.closest('[data-n]'); if(!b || G.locked || b.classList.contains('wrong')) return; audio(); const n = +b.dataset.n;
     if(n === right){ b.classList.add('right'); if(opt.onRight) opt.onRight(); good(right); done(G.tries === 0, 1900); }
-    else { G.tries++; b.classList.add('wrong'); sfx.no(); if(G.tries >= 2){ const r = box.querySelector(`[data-n="${right}"]`); r.classList.add('right'); if(opt.onRight) opt.onRight(); say(['rep', right]); done(false, 2600); } else say(['encore']); } };
+    else { G.tries++; b.classList.add('wrong'); sfx.no(); if(Controle.faux(b) === 'fini'){ const r = box.querySelector(`[data-n="${right}"]`); r.classList.add('right'); if(opt.onRight) opt.onRight(); say(['rep', right]); done(false, 2600); } else say(opt.aide || ['encore']); } };
 }
 // des nombres proches du bon, pour que le choix demande de bien regarder
 function around(n, k, max){
@@ -251,18 +255,20 @@ const MAKE = {
   compte(){
     const cap = Math.min(S.max, 20), n = S.max <= 10 ? rnd(1, 10) : rnd(Math.max(3, cap - 12), cap), size = n <= 4 ? 26 : n <= 8 ? 20 : n <= 12 ? 16 : 12.5;
     $('stage').innerHTML = `<div class="field" id="field">${Array.from({ length:n }, () => `<button class="al" style="--s:min(${size}vmin,${size * .95}vh);--d:${-Math.random() * 2}s"><img src="${alien(pick(ALIENS))}" alt=""></button>`).join('')}</div>`;
-    let c = 0; $('field').onclick = e => { const a = e.target.closest('.al'); if(!a || a.classList.contains('hit') || G.locked) return; audio(); c++; a.classList.add('hit'); a.insertAdjacentHTML('beforeend', `<u>${c}</u>`); sfx.blip(c); say([c]); };
-    say(['compte', 'combien'], true);
-    choices(around(n, 3, cap), n, { onRight(){ document.querySelectorAll('#field .al').forEach((a, k) => setTimeout(() => a.classList.add('hit'), k * 40)); } });
+    // 20/11 : on compte d'abord chaque alien (un numéro par alien, dans l'ordre) ; les réponses n'arrivent qu'après
+    let c = 0; $('field').onclick = e => { const a = e.target.closest('.al'); if(!a || a.classList.contains('hit') || G.locked) return; audio(); c++; a.classList.add('hit'); a.insertAdjacentHTML('beforeend', `<u>${c}</u>`); sfx.blip(c); say([c]);
+      if(c === n) setTimeout(() => { if(G.locked || G.id !== 'compte') return; say(['combien'], true); choices(around(n, 3, cap), n, { aide:['encore', 'combien'] }); }, 900); };
+    $('ask').innerHTML = '<p class="hint" style="margin:0;font-size:22px">👆 Touche chaque alien pour le compter</p>';
+    say(['compte'], true);
   },
   /* 2. Reconnaître un nombre entendu : la bonne soucoupe */
   trouve(){
     const n = target(), k = S.max <= 10 ? 3 : 4, nums = around(n, k, S.max);
     $('stage').innerHTML = `<div class="ufos" id="ufos">${nums.map((x, i) => `<button class="ufo" data-n="${x}" style="--d:${-i * .7}s;--e:${i * .12}s" aria-label="${x}"><b>${x}</b></button>`).join('')}</div><p class="hint">Écoute bien, puis touche la bonne soucoupe 🔊</p>`;
-    say(['trouve', n], true); sfx.zap();
+    say(['trouve', n], true); sfx.zap(); Controle.arme('#ufos', occupe);
     $('ufos').onclick = e => { const b = e.target.closest('.ufo'); if(!b || G.locked || b.classList.contains('wrong')) return; audio();
       if(+b.dataset.n === n){ b.classList.add('right'); good(n); done(G.tries === 0, 1900); }
-      else { G.tries++; b.classList.add('wrong'); sfx.no(); if(G.tries >= 2){ $('ufos').querySelector(`[data-n="${n}"]`).classList.add('right'); say(['rep', n]); done(false, 2600); } else say(['encore', 'trouve', n]); } };
+      else { G.tries++; b.classList.add('wrong'); sfx.no(); if(Controle.faux(b) === 'fini'){ $('ufos').querySelector(`[data-n="${n}"]`).classList.add('right'); say(['rep', n]); done(false, 2600); } else say(['encore', 'trouve', n]); } };
   },
   /* 3. La suite des nombres : celui d'après, celui d'avant */
   suite(){
@@ -276,10 +282,10 @@ const MAKE = {
     const k = S.max <= 10 ? 2 : pick([2, 3, 3]), big = S.max <= 10 || Math.random() < .7, set = new Set(); while(set.size < k) set.add(Math.random() < .5 ? target() : rnd(0, S.max));
     const nums = [...set], r = big ? Math.max(...nums) : Math.min(...nums), al = shuffle(ALIENS);
     $('stage').innerHTML = `<div class="duel" id="duel">${nums.map((x, i) => `<button class="holder" data-n="${x}" aria-label="${x}"><span class="bubble">${x}</span><img src="${alien(al[i])}" alt="" style="--d:${-i * .8}s"></button>`).join('')}</div>`;
-    say([big ? 'grand' : 'petit'], true);
+    say([big ? 'grand' : 'petit'], true); Controle.arme('#duel', occupe);
     $('duel').onclick = e => { const b = e.target.closest('.holder'); if(!b || G.locked || b.classList.contains('wrong')) return; audio();
       if(+b.dataset.n === r){ b.classList.add('right'); good(r); done(G.tries === 0, 1900); }
-      else { G.tries++; b.classList.add('wrong'); sfx.no(); if(G.tries >= 2 || k === 2){ $('duel').querySelector(`[data-n="${r}"]`).classList.add('right'); say(['rep', r]); done(false, 2600); } else say(['encore']); } };
+      else { G.tries++; b.classList.add('wrong'); sfx.no(); if(Controle.faux(b) === 'fini' || k === 2){ $('duel').querySelector(`[data-n="${r}"]`).classList.add('right'); say(['rep', r]); done(false, 2600); } else say(['encore']); } };
   },
   /* 5. Donner le bon nombre d'étoiles : on compte en donnant */
   donne(){

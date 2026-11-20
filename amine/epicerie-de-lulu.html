@@ -74,6 +74,8 @@ h1,h2{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-heig
 .calc{display:flex;align-items:center;gap:clamp(8px,2vw,18px);flex-wrap:wrap;justify-content:center}
 .calc .op{font-family:var(--lettre);font-size:clamp(46px,9vw,74px);color:var(--gold)}
 .calc .etal{min-height:0}
+.etal .cpt{display:inline-block;border-radius:16px}
+.choixs.cache{visibility:hidden}
 .go{background:var(--mint);color:#0d2a1d;border-radius:24px;padding:14px 34px;font-size:28px;box-shadow:0 7px 0 #1f9e66}
 #fin{align-items:center;justify-content:center;text-align:center}
 #fin .gros{font-size:110px;line-height:1}
@@ -103,6 +105,7 @@ h1,h2{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-heig
 <div id="fete"></div>
 <script src="../famille.js"></script>
 <script src="lire/voix.php"></script>
+<script src="controle.js?v=1"></script>
 <script>
 'use strict';
 const KEY = 'amine-epicerie', PLAYER = 'Amine', TOUR = 6;
@@ -197,21 +200,30 @@ function barre(){ $('barre').innerHTML = Array.from({ length:TOUR }, (_, i) => `
 function consigne(html){ return `<div class="consigne"><span class="lulu">🧚</span><span>${html}</span></div>`; }
 function bonne(b){ if(!R.faute) R.bons++; sfx.oui(); if(b) b.classList.add('oui'); $('tableau').querySelectorAll('.choix').forEach(x => x.disabled = true);
   parle([pick(BRAVO)], false); setTimeout(() => { R.k++; R.k >= TOUR ? fin() : question(); }, 1500); }
-function rate(b, aide){ R.faute = true; sfx.non(); if(b){ b.classList.add('non'); setTimeout(() => b.classList.remove('non'), 450); } parle(aide ? [ENCORE, ...aide] : [ENCORE], false); }
+/* 20/11 : le contrôle (amine/controle.js) : une réponse fausse est barrée ; à la 2e (ou s'il ne reste qu'une réponse), Lulu montre la bonne et on passe */
+function rate(b, aide, juste){ R.faute = true; sfx.non(); if(b){ b.classList.add('non'); setTimeout(() => b.classList.remove('non'), 450); }
+  if(!b){ parle(aide ? [ENCORE, ...aide] : [ENCORE], false); return; }
+  const reste = [...$('tableau').querySelectorAll('.choix:not(.ctl-barree)')].length - 1;
+  if(Controle.faux(b) === 'fini' || reste <= 1){ $('tableau').querySelectorAll('.choix').forEach(x => x.disabled = true); if(juste) juste.classList.add('oui');
+    parle(['Regarde, c\'est celle-ci.'], false); setTimeout(() => { R.k++; R.k >= TOUR ? fin() : question(); }, 2600); return; }
+  parle(aide ? [ENCORE, ...aide] : [ENCORE], false); }
+const occupe = () => !!joueur || file.length > 0 || !!(window.speechSynthesis && speechSynthesis.speaking);
+const arme = () => { const c = $('tableau').querySelector('.choixs'); if(c){ c.classList.remove('cache'); Controle.arme(c, occupe); } };
+const juste = v => $('tableau').querySelector(`.choix[data-v="${v}"]`);
 function nouveau(f){ let q, g = 0; do q = f(); while(R.vus.has(q.id) && g++ < 30); R.vus.add(q.id); return q; }
 function pts(n){ return '●'.repeat(n); }
 function etal(k, n, cls){ return Array.from({ length:n }, () => `<img src="${IMG(k)}" alt="" class="${cls || ''}">`).join(''); }
 function chiffres(good, max){ const s = new Set([good]); while(s.size < 3){ const v = good + pick([-2, -1, 1, 2]); if(v >= 1 && v <= max) s.add(v); } return shuffle([...s]); }
 
 function question(){
-  R.faute = false; barre(); const T = $('tableau'), id = R.a.id;
+  R.faute = false; barre(); const T = $('tableau'), id = R.a.id; Controle.nouvelle();
   if(id === 'compte'){
     const q = nouveau(() => { const k = pick(KS), n = rnd(1, R.k < 3 ? 6 : 10); return { id:k + n, k, n }; });
-    T.innerHTML = consigne(`Combien ${de(q.k)}<b>${P[q.k].p}</b> ?`) + `<div class="etal">${etal(q.k, q.n)}</div>` +
-      `<div class="choixs">${chiffres(q.n, 10).map(v => `<button class="choix" data-v="${v}">${v}<span class="pts">${pts(v)}</span></button>`).join('')}</div>`;
-    parle([`Combien ${de(q.k)}${P[q.k].p} ?`]);
-    T.querySelectorAll('.etal img').forEach((im, i) => im.onclick = () => { sfx.tape(); im.style.transform = 'scale(1.15)'; nombre(i + 1); });
-    T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === q.n ? bonne(b) : rate(b, ['Touche chaque fruit pour compter.']));
+    T.innerHTML = consigne(`Touche chaque ${P[q.k].s || 'fruit'} pour compter. Combien ${de(q.k)}<b>${P[q.k].p}</b> ?`) + `<div class="etal">${Array.from({ length:q.n }, () => `<span class="cpt"><img src="${IMG(q.k)}" alt=""></span>`).join('')}</div>` +
+      `<div class="choixs cache">${chiffres(q.n, 10).map(v => `<button class="choix" data-v="${v}">${v}<span class="pts">${pts(v)}</span></button>`).join('')}</div>`;
+    parle([`Combien ${de(q.k)}${P[q.k].p} ?`, 'Touche chaque fruit pour compter.']);
+    Controle.compte([...T.querySelectorAll('.etal .cpt')], c => { sfx.tape(); nombre(c); }, () => { parle([`Combien ${de(q.k)}${P[q.k].p} ?`]); arme(); });
+    T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === q.n ? bonne(b) : rate(b, ['Le dernier nombre que tu as dit, c\'est combien il y en a.'], juste(q.n)));
   }
   else if(id === 'panier'){
     const q = nouveau(() => { const k = pick(KS), n = rnd(1, R.k < 3 ? 5 : 9); return { id:k + n, k, n }; });
@@ -228,9 +240,9 @@ function question(){
     const q = nouveau(() => { const k = pick(LIRE); return { id:k, k }; }), opts = shuffle([q.k, ...shuffle(LIRE.filter(x => x !== q.k)).slice(0, 2)]);
     T.innerHTML = consigne(`Lis le mot. Quel fruit est écrit ?`) + `<div class="mot">${P[q.k].syl.map((s, i) => `<button class="s${i % 3}" data-s="${s}">${s}</button>`).join('')}</div>` +
       `<div class="choixs">${opts.map(k => `<button class="choix img" data-v="${k}"><img src="${IMG(k)}" alt=""></button>`).join('')}</div>`;
-    parle(['Lis le mot.', 'Quel fruit est écrit ?']);
+    parle(['Lis le mot.', 'Quel fruit est écrit ?']); arme();
     T.querySelectorAll('.mot button').forEach(b => b.onclick = () => { sfx.tape(); parle(['syl-' + b.dataset.s.toLowerCase()], false); });
-    T.querySelectorAll('.choix').forEach(b => b.onclick = () => b.dataset.v === q.k ? (bonne(b), setTimeout(() => parle([P[q.k].s], false), 700)) : rate(b, ['Touche les syllabes pour les entendre.']));
+    T.querySelectorAll('.choix').forEach(b => b.onclick = () => b.dataset.v === q.k ? (bonne(b), setTimeout(() => parle([P[q.k].s], false), 700)) : rate(b, ['Touche les syllabes pour les entendre.'], juste(q.k)));
   }
   else if(id === 'etiquette'){
     const q = nouveau(() => { const k = pick(LIRE), n = rnd(1, 6); return { id:k + n, k, n }; });
@@ -238,9 +250,9 @@ function question(){
     const opts = shuffle([[q.k, q.n], [q.k, n2], [k2, q.n]]);
     T.innerHTML = consigne(`Lis l'étiquette, et trouve le bon panier.`) + `<div class="etiquette">${q.n} ${P[q.k].syl.join('')}${q.n > 1 ? 'S' : ''}</div>` +
       `<div class="choixs">${opts.map(([k, n]) => `<button class="choix tas" data-v="${k + n}">${etal(k, n)}</button>`).join('')}</div>`;
-    parle(['Lis l\'étiquette, et trouve le bon panier.']);
+    parle(['Lis l\'étiquette, et trouve le bon panier.']); arme();
     T.querySelector('.etiquette').onclick = () => parle([dit(q.n, q.k), mot(q.n, q.k)], false);
-    T.querySelectorAll('.choix').forEach(b => b.onclick = () => b.dataset.v === q.k + q.n ? bonne(b) : rate(b, ['Regarde bien le fruit, et compte.']));
+    T.querySelectorAll('.choix').forEach(b => b.onclick = () => b.dataset.v === q.k + q.n ? bonne(b) : rate(b, ['Regarde bien le fruit, et compte.'], juste(q.k + q.n)));
   }
   else if(id === 'plus'){
     const moins = R.k >= 3 && Math.random() < .5;
@@ -248,17 +260,17 @@ function question(){
     const good = moins ? Math.min(q.a, q.b) : Math.max(q.a, q.b), phr = moins ? `Où y a-t-il le moins ${de(q.k)}${P[q.k].p} ?` : `Où y a-t-il le plus ${de(q.k)}${P[q.k].p} ?`;
     T.innerHTML = consigne(moins ? `Où y a-t-il le <b>moins</b> ${de(q.k)}${P[q.k].p} ?` : `Où y a-t-il le <b>plus</b> ${de(q.k)}${P[q.k].p} ?`) +
       `<div class="choixs">${[q.a, q.b].map(n => `<button class="choix tas" data-v="${n}">${etal(q.k, n)}</button>`).join('')}</div>`;
-    parle([phr]);
-    T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === good ? bonne(b) : rate(b, ['Compte les deux paniers.']));
+    parle([phr]); arme();
+    T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === good ? bonne(b) : rate(b, ['Compte les deux paniers.'], juste(good)));
   }
   else if(id === 'courses'){
     const q = nouveau(() => { const k = pick(KS), a = rnd(1, 4), b = rnd(1, R.k < 3 ? 2 : 4); return { id:k + a + '+' + b, k, a, b }; }), s = q.a + q.b;
     T.innerHTML = consigne(`${nb(q.a, q.k)}, et encore ${q.b}. Ça fait combien ?`) +
-      `<div class="calc"><div class="etal">${etal(q.k, q.a)}</div><span class="op">+</span><div class="etal">${etal(q.k, q.b)}</div></div>` +
-      `<div class="choixs">${chiffres(s, 10).map(v => `<button class="choix" data-v="${v}">${v}<span class="pts">${pts(v)}</span></button>`).join('')}</div>`;
+      `<div class="calc"><div class="etal">${Array.from({ length:q.a }, () => `<span class="cpt"><img src="${IMG(q.k)}" alt=""></span>`).join('')}</div><span class="op">+</span><div class="etal">${Array.from({ length:q.b }, () => `<span class="cpt"><img src="${IMG(q.k)}" alt=""></span>`).join('')}</div></div>` +
+      `<div class="choixs cache">${chiffres(s, 10).map(v => `<button class="choix" data-v="${v}">${v}<span class="pts">${pts(v)}</span></button>`).join('')}</div>`;
     parle([dit(q.a, q.k), mot(q.a, q.k), 'et encore', dit(q.b, q.k), 'Ça fait combien ?']);
-    let c = 0; T.querySelectorAll('.etal img').forEach(im => im.onclick = () => { if(im.dataset.c) return; im.dataset.c = 1; im.style.opacity = .55; nombre(++c); });
-    T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === s ? bonne(b) : rate(b, ['Touche tous les fruits pour les compter.']));
+    Controle.compte([...T.querySelectorAll('.etal .cpt')], c => { sfx.tape(); nombre(c); }, () => { parle(['Ça fait combien ?']); arme(); });
+    T.querySelectorAll('.choix').forEach(b => b.onclick = () => +b.dataset.v === s ? bonne(b) : rate(b, ['Le dernier nombre que tu as dit, c\'est le total.'], juste(s)));
   }
 }
 function fin(){
