@@ -59,7 +59,7 @@
   var J = [
     ['/jeux/legende-du-jasmin-3.html', '🌼', 'Le Jasmin'], ['/jeux/jasmin-stage2.html', '🏰', 'Jasmin · Stage 2'], ['/jeux/yajour.html', '🦸', 'Yajour'],
     ['/jeux/tebni.html', '🧱', 'Tebni'], ['/jeux/kassar.html', '💥', 'Kassar'], ['/jeux/khyout.html', '🧶', 'Khyout'], ['/jeux/kelma.html', '🔤', 'Kelma'],
-    ['/jeux/koora.html', '⚽', 'Koora'], ['/jeux/zarbia.html', '🟥', 'Zarbia'], ['/jeux/chkobba.html', '🃏', 'Chkobba'], ['/jeux/medina-express.html', '🚋', 'Médina Express'],
+    ['/jeux/koora.html', '⚽', 'Koora'], ['/jeux/zarbia.html', '🟥', 'Zarbia'], ['/jeux/serpent-arene.html', '🐍', 'L\'Arène'], ['/jeux/chkobba.html', '🃏', 'Chkobba'], ['/jeux/medina-express.html', '🚋', 'Médina Express'],
     ['/jeux/ma-houma.html', '🏘️', 'Ma Houma'], [enf === 'Essil' ? '/essil/les-ecuries.html' : '/jeux/les-ecuries.html', '🐴', 'Les Écuries'],
     ['/jeux/serpent-legendes.html', '🐉', 'Serpent Légendes'], ['/jeux/ludo-legendes.html', '🎲', 'Ludo'], ['/jeux/grimpe-glace.html', '❄️', 'Grimpe-Glace'],
     ['/jeux/atelier-du-jasmin.html', '🎨', 'Atelier du Jasmin'], ['/jeux/legende-du-jasmin-2.html', '🌸', 'Jasmin 2'], ['/mur.html', '📌', 'Le mur de la famille'], ['/eveil/', '🌙', 'Éveil religieux'] ];
