@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#14204a">
+<title>Les dessins animés de Zib</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%AD%90%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* Les dessins animés de Zib (20/11) : pour Amine (5 ans), demandé par le papa : « un dessin animé avec Comfy et ElevenLabs pour
+   apprendre à compter jusqu'aux grands nombres de façon ludique, et lire aussi ; qu'il compte de façon méthodique, et des jeux
+   avec plus de contrôle (il peut toucher les trois propositions au hasard) ».
+   Deux épisodes : « Zib compte les étoiles » (une étoile à la fois, les paquets de 10, les caisses de 100) et « Le train des
+   syllabes » (accrocher les wagons-syllabes dans l'ordre). Chaque épisode : le dessin animé (images ComfyUI FLUX.2, petits films
+   Wan 2.2, voix Lulu d'ElevenLabs par api/voix.php), puis des jeux contrôlés par amine/controle.js.
+   Sauvegarde « amine-zib » (tablette + serveur). Images : docs/cours/build_histoires.py. */
+:root{ --nuit:#14204a; --panel:rgba(255,255,255,.95); --encre:#23324a; --or:#ffd23f; --menthe:#3ddc97; --rose:#ff5fa8; --ciel:#5cc8f5; --ombre:0 7px 0 rgba(0,0,0,.3) }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--nuit);color:#fff;font-family:Nunito,system-ui,sans-serif;font-weight:800;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;border:0;cursor:pointer;padding:0;background:none}
+h1,h2{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-height:1.05}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 50% 110%,#2b4aa0 0%,#14204a 60%,#0b1230 100%)}
+.scr{position:fixed;inset:0;display:none;flex-direction:column;padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));overflow:auto}
+.scr.on{display:flex}
+.haut{display:flex;align-items:center;gap:10px;min-height:64px}
+.rond{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.14);border:3px solid #fff3;font-size:26px;display:grid;place-items:center;box-shadow:var(--ombre);flex:none;text-decoration:none;color:#fff}
+.rond:active,.carte:active,.gros:active,.choix:active{transform:translateY(4px)}
+.titre{flex:1;text-align:center;font-family:"Baloo 2";font-size:clamp(24px,4.4vw,40px);text-shadow:0 3px 0 #0006}
+.etoiles{background:rgba(255,255,255,.14);border-radius:999px;padding:8px 14px;font-size:20px}
+/* accueil */
+.episodes{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1000px;width:100%;margin:10px auto}
+@media (orientation:portrait),(max-width:700px){.episodes{grid-template-columns:1fr}}
+.ep{background:var(--panel);color:var(--encre);border-radius:28px;overflow:hidden;box-shadow:var(--ombre);display:flex;flex-direction:column}
+.ep .film{position:relative;aspect-ratio:16/9;background:#000 center/cover;border:0;width:100%;display:block}
+.ep .film::after{content:"▶";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:92px;height:92px;border-radius:50%;background:rgba(255,255,255,.92);color:var(--nuit);font-size:44px;display:grid;place-items:center;padding-left:8px;box-shadow:0 6px 0 rgba(0,0,0,.3)}
+.ep h2{font-size:28px;padding:10px 16px 0}
+.jeux{display:flex;flex-direction:column;gap:8px;padding:10px 12px 14px}
+.carte{display:flex;align-items:center;gap:12px;background:#eef3fb;border-radius:20px;padding:10px 14px;text-align:left;min-height:72px;box-shadow:0 4px 0 #0002}
+.carte .ic{font-size:40px;width:56px;text-align:center;flex:none}.carte .ic img{width:52px;height:52px;object-fit:contain}
+.carte b{display:block;font-size:20px;font-family:"Baloo 2"}.carte small{color:#5a6684;font-size:15px}
+.carte .st{margin-left:auto;font-size:22px;color:#e0a100;white-space:nowrap}
+.carte:disabled{opacity:.45}
+/* dessin animé */
+.ecran{position:relative;width:min(100%,calc((100vh - 230px) * 1.733));aspect-ratio:832/480;margin:0 auto;border-radius:24px;overflow:hidden;background:#000;box-shadow:0 10px 30px #0008}
+.ecran video{width:100%;height:100%;object-fit:cover;display:block}
+.ecran .num{position:absolute;right:12px;top:10px;background:#0009;border-radius:14px;padding:3px 10px;font-size:15px}
+.sous{max-width:900px;margin:10px auto 0;background:var(--panel);color:var(--encre);border-radius:20px;padding:12px 18px;font-size:clamp(18px,2.6vw,24px);line-height:1.4;min-height:76px}
+.sous b{color:#c8473a}
+.boutons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.gros{min-height:64px;min-width:64px;padding:0 20px;border-radius:32px;background:rgba(255,255,255,.95);color:var(--encre);font-size:24px;box-shadow:var(--ombre)}
+.gros.or{background:var(--or);color:#4a2d00}
+/* les jeux */
+.jeu{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:0}
+.consigne{background:var(--panel);color:var(--encre);border-radius:22px;padding:10px 18px;font-size:clamp(20px,3vw,28px);text-align:center;max-width:900px;box-shadow:var(--ombre)}
+.champ{position:relative;width:min(96vw,900px);height:min(42vh,380px);background:radial-gradient(ellipse at 50% 100%,#2f7a45,#1d4f30);border-radius:28px;box-shadow:inset 0 0 40px #0006}
+.champ .et{position:absolute;width:clamp(48px,8vmin,74px);height:clamp(48px,8vmin,74px);transform:translate(-50%,-50%)}
+.champ .et img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 4px #0007)}
+.choix-l{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.choix{min-width:clamp(90px,15vw,140px);height:clamp(90px,15vw,130px);border-radius:26px;background:var(--panel);color:var(--encre);font-family:"Baloo 2";font-size:clamp(40px,7vw,64px);box-shadow:var(--ombre);padding:0 14px}
+.choix.oui{background:var(--menthe);color:#fff}
+.choix.em{font-size:clamp(54px,9vw,84px)}
+/* paquets et caisses */
+.depot{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:8px;min-height:130px;width:min(96vw,980px);background:rgba(255,255,255,.12);border-radius:26px;padding:12px}
+.depot img{filter:drop-shadow(0 3px 3px #0006)}
+.depot .caisse{width:clamp(80px,12vw,120px)}.depot .paquet{width:clamp(44px,6.5vw,66px)}.depot .etoile{width:clamp(30px,4.5vw,44px)}
+.cible{font-family:"Baloo 2";font-size:clamp(60px,11vw,110px);line-height:1;color:var(--or);text-shadow:0 5px 0 #0006}
+.outils{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.outil{display:flex;align-items:center;gap:8px;min-height:76px;padding:0 18px;border-radius:24px;background:var(--panel);color:var(--encre);font-size:22px;box-shadow:var(--ombre)}
+.outil img{width:48px;height:48px;object-fit:contain}
+.outil.ok{background:var(--or);color:#4a2d00;font-size:30px;min-width:96px;justify-content:center}
+.compteur{font-family:"Baloo 2";font-size:30px;background:rgba(0,0,0,.3);border-radius:18px;padding:4px 16px}
+/* le train */
+.voie{display:flex;align-items:flex-end;gap:4px;min-height:150px;width:min(96vw,980px);justify-content:flex-start;padding:10px;border-bottom:8px solid #8a6a4a;overflow:hidden}
+.loco{font-size:clamp(70px,11vw,110px);line-height:1;transform:scaleX(-1)}
+.wagon{position:relative;width:clamp(110px,17vw,170px);height:clamp(90px,13vw,120px);background:url(zib/img/wagon.webp) center bottom/contain no-repeat;display:flex;align-items:center;justify-content:center;font-family:"Baloo 2";font-size:clamp(30px,5vw,46px);color:#23324a}
+.wagon span{background:#fff;border-radius:14px;padding:0 10px;margin-bottom:22%;box-shadow:0 3px 0 #0003}
+.wagon.vide span{background:#fff6;color:transparent;min-width:2.2em}
+.quai{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.quai .wagon{border-radius:16px}
+.quai button.wagon:disabled{opacity:.3}
+.wagon.secoue{animation:secoue .45s}
+@keyframes secoue{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.wagon.brille span{box-shadow:0 0 0 5px var(--or),0 0 24px var(--or)}
+.image{font-size:clamp(80px,14vw,130px);line-height:1}
+.mot{display:flex;gap:6px;justify-content:center}.mot button{font-family:"Baloo 2";font-size:clamp(44px,8vw,70px);padding:0 14px;border-radius:18px;background:#fff;color:#23324a;box-shadow:0 5px 0 #0003}
+.mot .s1{color:#c8473a}.mot .s2{color:#2a7fb4}
+/* fin */
+.fin{margin:auto;background:var(--panel);color:var(--encre);border-radius:30px;padding:26px;text-align:center;max-width:460px;box-shadow:var(--ombre)}
+.fin .grosse{font-size:70px;color:#e0a100}
+#fete{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+#fete i{position:absolute;top:-60px;font-style:normal;animation:tombe 1.8s linear forwards}
+@keyframes tombe{to{transform:translateY(115vh) rotate(360deg)}}
+.points{display:flex;gap:6px}.points i{width:16px;height:16px;border-radius:50%;background:#fff3}.points i.ok{background:var(--menthe)}.points i.no{background:#ff8a8a}.points i.la{background:var(--or)}
+@media (prefers-reduced-motion:reduce){#fete{display:none}.wagon.secoue{animation:none}}
+</style>
+</head>
+<body>
+<div id="fete"></div>
+
+<section class="scr on" id="accueil">
+  <div class="haut"><a class="rond" href="./" aria-label="Retour">←</a><h1 class="titre">⭐ Les dessins animés de Zib</h1><span class="etoiles" id="total">⭐ 0</span></div>
+  <div class="episodes" id="episodes"></div>
+</section>
+
+<section class="scr" id="film">
+  <div class="haut"><button class="rond" id="fRetour" aria-label="Retour">←</button><h2 class="titre" id="fTitre"></h2></div>
+  <div class="ecran"><video id="video" muted loop playsinline preload="auto"></video><span class="num" id="fNum"></span></div>
+  <p class="sous" id="fTexte"></p>
+  <div class="boutons"><button class="gros" id="fAv" aria-label="Scène d'avant">⏮</button><button class="gros" id="fPause" aria-label="Pause">⏸</button><button class="gros" id="fAp" aria-label="Scène suivante">⏭</button><button class="gros or" id="fJeux">À moi de jouer →</button></div>
+</section>
+
+<section class="scr" id="jeu">
+  <div class="haut"><button class="rond" id="jRetour" aria-label="Retour">←</button><div class="points" id="points"></div><span style="flex:1"></span><button class="rond" id="jRedis" aria-label="Répéter">🔊</button></div>
+  <div class="jeu" id="plateau"></div>
+</section>
+
+<section class="scr" id="bravo"><div class="fin"><div class="grosse" id="bEt"></div><h2 id="bTxt" style="font-size:30px;margin:6px 0 16px"></h2>
+  <div class="boutons"><button class="gros" id="bEncore">↻ Encore</button><button class="gros or" id="bMenu">Les dessins animés</button></div></div></section>
+
+<script src="../famille.js"></script>
+<script src="controle.js?v=1"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = [...a]; for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const IMG = n => `zib/img/${n}.webp`;
+const KEY = 'amine-zib';
+let S = { et:{}, niv:{}, vus:{}, t:0 };
+try{ Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); }catch(e){}
+function save(){ S.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ---------- la voix : Lulu (ElevenLabs) par la voix du site ; une phrase à la fois, et on sait quand elle a fini ---------- */
+let parleEncore = false, jetonV = 0, dernier = [];
+function dit(t){ return new Promise(res => { if(!('speechSynthesis' in window) || (window.FamilleVoix && !FamilleVoix.on())){ setTimeout(res, 600 + String(t).length * 45); return; }
+  const j = jetonV; try{ const u = new SpeechSynthesisUtterance(String(t)); u.lang = 'fr-FR'; u.rate = .92; u.pitch = 1.1; let fait = false;
+    const fin = () => { if(!fait){ fait = true; res(); } }; u.onend = fin; u.onerror = fin; setTimeout(fin, 2500 + String(t).length * 110); speechSynthesis.speak(u); }catch(e){ res(); } }); }
+async function parle(liste, garder = true){ chut(); if(garder) dernier = liste.slice(); const j = ++jetonV; parleEncore = true;
+  for(const t of liste){ if(j !== jetonV) return; await dit(t); } if(j === jetonV) parleEncore = false; }
+function chut(){ jetonV++; parleEncore = false; try{ speechSynthesis.cancel(); }catch(e){} }
+const occupe = () => parleEncore;
+Controle.dire(l => parle(l, false));
+let AC = null;
+function ton(f, d = .15, type = 'triangle', vol = .14, when = 0){ try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if(AC.state === 'suspended') AC.resume(); const t = AC.currentTime + when, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + .05); }catch(e){} }
+const sfx = { tape(){ ton(880, .06, 'triangle', .08); }, oui(){ ton(660, .12); ton(990, .18, 'triangle', .14, .1); }, non(){ ton(220, .25, 'sine', .12); }, ding(n){ ton(500 + (n % 12) * 40, .12, 'sine', .1); }, gagne(){ [523, 659, 784, 1047].forEach((f, i) => ton(f, .22, 'triangle', .14, i * .11)); } };
+function fete(){ const F = $('fete'); for(let i = 0; i < 24; i++){ const s = document.createElement('i'); s.textContent = pick(['⭐', '✨', '🌟', '🚂', '🎉']); s.style.left = Math.random() * 100 + 'vw'; s.style.fontSize = 24 + Math.random() * 26 + 'px'; s.style.animationDelay = Math.random() * .6 + 's'; F.appendChild(s); setTimeout(() => s.remove(), 2600); } }
+function ecran(id){ document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === id)); }
+
+/* ---------- les épisodes ---------- */
+const EPISODES = [
+  { id:'nombres', titre:'Zib compte les étoiles', scenes:[
+    { img:'h-az1', txt:`Voici <b>Zib</b>, une petite étoile venue de très loin dans sa soucoupe. Ce soir, plein d'étoiles sont tombées dans l'herbe. Zib veut toutes les ramasser. Mais combien y en a-t-il ?` },
+    { img:'h-az2', txt:`Zib compte bien : il touche <b>une</b> étoile et dit « un ». Puis une autre : « deux ». « Trois ! » Il n'en saute <b>aucune</b>, et il ne compte jamais deux fois la même.` },
+    { img:'h-az3', txt:`Oh là là, il y en a beaucoup ! Alors Zib fait des <b>paquets</b> : quand il a dix étoiles, il les attache avec un ruban rouge. Un paquet, c'est <b>dix</b>. Deux paquets, <b>vingt</b>. Trois paquets, <b>trente</b> !` },
+    { img:'h-az4', txt:`Et quand il a dix paquets, il les range dans une grande <b>caisse</b>. Dans une caisse, il y a <b>cent</b> étoiles ! Avec des caisses, des paquets et des étoiles, Zib peut compter très, très loin.` },
+    { img:'h-az5', txt:`Zib repart dans le ciel avec sa soucoupe toute pleine. À toi, Amine ! Compte bien, <b>une étoile à la fois</b>, et fais des <b>paquets de dix</b>.` },
+  ], jeux:['une', 'paquets', 'caisses'] },
+  { id:'lecture', titre:'Le train des syllabes', scenes:[
+    { img:'h-al1', txt:`Tchou, tchou ! Zib conduit un petit train. Chaque wagon transporte un morceau de mot : une <b>syllabe</b>. « LU »… « NE »… Quand les wagons sont bien accrochés, on entend le mot : <b>LUNE</b> !` },
+    { img:'h-al2', txt:`Mais attention ! Si on accroche les wagons dans le désordre, le mot ne veut plus rien dire : « NE-LU » ? Non ! On lit <b>de gauche à droite</b>, comme le train qui avance.` },
+    { img:'h-al3', txt:`Voilà le train à la gare. Tous les amis attendent les mots ! À toi, Amine : écoute bien, et accroche les wagons <b>dans le bon ordre</b>.` },
+  ], jeux:['wagons', 'lis'] },
+];
+const JEUX = {
+  une:{ nom:'Une étoile à la fois', sub:'Compter sans en sauter', ic:'img:etoile' },
+  paquets:{ nom:'Les paquets de 10', sub:'Fabrique le bon nombre', ic:'img:paquet' },
+  caisses:{ nom:'Les grandes caisses', sub:'Les grands nombres', ic:'img:caisse' },
+  wagons:{ nom:'Les wagons', sub:'Accroche les syllabes', ic:'🚂' },
+  lis:{ nom:'Lis le mot', sub:'Trouve la bonne image', ic:'📖' },
+};
+function accueil(){
+  chut(); ecran('accueil'); const tot = Object.values(S.et).reduce((a, b) => a + b, 0); $('total').textContent = '⭐ ' + tot;
+  $('episodes').innerHTML = EPISODES.map((e, i) => `<div class="ep"><button class="film" data-f="${i}" style="background-image:url(${IMG(e.scenes[0].img)})" aria-label="Regarder ${e.titre}"></button><h2>🎬 ${e.titre}</h2>
+    <div class="jeux">${e.jeux.map(j => { const J = JEUX[j], st = S.et[j] || 0, ouvert = S.vus[e.id] || st;
+      return `<button class="carte" data-j="${j}" ${ouvert ? '' : 'disabled'}><span class="ic">${J.ic.startsWith('img:') ? `<img src="${IMG(J.ic.slice(4))}" alt="">` : J.ic}</span><span><b>${J.nom}</b><small>${ouvert ? J.sub : 'Regarde d\'abord le dessin animé'}</small></span><span class="st">${'★'.repeat(Math.min(3, st))}${'☆'.repeat(3 - Math.min(3, st))}</span></button>`; }).join('')}</div></div>`).join('');
+  $('episodes').querySelectorAll('.film').forEach(b => b.onclick = () => { sfx.tape(); film(+b.dataset.f); });
+  $('episodes').querySelectorAll('.carte').forEach(b => b.onclick = () => { if(b.disabled) return; sfx.tape(); jouer(b.dataset.j); });
+}
+
+/* ---------- le lecteur de dessin animé ---------- */
+let F = null;
+function film(i){
+  const E = EPISODES[i]; F = { E, k:0, tok:0, pause:false }; ecran('film'); $('fTitre').textContent = '🎬 ' + E.titre;
+  $('fJeux').textContent = S.vus[E.id] ? 'À moi de jouer →' : 'Passer →'; scene(0);
+}
+async function scene(k){
+  const E = F.E; if(k >= E.scenes.length){ finFilm(); return; } F.k = Math.max(0, k); const sc = E.scenes[F.k], t = ++F.tok, v = $('video');
+  v.poster = IMG(sc.img); v.onerror = () => v.removeAttribute('src'); v.src = `zib/img/${sc.img}.mp4`; v.play().catch(() => {});
+  $('fTexte').innerHTML = sc.txt; $('fNum').textContent = (F.k + 1) + ' / ' + E.scenes.length;
+  await parle([sc.txt.replace(/<[^>]+>/g, '')]); if(t !== F.tok || F.pause) return;
+  setTimeout(() => { if(t === F.tok && !F.pause) scene(F.k + 1); }, 900);
+}
+function finFilm(){ F.tok++; chut(); $('video').pause(); S.vus[F.E.id] = (S.vus[F.E.id] || 0) + 1; save(); jouer(F.E.jeux[0]); }
+$('fAv').onclick = () => { F.pause = false; scene(F.k - 1); };
+$('fAp').onclick = () => { F.pause = false; scene(F.k + 1); };
+$('fPause').onclick = e => { F.pause = !F.pause; e.currentTarget.textContent = F.pause ? '▶' : '⏸'; if(F.pause){ F.tok++; chut(); $('video').pause(); } else { $('video').play().catch(() => {}); scene(F.k); } };
+$('fJeux').onclick = finFilm;
+$('fRetour').onclick = () => { F.tok++; chut(); $('video').pause(); accueil(); };
+
+/* ---------- une partie : 5 questions ; une étoile si 4 du premier coup ---------- */
+const TOUR = 5; let P = null;
+function jouer(j){ P = { j, k:0, res:[] }; ecran('jeu'); question(); }
+function points(){ $('points').innerHTML = Array.from({ length:TOUR }, (_, i) => `<i class="${i < P.res.length ? (P.res[i] ? 'ok' : 'no') : i === P.k ? 'la' : ''}"></i>`).join(''); }
+function question(){ points(); Controle.nouvelle(); P.faute = false; P.fini = false; FAIRE[P.j](); }
+function reussi(phr){ if(P.fini) return; P.fini = true; sfx.oui(); fete(); P.res.push(!P.faute); points(); parle([pick(['Bravo Amine !', 'Super !', 'Oui, c\'est ça !', 'Bien joué !'])].concat(phr || [])).then(() => setTimeout(suite, 500)); }
+function montre(phr){ if(P.fini) return; P.fini = true; P.res.push(false); points(); parle(['Regarde.'].concat(phr || [])).then(() => setTimeout(suite, 900)); }
+function suite(){ if(!$('jeu').classList.contains('on')) return; P.k++; if(P.k >= TOUR) bilan(); else question(); }
+function bilan(){
+  const bons = P.res.filter(Boolean).length, gagne = bons >= 4; if(gagne){ S.et[P.j] = (S.et[P.j] || 0) + 1; S.niv[P.j] = Math.min(4, (S.niv[P.j] || 0) + 1); } else if(bons <= 2) S.niv[P.j] = Math.max(0, (S.niv[P.j] || 0) - 1); save();
+  ecran('bravo'); $('bEt').textContent = gagne ? '⭐' : '💪'; $('bTxt').textContent = gagne ? `${bons} sur 5 du premier coup : une étoile !` : `${bons} sur 5. On recommence ?`;
+  if(gagne){ sfx.gagne(); fete(); } parle([gagne ? 'Bravo Amine, tu gagnes une étoile !' : 'Ce n\'est pas grave. On s\'entraîne encore ?']);
+}
+$('bEncore').onclick = () => { sfx.tape(); jouer(P.j); };
+$('bMenu').onclick = () => { sfx.tape(); accueil(); };
+$('jRetour').onclick = () => { chut(); accueil(); };
+$('jRedis').onclick = () => parle(dernier, false);
+function aide(b, phrases, montrer){   // une réponse fausse : barrée ; 2e erreur, ou plus qu'une réponse : on montre la bonne
+  P.faute = true; sfx.non(); const reste = b ? [...b.parentNode.querySelectorAll('.choix:not(.ctl-barree)')].length - 1 : 9;
+  if(Controle.faux(b) === 'fini' || reste <= 1){ montrer(); return; } parle(['Essaie encore.'].concat(phrases), false); }
+const consigne = h => `<div class="consigne">${h}</div>`;
+function proches(n, max){ const s = new Set([n]); const c = shuffle([n + 1, n - 1, n + 2, n - 2, n + 10, n - 10]).filter(x => x > 0 && x <= max); for(const x of c){ if(s.size >= 3) break; s.add(x); } while(s.size < 3) s.add(rnd(1, max)); return shuffle([...s]); }
+
+const FAIRE = {
+  /* 1. Une étoile à la fois : on touche chaque étoile (elle reçoit son numéro), PUIS seulement on dit combien */
+  une(){
+    const niv = S.niv.une || 0, n = rnd([3, 6, 9, 12, 15][niv], [8, 12, 15, 20, 25][niv]);
+    const pos = []; let g = 0; while(pos.length < n && g++ < 2000){ const p = [rnd(6, 94), rnd(10, 90)]; if(pos.every(q => Math.hypot((q[0] - p[0]) * 1.6, q[1] - p[1]) > 14)) pos.push(p); }
+    $('plateau').innerHTML = consigne('👆 Touche chaque étoile pour la compter') + `<div class="champ" id="champ">${pos.map(([x, y]) => `<button class="et" style="left:${x}%;top:${y}%"><img src="${IMG('etoile')}" alt=""></button>`).join('')}</div><div class="choix-l" id="rep"></div>`;
+    parle(['Compte les étoiles. Touche-les une par une.']);
+    Controle.compte([...document.querySelectorAll('#champ .et')], c => { sfx.ding(c); chut(); dit(String(c)); }, () => {
+      const r = $('rep'); r.innerHTML = proches(pos.length, 30).map(v => `<button class="choix" data-v="${v}">${v}</button>`).join('');
+      document.querySelector('.consigne').textContent = 'Combien y a-t-il d\'étoiles ?'; parle(['Combien y a-t-il d\'étoiles ?']); Controle.arme(r, occupe);
+      r.querySelectorAll('.choix').forEach(b => b.onclick = () => { if(+b.dataset.v === pos.length){ b.classList.add('oui'); reussi([`Il y a ${pos.length} étoiles.`]); }
+        else aide(b, ['Le dernier nombre que tu as dit, c\'est combien il y en a.'], () => { r.querySelector(`[data-v="${pos.length}"]`).classList.add('oui'); montre([`Le dernier nombre, c'est ${pos.length}. Il y a ${pos.length} étoiles.`]); }); });
+    });
+  },
+  /* 2. Les paquets de 10 : fabriquer un nombre avec des paquets (10) et des étoiles (1) */
+  paquets(){
+    const niv = S.niv.paquets || 0, n = rnd([11, 15, 21, 30, 40][niv], [19, 30, 45, 69, 99][niv]); let d = 0, u = 0;
+    $('plateau').innerHTML = consigne(`Fabrique le nombre <b>${n}</b> avec des paquets de 10 et des étoiles.`) + `<div class="cible">${n}</div>
+      <div class="depot" id="depot"></div><div class="outils"><button class="outil" id="addP"><img src="${IMG('paquet')}" alt="">+ 10</button><button class="outil" id="addE"><img src="${IMG('etoile')}" alt="">+ 1</button>
+      <button class="outil" id="moins">↩ Enlever</button><button class="outil ok" id="ok" aria-label="J'ai fini">✔</button></div>`;
+    parle([`Fabrique le nombre ${n}.`, `${Math.floor(n / 10) ? 'Combien de paquets de dix ? ' : ''}Et combien d'étoiles ?`]);
+    const pile = []; const maj = () => { $('depot').innerHTML = `${'<img class="paquet" src="' + IMG('paquet') + '" alt="">'.repeat(d)}${'<img class="etoile" src="' + IMG('etoile') + '" alt="">'.repeat(u)}`; };
+    $('addP').onclick = () => { if(d >= 9) return; d++; pile.push('d'); maj(); sfx.ding(d * 3); chut(); dit(String(d * 10 + u)); };
+    $('addE').onclick = () => { if(u >= 9){ parle(['Avec dix étoiles, Zib fait un paquet ! Touche le paquet de dix.'], false); return; } u++; pile.push('u'); maj(); sfx.ding(u); chut(); dit(String(d * 10 + u)); };
+    $('moins').onclick = () => { const x = pile.pop(); if(x === 'd') d--; else if(x === 'u') u--; maj(); sfx.tape(); };
+    $('ok').onclick = () => { if(P.fini) return; const v = d * 10 + u;
+      if(v === n){ reussi([`${d} paquet${d > 1 ? 's' : ''} de dix et ${u} étoile${u > 1 ? 's' : ''} : ${n}.`]); return; }
+      P.faute = true; sfx.non(); const r = Controle.faux(null);
+      if(r === 'fini'){ d = Math.floor(n / 10); u = n % 10; maj(); montre([`Pour ${n}, il faut ${d} paquet${d > 1 ? 's' : ''} de dix et ${u} étoile${u > 1 ? 's' : ''}.`]); return; }
+      parle([v < n ? 'Il en manque !' : 'Il y en a trop !', `Le chiffre de gauche, ${Math.floor(n / 10)}, dit combien de paquets.`], false); };
+  },
+  /* 3. Les grandes caisses : lire un grand nombre (caisses de 100, paquets de 10, étoiles) */
+  caisses(){
+    const niv = S.niv.caisses || 0; let c, d, u;
+    do { c = rnd(1, [1, 2, 3, 5, 9][niv]); d = rnd(0, 9); u = rnd(0, 9); } while(d === u || (niv < 2 && d > 5));
+    const n = c * 100 + d * 10 + u, pieges = shuffle([...new Set([c * 100 + u * 10 + d, d * 100 + c * 10 + u, c * 100 + d * 10 + u + (u < 9 ? 1 : -1), c * 100 + (d < 9 ? d + 1 : d - 1) * 10 + u])].filter(x => x !== n && x > 0)).slice(0, 2);
+    $('plateau').innerHTML = consigne('Combien d\'étoiles Zib a-t-il rangées ?') + `<div class="depot">${`<img class="caisse" src="${IMG('caisse')}" alt="cent">`.repeat(c)}${`<img class="paquet" src="${IMG('paquet')}" alt="dix">`.repeat(d)}${`<img class="etoile" src="${IMG('etoile')}" alt="un">`.repeat(u)}</div>
+      <div class="compteur" id="cpt">caisses : ? · paquets : ? · étoiles : ?</div><div class="choix-l" id="rep"></div>`;
+    // on compte d'abord les caisses, puis les paquets, puis les étoiles (méthodique) ; les réponses arrivent après
+    const objs = [...document.querySelectorAll('.depot img')]; let nc = 0, nd = 0, nu = 0;
+    parle(['Compte d\'abord les caisses de cent, puis les paquets de dix, puis les étoiles. Touche-les toutes.']);
+    const fin = () => { const r = $('rep'); r.innerHTML = shuffle([n, ...pieges]).map(v => `<button class="choix" data-v="${v}">${v}</button>`).join(''); parle([`${c} caisse${c > 1 ? 's' : ''}, ${d} paquet${d > 1 ? 's' : ''}, ${u} étoile${u > 1 ? 's' : ''}. Quel est le nombre ?`]); Controle.arme(r, occupe);
+      r.querySelectorAll('.choix').forEach(b => b.onclick = () => { if(+b.dataset.v === n){ b.classList.add('oui'); reussi([String(n)]); }
+        else aide(b, ['Les caisses, c\'est le premier chiffre. Puis les paquets, puis les étoiles.'], () => { r.querySelector(`[data-v="${n}"]`).classList.add('oui'); montre([`${c} caisses, ${d} paquets, ${u} étoiles : ${n}.`]); }); }); };
+    objs.forEach((o, i) => { o.style.cursor = 'pointer'; o.onclick = () => { if(o.dataset.vu) return; const k = o.classList.contains('caisse') ? 'c' : o.classList.contains('paquet') ? 'd' : 'u';
+      // dans l'ordre : toutes les caisses avant les paquets, tous les paquets avant les étoiles
+      if((k === 'd' && nc < c) || (k === 'u' && (nc < c || nd < d))){ sfx.non(); parle([k === 'd' ? 'D\'abord les caisses !' : 'D\'abord les caisses et les paquets !'], false); return; }
+      o.dataset.vu = 1; o.style.opacity = .55; if(k === 'c') nc++; else if(k === 'd') nd++; else nu++; sfx.ding(nc + nd + nu); chut();
+      dit(String(k === 'c' ? nc * 100 : k === 'd' ? c * 100 + nd * 10 : n - u + nu));
+      $('cpt').textContent = `caisses : ${nc} · paquets : ${nd} · étoiles : ${nu}`; if(nc + nd + nu === objs.length) setTimeout(fin, 900); }; });
+    if(!objs.length) fin();
+  },
+  /* 4. Les wagons : accrocher les syllabes dans l'ordre derrière la locomotive */
+  wagons(){
+    const niv = S.niv.wagons || 0, liste = MOTS.filter(m => m[0].length <= (niv < 2 ? 2 : 3)), [syl, em, mot] = pick(liste);
+    const autres = niv >= 1 ? [pick(SYLS.filter(x => !syl.includes(x)))] : [];
+    $('plateau').innerHTML = consigne(`Accroche les wagons pour écrire : <b>${mot}</b>`) + `<div class="image" aria-hidden="true">${em}</div>
+      <div class="voie" id="voie"><span class="loco">🚂</span>${syl.map(() => `<div class="wagon vide"><span>__</span></div>`).join('')}</div>
+      <div class="quai" id="quai">${shuffle([...syl, ...autres]).map(s => `<button class="wagon" data-s="${s}"><span>${s}</span></button>`).join('')}</div>`;
+    parle([`Écris le mot ${mot}.`, `Écoute : ${syl.join(' ... ')}`]);
+    let k = 0, erreurs = 0; const quai = $('quai'); Controle.arme(quai, occupe);
+    quai.querySelectorAll('.wagon').forEach(b => b.onclick = () => { if(b.disabled || P.fini) return; chut(); dit(b.dataset.s.toLowerCase());
+      if(b.dataset.s === syl[k]){ b.disabled = true; const v = $('voie').querySelectorAll('.wagon')[k]; v.classList.remove('vide'); v.querySelector('span').textContent = syl[k]; sfx.ding(k + 4); k++;
+        quai.querySelectorAll('.brille').forEach(x => x.classList.remove('brille')); erreurs = 0;
+        if(k === syl.length) setTimeout(() => reussi([syl.join(' '), mot]), 600); }
+      else { P.faute = true; erreurs++; sfx.non(); b.classList.add('secoue'); setTimeout(() => b.classList.remove('secoue'), 500); Controle.faux(null);
+        if(erreurs >= 2){ const g = [...quai.querySelectorAll('.wagon')].find(x => !x.disabled && x.dataset.s === syl[k]); if(g) g.classList.add('brille'); parle([`Le wagon qui brille : ${syl[k].toLowerCase()}.`], false); }
+        else parle([k ? `Après ${syl[k - 1].toLowerCase()}, on entend…` : 'Au début du mot, on entend…', `${mot}`], false); } });
+  },
+  /* 5. Lis le mot : le mot est écrit (syllabes en couleur), on touche la bonne image */
+  lis(){
+    const niv = S.niv.lis || 0, liste = MOTS.filter(m => m[0].length <= (niv < 2 ? 2 : 3)), [syl, em, mot] = pick(liste);
+    const opts = shuffle([[em, mot], ...shuffle(MOTS.filter(m => m[2] !== mot)).slice(0, 2).map(m => [m[1], m[2]])]);
+    $('plateau').innerHTML = consigne('Lis le mot. Touche les syllabes pour les entendre.') + `<div class="mot">${syl.map((s, i) => `<button class="s${i % 3}" data-s="${s}">${s}</button>`).join('')}</div>
+      <div class="choix-l" id="rep">${opts.map(([e, m]) => `<button class="choix em" data-v="${m}" aria-label="${m}">${e}</button>`).join('')}</div>`;
+    parle(['Lis le mot, et touche la bonne image.']);
+    document.querySelectorAll('.mot button').forEach(b => b.onclick = () => { sfx.tape(); chut(); dit(b.dataset.s.toLowerCase()); });
+    const r = $('rep'); Controle.arme(r, occupe, 2200);
+    r.querySelectorAll('.choix').forEach(b => b.onclick = () => { if(b.dataset.v === mot){ b.classList.add('oui'); reussi([syl.join(' '), mot]); }
+      else aide(b, ['Touche les syllabes pour les entendre.'], () => { r.querySelector(`[data-v="${mot}"]`).classList.add('oui'); montre([`C'est écrit : ${mot}.`]); }); });
+  },
+};
+const MOTS = [
+  [['LU', 'NE'], '🌙', 'lune'], [['VÉ', 'LO'], '🚲', 'vélo'], [['MO', 'TO'], '🏍️', 'moto'], [['LA', 'PIN'], '🐰', 'lapin'], [['BA', 'TEAU'], '⛵', 'bateau'],
+  [['RO', 'BOT'], '🤖', 'robot'], [['MOU', 'TON'], '🐑', 'mouton'], [['CA', 'DEAU'], '🎁', 'cadeau'], [['FU', 'SÉE'], '🚀', 'fusée'], [['TOR', 'TUE'], '🐢', 'tortue'],
+  [['PI', 'RA', 'TE'], '🏴‍☠️', 'pirate'], [['TO', 'MA', 'TE'], '🍅', 'tomate'], [['BA', 'NA', 'NE'], '🍌', 'banane'], [['GI', 'RA', 'FE'], '🦒', 'girafe'], [['PA', 'PI', 'LLON'], '🦋', 'papillon'],
+  [['CHO', 'CO', 'LAT'], '🍫', 'chocolat'], [['A', 'VION'], '✈️', 'avion'], [['MAI', 'SON'], '🏠', 'maison'], [['SA', 'LA', 'DE'], '🥗', 'salade'],
+];
+const SYLS = ['MA', 'PO', 'RI', 'LO', 'TU', 'BE', 'NA', 'SO', 'FI', 'CA'];
+
+accueil();
+if(window.Famille){ Famille.track(KEY, 'Amine', [KEY]); Famille.load(KEY, 'Amine').then(r => { const d = r && r[KEY]; if(d && (d.t || 0) > (S.t || 0)){ S = Object.assign({ et:{}, niv:{}, vus:{} }, d); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} if($('accueil').classList.contains('on')) accueil(); } }); }
+window.__zib = { S, FAIRE, jouer, get P(){ return P; } };
+</script>
+</body>
+</html>

@@ -22,7 +22,6 @@
 .ctl-tortue b{display:block;font-size:72px;animation:ctl-t 1s ease-in-out infinite alternate}
 @keyframes ctl-t{to{transform:translateX(14px)}}
 .ctl-num{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);min-width:1.6em;height:1.6em;border-radius:50%;background:#ffd23f;color:#3a2600;font:800 clamp(18px,4vmin,30px)/1.6em 'Baloo 2',Nunito,sans-serif;text-align:center;box-shadow:0 3px 0 rgba(0,0,0,.3);pointer-events:none;text-decoration:none}
-.ctl-compte{position:relative}
 .ctl-compte.ctl-vu img{opacity:.6}
 @media (prefers-reduced-motion:reduce){.ctl-tortue b{animation:none}}`;
   document.head.appendChild(css);
@@ -57,7 +56,7 @@
     get essais(){ return essais; },
     compte(objets, dit, fini){
       let c = 0; const n = objets.length;
-      objets.forEach(o => { o.classList.add('ctl-compte'); o.onclick = e => { e.stopPropagation(); if(o.classList.contains('ctl-vu')) return; c++; o.classList.add('ctl-vu');
+      objets.forEach(o => { o.classList.add('ctl-compte'); if(getComputedStyle(o).position === 'static') o.style.position = 'relative'; o.onclick = e => { e.stopPropagation(); if(o.classList.contains('ctl-vu')) return; c++; o.classList.add('ctl-vu');
         o.insertAdjacentHTML('beforeend', `<u class="ctl-num">${c}</u>`); if(dit) dit(c); if(c === n && fini) setTimeout(fini, 700); }; });
       return () => c;
     },
