@@ -99,6 +99,11 @@ const HL_MIME = ['webm' => 'audio/webm', 'mp4' => 'audio/mp4', 'ogg' => 'audio/o
 
 try {
     $m = $_SERVER['REQUEST_METHOD'] ?? 'GET'; $a = (string)($_POST['action'] ?? '');
+    // 20/11 : sessions par personne (acces/session.php) : on parle et on lit ses messages sous SON nom, jamais celui d'un autre
+    if ($m === 'POST' && ga_qui_actif() && !in_array($a, ['presents', 'historique', 'efface'], true)) {
+        $q = ga_qui(); if (!$q) fail(401, 'Entre d\'abord sur le site.');
+        foreach (['nom', 'de'] as $k) if (isset($_POST[$k])) $_POST[$k] = (string)$q['nom'];
+    }
     if ($m === 'GET' && isset($_GET['son'])) {
         $s = hl()->prepare('SELECT son FROM messages WHERE id = ?'); $s->execute([(int)$_GET['son']]); $x = (string)$s->fetchColumn();
         $f = hl_dossier() . '/' . (int)$_GET['son'] . '.' . $x;
@@ -131,7 +136,7 @@ try {
     if ($a === 'site') {
         $nom = nom($_POST['nom'] ?? ''); $client = (string)($_POST['client'] ?? '');
         if (!preg_match('/^[0-9a-z]{8,40}$/', $client)) fail(400, 'Appareil inconnu.');
-        $av = preg_match('/^[a-z]{2,12}$/', (string)($_POST['av'] ?? '')) ? (string)$_POST['av'] : '';
+        $av = preg_match('/^[a-z][a-z-]{1,11}$/', (string)($_POST['av'] ?? '')) ? (string)$_POST['av'] : '';
         hl()->prepare('DELETE FROM site WHERE vu < ?')->execute([$t - 25]);
         $url = preg_match('~^/[A-Za-z0-9/_.-]{0,80}$~', (string)($_POST['url'] ?? '')) ? (string)$_POST['url'] : '';
         hl()->prepare('INSERT OR REPLACE INTO site (client, nom, av, page, url, vu) VALUES (?, ?, ?, ?, ?, ?)')->execute([$client, $nom, $av, court($_POST['page'] ?? '', 60), $url, $t]);
@@ -142,7 +147,8 @@ try {
         $s = $depuis > 0 ? hl()->prepare("SELECT * FROM messages WHERE id > ? AND a <> '' AND (a = ? OR nom = ? OR a = ?) ORDER BY id LIMIT 60")
                          : hl()->prepare("SELECT * FROM (SELECT * FROM messages WHERE id > ? AND a <> '' AND (a = ? OR nom = ? OR a = ?) ORDER BY id DESC LIMIT 60) ORDER BY id");
         $s->execute([$depuis, $nom, $nom, $fam]);
-        out(200, ['en_ligne' => array_values($en), 'msgs' => array_map('msg_out', $s->fetchAll()), 'now' => $t]);
+        ga_qui_note_page($url);
+        out(200, ['en_ligne' => array_values($en), 'msgs' => array_map('msg_out', $s->fetchAll()), 'now' => $t, 'quiv' => ga_qui_actif() ? (ga_qui_public()['v'] ?? '-') : null]);
     }
     if ($a === 'ecrit') {
         $de = nom($_POST['de'] ?? ''); $vers = nom($_POST['a'] ?? ''); if ($de === $vers) fail(400, 'Choisis à qui écrire.');

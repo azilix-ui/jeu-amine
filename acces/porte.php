@@ -31,7 +31,10 @@ if (ga_active()) header('X-Robots-Tag: noindex, nofollow');
 if ($ext === 'html') {
     // le mode explorateur (14/11) : explorateur.js passe avant tous les autres scripts de la page
     $html = (string)file_get_contents($fichier);
-    $html = preg_replace('/<head(\s[^>]*)?>/i', '$0<script src="/explorateur.js"></script>', $html, 1);
+    // 20/11 : la session de la personne (acces/session.php) est donnée à la page AVANT explorateur.js, sans requête en plus
+    $qui = '';
+    try { if (ga_qui_actif()) $qui = '<script>window.FAMILLE_QUI=' . json_encode(ga_qui_public(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';</script>'; } catch (Throwable $e) {}
+    $html = preg_replace('/<head(\s[^>]*)?>/i', '$0' . str_replace('$', '\\$', $qui) . '<script src="/explorateur.js"></script>', $html, 1);
     header('Content-Length: ' . strlen($html));
     echo $html;
 } else {

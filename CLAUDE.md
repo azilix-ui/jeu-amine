@@ -55,7 +55,7 @@ jeux/   tebni.html (**Tebni** تبني : le jeu de briques façon Tetris, carrea
 espaces/ (18/11) le haut animé des espaces d'Essil, Salma et Amine : espace.css, espace.js (film, scroll-craft, bouton Reprendre), img/ (bannières ComfyUI + détourés), vid/ (films Wan 2.2 en boucle)
 lib/    three-addons/ (GLTFLoader de three 0.170.0, MIT), scrollcraft/ (moteur de défilement scroll-craft, MIT : scrollcraft.js/.css, LICENSE.txt), three-0.170.0.module.min.js (Three.js) et rapier3d-compat-0.14.0.es.js (Rapier, physique 3D, licence Apache 2.0), copiés ici : aucune dépendance en ligne
 api/    famille.php (joueurs, records, progrès), ludo.php (parties de Ludo en ligne), zarbia.php (Zarbia en ligne), chkobba.php et chkobba_regles.php (Chkobba en ligne : l'arbitre), chkobba_voix.php (les voix enregistrées de la Chkobba), houma.php (Ma Houma en ligne : présence, discussion et messages vocaux, « Viens voir ! », troc), mur.php (le mur de la famille), reponse.php (répondre depuis la notification ntfy à « 🙋 je demande plus de temps » : hors de la porte, jeton à usage unique)
-acces/  la porte du site (accès réservé) : garde.php, porte.php (toutes les pages passent par là), index.php (page « accès réservé »), invitation.php, admin.php (Anis) ; voir docs/serveur.md
+acces/  la porte du site (accès réservé) : garde.php, porte.php (toutes les pages passent par là), index.php (page « accès réservé »), invitation.php, admin.php (Anis), session.php (20/11 : les sessions par personne, avec api/qui.php) ; voir docs/serveur.md
 photos/ photos de famille de l'ancienne accueil (maison, salon, canapé)
 docs/   la documentation (voir le tableau ci-dessus)
 .htaccess  cache les .md et fichiers techniques, redirige les anciens liens, en-têtes anti-cache

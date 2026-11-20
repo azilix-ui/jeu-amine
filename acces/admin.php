@@ -89,6 +89,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         } elseif ($a === 'demande_ignore') {
             $db->prepare("UPDATE demandes SET statut = 'ignore' WHERE id = ?")->execute([$id]);
         } elseif ($a === 'invitation_cree') {
+            if ($nom === '') rep(400, ['error' => "Écris d'abord le prénom de la personne invitée."]);   // 20/11 : il arrive sur le site avec ce prénom
+            if (function_exists('ga_qui_nom_invite') && ga_qui_nom_invite($nom) === null) rep(400, ['error' => "Ce prénom ne va pas pour un invité (pas celui de quelqu'un de la famille, des lettres seulement)."]);
             $lien = max(600, min(30 * 86400, (int)($in['lien'] ?? 86400)));
             $duree = max(3600, min(GA_ANNEE, (int)($in['duree'] ?? 7 * 86400)));
             $usages = max(0, min(50, (int)($in['usages'] ?? 1)));
@@ -168,6 +170,19 @@ details summary{cursor:pointer;font-weight:800;color:var(--soft)}
     <div class="conseil" id="conseil" hidden></div>
   </section>
 
+  <section class="carte" id="secSessions">
+    <h2>👤 Les sessions de la famille</h2>
+    <p>Quand c'est en marche, chacun entre avec son code : les enfants avec leur code secret (4 chiffres ou 3 cartes, choisi la première fois), papa et maman avec le mot de passe parent, les invités avec leur prénom. Tu peux prendre la main sur la session d'un enfant pour faire des essais.</p>
+    <div class="etat" id="sesEtat"><span class="rond"></span><span style="flex:1 1 240px"><b id="sesTxt">…</b></span><button class="petit vert" id="sesBascule" type="button">…</button></div>
+    <div class="liste" id="sesListe"></div>
+    <h3 style="margin:16px 0 6px">Voir le site comme un enfant, ici</h3>
+    <div class="lienbox"><select id="sesVoirNom"><option>Amine</option><option>Salma</option><option>Essil</option></select>
+      <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="sesVoirEcrit" style="min-height:0;width:22px;height:22px"> enregistrer pour de vrai</label>
+      <button class="petit vert" id="sesVoir" type="button">👀 Voir comme lui (30 min)</button></div>
+    <h3 style="margin:16px 0 6px">Les codes secrets des enfants</h3>
+    <div class="liste" id="sesCodes"></div>
+  </section>
+
   <section class="carte">
     <h2>🛎️ Les appareils qui frappent à la porte</h2>
     <p>Les appareils inconnus qui ont essayé d'entrer ces 30 derniers jours, où qu'ils soient. Si tu reconnais quelqu'un, touche « Faire confiance » : son appareil entre dès sa prochaine page (ou tout de suite s'il attend sur la page « Accès réservé »). Ceux qui ont écrit leur prénom sont en haut.</p>
@@ -186,7 +201,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--soft)}
     <h2>💌 Inviter quelqu'un</h2>
     <p>Crée un lien et envoie-le (SMS, WhatsApp…). La personne ouvre le lien puis touche « Entrer » : son appareil a accès pendant la durée choisie.</p>
     <div class="grille">
-      <label>Pour qui ?<input id="invNom" placeholder="ex. Tata Leïla" maxlength="60"></label>
+      <label>Son prénom (il arrivera avec)<input id="invNom" placeholder="ex. Leïla" maxlength="20" required></label>
       <label>Le lien marche pendant<select id="invLien"><option value="3600">1 heure</option><option value="86400" selected>1 jour</option><option value="259200">3 jours</option><option value="604800">7 jours</option><option value="2592000">30 jours</option></select></label>
       <label>L'accès dure<select id="invDuree"><option value="86400">1 jour</option><option value="604800" selected>7 jours</option><option value="2592000">30 jours</option><option value="7776000">3 mois</option><option value="31536000">1 an</option></select></label>
       <label>Nombre d'appareils<select id="invUsages"><option value="1" selected>1 seul</option><option value="3">3</option><option value="5">5</option><option value="0">sans limite</option></select></label>
@@ -268,6 +283,37 @@ async function api(action, data = {}){
   return j;
 }
 async function charge(action = 'etat', data){ E = await api(action, data); dessine(); }
+/* 20/11 : les sessions par personne (api/qui.php) */
+let S = null;
+async function qui(action, data = {}){
+  const f = new FormData(); f.append('action', action); Object.entries(data).forEach(([k, v]) => f.append(k, v));
+  const r = await fetch('/api/qui.php', { method:'POST', headers:{ 'X-Garde':'1' }, credentials:'same-origin', body:f });
+  const j = await r.json().catch(() => ({ error:'Réponse illisible du serveur.' }));
+  if(!r.ok || j.error){ toast(j.error || 'Erreur.'); throw 0; } return j; }
+async function chargeSessions(){ try{ S = await qui('admin_liste'); }catch(e){ return; } dessineSessions(); }
+function dessineSessions(){
+  $('sesEtat').classList.toggle('on', S.actif); $('sesTxt').textContent = S.actif ? 'Les sessions sont en marche' : 'Les sessions sont à l\'arrêt (on choisit son avatar sans code, comme avant)';
+  $('sesBascule').textContent = S.actif ? 'Mettre à l\'arrêt' : 'Mettre en marche'; $('sesBascule').className = 'petit ' + (S.actif ? '' : 'vert');
+  const min = t => Math.max(0, Math.ceil((t - S.now) / 60));
+  $('sesListe').innerHTML = S.sessions.length ? S.sessions.map(q => `<div class="ligne"><div class="q"><b>${esc(q.nom)}${q.moi ? ' (cet appareil)' : ''} <small style="color:var(--soft)">· ${q.role === 'enfant' ? 'enfant' : q.role === 'parent' ? 'parent' : 'invité'}</small></b>
+      ${esc(q.appareil || '')} · ${q.page ? 'sur ' + esc(q.page) + ' · ' : ''}vu ${quand(q.vu)}${q.ctrl ? `<br><b style="color:#b45309">🔧 ${q.ctrl.voir ? 'tu le vois comme lui' : 'tu as la main'} · ${q.ctrl.ecrit ? 'enregistré pour de vrai' : 'rien n\'est enregistré'} · encore ${min(q.ctrl.fin)} min</b>` : ''}</div>
+      ${q.role === 'enfant' && !q.ctrl ? `<button class="petit vert" data-prend="${q.id}" type="button">🔧 Prendre la main</button>` : ''}
+      ${q.ctrl ? `<button class="petit" data-rend="${q.id}" type="button">Rendre</button>` : ''}
+      <button class="petit" data-ferme="${q.id}" type="button">Fermer</button></div>`).join('') : '<p class="vide">Personne n\'est entré pour l\'instant.</p>';
+  $('sesCodes').innerHTML = ['Essil', 'Salma', 'Amine'].map(n => `<div class="ligne"><div class="q"><b>${n}</b>${S.codes[n] ? (S.codes[n] === 'cartes' ? '🃏 3 cartes' : '🔢 4 chiffres') : '<span class="vide">pas encore choisi (il le choisira la première fois)</span>'}</div>
+      ${S.codes[n] ? `<button class="petit" data-codezero="${n}" type="button">Remettre à zéro</button>` : ''}</div>`).join('');
+}
+$('sesBascule').onclick = async () => { if(S.actif && !confirm('Mettre les sessions à l\'arrêt ? Chacun choisira de nouveau son avatar sans code.')) return;
+  if(!S.actif && !confirm('Mettre les sessions en marche ? Sur chaque tablette, il faudra entrer avec son code (les enfants le choisiront la première fois).')) return;
+  await qui('admin_interrupteur', { on:S.actif ? '' : '1' }); toast(S.actif ? 'Sessions à l\'arrêt' : 'Sessions en marche 👤'); chargeSessions(); };
+$('sesVoir').onclick = async () => { const j = await qui('admin_voir', { nom:$('sesVoirNom').value, ecrit:$('sesVoirEcrit').checked ? '1' : '' }); location.href = j.aller; };
+document.addEventListener('click', async e => { const d = e.target.closest('button')?.dataset; if(!d) return;
+  if(d.prend){ const ecrit = confirm('Enregistrer pour de vrai ce que tu feras sur sa session ?\n\nOK = oui, ses progrès comptent\nAnnuler = non, rien n\'est enregistré (conseillé pour des essais)');
+    await qui('admin_prend', { id:d.prend, minutes:30, ecrit:ecrit ? '1' : '' }); toast('Tu as la main : la tablette change dans quelques secondes 🔧'); chargeSessions(); }
+  if(d.rend){ await qui('admin_rend', { id:d.rend }); toast('Rendu 👍'); chargeSessions(); }
+  if(d.ferme && confirm('Fermer cette session ? La personne devra entrer de nouveau avec son code.')){ await qui('admin_ferme', { id:d.ferme }); chargeSessions(); }
+  if(d.codezero && confirm('Remettre à zéro le code secret de ' + d.codezero + ' ? Il en choisira un nouveau la prochaine fois.')){ await qui('admin_code_zero', { nom:d.codezero }); chargeSessions(); } });
+chargeSessions(); setInterval(() => { if(!document.hidden) chargeSessions(); }, 15000);
 function dessine(){
   const on = E.actif;
   $('etat').classList.toggle('on', on);
@@ -307,6 +353,7 @@ $('bascule').onclick = async () => {
 };
 $('ipAjout').onclick = async () => { await charge('ip_ajoute', { nom:$('ipNom').value }); $('ipNom').value = ''; toast('Adresse ajoutée 🏠'); };
 $('invCree').onclick = async () => {
+  if(!$('invNom').value.trim()){ toast('Écris d\'abord le prénom de la personne invitée'); $('invNom').focus(); return; }
   await charge('invitation_cree', { nom:$('invNom').value, lien:+$('invLien').value, duree:+$('invDuree').value, usages:+$('invUsages').value });
   $('invNom').value = ''; const l = E.invitations[0]; if(l) { try { await navigator.clipboard.writeText(l.lien); toast('Lien créé et copié 💌'); } catch(e){ toast('Lien créé 💌'); } }
 };

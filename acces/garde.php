@@ -292,3 +292,5 @@ function ga_alerte(string $titre, string $texte, bool $essai = false): array {
     } catch (Throwable $e) { error_log('alerte : ' . $e->getMessage()); }
     return $res;
 }
+
+require_once __DIR__ . '/session.php';   // 20/11 : les sessions par personne

@@ -255,7 +255,7 @@ try {
         $heads = [];
         foreach (db()->query("SELECT player, data FROM progress WHERE course = 'profil'") as $r) {
             $d = json_decode((string)$r['data'], true);
-            if (is_array($d) && in_array($d['tete'] ?? '', ['nour', 'yasmine', 'fares'], true)) $heads[$r['player']] = $d['tete'];
+            if (is_array($d) && in_array($d['tete'] ?? '', ['nour', 'yasmine', 'fares', 'f-anis', 'f-imen', 'f-essil', 'f-salma', 'f-amine'], true)) $heads[$r['player']] = $d['tete'];
         }
         out(200, ['heads' => $heads]);
     }
@@ -335,6 +335,7 @@ try {
 
     // temps d'écran : les règles du jour pour un enfant (lu par famille.js sur les pages de jeu)
     if ($method === 'GET' && $action === 'ecran') {
+        if (ga_qui_libre((string)($_GET['player'] ?? ''))) out(200, ['libre' => true, 'essais' => true]);   // 20/11 : Anis fait des essais
         out(200, ecran_etat((string)($_GET['player'] ?? '')));
     }
     // le tableau de bord de l'accueil : le temps de jeu des trois enfants
@@ -348,6 +349,10 @@ try {
     if (!empty($_COOKIE['famille_explo']) && in_array($action, ['score', 'progress', 'ecran', 'demande', 'temps'], true)) {
         $q = mb_convert_case(trim((string)($_POST['player'] ?? '')), MB_CASE_TITLE, 'UTF-8');
         if (in_array($q, ENFANTS, true)) out(200, ['ok' => true, 'explorateur' => true, 'libre' => true, 'personalBest' => false, 'best' => 0, 'rank' => 0]);
+    }
+    // 20/11 : sessions par personne (acces/session.php) : on n'écrit au nom d'un enfant que depuis SA session
+    if (in_array($action, ['score', 'progress', 'ecran', 'demande', 'temps'], true) && !ga_qui_peut_ecrire((string)($_POST['player'] ?? ''))) {
+        out(200, ['ok' => true, 'explorateur' => true, 'libre' => true, 'personalBest' => false, 'best' => 0, 'rank' => 0]);
     }
     if ($action === 'temps') {   // 16/11 : temps passé sur une page (site.js, par minute, page visible)
         $page = (string)($_POST['page'] ?? ''); $pl = trim((string)($_POST['player'] ?? '')); $sec = (int)($_POST['sec'] ?? 0);

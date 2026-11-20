@@ -32,7 +32,12 @@
   function mascot(id){ for(var i = 0; i < MASCOTS.length; i++) if(MASCOTS[i].id === id) return MASCOTS[i]; return null; }
   function head(name){
     var k = String(name || '').toLowerCase(); if(!k || FAMILY.indexOf(k) >= 0) return null;
-    var m = mascot(get('famille-tetes', {})[k]); if(m) return m;
+    var tid = get('famille-tetes', {})[k], m = mascot(tid); if(m) return m;
+    // 20/11 : un invité peut prendre l'avatar d'un membre de la famille (juste l'image) : « f-amine »…
+    // id reste une mascotte (les jeux qui fabriquent « mascotte-<id>.webp » restent justes), img est l'avatar choisi
+    var f = /^f-(essil|salma|amine|anis|imen)$/.exec(tid || '');
+    if(f){ var h0 = 0; for(var j = 0; j < k.length; j++) h0 = (h0 * 31 + k.charCodeAt(j)) >>> 0; var b = MASCOTS[h0 % MASCOTS.length];
+      return { id:b.id, name:b.name, color:b.color, img:BASE + 'jeux/avatars/' + f[1] + '.webp', famille:f[1] }; }
     var h = 0; for(var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; return MASCOTS[h % MASCOTS.length];
   }
   function saveHead(name, id){
@@ -42,7 +47,7 @@
   function loadHeads(){
     if(!online) return Promise.resolve(get('famille-tetes', {}));
     return fetch(API + '?action=heads', {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
-      if(j && j.heads){ var t = get('famille-tetes', {}); Object.keys(j.heads).forEach(function(n){ if(mascot(j.heads[n])) t[n.toLowerCase()] = j.heads[n]; }); set('famille-tetes', t); }
+      if(j && j.heads){ var t = get('famille-tetes', {}); Object.keys(j.heads).forEach(function(n){ if(mascot(j.heads[n]) || /^f-(essil|salma|amine|anis|imen)$/.test(j.heads[n])) t[n.toLowerCase()] = j.heads[n]; }); set('famille-tetes', t); }
       return get('famille-tetes', {});
     }).catch(function(){ return get('famille-tetes', {}); });
   }
@@ -113,6 +118,8 @@
   }
   function choosePlayer(opts){
     opts = opts || {};
+    // 20/11 : sessions par personne : on joue sous SON nom (celui de la session), sans fenêtre « Qui joue ? »
+    var Q = window.FAMILLE_QUI; if(Q && Q.actif && Q.nom){ set('famille-joueur', Q.nom); try{ document.dispatchEvent(new Event('famille-joueur')); }catch(e){} return Promise.resolve(Q.nom); }
     css();
     return new Promise(function(resolve){
       var cur = get('famille-joueur', null);

@@ -23,7 +23,9 @@ if (isset($_GET['sortie'])) $ok = 'Tu es déconnecté de l\'administration.';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['quoi'] ?? '') === 'demande') {   // « Demander l'accès à Anis » avec son prénom
     $p = trim((string)($_POST['prenom'] ?? ''));
-    if ($p === '') $msgDem = 'Écris ton prénom pour qu\'Anis te reconnaisse.'; else ga_note_demande('', $p);
+    if ($p === '') $msgDem = 'Écris ton prénom pour qu\'Anis te reconnaisse.';
+    elseif (function_exists('ga_qui_nom_invite') && ga_qui_nom_invite($p) === null) $msgDem = 'Écris TON prénom (des lettres seulement ; pas celui de quelqu\'un de la famille).';   // 20/11 : ce prénom sera celui de sa session d'invité
+    else ga_note_demande('', $p);
     $_POST = [];
 } elseif (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     try {

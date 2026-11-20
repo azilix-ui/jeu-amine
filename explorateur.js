@@ -20,6 +20,28 @@
   var ENFANTS = ['Essil', 'Salma', 'Amine'];
   var profil = null;
   try{ profil = JSON.parse(sessionStorage.getItem('famille-profil') || 'null'); }catch(e){}
+  /* 20/11 : SESSIONS PAR PERSONNE (acces/session.php). Quand l'interrupteur est en marche, la porte donne à la page
+     window.FAMILLE_QUI = {actif, nom, role, av, ctrl, v} : c'est le serveur qui dit qui est là, plus l'onglet.
+     - un enfant dans sa session → profil « enfant » ; un parent, un invité → « explo » (bac à sable, rien ne compte pour les enfants) ;
+     - Anis qui fait des essais (ctrl) → la session de l'enfant, en bac à sable (sauf s'il a demandé d'enregistrer pour de vrai) ;
+     - personne : direction « Qui es-tu ? ». */
+  var QUI = window.FAMILLE_QUI && window.FAMILLE_QUI.actif ? window.FAMILLE_QUI : null;
+  if(QUI){
+    var voulu = null, sess = window.sessionStorage;
+    if(QUI.nom){ var enf = QUI.role === 'enfant' && (!QUI.ctrl || QUI.ctrl.ecrit);
+      voulu = { nom:QUI.nom, type:enf ? 'enfant' : 'explo', av:QUI.av || '', ctrl:QUI.ctrl || null, v:QUI.v }; }
+    if(!profil || !voulu || profil.v !== voulu.v || profil.nom !== voulu.nom || profil.type !== voulu.type) try{
+      Object.keys(sess).forEach(function(k){ if(k.indexOf(PFX) === 0) sess.removeItem(k); });
+      if(voulu){ sess.setItem('famille-profil', JSON.stringify(voulu));
+        if(voulu.type === 'explo'){ sess.setItem(PFX + 'famille-joueur', JSON.stringify(voulu.nom));
+          if(voulu.av){ var tt = {}; try{ tt = JSON.parse(VRAI.getItem('famille-tetes') || '{}') || {}; }catch(e){} tt[voulu.nom.toLowerCase()] = voulu.av; sess.setItem(PFX + 'famille-tetes', JSON.stringify(tt)); } }
+        else if(VRAI) VRAI.setItem('famille-joueur', JSON.stringify(voulu.nom)); }
+      else sess.removeItem('famille-profil');
+    }catch(e){}
+    profil = voulu;
+    if(!QUI.nom && !/^\/(index\.html)?$/.test(location.pathname) && location.pathname.indexOf('/acces/') !== 0)
+      location.replace('/?suite=' + encodeURIComponent(location.pathname + location.search));
+  }
   var explo = !!(profil && profil.type === 'explo' && profil.nom);
 
   window.FamilleProfil = {
@@ -35,7 +57,7 @@
         else if(VRAI) VRAI.setItem('famille-joueur', JSON.stringify(nom));
       }catch(e){}
     },
-    oublier: function(){ try{ sessionStorage.removeItem('famille-profil'); Object.keys(sessionStorage).forEach(function(k){ if(k.indexOf(PFX) === 0) sessionStorage.removeItem(k); }); }catch(e){} document.cookie = 'famille_explo=; path=/; max-age=0; SameSite=Lax'; }
+    oublier: function(){ if(QUI) try{ var f = new FormData(); f.append('action', 'sortir'); navigator.sendBeacon('/api/qui.php', f); }catch(e){} try{ sessionStorage.removeItem('famille-profil'); Object.keys(sessionStorage).forEach(function(k){ if(k.indexOf(PFX) === 0) sessionStorage.removeItem(k); }); }catch(e){} document.cookie = 'famille_explo=; path=/; max-age=0; SameSite=Lax'; }
   };
 
   if(!explo) document.cookie = 'famille_explo=; path=/; max-age=0; SameSite=Lax';
@@ -66,6 +88,24 @@
     Object.defineProperty(window, 'localStorage', { configurable:true, get:function(){ return proxy; } });
   }catch(e){}
 
+
+  /* ---------- 20/11 : le bandeau « Papa fait des essais » (prise de main d'Anis, ou « voir le site comme… ») ---------- */
+  if(profil && profil.ctrl) (function(){
+    var c = profil.ctrl, d = document.createElement('div'); d.id = 'famCtrl';
+    var st = document.createElement('style');
+    st.textContent = '#famCtrl{position:fixed;left:50%;top:max(6px,env(safe-area-inset-top));transform:translateX(-50%);z-index:2147483600;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;' +
+      'max-width:calc(100vw - 16px);box-sizing:border-box;background:#7c2d12;color:#fff;border-radius:16px;padding:7px 8px 7px 14px;font:800 15px/1.25 Nunito,system-ui,sans-serif;box-shadow:0 4px 0 #431407,0 8px 22px #0005}' +
+      '#famCtrl small{font-weight:700;opacity:.9}#famCtrl button{min-height:40px;border:0;border-radius:12px;background:#fff;color:#7c2d12;font:inherit;padding:0 14px;cursor:pointer}';
+    function texte(){ var m = Math.max(0, Math.ceil((c.fin * 1000 - Date.now()) / 60000));
+      return '🔧 ' + (c.retour ? 'Tu vois le site comme ' : 'Papa fait des essais sur la session de ') + '<b></b> <small>· ' + (c.ecrit ? 'enregistré pour de vrai' : 'rien n\'est enregistré') + ' · fin dans ' + m + ' min</small>'; }
+    function pose(){ if(!document.body){ setTimeout(pose, 50); return; }
+      document.head.appendChild(st); d.innerHTML = texte() + '<button type="button">' + (c.retour ? 'Revenir à moi' : 'Rendre la tablette') + '</button>';
+      d.querySelector('b').textContent = profil.nom; document.body.appendChild(d);
+      d.querySelector('button').onclick = function(){ var f = new FormData(); f.append('action', 'rendre');
+        fetch('/api/qui.php', { method:'POST', body:f }).then(function(){ location.href = c.retour ? '/' : location.href; }).catch(function(){ location.reload(); }); };
+      setInterval(function(){ if(Date.now() > c.fin * 1000 + 2000){ location.reload(); return; } var b = d.querySelector('small'); if(b){ var t = document.createElement('div'); t.innerHTML = texte(); b.innerHTML = t.querySelector('small').innerHTML; } }, 20000); }
+    pose();
+  })();
 
   /* ---------- FamilleSon : UN seul lecteur de son pour les voix (19/11, tablettes) ----------
      Sur tablette (surtout iPad), chaque nouveau « new Audio() » lancé sans toucher l'écran peut être refusé, et des dizaines
@@ -217,9 +257,10 @@
   /* ---------- le salon du site ---------- */
   var API = '/api/houma.php', FAMILLE = ['anis', 'imen', 'essil', 'salma', 'amine'];
   var cap = function(s){ s = String(s || '').trim(); return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; };
-  function moi(){ if(profil && profil.nom) return cap(profil.nom); try{ return cap(JSON.parse(VRAI.getItem('famille-joueur') || 'null')); }catch(e){ return ''; } }
+  function moi(){ if(profil && profil.nom) return cap(profil.nom); if(QUI) return '';   /* 20/11 : personne n'est entré : pas de salon */ try{ return cap(JSON.parse(VRAI.getItem('famille-joueur') || 'null')); }catch(e){ return ''; } }
   function sansAccent(s){ return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
   function tete(nom, av){ var k = sansAccent(nom); if(FAMILLE.indexOf(k) >= 0) return '/jeux/avatars/' + k + '.webp';
+    if(/^f-(essil|salma|amine|anis|imen)$/.test(av || '')) return '/jeux/avatars/' + av.slice(2) + '.webp';
     if(['nour', 'yasmine', 'fares'].indexOf(av) >= 0) return '/jeux/avatars/mascotte-' + av + '.webp';
     if(['nour', 'yasmine', 'fares'].indexOf(k) >= 0) return '/jeux/avatars/mascotte-' + k + '.webp';
     var h = 0; for(var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; return '/jeux/avatars/mascotte-' + ['nour', 'yasmine', 'fares'][h % 3] + '.webp'; }
@@ -399,6 +440,8 @@
     var plusGrand = S.msgs.length ? S.msgs[S.msgs.length - 1].id : 0; fd.append('depuis', plusGrand);
     fetch(API, { method:'POST', body:fd, cache:'no-store' }).then(function(r){ if(r.status === 401 || r.status === 403){ S.stop = true; return null; } return r.ok ? r.json() : null; }).then(function(j){
       occupe = false; if(!j) return;
+      // 20/11 : la session a changé ailleurs (Anis prend ou rend la main, session fermée) : on recharge la page
+      if(QUI && j.quiv && j.quiv !== QUI.v && !window.__quiRecharge){ window.__quiRecharge = 1; setTimeout(function(){ location.reload(); }, 600); }
       S.enLigne = j.en_ligne || [];
       var nv = (j.msgs || []).filter(function(x){ return x.id > plusGrand; });
       if(nv.length){ S.msgs = S.msgs.concat(nv).slice(-200);
@@ -414,5 +457,5 @@
       badges();
     }).catch(function(){ occupe = false; });
   }
-  if(document.body) construit(); else document.addEventListener('DOMContentLoaded', construit);
+  if(QUI && !QUI.nom){} /* 20/11 : personne n'est entré : pas d'étiquette */ else if(document.body) construit(); else document.addEventListener('DOMContentLoaded', construit);
 })();

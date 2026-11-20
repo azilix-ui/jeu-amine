@@ -12,6 +12,10 @@
 <script>
 // « Qui es-tu ? » (14/11) : à chaque entrée sur le site, on choisit son avatar (le choix dure le temps de la visite, voir explorateur.js)
 (function(){ var P = window.FamilleProfil && FamilleProfil.actuel(), h = document.documentElement;
+  // 20/11 : après être entré (sessions par personne), on revient à la page demandée (?suite=/jeux/…)
+  var su = /[?&]suite=([^&]+)/.exec(location.search); su = su ? decodeURIComponent(su[1]) : '';
+  if(P && su && /^\/(?!\/)[\w\-./%?=&]*$/.test(su) && !/[?&]profil\b/.test(location.search)){ location.replace(su); return; }
+  if(window.FAMILLE_QUI && FAMILLE_QUI.actif) h.classList.add('sessions');
   if(!P || /[?&]profil\b/.test(location.search)) h.classList.add('choisir');
   else if(P.type === 'enfant'){ var k = P.nom.toLowerCase();
     // 18/11 (demande du papa) : un enfant arrive directement dans SON espace animé (essil/, salma/, amine/)
@@ -723,6 +727,123 @@ const NOUVEAUTES = [
   document.getElementById('afficheFerme').onclick = ferme;
   vue.addEventListener('click', e => { if(e.target === vue) ferme(); });
   addEventListener('keydown', e => { if(e.key === 'Escape' && ouvert()) ferme(); });
+})();
+</script>
+<style>
+/* 20/11 : entrer avec son code (sessions par personne) */
+html.sessions #qui .inv{display:none}
+#quiCode{position:fixed;inset:0;z-index:2147482000;display:none;align-items:center;justify-content:center;background:#14102bcc;padding:16px;box-sizing:border-box}
+#quiCode.on{display:flex}
+#quiCode .boite{background:var(--surface,#fff);color:var(--ink,#1b1530);border-radius:28px;padding:22px 20px 18px;width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box;text-align:center;box-shadow:0 10px 0 #0003}
+#quiCode .tete{width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid var(--c,#0f766e);background:#eee}
+#quiCode h2{margin:8px 0 2px;font-family:var(--display,inherit);font-size:28px}
+#quiCode p{margin:4px 0 12px;color:var(--soft,#555);font-weight:700}
+#quiCode .points{display:flex;justify-content:center;gap:12px;margin:6px 0 14px;min-height:46px;align-items:center}
+#quiCode .points i{width:22px;height:22px;border-radius:50%;border:3px solid var(--c,#0f766e);box-sizing:border-box}
+#quiCode .points i.on{background:var(--c,#0f766e)}
+#quiCode .points span{font-size:38px;line-height:1}
+#quiCode .pave{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#quiCode .pave button{min-height:64px;border:0;border-radius:18px;background:#f1eefc;font:inherit;font-size:28px;font-weight:800;color:inherit;cursor:pointer;box-shadow:0 4px 0 #d9d3f0}
+#quiCode .pave button:active{transform:translateY(3px);box-shadow:none}
+#quiCode .pave.cartes button{font-size:40px;min-height:76px}
+#quiCode .pave button.pris{opacity:.35}
+#quiCode .choix{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#quiCode .choix button{min-height:110px;border:3px solid #e4def5;border-radius:22px;background:#fff;font:inherit;font-weight:800;font-size:18px;cursor:pointer;color:inherit}
+#quiCode .choix button span{display:block;font-size:40px}
+#quiCode input[type=password]{width:100%;box-sizing:border-box;height:58px;border:2px solid #d9d3f0;border-radius:16px;padding:0 14px;font:inherit;font-size:20px;margin-bottom:10px}
+#quiCode .ok{min-height:56px;width:100%;border:0;border-radius:16px;background:var(--c,#0f766e);color:#fff;font:inherit;font-size:19px;font-weight:800;cursor:pointer}
+#quiCode .err{color:#b42318;font-weight:800;min-height:1.3em;margin:10px 0 4px}
+#quiCode .annule{margin-top:6px;border:0;background:none;font:inherit;font-weight:800;color:var(--soft,#555);cursor:pointer;min-height:44px;text-decoration:underline}
+#quiCode .secoue{animation:quiSec .4s}
+@keyframes quiSec{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@media (prefers-reduced-motion:reduce){#quiCode .secoue{animation:none}}
+</style>
+<div id="quiCode" role="dialog" aria-modal="true" aria-labelledby="quiCodeT"><div class="boite"></div></div>
+<script>
+/* 20/11 : SESSIONS PAR PERSONNE (acces/session.php, api/qui.php). Quand l'interrupteur est en marche :
+   - un enfant entre avec SON code secret : 4 chiffres ou 3 cartes (il choisit la première fois) ;
+   - papa et maman avec le mot de passe parent ;
+   - un invité écrit son prénom (déjà rempli s'il vient d'une invitation ou s'il a frappé à la porte) et choisit un avatar :
+     une mascotte, ou l'avatar d'un membre de la famille (juste l'image : il n'entre pas dans sa session). */
+(function(){
+  const Q = window.FAMILLE_QUI; if(!Q || !Q.actif) return;
+  const CARTES = ['🐱', '🌙', '⭐', '🚀', '🍉', '🐴', '⚽', '🌸', '🐢'];
+  const ENF = ['Essil', 'Salma', 'Amine'], box = document.querySelector('#quiCode .boite'), fond = document.getElementById('quiCode');
+  const su = (/[?&]suite=([^&]+)/.exec(location.search) || [])[1];
+  const apres = () => location.replace(su ? '/?suite=' + su : '/');
+  const dit = t => { try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; speechSynthesis.speak(u); }catch(e){} };
+  const post = async (o) => { const f = new FormData(); Object.entries(o).forEach(([k, v]) => f.append(k, v)); const r = await fetch('/api/qui.php', { method:'POST', body:f, cache:'no-store' }); let j = {}; try{ j = await r.json(); }catch(e){} if(!r.ok) throw new Error(j.error || 'Petit souci, réessaie.'); return j; };
+  const ferme = () => { fond.classList.remove('on'); box.innerHTML = ''; };
+  fond.onclick = e => { if(e.target === fond) ferme(); };
+  addEventListener('keydown', e => { if(e.key === 'Escape' && fond.classList.contains('on')) ferme(); });
+  function entete(nom, img, c, titre, sous){
+    fond.style.setProperty('--c', c);
+    return `<img class="tete" src="${img}" alt=""><h2 id="quiCodeT">${titre}</h2><p>${sous}</p>`; }
+  // le pavé : chiffres (4) ou cartes (3) ; fini(code) quand c'est complet
+  function pave(type, fini){
+    const n = type === 'cartes' ? 3 : 4; let v = [];
+    const w = document.createElement('div');
+    w.innerHTML = `<div class="points" aria-live="polite"></div><div class="pave ${type}">${type === 'cartes'
+      ? CARTES.map((c, i) => `<button type="button" data-k="${i}" aria-label="Carte ${i + 1}">${c}</button>`).join('')
+      : [1,2,3,4,5,6,7,8,9].map(i => `<button type="button" data-k="${i}">${i}</button>`).join('') + '<button type="button" data-x aria-label="Effacer">⌫</button><button type="button" data-k="0">0</button><span></span>'}</div>`;
+    const pts = w.querySelector('.points');
+    const maj = () => { pts.innerHTML = Array.from({ length:n }, (_, i) => type === 'cartes' ? `<span>${v[i] !== undefined ? CARTES[v[i]] : '<i></i>'}</span>` : `<i class="${i < v.length ? 'on' : ''}"></i>`).join('');
+      w.querySelectorAll('.cartes button').forEach(b => b.classList.toggle('pris', v.includes(+b.dataset.k))); };
+    w.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const k = +b.dataset.k; if(v.length >= n || (type === 'cartes' && v.includes(k))) return; v.push(k); maj();
+      if(v.length === n) setTimeout(() => { const code = type === 'cartes' ? v.join('-') : v.join(''); v = []; maj(); fini(code); }, 250); });
+    const x = w.querySelector('[data-x]'); if(x) x.onclick = () => { v.pop(); maj(); };
+    if(type === 'cartes') pts.onclick = () => { v.pop(); maj(); };
+    maj(); return w; }
+  function erreur(msg){ let e = box.querySelector('.err'); if(e) e.textContent = msg; box.classList.remove('secoue'); void box.offsetWidth; box.classList.add('secoue'); }
+  function pied(){ const a = document.createElement('div'); a.innerHTML = '<p class="err" role="alert"></p><button type="button" class="annule">Ce n\'est pas moi</button>'; a.querySelector('.annule').onclick = ferme; return a; }
+
+  function enfant(nom, img, c){
+    const type = (Q.codes || {})[nom];
+    if(!type) return choisirCode(nom, img, c);
+    box.innerHTML = entete(nom, img, c, 'Bonjour ' + nom + ' !', type === 'cartes' ? 'Touche tes 3 cartes secrètes, dans l\'ordre.' : 'Tape ton code secret (4 chiffres).');
+    box.appendChild(pave(type, async code => { try{ const j = await post({ action:'entrer', nom, code }); if(j.creer) return choisirCode(nom, img, c); apres(); }catch(e){ erreur(e.message); dit(e.message); } }));
+    box.appendChild(pied()); fond.classList.add('on');
+    dit(type === 'cartes' ? 'Bonjour ' + nom + ' ! Touche tes trois cartes secrètes.' : 'Bonjour ' + nom + ' ! Tape ton code secret.'); }
+  function choisirCode(nom, img, c){
+    box.innerHTML = entete(nom, img, c, 'Ton code secret', 'C\'est la première fois : choisis ton code. Tu le taperas pour entrer.') +
+      '<div class="choix"><button type="button" data-t="chiffres"><span>🔢</span>4 chiffres</button><button type="button" data-t="cartes"><span>🃏</span>3 cartes</button></div>';
+    box.appendChild(pied()); fond.classList.add('on'); dit('C\'est la première fois ! Choisis ton code secret : quatre chiffres, ou trois cartes.');
+    box.querySelectorAll('[data-t]').forEach(b => b.onclick = () => nouveau(nom, img, c, b.dataset.t)); }
+  function nouveau(nom, img, c, type, premier){
+    box.innerHTML = entete(nom, img, c, premier ? 'Encore une fois' : 'Ton code secret', premier ? 'Pour être sûr, refais le même code.' : (type === 'cartes' ? 'Choisis 3 cartes, dans l\'ordre. Retiens-les bien !' : 'Choisis 4 chiffres. Retiens-les bien !'));
+    box.appendChild(pave(type, async code => {
+      if(!premier) return nouveau(nom, img, c, type, code);
+      if(code !== premier){ nouveau(nom, img, c, type); erreur('Ce n\'est pas le même code : on recommence.'); dit('Ce n\'est pas le même code. On recommence.'); return; }
+      try{ await post({ action:'cree_code', nom, type, code }); dit('Bravo ! Ton code secret est gardé.'); apres(); }catch(e){ erreur(e.message); } }));
+    box.appendChild(pied()); dit(premier ? 'Refais le même code.' : (type === 'cartes' ? 'Choisis trois cartes, et retiens-les bien.' : 'Choisis quatre chiffres, et retiens-les bien.')); }
+  function parent(nom, img, c){
+    box.innerHTML = entete(nom, img, c, 'Bonjour ' + (nom === 'Anis' ? 'papa' : 'maman') + ' !', 'Le mot de passe parent' + (nom === 'Anis' ? ' (ou celui de l\'administration)' : '') + '.') +
+      '<form><input type="password" autocomplete="current-password" aria-label="Mot de passe"><button class="ok" type="submit">Entrer</button></form>';
+    box.appendChild(pied()); fond.classList.add('on');
+    const f = box.querySelector('form'), i = f.querySelector('input'); setTimeout(() => i.focus(), 50);
+    f.onsubmit = async e => { e.preventDefault(); try{ await post({ action:'entrer', nom, code:i.value }); apres(); }catch(er){ i.value = ''; erreur(er.message); } }; }
+
+  document.querySelectorAll('#qui .fam5 [data-nom]').forEach(b => b.onclick = () => {
+    const nom = b.dataset.nom, img = b.querySelector('img').src, c = getComputedStyle(b).getPropertyValue('--c') || '#0f766e';
+    if(Q.nom === nom && !Q.ctrl) return apres();              // c'est déjà moi : on continue
+    if(ENF.includes(nom)) enfant(nom, img, c.includes('var(') ? '#2563eb' : c); else parent(nom, img, c);
+  });
+  // les invités : prénom (déjà rempli si on le connaît) + avatar, y compris celui d'un membre de la famille (juste l'image)
+  const fs = document.querySelector('#quiPerso .avs');
+  if(fs) [['f-anis', 'anis', 'Papa'], ['f-imen', 'imen', 'Maman'], ['f-essil', 'essil', 'Essil'], ['f-salma', 'salma', 'Salma'], ['f-amine', 'amine', 'Amine']].forEach(([v, k, t]) => {
+    const l = document.createElement('label'); l.innerHTML = `<input type="radio" name="quiAv" value="${v}"><img src="jeux/avatars/${k}.webp" width="320" height="320" alt="Avatar de ${t}">`; fs.appendChild(l); });
+  const q = document.querySelector('#quiPerso .q2'); if(q) q.textContent = Q.suggestion ? 'Bienvenue ' + Q.suggestion + ' ! Choisis ton avatar et entre.' : 'Écris ton prénom et choisis ton avatar';
+  const qt = document.querySelector('#qui .invites .q'); if(qt) qt.textContent = 'Tu viens nous rendre visite ?';
+  const nomI = document.getElementById('quiNom'); if(nomI && Q.suggestion) nomI.value = Q.suggestion;
+  if(Q.nom && Q.role === 'invite' && nomI){ nomI.value = Q.nom; const r = document.querySelector(`#quiPerso input[value="${Q.av}"]`); if(r) r.checked = true; }
+  const form = document.getElementById('quiPerso');
+  if(form) form.onsubmit = async e => {
+    e.preventDefault(); const err = document.getElementById('quiErr');
+    const nom = nomI.value.trim(), av = (document.querySelector('input[name="quiAv"]:checked') || {}).value || 'nour';
+    try{ const j = await post({ action:'invite', nom, av });
+      const f = new FormData(); f.append('action', 'progress'); f.append('player', j.nom); f.append('course', 'profil'); f.append('data', JSON.stringify({ tete:av }));
+      await fetch('/api/famille.php', { method:'POST', body:f }).catch(() => {}); apres(); }
+    catch(er){ err.textContent = er.message; } };
 })();
 </script>
 </body>
