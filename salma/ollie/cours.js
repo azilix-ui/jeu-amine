@@ -63,11 +63,11 @@ function tampon(f){ if(tampons[f]) return tampons[f]; const a = actx(); if(!a) r
   return tampons[f] = fetch(f).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); }).then(b => new Promise((ok, ko) => { const p = a.decodeAudioData(b, ok, ko); if(p && p.catch) p.catch(ko); })).catch(e => { delete tampons[f]; throw e; }); }
 let jeton = 0, joueur = null;
 function speak(html){
-  talk(); hush(); if(muted || (window.FamilleVoix && !FamilleVoix.on())) return;   // touche V : consignes orales coupées
+  talk(); hush(); if(muted || (window.FamilleVoix && !FamilleVoix.on())) return new Promise(r => setTimeout(r, Math.min(9000, 1200 + clean(html).length * 55)));   // touche V : consignes orales coupées (on laisse le temps de lire)
   const j = jeton, segs = [];
   for(const [t, l] of segments(html)) for(const m of (l === 'en' && fichier(t) ? [t] : morceaux(t))) segs.push([m, l, (l === 'en' && fichier(m)) || enLigne(m, l)]);
   segs.forEach(([, , f]) => tampon(f).catch(() => {}));   // tout se charge en même temps, puis se joue dans l'ordre
-  (async () => { for(const [t, l, f] of segs){ if(j !== jeton) return;
+  return (async () => { for(const [t, l, f] of segs){ if(j !== jeton) return;
     try{ const b = await tampon(f); if(j !== jeton) return; await new Promise(res => { const a = actx(), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); joueur = s; s.onended = res; setTimeout(res, b.duration * 1000 + 400); s.start(); }); continue; }catch(e){}
     await dire(t, l, j); } })();
 }
@@ -98,6 +98,7 @@ function home(greet){
   const next = CH.findIndex((c, i) => unlocked(i) && !(data.stars[c.id] > 0));
   app.innerHTML = topbar(false) +
     `<div><h1>${C.titre}</h1><p class="lead">${C.sous}</p></div>` + (C.bandeau || '') +
+    (C.histoire ? `<button class="histoire-bt" id="histoire" style="--img:url('${new URL(C.histoire.scenes[0].img, location.href).href}')"><span>🎬</span><b>L'histoire : ${C.histoire.titre}</b><small>${data.histoire ? 'Revoir le dessin animé' : 'Commence par le dessin animé !'}</small></button>` : '') +
     teacher(next === 0 && !totalStars() ? C.bonjour
       : next >= 0 ? `Tu as déjà <b>${data.tickets} tickets 🎟️</b>, ${ENF} ! Ta prochaine étape : <b class="n">${CH[next].name}</b>.` : `Tu as tout fini, ${ENF} ! Refais les étapes pour gagner 3 étoiles partout… et encore des tickets 🎟️.`) +
     `<div class="tools"><button class="btn" id="fiche">📋 Ma fiche</button><button class="btn" id="carnet">📈 Mon carnet</button><a class="btn tkbtn" href="../jeux/serpent-legendes.html">🎟️ ${data.tickets} → Serpent Légendes</a></div>` +
@@ -111,7 +112,36 @@ function home(greet){
   app.querySelectorAll('.step').forEach(b => b.onclick = () => { if(b.disabled) return; sfx.tap(); start(+b.dataset.i); });
   document.getElementById('fiche').onclick = () => { sfx.tap(); fiche(); };
   document.getElementById('carnet').onclick = () => { sfx.tap(); carnet(); };
+  const hb = document.getElementById('histoire'); if(hb) hb.onclick = () => { sfx.tap(); histoire(); };
   if(greet) speak(document.getElementById('say').innerHTML);
+}
+
+/* ---------- l'histoire en dessin animé (20/11) : C.histoire = { titre, scenes:[{ vid, img, txt }] } ----------
+   Chaque scène : un petit film ComfyUI en boucle (Wan 2.2), le texte écrit dessous, lu par la voix du site ; on passe à la
+   scène suivante quand la voix a fini (ou avec ⏭). Le cours commence par là, pour mettre l'enfant dans le sujet. */
+function histoire(auto){
+  hush(); const H = C.histoire, N = H.scenes.length; let k = 0, tok = 0, pause = false;
+  if(auto){   // à l'ouverture de la page, la tablette refuse le son sans un toucher : on attend « Regarder »
+    app.innerHTML = topbar(false) + `<div><h1>${C.titre}</h1><p class="lead">${C.sous}</p></div><button class="ha-go" id="hgo" style="--img:url('${new URL(H.scenes[0].img, location.href).href}')"><span>▶</span><b>${H.titre}</b><small>Regarde le dessin animé avant les exercices</small></button>
+      <div class="tools"><button class="btn" id="hno">Plus tard : aller aux exercices →</button></div>`;
+    wireTop(); document.getElementById('hgo').onclick = () => { sfx.tap(); histoire(); }; document.getElementById('hno').onclick = () => { sfx.tap(); home(false); }; return; }
+  app.innerHTML = topbar(true) + `<div class="ha"><div class="ha-ecran"><video id="hv" muted loop playsinline preload="auto"></video><div class="ha-num" id="hn"></div></div>
+    <p class="ha-txt" id="ht"></p><div class="ha-bt"><button class="btn" id="hp">⏮</button><button class="btn" id="hz">⏸</button><button class="btn" id="hs">⏭</button><button class="btn go" id="hf">${data.histoire ? 'Aux exercices →' : 'Passer →'}</button></div></div>`;
+  wireTop(); const v = document.getElementById('hv');
+  const fin = () => { tok++; hush(); try{ v.pause(); }catch(e){} data.histoire = (data.histoire || 0) + 1; save(); home(true); };
+  async function scene(i){
+    k = Math.max(0, i); if(k >= N) return fin(); const t = ++tok, sc = H.scenes[k];
+    v.poster = sc.img; v.onerror = () => v.removeAttribute('src'); if(sc.vid){ v.src = sc.vid; v.play().catch(() => {}); } else v.removeAttribute('src');
+    document.getElementById('ht').innerHTML = sc.txt; document.getElementById('hn').textContent = (k + 1) + ' / ' + N;
+    await speak(sc.txt); if(t !== tok) return;
+    await new Promise(r => setTimeout(r, 900)); if(t !== tok || pause) return;
+    scene(k + 1);
+  }
+  document.getElementById('hp').onclick = () => { pause = false; scene(k - 1); };
+  document.getElementById('hs').onclick = () => { pause = false; scene(k + 1); };
+  document.getElementById('hz').onclick = e => { pause = !pause; e.currentTarget.textContent = pause ? '▶' : '⏸'; if(pause){ tok++; hush(); v.pause(); } else { v.play().catch(() => {}); scene(k); } };
+  document.getElementById('hf').onclick = fin;
+  scene(0);
 }
 
 /* ---------- une séance ---------- */
@@ -138,7 +168,40 @@ function next(){
   const q = S.list[S.k], f = (C.ask && C.ask[q.t]) || ASK[q.t];
   f(q);
 }
+/* ---------- le contrôle (20/11, C.controle) : on ne gagne pas en touchant au hasard ----------
+   - les réponses ne s'allument qu'après un petit temps de lecture (C.reflexion, 1,5 s par défaut) ;
+   - une erreur : on ne montre pas la réponse, un indice s'affiche, la réponse fausse est barrée et on réessaie (sans ticket) ;
+   - deux erreurs : la bonne réponse est montrée et expliquée, et la question revient à la fin de la série ;
+   - des réponses fausses données trop vite (moins de 1 s, deux fois de suite) : « Doucement ! » et 4 s de pause. */
+const CTRL = !!C.controle;
+function attendre(card){
+  if(!CTRL || !card) return; const ms = C.reflexion || 1500, bts = [...card.querySelectorAll('.ans, .tile, .pad button, #val2')];
+  bts.forEach(b => b.disabled = true); card.insertAdjacentHTML('afterbegin', `<div class="lis" style="--d:${ms}ms" aria-hidden="true"><i></i></div>`);
+  setTimeout(() => { if(!card.isConnected) return; bts.forEach(b => { if(!b.classList.contains('barre')) b.disabled = false; }); const l = card.querySelector('.lis'); if(l) l.remove(); S.t0 = performance.now(); }, ms);
+}
+function controle(ok, item, expl, btn, goodSel, retry){
+  if(!CTRL || ok || !retry) return false;
+  const q = S.list[S.k]; q.essai = (q.essai || 0) + 1;
+  const vite = S.t0 && performance.now() - S.t0 < 1000; S.vite = vite ? (S.vite || 0) + 1 : 0;
+  if(q.essai >= 2) return false;   // 2e erreur : on montre la réponse (answered), et la question reviendra
+  S.errors++; note(item, false); save(); sfx.no(); if(btn){ btn.classList.add('bad', 'shake', 'barre'); btn.disabled = true; }
+  const card = app.querySelector('.card.ex');
+  say('Pas encore. ' + (q.indice || 'Relis bien la question et réfléchis avant de répondre.') + ' Essaie encore !');
+  if(S.vite >= 2){ S.vite = 0; card.insertAdjacentHTML('beforeend', `<div class="doucement">🐢 Doucement, ${ENF} ! On ne répond pas au hasard : lis, réfléchis, puis réponds.</div>`); say(`Doucement, ${ENF}. On ne répond pas au hasard. Lis bien, réfléchis, puis réponds.`);
+    const bts = [...card.querySelectorAll('.ans:not(.barre), .tile, .pad button, #val2')]; bts.forEach(b => b.disabled = true);
+    setTimeout(() => { bts.forEach(b => b.disabled = false); const d = card.querySelector('.doucement'); if(d) d.remove(); S.t0 = performance.now(); }, 4000); }
+  else S.t0 = performance.now();
+  retry(); return true;
+}
 function answered(ok, item, expl, btn, goodSel){
+  if(CTRL){ const q = S.list[S.k];
+    if(!ok && q.essai >= 2 && !q.revient){ S.list.push(Object.assign({}, q, { essai:0, revient:true })); expl = (expl || '') + ' <i>On reverra cette question à la fin.</i>'; }
+    if(ok && q.essai){ app.querySelectorAll('.ans, .tile, .pad button, .ex [data-lock]').forEach(x => x.disabled = true); if(btn) btn.classList.add('good'); sfx.ok(); note(item, true); save();
+      say('Oui, c\'est ça ! ' + (expl || '')); const card = app.querySelector('.card.ex');
+      card.insertAdjacentHTML('beforeend', `<button class="btn ok" id="nx">${S.k + 1 < S.list.length ? 'Suivant →' : 'Terminer'}</button>`);
+      const nx = document.getElementById('nx'); nx.onclick = () => { sfx.tap(); hush(); S.k++; next(); }; return; }
+    if(!ok){ S.errors--; }   // la 1re erreur est déjà comptée par controle()
+  }
   app.querySelectorAll('.ans, .tile, .pad button, .ex [data-lock]').forEach(x => { x.disabled = true; if(goodSel && x.matches(goodSel)) x.classList.add('good'); });
   if(ok){ S.earned++; data.tickets++; sfx.ok(); setTimeout(sfx.ticket, 220); if(btn) btn.classList.add('good'); }
   else { S.errors++; sfx.no(); if(btn){ btn.classList.add('bad'); btn.classList.add('shake'); } }
@@ -162,7 +225,9 @@ const ASK = {
     const card = frame(q.q, (q.body || '') + (q.en ? `<button class="btn" data-ecoute>🔊 Écouter</button>` : '') +
       `<div class="answers${q.cols === 3 ? ' ends' : ''}${q.cols === 1 ? ' one' : ''}${q.imgs ? ' imgs' : ''}">${opts.map(o => `<button class="ans" data-v="${esc(o.v)}">${o.html}</button>`).join('')}</div>`, q.help, ecoute(q));
     const e = card.querySelector('[data-ecoute]'); if(e) e.onclick = () => en(q.en, q.lang);
-    card.querySelectorAll('.ans').forEach(b => b.onclick = () => answered(b.dataset.v === String(q.good), q.item, q.expl, b, `.ans[data-v="${CSS.escape(String(q.good))}"]`));
+    card.querySelectorAll('.ans').forEach(b => b.onclick = () => { const ok = b.dataset.v === String(q.good), g = `.ans[data-v="${CSS.escape(String(q.good))}"]`;
+      if(controle(ok, q.item, q.expl, b, g, () => {})) return; answered(ok, q.item, q.expl, b, g); });
+    attendre(card);
   },
   /* un nombre au pavé : { q, body, good, item, expl } */
   nombre(q){
@@ -172,8 +237,10 @@ const ASK = {
     let v = ''; const show = () => card.querySelector('#val').textContent = v || '?';
     card.querySelectorAll('.pad button').forEach(b => b.onclick = () => { if(v.length < 4){ sfx.tap(); v += b.dataset.n; v = String(+v); show(); } });
     card.querySelector('#eff').onclick = () => { v = v.slice(0, -1); show(); };
-    card.querySelector('#val2').onclick = () => { if(!v) return; const ok = +v === q.good; const s = card.querySelector('.saisie'); s.classList.add(ok ? 'ok' : 'ko');
-      if(!ok) s.innerHTML = `<s>${v}</s> <b>${q.good}</b>`; answered(ok, q.item, q.expl); };
+    card.querySelector('#val2').onclick = () => { if(!v) return; const ok = +v === q.good; const s = card.querySelector('.saisie');
+      if(controle(ok, q.item, q.expl, null, null, () => { s.classList.add('ko'); setTimeout(() => s.classList.remove('ko'), 700); v = ''; show(); })) return;
+      s.classList.add(ok ? 'ok' : 'ko'); if(!ok) s.innerHTML = `<s>${v}</s> <b>${q.good}</b>`; answered(ok, q.item, q.expl); };
+    attendre(card);
   },
   /* épeler un mot avec des lettres : { q, body, word, item, expl, en } */
   epelle(q){
@@ -188,8 +255,10 @@ const ASK = {
     const show = () => slots.forEach((s, k) => s.textContent = used[k] ? used[k].textContent : '');
     card.querySelectorAll('.tile').forEach(b => b.onclick = () => { if(b.disabled || used.length >= slots.length) return; sfx.tap(); used.push(b); b.disabled = true; show();
       if(used.length === slots.length){ const got = used.map(x => x.textContent).join(''), ok = got === W.replace(/ /g, '');
+        if(controle(ok, q.item, q.expl, null, null, () => { card.querySelector('.mot').classList.add('ko'); setTimeout(() => { card.querySelector('.mot').classList.remove('ko'); while(used.length){ used.pop().disabled = false; } show(); }, 700); })) return;
         card.querySelector('.mot').classList.add(ok ? 'ok' : 'ko'); if(!ok) card.querySelector('.mot').insertAdjacentHTML('afterend', `<p class="corr">${esc(q.word)}</p>`);
         answered(ok, q.item, q.expl); } });
+    attendre(card);
     card.querySelector('#eff').onclick = () => { const b = used.pop(); if(b) b.disabled = false; show(); };
   },
   /* remettre des mots dans l'ordre : { q, words:[…dans l'ordre], fin:'.', item, expl } */
@@ -201,8 +270,10 @@ const ASK = {
     const show = () => phr.innerHTML = used.map(b => `<span>${esc(b.textContent)}</span>`).join(' ') + (used.length === order.length ? esc(q.fin || '') : '');
     card.querySelectorAll('.tile').forEach(b => b.onclick = () => { if(b.disabled) return; sfx.tap(); used.push(b); b.disabled = true; show();
       if(used.length === order.length){ const got = used.map(x => x.textContent).join(' '), ok = got === order.join(' ') || (q.aussi || []).includes(got);
+        if(controle(ok, q.item, q.expl, null, null, () => { phr.classList.add('ko'); setTimeout(() => { phr.classList.remove('ko'); while(used.length){ used.pop().disabled = false; } show(); }, 700); })) return;
         phr.classList.add(ok ? 'ok' : 'ko'); if(!ok) phr.insertAdjacentHTML('afterend', `<p class="corr">${esc(order.join(' ') + (q.fin || ''))}</p>`);
         answered(ok, q.item, q.expl); } });
+    attendre(card);
     card.querySelector('#eff').onclick = () => { const b = used.pop(); if(b) b.disabled = false; phr.classList.remove('ok', 'ko'); show(); };
   },
 };
@@ -245,13 +316,13 @@ function carnet(){
   wireTop(); speak(document.getElementById('say').innerHTML);
 }
 
-window.OLLIE = { segments, rnd, pick, shuffle, esc, speak, en, hush, say, frame, answered, sfx, ASK, get S(){ return S; } };
-home(false);
+window.OLLIE = { segments, rnd, pick, shuffle, esc, speak, en, hush, say, frame, answered, controle, attendre, sfx, ASK, get S(){ return S; } };
+if(C.histoire && !data.histoire) histoire(true); else home(false);
 if(window.Famille){
   Famille.track(C.track, ENF, [KEY]);
   Famille.load(C.track, ENF).then(r => {
     const d = r && r[KEY];
-    if(d && (d.t || 0) > (data.t || 0) && (d.tickets || 0) >= (data.tickets || 0)){ data = Object.assign({ stars:{}, done:{}, tickets:0, items:{} }, d); try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} if(!S) home(false); }
+    if(d && (d.t || 0) > (data.t || 0) && (d.tickets || 0) >= (data.tickets || 0)){ data = Object.assign({ stars:{}, done:{}, tickets:0, items:{} }, d); try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){} if(!S && !document.getElementById('hv')) home(false); }
   });
 }
 })();

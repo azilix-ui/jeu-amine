@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Les Doubles d'Ollie</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%9C%8C%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="ollie/cours.css?v=3">
+<style>
+/* Les Doubles d'Ollie (20/11) : le calcul mental de Salma (CE2) sur le moteur ollie/cours.js, demandé par le papa :
+   « apprendre les doubles, ce qui lui permettra de faire facilement des divisions ». Le cours commence par un dessin animé
+   (la boulangerie des doubles : images ComfyUI, petits films Wan 2.2, voix Céline), puis 8 étapes contrôlées (C.controle) :
+   on répond au pavé (on ne peut pas deviner en touchant au hasard), une erreur = un indice et on réessaie, deux erreurs = la
+   correction et la question revient à la fin. Du double (3 + 3) à la moitié, puis à la division par 2 et par 4. */
+.plats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:6px 0}
+.plat{background:radial-gradient(#fff,#e9eef5);border:4px solid #c9d4e3;border-radius:50%/40%;padding:12px 16px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-content:center;max-width:46%;min-width:120px;min-height:90px}
+.plat img{width:clamp(30px,5.5vw,46px);height:auto}
+.plat.dix{border-radius:18px}
+.plus{font-family:var(--display);font-size:40px;align-self:center;color:var(--mint-deep)}
+.barres{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}.barres i{display:inline-block;width:14px;height:64px;border-radius:5px;background:linear-gradient(#ffd56a,#e09a12);box-shadow:inset 0 0 0 2px #b97500}
+.barres u{display:inline-block;width:14px;height:14px;border-radius:4px;background:#ffd56a;box-shadow:inset 0 0 0 2px #b97500;align-self:flex-end}
+.table2{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-weight:800;text-align:center}.table2 span{background:#eef3f8;border-radius:12px;padding:6px 2px}.table2 b{display:block;color:var(--mint-deep);font-size:20px}
+.astuce{background:#fff8de;border:3px solid var(--sun);border-radius:16px;padding:10px 14px;font-weight:800}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const rnd = (a, b) => a + Math.floor(Math.random()*(b - a + 1));
+function noDup(f, n){ const out = [], seen = new Set(); let g = 0; while(out.length < n && g++ < 400){ const q = f(); if(!seen.has(q.item)){ seen.add(q.item); out.push(q); } } return out; }
+const OBJ = { makroud:['makroud', 'makrouds'], cupcake:['cupcake', 'cupcakes'], croissant:['croissant', 'croissants'], poisson:['poisson', 'poissons'] };
+const img = k => `<img src="ollie/img/d-${k}.webp" alt="">`;
+const plat = (n, k) => `<div class="plat">${img(k).repeat(n)}</div>`;
+/* un nombre en barres de 10 et en cubes (pour les grands doubles) */
+const barres = n => `<div class="barres">${'<i></i>'.repeat(Math.floor(n / 10))}${'<u></u>'.repeat(n % 10)}</div>`;
+const Q = (o) => Object.assign({ t:'nombre' }, o);
+
+/* 1. Les doubles jusqu'à 5 + 5, avec les plateaux de la boulangerie */
+function qPetit(){ const n = rnd(1, 5), k = pick(Object.keys(OBJ)), [, pl] = OBJ[k];
+  return Q({ q:`Ollie met <b>${n}</b> ${n > 1 ? pl : OBJ[k][0]} sur chaque plateau. Combien y en a-t-il en tout ?`, voice:`Ollie met ${n} ${n > 1 ? pl : OBJ[k][0]} sur chaque plateau. Combien y en a-t-il en tout ? Compte bien.`,
+    body:`<div class="plats">${plat(n, k)}<span class="plus">+</span>${plat(n, k)}</div>`, good:2 * n, item:`${n} + ${n}`,
+    indice:`Compte les ${pl} d'un plateau, puis continue à compter sur l'autre plateau.`, expl:`${n} + ${n} = <b>${2 * n}</b> : c'est le <b>double</b> de ${n}.` }); }
+/* 2. Les doubles de 6 à 10 */
+function qMoyen(){ const n = rnd(6, 10), k = pick(Object.keys(OBJ));
+  return Q({ q:`Calcule le double : <b>${n} + ${n}</b>`, voice:`Calcule le double : ${n} plus ${n}.`, body:`<div class="big-q">${n} + ${n} = ?</div>${n <= 8 ? `<div class="plats">${plat(n, k)}${plat(n, k)}</div>` : ''}`,
+    good:2 * n, item:`${n} + ${n}`, indice:n === 10 ? `10 + 10, c'est deux dizaines.` : `Pense à 5 + 5 = 10, puis ajoute encore ${n - 5} + ${n - 5}.`,
+    expl:`${n} + ${n} = <b>${2 * n}</b>. ${n !== 10 ? `Astuce : 5 + 5 = 10, et ${n - 5} + ${n - 5} = ${2 * (n - 5)} ; 10 + ${2 * (n - 5)} = ${2 * n}.` : ''}` }); }
+/* 3. « Le double de… » en vrac (1 à 10) et le sens inverse : de quel nombre est-ce le double ? */
+function qDouble(){ const n = rnd(2, 10);
+  if(Math.random() < .5) return Q({ q:`Quel est le <b>double de ${n}</b> ?`, voice:`Quel est le double de ${n} ?`, body:`<div class="big-q">double de ${n} = ?</div>`, good:2 * n, item:`double de ${n}`,
+    indice:`Le double de ${n}, c'est ${n} + ${n}.`, expl:`Le double de ${n}, c'est ${n} + ${n} = <b>${2 * n}</b>.` });
+  return Q({ q:`<b>${2 * n}</b> est le double de quel nombre ?`, voice:`${2 * n} est le double de quel nombre ?`, body:`<div class="big-q">? + ? = ${2 * n}</div>`, good:n, item:`${2 * n} = double de ?`,
+    indice:`Cherche le nombre qui, ajouté à lui-même, fait ${2 * n}. Essaie avec ${n > 5 ? 5 : 2} pour commencer.`, expl:`${n} + ${n} = ${2 * n}, donc ${2 * n} est le double de <b>${n}</b>.` }); }
+/* 4. La moitié : partager en deux parts égales (les chatons jumeaux) */
+function qMoitie(){ const n = rnd(2, 10), k = pick(['poisson', 'poisson', 'croissant', 'makroud']), [, pl] = OBJ[k];
+  return Q({ q:`Les deux chatons jumeaux se partagent <b>${2 * n} ${pl}</b>, autant chacun. Combien en a chaque chaton ?`, voice:`Les deux chatons jumeaux se partagent ${2 * n} ${pl}, autant chacun. Combien en a chaque chaton ?`,
+    body:`<div class="plats"><div class="plat dix">${img(k).repeat(2 * n)}</div></div>`, good:n, item:`moitié de ${2 * n}`,
+    indice:`Cherche le nombre dont le double fait ${2 * n} : ? + ? = ${2 * n}.`, expl:`${n} + ${n} = ${2 * n}, donc la <b>moitié</b> de ${2 * n}, c'est <b>${n}</b>. Chaque chaton a ${n} ${pl}.` }); }
+/* 5. Les grands doubles : dizaines, puis nombres à deux chiffres (on double les dizaines, puis les unités) */
+function qGrand(){ let n;
+  if(Math.random() < .4){ n = pick([20, 30, 40, 50, 15, 25, 35, 45]); }
+  else { const d = rnd(1, 4), u = rnd(1, 4); n = 10 * d + u; }
+  const d = Math.floor(n / 10), u = n % 10;
+  return Q({ q:`Quel est le <b>double de ${n}</b> ?`, voice:`Quel est le double de ${n} ?`, body:`<div class="big-q">${n} + ${n} = ?</div>${barres(n)}<div class="barres" style="margin-top:6px">${barres(n).replace(/^<div class="barres">|<\/div>$/g, '')}</div>`, good:2 * n, item:`double de ${n}`,
+    indice:u === 5 ? `Double les dizaines (${d * 10} + ${d * 10} = ${20 * d}), puis 5 + 5 = 10.` : u ? `Double les dizaines : ${d * 10} + ${d * 10} = ${20 * d}. Puis les unités : ${u} + ${u} = ${2 * u}.` : `${d} dizaines + ${d} dizaines = ${2 * d} dizaines.`,
+    expl:`Double de ${n} : ${d * 10} + ${d * 10} = ${20 * d}${u ? `, et ${u} + ${u} = ${2 * u}, donc ${20 * d} + ${2 * u}` : ''} = <b>${2 * n}</b>.` }); }
+/* 6. Les grandes moitiés : moitié de 40, 60, 24, 48… (on partage les dizaines puis les unités) */
+function qGrandeMoitie(){ const n = pick([20, 40, 60, 80, 100, 24, 26, 28, 42, 44, 46, 48, 62, 64, 66, 68, 84, 86, 88, 30, 50, 70, 90]), m = n / 2;
+  const d = Math.floor(n / 10), u = n % 10, pair = d % 2 === 0;
+  return Q({ q:`Quelle est la <b>moitié de ${n}</b> ?`, voice:`Quelle est la moitié de ${n} ?`, body:`<div class="big-q">moitié de ${n} = ?</div>${barres(n)}`, good:m, item:`moitié de ${n}`,
+    indice:pair ? `Partage les dizaines : la moitié de ${d * 10}, c'est ${d * 5}. Puis la moitié de ${u}, c'est ${u / 2}.` : `Pense au double : quel nombre + lui-même fait ${n} ? La moitié de ${(d - 1) * 10} est ${(d - 1) * 5}, et la moitié de ${10 + u} est ${(10 + u) / 2}.`,
+    expl:`${m} + ${m} = ${n}, donc la moitié de ${n}, c'est <b>${m}</b>.` }); }
+/* 7. Diviser par 2 = prendre la moitié */
+function qDiv2(){ const m = pick([3, 4, 5, 6, 7, 8, 9, 12, 14, 15, 21, 23, 24, 25, 32, 34, 35, 41, 43, 45]), n = 2 * m;
+  const pb = Math.random() < .45;
+  return Q({ q:pb ? `Ollie range <b>${n} croissants</b> dans <b>2 paniers</b>, autant dans chaque panier. Combien y a-t-il de croissants par panier ?` : `Calcule <b>${n} : 2</b>`,
+    voice:pb ? `Ollie range ${n} croissants dans 2 paniers, autant dans chaque panier. Combien y a-t-il de croissants par panier ?` : `Calcule ${n} divisé par 2.`,
+    body:`<div class="big-q">${n} : 2 = ?</div><div class="astuce">: 2, c'est chercher la moitié. Quel nombre a pour double ${n} ?</div>`, good:m, item:`${n} : 2`,
+    indice:`Cherche le nombre qui, doublé, fait ${n}. ${n >= 20 ? `Partage d'abord les dizaines, puis les unités.` : ''}`, expl:`${m} + ${m} = ${n}, donc ${n} : 2 = <b>${m}</b>.` }); }
+/* 8. La grande révision : diviser par 4 = la moitié de la moitié, et les doubles en problème */
+function qDiv4(){ const r = Math.random();
+  if(r < .5){ const m = pick([2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25]), n = 4 * m;
+    return Q({ q:`Calcule <b>${n} : 4</b>. Astuce : la moitié… de la moitié !`, voice:`Calcule ${n} divisé par 4. Astuce : la moitié de la moitié.`, body:`<div class="big-q">${n} : 4 = ?</div><div class="astuce">${n} → moitié → ? → moitié → ?</div>`, good:m, item:`${n} : 4`,
+      indice:`D'abord la moitié de ${n} : c'est ${n / 2}. Puis la moitié de ${n / 2}.`, expl:`La moitié de ${n} est ${n / 2}, et la moitié de ${n / 2} est <b>${m}</b>. Donc ${n} : 4 = ${m}.` }); }
+  if(r < .75) return qDiv2();
+  return qGrand(); }
+
+window.COURS = {
+  key:'salma-doubles', track:'salma-doubles', retour:'Les Doubles', titre:'Les Doubles d\'Ollie', sous:'Les doubles, les moitiés… et la division devient facile',
+  controle:true, reflexion:1500,
+  histoire:{ titre:'La boulangerie des doubles', scenes:[
+    { img:'ollie/img/h-sd1.webp', vid:'ollie/img/h-sd1.mp4', txt:`Ce matin, Ollie ouvre sa petite boulangerie de Sidi Bou Saïd. Salma vient l'aider. Sur la table, il y a <b>deux plateaux</b>, exactement pareils. « Quand je mets 3 makrouds sur un plateau, dit Ollie, j'en mets 3 sur l'autre. 3 et encore 3, ça fait 6 : <b>6 est le double de 3</b> ! »` },
+    { img:'ollie/img/h-sd2.webp', vid:'ollie/img/h-sd2.mp4', txt:`Miaou ! Deux chatons jumeaux arrivent dans la cuisine. Ils ont faim, et ils veulent toujours <b>la même chose</b> ! Salma a 8 petits poissons. Elle les partage : 4 pour l'un, 4 pour l'autre. « Bravo, dit Ollie : 4, c'est <b>la moitié</b> de 8. Car 4 + 4 = 8. »` },
+    { img:'ollie/img/h-sd3.webp', vid:'ollie/img/h-sd3.mp4', txt:`À midi, la classe de Salma arrive. 24 enfants ! La maîtresse demande : « Faites <b>deux équipes</b> égales. » Salma réfléchit : « Je cherche le nombre qui, doublé, fait 24… 12 + 12 = 24 ! Donc <b>24 divisé par 2, ça fait 12</b>. » Diviser par 2, c'est chercher la moitié !` },
+    { img:'ollie/img/h-sd4.webp', vid:'ollie/img/h-sd4.mp4', txt:`« Tope là ! » Ollie est très fier. « Tu as trouvé mon secret, Salma : quand on connaît bien <b>ses doubles</b>, on trouve les <b>moitiés</b>, et les <b>divisions</b> deviennent faciles. » À toi maintenant ! Et attention : ici, on réfléchit avant de répondre.` },
+  ] },
+  bonjour:`Bienvenue dans ma boulangerie, Salma ! Ici, on apprend <b>les doubles</b> par cœur, puis <b>les moitiés</b>, puis <b>la division</b>. Les réponses s'écrivent au pavé : pas de hasard ! Si tu te trompes, je te donne un indice et tu réessaies. Chaque bonne réponse du premier coup te donne un <b>ticket 🎟️</b>.`,
+  confetti:['🥐','🧁','✌️','⭐','🎟️'], revoir:'Mes doubles à revoir',
+  CH:[
+    { id:'petits', name:'Les deux plateaux', sub:'1 + 1 … 5 + 5', icon:'🥐', edge:'#e0a100', make:() => noDup(qPetit, 6),
+      rule:`Le <b>double</b> d'un nombre, c'est ce nombre ajouté à lui-même. Le double de 3, c'est 3 + 3 = <b>6</b>.<div class="table2" style="margin-top:8px"><span>1+1<b>2</b></span><span>2+2<b>4</b></span><span>3+3<b>6</b></span><span>4+4<b>8</b></span><span>5+5<b>10</b></span></div>` },
+    { id:'moyens', name:'Les grands plateaux', sub:'6 + 6 … 10 + 10', icon:'🧁', edge:'#c2577a', make:() => noDup(qMoyen, 7),
+      rule:`Astuce d'Ollie : 7 + 7, c'est 5 + 5 (= 10) et encore 2 + 2 (= 4), donc <b>14</b>.<div class="table2" style="margin-top:8px"><span>6+6<b>12</b></span><span>7+7<b>14</b></span><span>8+8<b>16</b></span><span>9+9<b>18</b></span><span>10+10<b>20</b></span></div>` },
+    { id:'double', name:'Le double, dans les deux sens', sub:'double de 7 ? · 16 = double de ?', icon:'✌️', edge:'#2a7fb4', make:() => noDup(qDouble, 8),
+      rule:`Si le double de 8 est 16, alors <b>16 est le double de 8</b>. On lit la table dans les deux sens !` },
+    { id:'moitie', name:'Les chatons jumeaux', sub:'La moitié', icon:'🐱', edge:'#147a66', make:() => noDup(qMoitie, 7),
+      rule:`Partager en <b>deux parts égales</b>, c'est prendre la <b>moitié</b>. Pour trouver la moitié de 14, je cherche le double qui fait 14 : 7 + 7 = 14, donc la moitié de 14, c'est <b>7</b>.` },
+    { id:'grands', name:'Les grands doubles', sub:'double de 30, de 24…', icon:'🏗️', edge:'#7a4fe0', make:() => noDup(qGrand, 8),
+      rule:`Pour doubler un grand nombre, on double <b>les dizaines</b> puis <b>les unités</b>. Double de 24 : 20 + 20 = 40, 4 + 4 = 8, donc <b>48</b>.` },
+    { id:'gmoities', name:'Les grandes moitiés', sub:'moitié de 60, de 48…', icon:'🍰', edge:'#c8473a', make:() => noDup(qGrandeMoitie, 8),
+      rule:`Pour la moitié de 48 : la moitié de 40 = 20, la moitié de 8 = 4, donc <b>24</b>. Et pour 30 ? Je cherche le double : 15 + 15 = 30, donc la moitié de 30 = <b>15</b>.` },
+    { id:'div2', name:'Diviser par 2', sub:'24 : 2 = ?', icon:'➗', edge:'#2a7fb4', make:() => noDup(qDiv2, 8),
+      rule:`<b>Diviser par 2</b>, c'est prendre la moitié. 24 : 2 ? Je cherche le nombre dont le double fait 24 : 12 + 12 = 24, donc <b>24 : 2 = 12</b>.` },
+    { id:'div4', name:'La grande révision', sub:'Diviser par 4 : la moitié de la moitié', icon:'🏆', edge:'#147a66', make:() => noDup(qDiv4, 10),
+      rule:`<b>Diviser par 4</b>, c'est prendre la moitié… de la moitié ! 20 : 4 → la moitié de 20 = 10 → la moitié de 10 = <b>5</b>.` },
+  ],
+  fiche:[
+    { h:'Mes doubles par cœur', tag:'1', html:`<div class="table2"><span>1+1<b>2</b></span><span>2+2<b>4</b></span><span>3+3<b>6</b></span><span>4+4<b>8</b></span><span>5+5<b>10</b></span><span>6+6<b>12</b></span><span>7+7<b>14</b></span><span>8+8<b>16</b></span><span>9+9<b>18</b></span><span>10+10<b>20</b></span></div>`,
+      lire:`1 plus 1, 2. 2 plus 2, 4. 3 plus 3, 6. 4 plus 4, 8. 5 plus 5, 10. 6 plus 6, 12. 7 plus 7, 14. 8 plus 8, 16. 9 plus 9, 18. 10 plus 10, 20.` },
+    { h:'Les grands doubles', tag:'2', html:`<div class="table2"><span>double de 20<b>40</b></span><span>de 30<b>60</b></span><span>de 50<b>100</b></span><span>de 15<b>30</b></span><span>de 25<b>50</b></span></div><div class="astuce" style="margin-top:8px">Double de 24 = double de 20 (40) + double de 4 (8) = 48</div>`,
+      lire:`Pour doubler un grand nombre, on double les dizaines, puis les unités. Le double de 24, c'est 40 plus 8, donc 48. Le double de 25, c'est 50.` },
+    { h:'Moitié et division', tag:'3', html:`<p>La <b>moitié</b> d'un nombre, c'est le nombre dont il est le double.</p><div class="astuce">18 : 2 = ? → ? + ? = 18 → 9 + 9 = 18 → <b>18 : 2 = 9</b><br>40 : 4 → moitié 20 → moitié 10 → <b>40 : 4 = 10</b></div>`,
+      lire:`La moitié d'un nombre, c'est le nombre dont il est le double. Diviser par 2, c'est chercher la moitié. Diviser par 4, c'est chercher la moitié de la moitié.` },
+  ],
+};
+</script>
+<script src="ollie/cours.js?v=5"></script>
+</body></html>

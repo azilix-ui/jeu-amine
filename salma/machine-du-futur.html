@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>La Machine du Futur</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%8F%B3%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="ollie/cours.css?v=3">
+<style>
+/* La Machine du Futur (20/11) : le futur simple pour Salma (CE2), sur le moteur ollie/cours.js. Demandé par le papa :
+   un cours de français qui commence par un dessin animé (Salma et Ollie voyagent dans le futur : images ComfyUI, films Wan 2.2,
+   voix Céline), puis des exercices contrôlés (C.controle) : réfléchir avant de répondre, un indice à la 1re erreur,
+   écrire les terminaisons lettre par lettre et remettre les phrases dans l'ordre (on ne peut pas deviner au hasard). */
+.term{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;font-weight:800;text-align:center}
+@media (max-width:560px){.term{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.term span{background:#e4f3fd;color:#1d5c84;border-radius:12px;padding:8px 4px}.term b{color:#c8473a}
+.astuce{background:#fff8de;border:3px solid var(--sun);border-radius:16px;padding:10px 14px;font-weight:800}
+.trou{display:inline-block;min-width:2.4em;border-bottom:5px dotted var(--sun);text-align:center;color:var(--mint-deep)}
+.frise{display:flex;gap:8px;justify-content:center;margin-top:8px;font-weight:800;flex-wrap:wrap}.frise span{padding:4px 12px;border-radius:999px;background:#eef3f8}.frise .on{background:#ffe9a6}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = [...a]; for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const T = '<span class="trou">…</span>';
+function noDup(f, n){ const out = [], seen = new Set(); let g = 0; while(out.length < n && g++ < 400){ const q = f(); if(!seen.has(q.item)){ seen.add(q.item); out.push(q); } } return out; }
+const PR = ['je', 'tu', 'il', 'nous', 'vous', 'ils'], PRX = ['je', 'tu', 'elle', 'nous', 'vous', 'elles'];
+const TERM = ['ai', 'as', 'a', 'ons', 'ez', 'ont'];
+const ER = ['chanter', 'jouer', 'danser', 'manger', 'regarder', 'nager', 'dessiner', 'parler', 'sauter', 'voler', 'marcher', 'rêver', 'chercher', 'cuisiner', 'visiter', 'gagner'];
+const IRR = { 'être':['serai', 'seras', 'sera', 'serons', 'serez', 'seront'], 'avoir':['aurai', 'auras', 'aura', 'aurons', 'aurez', 'auront'], 'aller':['irai', 'iras', 'ira', 'irons', 'irez', 'iront'],
+  'faire':['ferai', 'feras', 'fera', 'ferons', 'ferez', 'feront'], 'venir':['viendrai', 'viendras', 'viendra', 'viendrons', 'viendrez', 'viendront'], 'voir':['verrai', 'verras', 'verra', 'verrons', 'verrez', 'verront'], 'pouvoir':['pourrai', 'pourras', 'pourra', 'pourrons', 'pourrez', 'pourront'] };
+const fut = (v, i) => IRR[v] ? IRR[v][i] : v + TERM[i];
+const sujet = (i, v) => { const p = Math.random() < .5 ? PR[i] : PRX[i]; return p === 'je' && /^[aeiouhéê]/.test(fut(v, i)) ? "j'" : p; };
+const sp = s => s.endsWith("'") ? s : s + ' ';
+
+/* 1. Reconnaître le futur (les mots du temps + la forme du verbe) */
+const PHR = [
+  ['Demain, nous irons à la plage.', 'futur'], ['Hier, nous sommes allés à la plage.', 'passe'], ['Aujourd\'hui, nous allons à la plage.', 'present'],
+  ['L\'été prochain, Salma nagera dans la mer.', 'futur'], ['L\'été dernier, Salma a nagé dans la mer.', 'passe'], ['En ce moment, Salma nage dans la mer.', 'present'],
+  ['Plus tard, je serai pilote.', 'futur'], ['Avant, j\'étais petite.', 'passe'], ['Maintenant, je suis en CE2.', 'present'],
+  ['Bientôt, Ollie ouvrira sa boulangerie.', 'futur'], ['Ce matin, Ollie a ouvert sa boulangerie.', 'passe'], ['Ollie ouvre sa boulangerie.', 'present'],
+  ['Dans cent ans, les maisons voleront.', 'futur'], ['Autrefois, on voyageait à cheval.', 'passe'], ['Ce soir, nous regarderons les étoiles.', 'futur'], ['Amine dessine un dragon.', 'present'],
+  ['Samedi, tu viendras chez mamie.', 'futur'], ['La semaine dernière, tu es venu chez mamie.', 'passe']];
+function qReco(){ const [p, g] = pick(PHR), N = { passe:'⏪ Passé', present:'⏺ Présent', futur:'⏩ Futur' };
+  return { t:'choix', q:`Cette phrase est-elle au passé, au présent ou au futur ?`, voice:`Cette phrase est-elle au passé, au présent ou au futur ? ${p}`, body:`<div class="big-q">${p}</div>`,
+    opts:Object.keys(N).map(k => ({ v:k, html:N[k] })), cols:1, good:g, item:p, indice:`Regarde le petit mot du début (« ${p.split(',')[0]} ») et la fin du verbe.`,
+    expl:`C'est au <b>${{ passe:'passé', present:'présent', futur:'futur' }[g]}</b>.${g === 'futur' ? ' Le verbe au futur garde souvent son <b>r</b> : nage<b>r</b>a, ouvri<b>r</b>a.' : ''}` }; }
+/* 2. Les terminaisons : écrire la terminaison lettre par lettre (épeler) */
+function qTerm(){ const v = pick(ER), i = Math.floor(Math.random() * 6), s = sujet(i, v);
+  return { t:'epelle', q:`Écris la <b>terminaison</b> du futur : ${sp(s)}${v}<b>…</b>`, voice:`Écris la terminaison du futur. ${s} ${fut(v, i)}. Avec quel pronom ? ${s}.`, body:`<div class="big-q">${sp(s)}${v}${T}</div>`,
+    word:TERM[i], item:`${s} ${fut(v, i)}`, indice:`Avec « ${PR[i]} », la terminaison du futur est toujours la même : regarde la fiche des terminaisons.`, expl:`${sp(s)}${v}<b>${TERM[i]}</b> : avec ${PR[i]}, on écrit <b>-${TERM[i]}</b>.` }; }
+/* 3. Les verbes en -er : choisir la bonne forme (pièges : présent, oubli du r, mauvaise personne) */
+function qEr(){ const v = pick(ER), i = Math.floor(Math.random() * 6), s = sujet(i, v), g = fut(v, i), rad = v.slice(0, -2);
+  const pieges = [...new Set([rad + ['e', 'es', 'e', 'ons', 'ez', 'ent'][i], v.slice(0, -1) + TERM[i], fut(v, (i + 3) % 6), fut(v, i === 0 ? 1 : 0)])].filter(x => x !== g).slice(0, 3);
+  return { t:'choix', q:`Demain… choisis le verbe <b>${v}</b> au futur.`, voice:`Demain, ${s} ... Choisis le verbe ${v} au futur.`, body:`<div class="big-q">Demain, ${sp(s)}${T}</div>`,
+    opts:shuffle([g, ...pieges]), cols:2, good:g, item:`${s} ${g}`, indice:`Au futur, on garde tout le verbe « ${v} » avec son r, et on ajoute la terminaison de « ${PR[i]} ».`,
+    expl:`${sp(s)}<b>${g}</b> : on garde « ${v} » et on ajoute <b>-${TERM[i]}</b>.` }; }
+/* 4. Être et avoir : les deux verbes champions */
+function qEtreAvoir(){ const v = pick(['être', 'avoir']), i = Math.floor(Math.random() * 6), s = sujet(i, v), g = fut(v, i);
+  const autre = fut(v === 'être' ? 'avoir' : 'être', i), pres = (v === 'être' ? ['suis', 'es', 'est', 'sommes', 'êtes', 'sont'] : ['ai', 'as', 'a', 'avons', 'avez', 'ont'])[i];
+  return { t:'choix', q:`Le verbe <b>${v}</b> au futur :`, voice:`Le verbe ${v} au futur. ${s} ...`, body:`<div class="big-q">${sp(s)}${T}</div>`,
+    opts:shuffle([g, autre, pres, fut(v, (i + 2) % 6)]), cols:2, good:g, item:`${v} : ${s} ${g}`, indice:v === 'être' ? `Être au futur commence par « ser- » : je serai, tu seras…` : `Avoir au futur commence par « aur- » : j'aurai, tu auras…`,
+    expl:`${v === 'être' ? 'Être → <b>ser</b>' : 'Avoir → <b>aur</b>'} + la terminaison : <b>${g}</b>.` }; }
+/* 5. Les verbes voyageurs : aller, faire, venir, voir, pouvoir */
+function qIrr(){ const v = pick(['aller', 'faire', 'venir', 'voir', 'pouvoir', 'aller', 'faire']), i = Math.floor(Math.random() * 6), s = sujet(i, v), g = fut(v, i);
+  const FAUX = { aller:['aller', 'va'], faire:['fair', 'faise'], venir:['venir', 'vienr'], voir:['voir', 'voyer'], pouvoir:['pouvoir', 'pouver'] }[v];
+  const faux = [...new Set([...FAUX.map(r => r + TERM[i]), fut(v, (i + 1) % 6)])].filter(x => x !== g).slice(0, 3);
+  const rad = { aller:'ir', faire:'fer', venir:'viendr', voir:'verr', pouvoir:'pourr' }[v];
+  return { t:'choix', q:`Le verbe <b>${v}</b> au futur. Attention, il change !`, voice:`Le verbe ${v} au futur. Attention, il change ! ${s} ...`, body:`<div class="big-q">${sp(s)}${T}</div>`,
+    opts:shuffle([g, ...faux]), cols:2, good:g, item:`${v} : ${s} ${g}`, indice:`Au futur, « ${v} » devient « ${rad}- ». Ajoute la terminaison de « ${PR[i]} ».`,
+    expl:`${v} → <b>${rad}</b> + -${TERM[i]} : ${sp(s)}<b>${g}</b>.` }; }
+/* 6. Remettre une phrase au futur dans l'ordre */
+const ORD = [['Demain', 'nous', 'irons', 'à', 'la', 'plage'], ['Plus', 'tard', 'je', 'serai', 'pilote'], ['Ollie', 'fera', 'un', 'gâteau', 'géant'], ['Samedi', 'tu', 'viendras', 'chez', 'mamie'],
+  ['Les', 'maisons', 'voleront', 'dans', 'le', 'ciel'], ['Nous', 'verrons', 'les', 'étoiles', 'ce', 'soir'], ['Salma', 'aura', 'neuf', 'ans', 'bientôt'], ['Vous', 'chanterez', 'à', 'la', 'fête'],
+  ['Amine', 'dessinera', 'un', 'robot'], ['Les', 'chatons', 'joueront', 'dans', 'le', 'jardin']];
+function qOrdre(){ const w = pick(ORD);
+  return { t:'ordre', q:`Remets les mots dans l'ordre pour faire une phrase au futur.`, voice:`Remets les mots dans l'ordre pour faire une phrase au futur. Commence par le mot qui a une majuscule.`, words:w, fin:'.', item:w.join(' '),
+    indice:`Commence par le mot avec une majuscule. Puis : qui ? quoi (le verbe au futur) ? et le reste.`, expl:`« ${w.join(' ')}. »` }; }
+/* 7. Transformer : du présent au futur */
+const TR = [['Je mange une pomme.', 'Je mangerai une pomme.', 'Je mangeais une pomme.', 'Je mangerait une pomme.'], ['Tu joues au ballon.', 'Tu joueras au ballon.', 'Tu jouais au ballon.', 'Tu jouera au ballon.'],
+  ['Nous sommes en vacances.', 'Nous serons en vacances.', 'Nous étions en vacances.', 'Nous serrons en vacances.'], ['Elle a un chat.', 'Elle aura un chat.', 'Elle avait un chat.', 'Elle aurai un chat.'],
+  ['Ils vont à l\'école.', 'Ils iront à l\'école.', 'Ils allaient à l\'école.', 'Ils iron à l\'école.'], ['Vous faites un gâteau.', 'Vous ferez un gâteau.', 'Vous faisiez un gâteau.', 'Vous fairez un gâteau.'],
+  ['Je vois la mer.', 'Je verrai la mer.', 'Je voyais la mer.', 'Je voirai la mer.'], ['Salma vient avec nous.', 'Salma viendra avec nous.', 'Salma venait avec nous.', 'Salma venira avec nous.']];
+function qTrans(){ const [p, g, ...f] = pick(TR);
+  return { t:'choix', q:`La machine du futur transforme la phrase. Quelle est la phrase <b>au futur</b> ?`, voice:`La machine du futur transforme la phrase. Quelle est la phrase au futur ? ${p}`, body:`<div class="big-q">${p}</div><div class="frise"><span>passé</span><span>présent</span><span class="on">futur ⏩</span></div>`,
+    opts:shuffle([g, ...f]), cols:1, good:g, item:p, indice:`Attention aux pièges : le passé finit souvent par -ais, -ait. Et vérifie la terminaison avec le sujet.`, expl:`« ${g} »` }; }
+function qRevision(){ return pick([qTerm, qEr, qEtreAvoir, qIrr, qTrans, qOrdre])(); }
+
+window.COURS = {
+  key:'salma-futur', track:'salma-futur', retour:'La Machine du Futur', titre:'La Machine du Futur', sous:'Le futur simple : demain, je chanterai, tu seras, nous irons…',
+  controle:true, reflexion:1800,
+  histoire:{ titre:'Le voyage dans le futur', scenes:[
+    { img:'ollie/img/h-sf1.webp', vid:'ollie/img/h-sf1.mp4', txt:`Dans le grenier d'Ollie, il y a une drôle de machine : une grosse horloge dorée. « C'est ma <b>machine du futur</b> ! dit Ollie. Elle nous emmène <b>demain</b>, ou même dans cent ans. Mais attention, Salma : pour qu'elle démarre, il faut parler <b>au futur</b>. » Salma prend une grande inspiration : « Nous <b>partirons</b> ! » Tic, tac… vrouuum !` },
+    { img:'ollie/img/h-sf2.webp', vid:'ollie/img/h-sf2.mp4', txt:`Les voilà <b>demain</b>, à la plage ! Ollie flotte sous son parasol. « Regarde, Salma : au futur, le verbe garde tout son corps et on ajoute une petite queue. Nager… je nager<b>ai</b>, tu nager<b>as</b>, elle nager<b>a</b>. » Salma rit : « Et nous nager<b>ons</b> jusqu'à l'horizon ! »` },
+    { img:'ollie/img/h-sf3.webp', vid:'ollie/img/h-sf3.mp4', txt:`Tic, tac… Les voilà <b>dans cent ans</b>, dans un dirigeable au-dessus d'une ville toute blanche. « Plus tard, les maisons <b>voleront</b>, dit Ollie. Et certains verbes changeront de costume : être devient <b>je serai</b>, avoir devient <b>j'aurai</b>, aller devient <b>j'irai</b>, faire devient <b>je ferai</b>. »` },
+    { img:'ollie/img/h-sf4.webp', vid:'ollie/img/h-sf4.mp4', txt:`Retour au grenier ! La machine brille de mille étincelles. « Merci Ollie ! Demain, je <b>raconterai</b> tout à Amine, et nous <b>ferons</b> le voyage ensemble ! » À toi maintenant de faire marcher la machine. Elle ne démarre que si tu <b>réfléchis</b> bien : pas de réponse au hasard !` },
+  ] },
+  bonjour:`Bienvenue dans le grenier, Salma ! La machine du futur ne marche que si on parle <b>au futur</b>. On va apprendre les <b>terminaisons</b> (-ai, -as, -a, -ons, -ez, -ont), les verbes qui changent de costume, et faire des phrases de demain. Si tu te trompes, je te donne un indice : réfléchis bien avant de répondre. Chaque bonne réponse du premier coup = un <b>ticket 🎟️</b> !`,
+  confetti:['⏳','🚀','⭐','🎟️','✨'], revoir:'Mes verbes à revoir',
+  CH:[
+    { id:'reco', name:'Hier, aujourd\'hui ou demain ?', sub:'Reconnaître le futur', icon:'🕰️', edge:'#e0a100', make:() => noDup(qReco, 8),
+      rule:`Le <b>futur</b>, c'est ce qui n'est pas encore arrivé : <b>demain</b>, <b>bientôt</b>, <b>plus tard</b>, <b>l'été prochain</b>, <b>dans cent ans</b>… Et le verbe a une forme spéciale : nous <b>irons</b>, je <b>serai</b>, elle <b>nagera</b>.` },
+    { id:'term', name:'Les petites queues', sub:'-ai, -as, -a, -ons, -ez, -ont', icon:'✍️', edge:'#c2577a', make:() => noDup(qTerm, 8),
+      rule:`Au futur, les terminaisons sont <b>toujours les mêmes</b> :<div class="term" style="margin-top:8px"><span>je …<b>ai</b></span><span>tu …<b>as</b></span><span>il, elle …<b>a</b></span><span>nous …<b>ons</b></span><span>vous …<b>ez</b></span><span>ils, elles …<b>ont</b></span></div>` },
+    { id:'er', name:'Les verbes en -er', sub:'je chanterai, tu chanteras', icon:'🎵', edge:'#2a7fb4', make:() => noDup(qEr, 8),
+      rule:`Pour les verbes en <b>-er</b>, on garde <b>tout le verbe</b> (avec le r !) et on ajoute la terminaison : chanter → je <b>chanter</b>ai, nous <b>chanter</b>ons.` },
+    { id:'etre', name:'Être et avoir', sub:'je serai, j\'aurai', icon:'👑', edge:'#7a4fe0', make:() => noDup(qEtreAvoir, 8),
+      rule:`Les deux verbes champions changent de costume : <b>être → ser-</b> (je serai, nous serons) et <b>avoir → aur-</b> (j'aurai, ils auront).` },
+    { id:'irr', name:'Les verbes voyageurs', sub:'irai, ferai, viendrai, verrai', icon:'🧳', edge:'#c8473a', make:() => noDup(qIrr, 8),
+      rule:`Ces verbes aussi changent de costume au futur : <b>aller → ir-</b> (j'irai), <b>faire → fer-</b> (je ferai), <b>venir → viendr-</b>, <b>voir → verr-</b>, <b>pouvoir → pourr-</b>. Les terminaisons, elles, ne changent pas !` },
+    { id:'ordre', name:'Les phrases de demain', sub:'Remettre dans l\'ordre', icon:'🧩', edge:'#147a66', make:() => noDup(qOrdre, 7),
+      rule:`Une phrase commence par une <b>majuscule</b> et finit par un <b>point</b>. On cherche d'abord <b>qui</b> fait l'action (le sujet), puis le <b>verbe au futur</b>.` },
+    { id:'trans', name:'La machine transforme', sub:'Du présent au futur', icon:'🔮', edge:'#2a7fb4', make:() => noDup(qTrans, 8),
+      rule:`Je mange (présent) → je <b>mangerai</b> (futur). Attention au piège du passé : je mang<b>eais</b> (avec -ais), c'est hier !` },
+    { id:'revision', name:'Le grand voyage', sub:'La grande révision', icon:'🏆', edge:'#147a66', make:() => noDup(qRevision, 10),
+      rule:`Tout ensemble ! Les terminaisons <b>-ai, -as, -a, -ons, -ez, -ont</b>, et les costumes : ser-, aur-, ir-, fer-, viendr-, verr-, pourr-.` },
+  ],
+  fiche:[
+    { h:'Le futur, c\'est demain', tag:'1', html:`<div class="frise"><span>⏪ hier</span><span>⏺ aujourd'hui</span><span class="on">⏩ demain, bientôt, plus tard</span></div><div class="astuce" style="margin-top:8px">Demain, nous <b>irons</b> à la plage.</div>`,
+      lire:`Le futur, c'est ce qui n'est pas encore arrivé : demain, bientôt, plus tard. Demain, nous irons à la plage.` },
+    { h:'Les terminaisons', tag:'2', html:`<div class="term"><span>je chanter<b>ai</b></span><span>tu chanter<b>as</b></span><span>il chanter<b>a</b></span><span>nous chanter<b>ons</b></span><span>vous chanter<b>ez</b></span><span>ils chanter<b>ont</b></span></div>`,
+      lire:`Je chanterai, tu chanteras, il chantera, nous chanterons, vous chanterez, ils chanteront. Les terminaisons sont toujours a i, a s, a, o n s, e z, o n t.` },
+    { h:'Les verbes qui changent de costume', tag:'3', html:`<div class="term"><span>être → <b>ser</b>ai</span><span>avoir → <b>aur</b>ai</span><span>aller → <b>ir</b>ai</span><span>faire → <b>fer</b>ai</span><span>venir → <b>viendr</b>ai</span><span>voir → <b>verr</b>ai</span></div>`,
+      lire:`Être : je serai. Avoir : j'aurai. Aller : j'irai. Faire : je ferai. Venir : je viendrai. Voir : je verrai.` },
+  ],
+};
+</script>
+<script src="ollie/cours.js?v=5"></script>
+</body></html>
