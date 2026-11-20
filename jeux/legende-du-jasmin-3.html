@@ -117,8 +117,8 @@ body.menu .back{display:inline-flex}
 
 <div class="screen on" id="menu"><div class="box">
   <video class="title-img" id="titleVid" src="jasmin/titre.mp4" poster="jasmin/titre.webp" preload="none" muted playsinline disablepictureinpicture aria-label="La famille dans un village tunisien bleu et blanc : passe la souris ou touche l'image pour la voir sauter"></video>
-  <h1>La Légende <span>du Jasmin</span> <small style="font-size:.45em;display:block">3 · les 24 mondes en vrai</small></h1>
-  <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse vingt-quatre mondes pour les rapporter !</p>
+  <h1>La Légende <span>du Jasmin</span> <small style="font-size:.45em;display:block">3 · les 27 mondes en vrai</small></h1>
+  <p class="sub">Le Scorpion d'Or a volé les jasmins dorés de la Tunisie. Traverse vingt-sept mondes pour les rapporter !</p>
   <button class="who" id="who"></button>
   <div class="tenues-w"><p class="tlab" id="tLab">Ta tenue</p><div class="tenues" id="tenues"></div></div>
   <button class="big" id="play">▶ Jouer</button>
@@ -228,10 +228,15 @@ const WORLDS = [
   { name:'Le Cap Bon', sub:'Les potiers de Nabeul et les orangers', img:'jasmin/monde21.webp', sky:['#5aa8e8', '#fde8c0'], ground:'#d8804a', ground2:'#b85e2e', edge:'#7a3a18', top:'#6aa84a', plat:'#8a4a22', haz:'#3f9ad0', mid:'#d8804a', mid2:'#b85e2e', music:{ bpm:118, root:59 } },
   { name:'Le Vieux Port de Bizerte', sub:'Le pont qui se lève et les barques', img:'jasmin/monde22.webp', sky:['#6ab8e8', '#fdf2d8'], ground:'#e8dcc0', ground2:'#c8b890', edge:'#8a7a5a', top:'#f4ecd8', plat:'#5a6a7a', haz:'#2f8ac0', mid:'#e8dcc0', mid2:'#c8b890', music:{ bpm:110, root:60 } },
   { name:'Testour l\'Andalouse', sub:'L\'horloge qui tourne à l\'envers', img:'jasmin/monde23.webp', sky:['#8ac0e8', '#fdeccc'], ground:'#f0e6d2', ground2:'#d2c2a2', edge:'#9a5a3a', top:'#c8643a', plat:'#8a5a3a', haz:'#4a9ac0', mid:'#f0e6d2', mid2:'#d2c2a2', music:{ bpm:114, root:57 } },
-  { name:'Le Ribat de Monastir', sub:'La tour, les vagues et les boulets', img:'jasmin/monde24.webp', sky:['#f0b070', '#fdeac8'], ground:'#e0b878', ground2:'#c09050', edge:'#7a5a2a', top:'#f0d098', plat:'#8a6a3a', haz:'#3aa0c8', mid:'#e0b878', mid2:'#c09050', music:{ bpm:120, root:55 } }
+  { name:'Le Ribat de Monastir', sub:'La tour, les vagues et les boulets', img:'jasmin/monde24.webp', sky:['#f0b070', '#fdeac8'], ground:'#e0b878', ground2:'#c09050', edge:'#7a5a2a', top:'#f0d098', plat:'#8a6a3a', haz:'#3aa0c8', mid:'#e0b878', mid2:'#c09050', music:{ bpm:120, root:55 } },
+  // 20/11 (demande du papa) : trois mondes de plus
+  { name:'Les Temples de Sbeïtla', sub:'Les colonnes qui s\'effritent', img:'jasmin3/m25/fond.webp', sky:['#f0a868', '#fde6c4'], ground:'#e0c08a', ground2:'#c09a60', edge:'#7a5a30', top:'#d8b070', plat:'#a88050', haz:'#3a9ac0', mid:'#e0c08a', mid2:'#c09a60', music:{ bpm:112, root:56 } },
+  { name:'La Plage de Hammamet', sub:'La médina blanche et les vagues', img:'jasmin3/m26/fond.webp', sky:['#6ac0f0', '#fdf4dc'], ground:'#f4e6c4', ground2:'#dcc898', edge:'#9a8458', top:'#ffffff', plat:'#3a7ab8', haz:'#2a9ad0', mid:'#f4e6c4', mid2:'#dcc898', music:{ bpm:122, root:61 } },
+  { name:'La Kasbah du Kef', sub:'La forteresse dans la montagne', img:'jasmin3/m27/fond.webp', sky:['#7aa8d8', '#e8eef4'], ground:'#b8a488', ground2:'#8a7860', edge:'#4a3e30', top:'#7a9a5a', plat:'#6a5a44', haz:'#4a8ab0', mid:'#b8a488', mid2:'#8a7860', music:{ bpm:104, root:53 } }
 ];
 // L'ordre du voyage (les numéros des mondes restent fixes pour les sauvegardes et les records) : le palais reste la fin
-const ORDER = [1, 6, 7, 19, 23, 15, 10, 21, 17, 22, 11, 14, 24, 2, 12, 18, 13, 8, 20, 9, 16, 3, 4, 5];   // 19 Dougga, 20 Kerkennah, 21 Cap Bon, puis 22 Bizerte, 23 Testour, 24 Monastir ajoutés le 11/11
+const ORDER = [1, 6, 7, 19, 23, 15, 10, 21, 17, 22, 11, 14, 24, 2, 12, 18, 13, 8, 20, 9, 16, 25, 26, 27, 3, 4, 5];   // 25 Sbeïtla, 26 Hammamet, 27 Le Kef ajoutés le 20/11, avant le désert et le palais
+const ORDER24 = [1, 6, 7, 19, 23, 15, 10, 21, 17, 22, 11, 14, 24, 2, 12, 18, 13, 8, 20, 9, 16, 3, 4, 5];   // le voyage à 24 mondes : ce qui était ouvert le reste   // 19 Dougga, 20 Kerkennah, 21 Cap Bon, puis 22 Bizerte, 23 Testour, 24 Monastir ajoutés le 11/11
 const ORDER21 = [1, 6, 7, 19, 15, 10, 21, 17, 11, 14, 2, 12, 18, 13, 8, 20, 9, 16, 3, 4, 5];   // le voyage à 21 mondes : ce qui était ouvert le reste
 const ORDER18 = [1, 6, 7, 15, 10, 17, 11, 14, 2, 12, 18, 13, 8, 9, 16, 3, 4, 5];   // le voyage à 18 mondes : ce qui était ouvert le reste
 const ORDER13 = [1, 6, 7, 10, 11, 2, 12, 13, 8, 9, 3, 4, 5];   // l'ancien voyage (13 mondes) : ce qui était ouvert le reste
@@ -497,6 +502,33 @@ function buildLevel(n){
     M.blocks('cpc', 8); e('scorp', -2); M.secret();
     M.flat(8, { coins:4 }); warpOut(-3); M.check(); M.mover(10, GY - 3, 5, 'x', true); M.flat(6, { coins:3 }); hid(-3);
     M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
+  } else if(n === 25){   // Sbeïtla : les trois temples romains, les colonnes fragiles, les pierres qui tombent
+    sign(3, 'Les temples de Sbeïtla : les vieilles pierres sont fragiles !'); deco(8, 'column'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3); M.stairs(4); M.step(4, 4, { coins:3 }); deco(-2, 'column'); M.stairs(4, -1); M.flat(5);
+    M.plats([[0, GY - 2, 3, 'f'], [4, GY - 4, 3, 'f'], [8, GY - 6, 3, 'f'], [12, GY - 4, 3]], 16, true); gem(9, GY - 8); M.flat(6, { coins:3 }); e('bird', 2, GY - 5);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3); stone(-6); stone(-2);
+    M.fragile(6); M.flat(5); deco(-3, 'arch'); e('scorp', 2); M.fragile(5); M.flat(6); ivre(-2);
+    M.blocks('cpc', 8); e('scorp', -2); M.secret();
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); M.mover(9, GY - 3, 4, 'y', true); M.step(5, 5, { coins:3 }); stone(-2); M.stairs(5, -1); M.flat(4); hid(-3);
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
+  } else if(n === 26){   // Hammamet : la médina blanche au bord de la mer, les vagues, les barques et les mouettes
+    sign(3, 'Hammamet : attends que la vague se retire !'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('scorp', -3); M.tide(5); M.flat(5, { coins:3 }); M.tide(6); M.flat(6); e('bird', 2, GY - 5);
+    boat(10, 5); M.flat(6, { coins:3 }); gem(-3, GY - 6); e('bird', -4, GY - 5);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3);
+    M.step(2, 4); M.step(4, 5, { coins:3 }); M.step(2, 4); M.flat(5); e('scorp', 2); M.tide(7); gem(-4, GY); M.flat(6); ivre(-2);
+    M.blocks('cpc', 8); e('scorp', -2); M.secret(); e('bird', 3, GY - 5);
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); boat(11, 6); M.flat(6, { coins:3 }); M.tide(5); M.flat(5); hid(-3);
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
+  } else if(n === 27){   // Le Kef : on grimpe la montagne jusqu'à la kasbah, les ascenseurs de pierre, les hérissons
+    sign(3, 'Le Kef : grimpe jusqu\'à la kasbah !'); M.flat(12, { coins:5 }); hid(-4);
+    M.blocks('bSb', 8); e('hog', -3); M.stairs(5); M.step(5, 5, { coins:3 }); M.mover(6, GY - 6, 4, 'y', true); M.step(5, 7, { coins:3 }); gem(-3, GY - 11); M.stairs(7, -1); M.flat(5);
+    M.check(); M.flat(8, { coins:4 }); warpIn(-3); e('hog', -5);
+    M.plats([[1, GY - 3, 3], [5, GY - 5, 3], [9, GY - 7, 3], [13, GY - 5, 3]], 17, true); gem(10, GY - 9); M.flat(6); e('bird', 2, GY - 5);
+    M.step(2, 4); M.step(4, 5, { coins:3 }); stone(-3); M.step(2, 4); M.flat(5); ivre(-2);
+    M.blocks('cpc', 8); e('hog', -2); M.secret();
+    M.flat(8, { coins:4 }); warpOut(-3); M.check(); M.mover(10, GY - 3, 5, 'x', true); M.flat(6, { coins:3 }); stone(-3); hid(-3);
+    M.spring(); M.flat(5); M.blocks('S', 6); M.spikes(9); M.door();
   } else {
     sign(3, 'Le palais du Scorpion…'); M.flat(12, { coins:5 }); hid(-4);
     M.blocks('bpbSb', 10); e('cactus', -2); M.gap(3, true); M.spikes(10); e('hog', -4); M.fragile(6); M.flat(5); e('bird', 2, GY - 5);
@@ -710,7 +742,7 @@ function musicTick(){
   }
 }
 // L'ambiance de chaque monde (13/11) : jeux/sons/jasmin-amb-<monde>.mp3, ElevenLabs, 15 s en boucle ; chargée seulement quand on entre dans le monde
-function ambStart(){ if(!prefs.amb || !window.Sons || !G0 || !audio()) return; const k = 'amb-' + G0.lv.n; Sons.charger('jasmin', [k]); Sons.boucle(AC, master, k, .5); }
+function ambStart(){ if(!prefs.amb || !window.Sons || !G0 || !audio()) return; const k = 'amb-' + ({ 25:19, 26:7, 27:4 }[G0.lv.n] || G0.lv.n);   // 25 à 27 (20/11) reprennent l'ambiance d'un monde voisin Sons.charger('jasmin', [k]); Sons.boucle(AC, master, k, .5); }
 function ambStop(){ if(window.Sons) Sons.stop(); }
 function musicStart(){ ambStart(); if(!prefs.music || !audio() || MUS.on) return; genMelody(); MUS.on = true; MUS.next = AC.currentTime + .05; MUS.timer = setInterval(musicTick, 25); }
 function musicStop(){ MUS.on = false; clearInterval(MUS.timer); ambStop(); }
@@ -1549,7 +1581,7 @@ function renderMenu(){ renderTenues(); if($('eWho')) $('eWho').innerHTML = `${av
 async function choose(){ const n = await Famille.choosePlayer({ title:'Qui part à l\'aventure ?', extra:PARENTS, avatar:k => `<img src="avatars/${k.name.toLowerCase()}.webp" alt="" onerror="this.replaceWith(document.createTextNode('${k.emoji}'))">` }); if(n) await setPlayer(n); return n; }
 $('who').onclick = () => { audio(); sfx.tap(); choose(); };
 // un monde est ouvert s'il est le premier du voyage, s'il l'était déjà avec l'ancien ordre (1 à 5), ou si le monde d'avant est réussi
-function isOpen(id){ const i = ORDER.indexOf(id), j = ORDER13.indexOf(id), k = ORDER18.indexOf(id); return i === 0 || !!save.best[id] || (id <= 5 && id <= save.unlocked) || !!save.best[ORDER[i - 1]] || (j > 0 && !!save.best[ORDER13[j - 1]]) || (k > 0 && !!save.best[ORDER18[k - 1]]) || (ORDER21.indexOf(id) > 0 && !!save.best[ORDER21[ORDER21.indexOf(id) - 1]]); }
+function isOpen(id){ const i = ORDER.indexOf(id), j = ORDER13.indexOf(id), k = ORDER18.indexOf(id); return i === 0 || !!save.best[id] || (id <= 5 && id <= save.unlocked) || !!save.best[ORDER[i - 1]] || (j > 0 && !!save.best[ORDER13[j - 1]]) || (k > 0 && !!save.best[ORDER18[k - 1]]) || (ORDER21.indexOf(id) > 0 && !!save.best[ORDER21[ORDER21.indexOf(id) - 1]]) || (ORDER24.indexOf(id) > 0 && !!save.best[ORDER24[ORDER24.indexOf(id) - 1]]); }
 async function openLevels(){
   audio(); if(!player){ const n = await choose(); if(!n) return; }
   const nextId = ORDER.find(id => isOpen(id) && !save.best[id]);
@@ -1585,7 +1617,10 @@ const STORY = ["Le Scorpion d'Or a volé les jasmins dorés de Sidi Bou Saïd ! 
   "Au Cap Bon, les potiers de Nabeul empilent leurs jarres et les orangers croulent sous les fruits. Les piles s'effritent, et les oranges tombent !",
   "Dans le vieux port de Bizerte, un grand pont se lève pour laisser passer les bateaux. Attends qu'il redescende pour monter dessus, et saute de barque en barque !",
   "À Testour, la ville des Andalous, l'horloge de la mosquée tourne à l'envers ! Monte au bout de l'aiguille et laisse-toi porter… gare aux grenades qui tombent.",
-  "À Monastir, un ribat doré garde la mer depuis plus de mille ans. Grimpe sa tour, attends que les vagues se retirent, et saute par-dessus les boulets de canon !"];
+  "À Monastir, un ribat doré garde la mer depuis plus de mille ans. Grimpe sa tour, attends que les vagues se retirent, et saute par-dessus les boulets de canon !",
+  "À Sbeïtla, trois temples romains se dressent encore au milieu de la plaine. Leurs vieilles pierres s'effritent sous tes pieds : ne traîne pas !",
+  "À Hammamet, la médina toute blanche trempe ses pieds dans la mer. Attends que les vagues se retirent, et saute de barque en barque !",
+  "Au Kef, la kasbah veille sur la montagne. Grimpe les rochers, prends les ascenseurs de pierre, et gare aux hérissons qui dévalent la pente !"];
 function intro(n){
   const w = WORLDS[n - 1];
   $('introBox').innerHTML = `${n === 5 ? `<img class="boss-img" src="jasmin/boss.webp" alt="Le Scorpion d'Or" onerror="this.remove()">` : `<img class="title-img" src="${w.img}" alt="" onerror="this.remove()" style="aspect-ratio:21/9">`}

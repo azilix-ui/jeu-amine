@@ -518,6 +518,8 @@ html.explo .explo-note{display:flex;align-items:center;gap:12px;background:#e1f4
 <script>
 // Le mur des nouveautés (14/11) : à compléter ici à chaque nouveauté (la plus récente en premier). « pour » : tous, explo, ou des prénoms.
 const NOUVEAUTES = [
+  { d:'20/11', e:'🏺', t:'Yajour : 2 nouveaux mondes', x:'Djerba et ses potiers de Guellala, puis le fort de Tabarka : 10 nouveaux niveaux, des jarres, des remparts et des chatons à sauver.', l:'jeux/yajour.html', p:'#ffe7c2', pin:'#0f766e' },
+  { d:'20/11', e:'🌸', t:'Le Jasmin : 27 mondes', x:'Trois nouveaux mondes en vrai : les temples de Sbeïtla, la plage de Hammamet et la kasbah du Kef.', l:'jeux/legende-du-jasmin-3.html', p:'#fff7c2', pin:'#b4235a' },
   { d:'20/11', e:'🧱', t:'Tebni (تبني) : nouveau jeu !', x:'Le jeu de briques de la famille, comme le classique : empile les carreaux de zellige sur la terrasse de Sidi Bou Saïd et complète les lignes. 4 lignes d\'un coup, c\'est un « Tebni ! ». Ton avatar te félicite.', l:'jeux/tebni.html', p:'#e0ecff', pin:'#0b3a82' },
   { d:'20/11', e:'✖️', t:'Les Tables du Souk', x:'Un nouveau cours de maths pour Salma (CE2) : le dessin animé au souk, puis les rangées, les tables de 2, 3, 4, 5 et 10, et multiplier pour diviser.', l:'salma/tables-du-souk.html', p:'#fff1d6', pin:'#e0a100', pour:['Salma', 'explo'] },
   { d:'20/11', e:'🇬🇧', t:'My First English', x:'5 cours pour commencer l’anglais : bonjour, les couleurs, les nombres, les animaux, la famille. Un dessin animé, des exercices, et tu répètes à voix haute : la tablette t’écoute !', l:'salma/first-english-1.html', p:'#e4f3fd', pin:'#2a7fb4', pour:['Salma', 'explo'] },
@@ -564,7 +566,7 @@ const NOUVEAUTES = [
   { d:'14/11', e:'💬', t:'Le salon', x:'Touche ton étiquette en bas à gauche : écris à qui est connecté.', p:'#dff7e8', pin:'#7c3aed', pour:['explo'] },
   { d:'14/11', e:'🙋', t:'Encore un peu ?', x:'Quand le temps est fini, demande plus de temps à papa ou maman.', p:'#dff7e8', pin:'#7c3aed', pour:['Essil', 'Salma', 'Amine'] },
   { d:'14/11', e:'🐑', t:'La ferme', x:'Dans Ma Houma : nourris les animaux, ramasse les œufs.', l:'jeux/ma-houma.html', p:'#fff1dc', pin:'#0f766e' },
-  { d:'13/11', e:'🌸', t:'Le Jasmin en vrai', x:'Les 24 mondes en images réalistes.', l:'jeux/legende-du-jasmin-3.html', p:'#fff7c2', pin:'#b4235a' }];
+  { d:'13/11', e:'🌸', t:'Le Jasmin en vrai', x:'Les 24 mondes en images réalistes (27 depuis le 20/11).', l:'jeux/legende-du-jasmin-3.html', p:'#fff7c2', pin:'#b4235a' }];
 (function(){
   const P = window.FamilleProfil && FamilleProfil.actuel(); if(!P) return;
   const qui = P.type === 'explo' ? 'explo' : P.nom, R = ['-2deg', '1.5deg', '-1deg', '2deg', '-1.5deg', '1deg'];

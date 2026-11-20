@@ -57,6 +57,9 @@ export const MONDES = [
   { id:'sidibou', nom:'Sidi Bou Saïd', ar:'سيدي بو سعيد', sol:'sol_sidibou', pano:'pano_sidibou', ciel:0x8fd0ff },
   { id:'eljem', nom:'El Jem', ar:'الجم', sol:'sol_eljem', pano:'pano_eljem', ciel:0xa9cdf0 },
   { id:'sahara', nom:'Le Sahara', ar:'الصحراء', sol:'sol_sahara', pano:'pano_sahara', ciel:0xf0a070 },
+  // 20/11 (demande du papa) : deux mondes de plus
+  { id:'djerba', nom:'Djerba, les potiers', ar:'جربة', sol:'sol_djerba', pano:'pano_djerba', ciel:0x8fd8f0 },
+  { id:'tabarka', nom:'Le fort de Tabarka', ar:'طبرقة', sol:'sol_tabarka', pano:'pano_tabarka', ciel:0x7ec4ec },
 ];
 export const NIVEAUX = [
   // Sidi Bou Saïd : briques et bois (on apprend)
@@ -77,6 +80,18 @@ export const NIVEAUX = [
   { m:2, nom:'L’oasis', tirs:3, but:{ type:'cible' }, par:1700, aide:'Les jarres d’or sont près de l’oasis. Une caisse de feux peut t’aider !', blocs:[jarre(-1.8, 0, 1.2, { cible:true }), jarre(1.8, 0, 1.2, { cible:true }), cube('feux', 0, 0, 1.2, .9), ...mur('brique', 0, -.6, 5, 2)] },
   { m:2, nom:'La caravane', tirs:4, but:{ type:'tomber', min:12 }, par:1700, aide:'Une grande caravane de caisses : fais tout tomber du plateau !', blocs:[...pyramide('palmier', -1.6, .5, 3), ...pyramide('palmier', 1.6, .5, 3), cube('feux', 0, 0, .5, .8), ...tour('brique', 0, -1.5, 3, .6)] },
   { m:2, nom:'Le grand final', tirs:4, but:{ type:'chat' }, par:1500, aide:'Le dernier chaton est tout en haut ! Libère-le sans le faire tomber.', blocs:[dalle('zellige', 0, 1.6, 1, 2.4, 2.4, .3), colonne('zellige', -.9, 1, 1.6, .25), colonne('zellige', .9, 1, 1.6, .25), ...cage(0, 1.9, 1), cube('feux', -2.2, 0, -.5, .8), ...tour('palmier', 2.2, -.5, 3, .8)] },
+  // Djerba (20/11) : les jarres des potiers de Guellala, les murs blanchis, les palmiers
+  { m:3, nom:'L’atelier du potier', tirs:3, but:{ type:'cible' }, par:1150, aide:'Chez le potier de Guellala : casse les trois jarres d’or sur les étagères !', blocs:[dalle('bois', 0, 1.2, .5, 4.2, 1, .2), ...tour('bois', -1.8, .5, 1, 1.2), ...tour('bois', 1.8, .5, 1, 1.2), jarre(-1.2, 1.4, .5, { cible:true }), jarre(0, 1.4, .5, { cible:true }), jarre(1.2, 1.4, .5, { cible:true })] },
+  { m:3, nom:'Le menzel', tirs:3, but:{ type:'tomber', min:8 }, par:1600, aide:'Une maison blanche de Djerba : fais tomber ses briques !', blocs:[...mur('brique', 0, 0, 5, 4), ...pyramide('bois', 0, -1.2, 3)] },
+  { m:3, nom:'Les jarres en équilibre', tirs:3, but:{ type:'tomber', min:5 }, par:1000, aide:'Les jarres sont empilées sur des planches : fais-les toutes tomber du plateau.', blocs:[...tour('palmier', -1.5, 0, 2), ...tour('palmier', 1.5, 0, 2), dalle('bois', 0, 2, 0, 4, 1, .2), jarre(-1, 2.2, 0), jarre(0, 2.2, 0), jarre(1, 2.2, 0), jarre(0, 0, 0)] },
+  { m:3, nom:'Le chat du potier', tirs:3, but:{ type:'chat' }, par:900, aide:'Le chat du potier est enfermé : libère-le sans le faire tomber !', blocs:[dalle('zellige', 0, -.25, 0, 3, 3, .25), ...cage(0, 0, 0), jarre(-1.8, 0, 1), jarre(1.8, 0, 1)] },
+  { m:3, nom:'Le four de Guellala', tirs:4, but:{ type:'tomber', min:9 }, par:2500, aide:'Le grand four : une caisse de feux d’artifice est cachée dedans !', blocs:[...pyramide('brique', 0, .5, 4), cube('feux', 0, 0, -.7, .8), ...tour('palmier', -2.4, .5, 3), ...tour('palmier', 2.4, .5, 3)] },
+  // Tabarka (20/11) : le fort génois, les troncs de pins, le corail (matelas), la pierre
+  { m:4, nom:'Les remparts', tirs:3, vitesse:17, but:{ type:'tomber', min:8 }, par:1400, aide:'Le fort de Tabarka : vise le haut des remparts de pierre !', blocs:[...mur('pierre', 0, 0, 5, 4), ...tour('pierre', -2.4, 0, 2), ...tour('pierre', 2.4, 0, 2)] },
+  { m:4, nom:'La forêt de pins', tirs:3, but:{ type:'tomber', min:6 }, par:1100, aide:'Des troncs de pins debout : fais-les tomber comme des quilles !', blocs:[colonne('palmier', -1.6, 0, 2.4, .3), colonne('palmier', -.5, .6, 2.4, .3), colonne('palmier', .5, 0, 2.4, .3), colonne('palmier', 1.6, .6, 2.4, .3), colonne('palmier', 0, 1.4, 2.4, .3), colonne('palmier', 0, -.9, 2.4, .3)] },
+  { m:4, nom:'Le rocher du corail', tirs:3, but:{ type:'cible' }, par:1050, aide:'Rebondis sur le matelas de corail pour toucher la jarre d’or tout en haut !', blocs:[B('matelas', 0, .3, -1.6, 2.6, .6, 1.4), ...tour('pierre', 0, 1.5, 3, .9), jarre(0, 2.7, 1.5, { cible:true })] },
+  { m:4, nom:'Le canon du fort', tirs:3, but:{ type:'tomber', min:7 }, par:1400, aide:'Les caisses de poudre du fort : une étincelle, et tout saute !', blocs:[cube('feux', 0, 0, 0, .8), ...tour('bois', -1.1, 0, 3), ...tour('bois', 1.1, 0, 3), dalle('bois', 0, 3, 0, 3, 1, .2)] },
+  { m:4, nom:'Le chaton du phare', tirs:4, but:{ type:'chat' }, par:1400, aide:'Le dernier chaton est en haut de la tour de pierre : libère-le sans le faire tomber !', blocs:[dalle('zellige', 0, 1.6, .5, 2.4, 2.4, .3), colonne('zellige', -.9, .5, 1.6, .25), colonne('zellige', .9, .5, 1.6, .25), ...cage(0, 1.9, .5), ...tour('pierre', -2.2, 0, 2), ...tour('pierre', 2.2, 0, 2)] },
 ];
 export const PLATEAU = { demi:4.5 };   // le plateau fait 9 m × 9 m
 
