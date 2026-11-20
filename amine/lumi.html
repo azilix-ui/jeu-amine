@@ -129,6 +129,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 
 <script src="../famille.js"></script>
 <script src="controle.js?v=1"></script>
+<script src="lire/voix.php"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -144,12 +145,21 @@ function save(){ S.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify
 
 /* ---------- la voix : Lulu (ElevenLabs) par la voix du site ; une phrase à la fois, et on sait quand elle a fini ---------- */
 let parleEncore = false, jetonV = 0, dernier = [];
-function dit(t){ return new Promise(res => { if(!('speechSynthesis' in window) || (window.FamilleVoix && !FamilleVoix.on())){ setTimeout(res, 600 + String(t).length * 45); return; }
+/* 20/11 (remarque du papa) : un mot ou une syllabe seule (« to », « lune ») était lue avec l'accent anglais par la voix du site.
+   On joue d'abord l'enregistrement de Lulu fait pour Je lis (lire/voix.php : syllabes et mots), sinon la voix du site (forcée en français, api/voix.php). */
+const cleL = t => String(t).toLowerCase().replace(/é/g, 'ee').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+function sonLulu(t){ const L = window.LIRE_VOIX && LIRE_VOIX.lulu; if(!L || String(t).length > 14) return null; const k = cleL(t);
+  return L.k.includes(k) ? `lire/son.php?v=lulu&k=${k}&r=${L.r}` : L.k.includes('syl-' + k) ? `lire/son.php?v=lulu&k=syl-${k}&r=${L.r}` : null; }
+function dit(t){ const f = sonLulu(t); if(f && !(window.FamilleVoix && !FamilleVoix.on())) return new Promise(res => { const j = jetonV;
+    if(window.FamilleSon){ FamilleSon.joue(f).then(r => { if(r === null && j === jetonV) dit2(t).then(res); else res(); }); }
+    else { const a = new Audio(f); a.onended = () => res(); a.onerror = () => dit2(t).then(res); a.play().catch(() => dit2(t).then(res)); setTimeout(res, 4000); } });
+  return dit2(t); }
+function dit2(t){ return new Promise(res => { if(!('speechSynthesis' in window) || (window.FamilleVoix && !FamilleVoix.on())){ setTimeout(res, 600 + String(t).length * 45); return; }
   const j = jetonV; try{ const u = new SpeechSynthesisUtterance(String(t)); u.lang = 'fr-FR'; u.rate = .92; u.pitch = 1.1; let fait = false;
     const fin = () => { if(!fait){ fait = true; res(); } }; u.onend = fin; u.onerror = fin; setTimeout(fin, 2500 + String(t).length * 110); speechSynthesis.speak(u); }catch(e){ res(); } }); }
 async function parle(liste, garder = true){ chut(); if(garder) dernier = liste.slice(); const j = ++jetonV; parleEncore = true;
   for(const t of liste){ if(j !== jetonV) return; await dit(t); } if(j === jetonV) parleEncore = false; }
-function chut(){ jetonV++; parleEncore = false; try{ speechSynthesis.cancel(); }catch(e){} }
+function chut(){ jetonV++; parleEncore = false; try{ speechSynthesis.cancel(); }catch(e){} try{ if(window.FamilleSon) FamilleSon.stop(); }catch(e){} }
 const occupe = () => parleEncore;
 Controle.dire(l => parle(l, false));
 let AC = null;
@@ -296,7 +306,7 @@ const FAIRE = {
     quai.querySelectorAll('.wagon').forEach(b => b.onclick = () => { if(b.disabled || P.fini) return; chut(); dit(b.dataset.s.toLowerCase());
       if(b.dataset.s === syl[k]){ b.disabled = true; const v = $('voie').querySelectorAll('.wagon')[k]; v.classList.remove('vide'); v.querySelector('span').textContent = syl[k]; sfx.ding(k + 4); k++;
         quai.querySelectorAll('.brille').forEach(x => x.classList.remove('brille')); erreurs = 0;
-        if(k === syl.length) setTimeout(() => reussi([syl.join(' '), mot]), 600); }
+        if(k === syl.length) setTimeout(() => reussi([...syl, mot]), 600); }
       else { P.faute = true; erreurs++; sfx.non(); b.classList.add('secoue'); setTimeout(() => b.classList.remove('secoue'), 500); Controle.faux(null);
         if(erreurs >= 2){ const g = [...quai.querySelectorAll('.wagon')].find(x => !x.disabled && x.dataset.s === syl[k]); if(g) g.classList.add('brille'); parle([`Le wagon qui brille : ${syl[k].toLowerCase()}.`], false); }
         else parle([k ? `Après ${syl[k - 1].toLowerCase()}, on entend…` : 'Au début du mot, on entend…', `${mot}`], false); } });
@@ -310,7 +320,7 @@ const FAIRE = {
     parle(['Lis le mot, et touche la bonne image.']);
     document.querySelectorAll('.mot button').forEach(b => b.onclick = () => { sfx.tape(); chut(); dit(b.dataset.s.toLowerCase()); });
     const r = $('rep'); Controle.arme(r, occupe, 2200);
-    r.querySelectorAll('.choix').forEach(b => b.onclick = () => { if(b.dataset.v === mot){ b.classList.add('oui'); reussi([syl.join(' '), mot]); }
+    r.querySelectorAll('.choix').forEach(b => b.onclick = () => { if(b.dataset.v === mot){ b.classList.add('oui'); reussi([...syl, mot]); }
       else aide(b, ['Touche les syllabes pour les entendre.'], () => { r.querySelector(`[data-v="${mot}"]`).classList.add('oui'); montre([`C'est écrit : ${mot}.`]); }); });
   },
 };

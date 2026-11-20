@@ -917,7 +917,7 @@ function buildPad(){
    ===================================================================== */
 const $ = id => document.getElementById(id);
 function show(id){ document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id || (id === 'pause' && s.id === 'hud'))); }
-function toast(t){ const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 1500); }
+function toast(t){ const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), Math.max(1500, t.length * 55)); }
 let hintEl = null;
 function showHint(t){ hideHint(); hintEl = document.createElement('div'); hintEl.className = 'hint'; hintEl.textContent = t; document.body.appendChild(hintEl); }
 function hideHint(){ if(hintEl){ hintEl.remove(); hintEl = null; } }
@@ -1024,7 +1024,7 @@ function renderColl(){
   $('collBody').innerHTML = `
     <div class="chest"><span class="ic" aria-hidden="true">🎁</span><div><h3>Coffre mystère</h3><p>${pool.length ? `Un skin que tu n'as pas encore. Il te reste ${pool.length} skin${pool.length > 1 ? 's' : ''} à découvrir.` : 'Tu as tous les skins des coffres ! Il reste les légendaires.'}</p>
       <div class="odds"><span class="rar-commun">Commun ${RAR.commun.p}%</span><span class="rar-rare">Rare ${RAR.rare.p}%</span><span class="rar-epique">Épique ${RAR.epique.p}%</span></div></div>
-      <button class="big alt" id="buyChest" style="padding:0 18px;font-size:20px" ${data.coins >= CHEST && pool.length ? '' : 'disabled style="opacity:.5;padding:0 18px;font-size:20px"'}>🪙 ${CHEST}</button></div>
+      <button class="big alt" id="buyChest" style="padding:0 18px;font-size:20px${data.coins >= CHEST && pool.length ? '' : ';opacity:.55;filter:grayscale(.5)'}" aria-disabled="${data.coins >= CHEST && pool.length ? 'false' : 'true'}">🪙 ${CHEST}</button></div>
     ${shopHTML()}
     <div class="sect rar-atelier">🎨 Ma création<small>Invente ton propre serpent dans l'Atelier du Jasmin.</small></div>${SKIN.atelier ? cards([SKIN.atelier]) : ''}
     <a class="atelier-link" href="atelier-du-jasmin.html?go=serpent"><span aria-hidden="true">🎨</span><div>${SKIN.atelier ? 'Changer mon serpent' : 'Créer mon serpent'}<small>Couleurs, motif, effet et chapeau : c'est toi qui choisis !</small></div></a>
@@ -1032,7 +1032,12 @@ function renderColl(){
     ${rareHTML(cards)}
     <div class="sect">Ma collection (${data.skins.length}/${SKINS.length})</div>${cards(SKINS.filter(s => !['legendaire','mythique','secret','atelier'].includes(s.rar) && (s.rar !== 'savoir' || data.skins.includes(s.id))))}`;
   $('collBody').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { sfx.tap(); buy(b.dataset.buy); });
-  const b = $('buyChest'); if(b) b.onclick = () => { if(data.coins < CHEST || !pool.length) return; openChest(); };
+  // 20/11 (les enfants n'arrivaient pas à ouvrir le coffre) : le bouton grisé ne se voyait pas (deux attributs style, le 2e était ignoré)
+  // et ne disait rien. Maintenant il explique ce qui manque.
+  const b = $('buyChest'); if(b) b.onclick = () => {
+    if(!pool.length){ sfx.turn(); toast('🎉 Tu as déjà tous les skins des coffres !'); return; }
+    if(data.coins < CHEST){ sfx.turn(); const m = CHEST - data.coins; toast(`🪙 Il te faut ${CHEST} pièces : il t'en manque ${m}. Joue au serpent pour en gagner !`); try{ speechSynthesis.cancel(); speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(`Il te faut ${CHEST} pièces. Il t'en manque ${m}. Joue pour en gagner !`), { lang:'fr-FR' })); }catch(e){} return; }
+    b.disabled = true; openChest(); };
   $('collBody').querySelectorAll('.skin').forEach(el => el.onclick = () => {
     const s = SKIN[el.dataset.id]; setShowSkin(s.id);
     if(data.skins.includes(s.id)){ data.skin = s.id; save(); sfx.tap(); renderColl(); }
