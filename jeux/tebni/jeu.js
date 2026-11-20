@@ -20,7 +20,9 @@ const teinte = t => (classique() ? TEINTE_C : TEINTE)[t];
 function appliqueStyle(){ document.body.classList.toggle('classique', classique()); document.querySelectorAll('[data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === (REG().style || 'zellige'))); if($('sous')) $('sous').textContent = classique() ? 'Le jeu de briques classique, en vrais blocs de verre : complète les lignes !' : 'Empile les carreaux de zellige et complète les lignes de la terrasse !'; }
 
 /* ---------- réglages ---------- */
-const REG = () => Object.assign({ lang:'ar', son:true, vib:true, fantome:true, style:'zellige' }, store.get('tebni-reg', {}));
+// 21/11 (papa) : l'ombre de la pièce est maintenant une option, NON par défaut (même pour ceux qui avaient déjà des réglages)
+{ const r0 = store.get('tebni-reg', null); if(r0 && !r0.ombre21){ r0.fantome = false; r0.ombre21 = 1; store.set('tebni-reg', r0); } }
+const REG = () => Object.assign({ lang:'ar', son:true, vib:true, fantome:false, style:'zellige' }, store.get('tebni-reg', {}));
 const setReg = (k, v) => { const r = REG(); r[k] = v; store.set('tebni-reg', r); };
 
 /* ---------- les sons (fabriqués par le navigateur : courts, nets, sans téléchargement) ---------- */
@@ -84,7 +86,7 @@ function reglages(){
     <div class="reg">Le commentaire ${seg('lang', [['ar', 'العربية'], ['fr', 'Français']])}</div>
     <div class="reg">Les sons ${seg('son', [[true, 'Oui'], [false, 'Non']])}</div>
     <div class="reg">Vibrations ${seg('vib', [[true, 'Oui'], [false, 'Non']])}</div>
-    <div class="reg">Pièce fantôme ${seg('fantome', [[true, 'Oui'], [false, 'Non']])}</div>
+    <div class="reg">Ombre de la pièce (où elle va tomber) ${seg('fantome', [[false, 'Non'], [true, 'Oui']])}</div>
     <div class="reg">Le style ${seg('style', [['zellige', '🇹🇳 Zellige'], ['classique', '🎮 Classique']])}</div>
     <div class="row"><button class="pill or" id="ferme">OK</button></div>`;
   $('modal').classList.add('on');

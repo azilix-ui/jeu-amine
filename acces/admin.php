@@ -162,7 +162,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--soft)}
 <main class="porte large">
   <div class="tete">
     <h1>🔑 L'accès au site</h1>
-    <div class="boutons"><a class="petit" href="/">← Le site</a><button class="petit" id="sortir" type="button">Se déconnecter</button></div>
+    <div class="boutons"><a class="petit" href="/acces/aide.php">📖 Aide</a><a class="petit" href="/">← Le site</a><button class="petit" id="sortir" type="button">Se déconnecter</button></div>
   </div>
 
   <section class="carte">
