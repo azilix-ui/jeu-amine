@@ -37,6 +37,7 @@ const HL_FENETRE = 600;        // …toutes les 10 minutes
 const HL_TROC_VIE = 172800;    // une proposition sans réponse s'efface après 2 jours
 
 header('X-Content-Type-Options: nosniff');
+const HL_FAMILLE = ['Anis', 'Imen', 'Essil', 'Salma', 'Amine'];
 function out(int $c, array $d): void { http_response_code($c); header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; }
 function fail(int $c, string $m): void { out($c, ['error' => $m]); }
 function hl_dossier(): string { $d = dirname(ga_racine()) . '/famille-data/houma-voix'; if (!is_dir($d)) @mkdir($d, 0750, true); return $d; }
@@ -136,13 +137,16 @@ try {
         hl()->prepare('INSERT OR REPLACE INTO site (client, nom, av, page, url, vu) VALUES (?, ?, ?, ?, ?, ?)')->execute([$client, $nom, $av, court($_POST['page'] ?? '', 60), $url, $t]);
         $en = []; foreach (hl()->query('SELECT nom, av, page FROM site ORDER BY vu DESC') as $p) if (!isset($en[$p['nom']])) $en[$p['nom']] = $p;
         $depuis = (int)($_POST['depuis'] ?? 0);
-        $s = $depuis > 0 ? hl()->prepare("SELECT * FROM messages WHERE id > ? AND a <> '' AND (a = ? OR nom = ?) ORDER BY id LIMIT 60")
-                         : hl()->prepare("SELECT * FROM (SELECT * FROM messages WHERE id > ? AND a <> '' AND (a = ? OR nom = ?) ORDER BY id DESC LIMIT 40) ORDER BY id");
-        $s->execute([$depuis, $nom, $nom]);
+        // 20/11 : la discussion « Toute la famille » (a = 'Famille'), lue seulement par la famille
+        $fam = in_array($nom, HL_FAMILLE, true) ? 'Famille' : '-';
+        $s = $depuis > 0 ? hl()->prepare("SELECT * FROM messages WHERE id > ? AND a <> '' AND (a = ? OR nom = ? OR a = ?) ORDER BY id LIMIT 60")
+                         : hl()->prepare("SELECT * FROM (SELECT * FROM messages WHERE id > ? AND a <> '' AND (a = ? OR nom = ? OR a = ?) ORDER BY id DESC LIMIT 60) ORDER BY id");
+        $s->execute([$depuis, $nom, $nom, $fam]);
         out(200, ['en_ligne' => array_values($en), 'msgs' => array_map('msg_out', $s->fetchAll()), 'now' => $t]);
     }
     if ($a === 'ecrit') {
         $de = nom($_POST['de'] ?? ''); $vers = nom($_POST['a'] ?? ''); if ($de === $vers) fail(400, 'Choisis à qui écrire.');
+        if ($vers === 'Famille' && !in_array($de, HL_FAMILLE, true)) fail(403, 'La discussion de la famille est réservée à la famille.');
         $x = court($_POST['texte'] ?? '', HL_TEXTE); if ($x === '') fail(400, 'Le message est vide.');
         limite(); out(200, ['id' => ajoute($de, 't', $x, '', '', 0, $vers)]);
     }
@@ -163,6 +167,7 @@ try {
         if ($x === '') fail(400, 'Ce son n\'est pas reconnu.');
         // 18/11 : un message vocal peut aussi être privé (le salon du site : a = le destinataire)
         $vers = trim((string)($_POST['a'] ?? '')) !== '' ? nom($_POST['a']) : ''; if ($vers !== '' && $vers === $nom) fail(400, 'Choisis à qui parler.');
+        if ($vers === 'Famille' && !in_array($nom, HL_FAMILLE, true)) fail(403, 'La discussion de la famille est réservée à la famille.');
         limite(); $id = ajoute($nom, 'v', '', '', $x, max(1, min(60, (int)($_POST['duree'] ?? 0))), $vers);
         if (!move_uploaded_file($f['tmp_name'], hl_dossier() . '/' . $id . '.' . $x)) { hl()->prepare('DELETE FROM messages WHERE id = ?')->execute([$id]); fail(500, 'Le serveur n\'a pas pu garder le son.'); }
         out(200, ['id' => $id]);

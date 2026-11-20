@@ -263,6 +263,8 @@
     '#famSalon .emo{display:flex;gap:4px;flex-wrap:wrap;padding:6px 10px 0}#famSalon .emo button{all:unset;cursor:pointer;font-size:22px;min-width:40px;min-height:40px;display:grid;place-items:center;border-radius:10px;background:#f1f5f9}' +
     '#famSalon .m .hp{all:unset;cursor:pointer;font-size:15px;padding:0 4px;opacity:.75}#famSalon .m .vo{all:unset;cursor:pointer;font-weight:800;padding:6px 4px;display:inline-block}' +
     '#famSalon form .mic{min-width:52px;background:#ff8c1a;font-size:22px;padding:0 8px}#famSalon form .mic.on{background:#d7263d;font-size:15px;animation:famMic 1s infinite}@keyframes famMic{50%{box-shadow:0 0 0 6px #d7263d44}}' +
+    '#famSalon .av{position:relative;flex:none}#famSalon .av u{position:absolute;right:0;bottom:0;width:13px;height:13px;border-radius:50%;background:#94a3b8;border:2px solid #fff}#famSalon .av u.on{background:#22c55e}#famSalon .qui.fam{background:#fff3d6}' +
+    '#famSalon .emo.ph button{font:800 13px Nunito,system-ui,sans-serif;padding:0 10px;background:#e0f2fe}' +
     '#famSalon form{display:flex;gap:6px;padding:10px}#famSalon input{flex:1;min-width:0;height:46px;border:2px solid #cbd5e1;border-radius:14px;padding:0 12px;font:600 16px Nunito,system-ui,sans-serif}' +
     '#famBulle{position:fixed;z-index:2147483002;left:12px;max-width:min(380px,calc(100vw - 24px));display:flex;align-items:center;gap:10px;background:#fff;color:#18202e;border-radius:18px;padding:8px 10px;box-shadow:0 10px 30px #0004,0 0 0 3px #ffd23f;font:800 15px/1.25 Nunito,system-ui,sans-serif}#famBulle img{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:none}#famBulle span{flex:1}#famBulle button{min-height:42px;border:0;border-radius:12px;background:#0f766e;color:#fff;font:800 14px Nunito,system-ui,sans-serif;padding:0 10px;cursor:pointer}#famBulle .x{background:#e2e8f0;color:#18202e}' +
     '@media (prefers-color-scheme:dark){#famSalon,#famBulle{background:#1a2130;color:#eef1f6}#famSalon .qui,#famSalon .m,#famSalon .emo button{background:#232c3d}#famSalon .m.moi{background:#14463f}#famSalon input{background:#10141c;color:#eef1f6;border-color:#2a3447}#famSalon .pied .g,#famBulle .x{background:#2a3447;color:#eef1f6}#famSalon .qui small,#famSalon .vide{color:#a3aec2}}';
@@ -279,7 +281,7 @@
     B = document.createElement('div'); B.id = 'famExplo'; B.setAttribute('role', 'button'); B.tabIndex = 0;
     B.setAttribute('aria-label', explo ? 'Explorateur du site : ' + moi() + '. Toucher pour voir qui est sur le site et discuter.' : 'Les messages');
     B.innerHTML = '<img alt="" src="' + tete(moi(), profil && profil.av) + '">' + (explo ? '<span class="t"><small>Explorateur du site</small><span></span></span><span class="v" title="sur le site en ce moment"></span><span class="porte" title="Sortir : revenir à « Qui es-tu ? »" aria-label="Sortir">🚪</span>' : '') + '<span class="n"></span>';
-    if(explo) B.querySelector('.t span').textContent = moi(); else { B.classList.add('enfant', 'cache'); }
+    if(explo) B.querySelector('.t span').textContent = moi(); else { B.classList.add('enfant'); }   // 20/11 : toujours visible pour les enfants (avant : seulement après un message reçu)
     B.classList.add('replie');   // 17/11 (demande du papa) : repliée = juste l'avatar ; on la touche, elle se déplie (nom, 🚪) et le salon s'ouvre
     var pos = sget('salon-pos', null);
     if(pos){ B.style.left = pos.l + 'px'; B.style.bottom = pos.b + 'px'; }
@@ -295,7 +297,7 @@
     B.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); bascule(); } });
     P.addEventListener('click', clicPanneau);
     P.addEventListener('submit', function(e){ e.preventDefault(); var i = P.querySelector('input'); envoie(i.value); });
-    salut(); setInterval(salut, 8000);
+    salut(); setInterval(function(){ if(!P.classList.contains('on')) salut(); }, 8000); setInterval(function(){ if(P.classList.contains('on')) salut(); }, 3000);   // 20/11 : toutes les 3 s quand le panneau est ouvert
     document.addEventListener('visibilitychange', function(){ if(!document.hidden) salut(); });
   }
   function porteVisee(e){ var p = B.querySelector('.porte'); if(!p) return false; var r = p.getBoundingClientRect(); return e.clientX >= r.left - 4 && e.clientX <= r.right + 4 && e.clientY >= r.top - 4 && e.clientY <= r.bottom + 4; }
@@ -303,9 +305,14 @@
   function replie(){ P.classList.remove('on'); B.classList.add('replie'); }
   function bascule(){ if(!B.classList.contains('replie')){ replie(); return; } B.classList.remove('replie'); S.vue = S.avec ? 'conv' : 'liste'; dessine(); P.classList.add('on'); place(); }
   function autres(){ var m = moi(); return S.enLigne.filter(function(p){ return p.nom !== m; }); }
-  function nonLus(nom){ var lu = luGet(moi()) || {}; return S.msgs.filter(function(m){ return m.nom === nom && m.a === moi() && m.id > (lu[nom] || 0); }).length; }
+  var FAMN = ['Anis', 'Imen', 'Essil', 'Salma', 'Amine'], NOMS = { Anis:'Papa', Imen:'Maman' };
+  var deFamille = function(){ return FAMN.indexOf(moi()) >= 0; };
+  var conv = function(a, m){ return a === 'Famille' ? S.msgs.filter(function(x){ return x.a === 'Famille'; }) : S.msgs.filter(function(x){ return (x.nom === a && x.a === m) || (x.nom === m && x.a === a); }); };
+  // 20/11 : un petit « ding » quand un message arrive (sons du navigateur)
+  var ding = function(){ try{ var C = window.AudioContext || window.webkitAudioContext, a = ding.c = ding.c || new C(), t = a.currentTime; [880, 1320].forEach(function(f, i){ var o = a.createOscillator(), g = a.createGain(); o.frequency.value = f; g.gain.setValueAtTime(.12, t + i * .12); g.gain.exponentialRampToValueAtTime(.001, t + i * .12 + .25); o.connect(g).connect(a.destination); o.start(t + i * .12); o.stop(t + i * .12 + .3); }); }catch(e){} };
+  function nonLus(nom){ var lu = luGet(moi()) || {}, m = moi(); if(nom === 'Famille') return S.msgs.filter(function(x){ return x.a === 'Famille' && x.nom !== m && x.id > (lu.Famille || 0); }).length; return S.msgs.filter(function(x){ return x.nom === nom && x.a === m && x.id > (lu[nom] || 0); }).length; }
   function badges(){
-    if(!B) return; var n = 0, m = moi(), lu = luGet(m) || {}; S.msgs.forEach(function(x){ if(x.a === m && x.id > (lu[x.nom] || 0)) n++; });
+    if(!B) return; var n = 0, m = moi(), lu = luGet(m) || {}; S.msgs.forEach(function(x){ if((x.a === m && x.id > (lu[x.nom] || 0)) || (x.a === 'Famille' && x.nom !== m && x.id > (lu.Famille || 0))) n++; });
     var e = B.querySelector('.n'); e.textContent = n > 9 ? '9+' : n; e.classList.toggle('on', n > 0);
     var v = B.querySelector('.v'); if(v){ var k = autres().length; v.textContent = k ? '👥 ' + k : ''; v.style.display = k ? '' : 'none'; }
     if(!explo && (n > 0 || S.msgs.length)) B.classList.remove('cache');
@@ -314,20 +321,26 @@
     var m = moi();
     if(S.vue === 'conv' && S.avec){
       var a = S.avec, p = S.enLigne.filter(function(x){ return x.nom === a; })[0];
-      var L = S.msgs.filter(function(x){ return (x.nom === a && x.a === m) || (x.nom === m && x.a === a); });
-      P.innerHTML = '<header><button type="button" data-r aria-label="Retour">←</button><img alt="" src="' + tete(a, p && p.av) + '"><b>' + esc(a) + (p ? '' : ' <small style="font-weight:600;opacity:.8">(parti)</small>') + '</b><button type="button" data-f aria-label="Fermer">✕</button></header>' +
-        '<div class="corps">' + (L.length ? L.map(function(x){ var d = new Date(x.ts * 1000); return '<div class="m' + (x.nom === m ? ' moi' : '') + '"><small>' + esc(x.nom) + ' · ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0') + '</small>' + (x.type === 'v' ? '<button type="button" class="vo" data-ecoute="' + x.id + '">▶ 🎤 Message vocal · ' + (x.duree || 1) + ' s</button>' : esc(x.texte) + ' <button type="button" class="hp" data-ecoute="' + x.id + '" aria-label="Écouter">🔊</button>') + '</div>'; }).join('') : '<p class="vide">Écris le premier message à ' + esc(a) + ' 👋</p>') + '</div>' +
+      var L = conv(a, m);
+      P.innerHTML = '<header><button type="button" data-r aria-label="Retour">←</button>' + (a === 'Famille' ? '<span style="font-size:28px">👨‍👩‍👧‍👦</span><b>Toute la famille</b>' : '<img alt="" src="' + tete(a, p && p.av) + '"><b>' + esc(NOMS[a] || a) + (p ? ' <small style="font-weight:600;opacity:.8">● en ligne</small>' : ' <small style="font-weight:600;opacity:.8">(lira plus tard)</small>') + '</b>') + '<button type="button" data-f aria-label="Fermer">✕</button></header>' +
+        '<div class="corps">' + (L.length ? L.map(function(x){ var d = new Date(x.ts * 1000); return '<div class="m' + (x.nom === m ? ' moi' : '') + '"><small>' + esc(x.nom) + ' · ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0') + '</small>' + (x.type === 'v' ? '<button type="button" class="vo" data-ecoute="' + x.id + '">▶ 🎤 Message vocal · ' + (x.duree || 1) + ' s</button>' : esc(x.texte) + ' <button type="button" class="hp" data-ecoute="' + x.id + '" aria-label="Écouter">🔊</button>') + '</div>'; }).join('') : '<p class="vide">' + (a === 'Famille' ? 'Ici, tout le monde lit tout le monde : papa, maman, Essil, Salma et Amine 👋' : 'Écris le premier message à ' + esc(NOMS[a] || a) + ' 👋') + '</p>') + '</div>' +
         '<div class="emo">' + ['👋', '😀', '😂', '❤️', '👍', '🎉', '⭐', '🏠'].map(function(e){ return '<button type="button" data-e="' + e + '">' + e + '</button>'; }).join('') + '</div>' +
-        '<form>' + (REC ? '<button type="button" class="mic' + (S.rec ? ' on' : '') + '" data-mic aria-label="Message vocal">' + (S.rec ? '⏹ ' + S.rec.s + ' s' : '🎤') + '</button>' : '') + '<input maxlength="300" placeholder="' + (moi() === 'Amine' ? '🎤 Touche le micro' : 'Ton message à ' + esc(a) + '…') + '" autocomplete="off" enterkeyhint="send"><button type="submit">Envoyer</button></form>';
+        '<div class="emo ph">' + ['Je t\'aime ❤️', 'Viens jouer avec moi ! 🎮', 'Bravo ! 👏', 'J\'ai fini mes devoirs ✅', 'Tu me manques 🥰', 'J\'arrive ! 🏃'].map(function(e){ return '<button type="button" data-e="' + esc(e) + '">' + esc(e) + '</button>'; }).join('') + '</div>' +
+        '<form>' + (REC ? '<button type="button" class="mic' + (S.rec ? ' on' : '') + '" data-mic aria-label="Message vocal">' + (S.rec ? '⏹ ' + S.rec.s + ' s' : '🎤') + '</button>' : '') + '<input maxlength="300" placeholder="' + (moi() === 'Amine' ? '🎤 Touche le micro' : 'Ton message à ' + (a === 'Famille' ? 'toute la famille' : esc(NOMS[a] || a)) + '…') + '" autocomplete="off" enterkeyhint="send"><button type="submit">Envoyer</button></form>';
       var c = P.querySelector('.corps'); c.scrollTop = c.scrollHeight;
-      var lu = luGet(m) || {}; L.forEach(function(x){ if(x.nom === a) lu[a] = Math.max(lu[a] || 0, x.id); }); luSet(m, lu); badges();
+      var lu = luGet(m) || {}; L.forEach(function(x){ if(x.nom !== m) lu[a] = Math.max(lu[a] || 0, x.id); }); luSet(m, lu); badges();
       return;
     }
     var O = autres(), deja = {}; O.forEach(function(p){ deja[p.nom] = 1; });
     var anciens = []; S.msgs.forEach(function(x){ var q = x.nom === m ? x.a : x.nom; if(q && !deja[q] && anciens.indexOf(q) < 0) anciens.push(q); });
-    P.innerHTML = '<header><b>Sur le site en ce moment</b><button type="button" data-f aria-label="Fermer">✕</button></header><div class="corps">' +
+    var enL = {}; S.enLigne.forEach(function(p){ enL[p.nom] = p; });
+    var ligne = function(nom, sous, bt){ var n = nonLus(nom), p = enL[nom]; return '<div class="qui"><span class="av"><img alt="" src="' + tete(nom, p && p.av) + '"><u class="' + (p ? 'on' : '') + '"></u></span><span><b>' + esc(NOMS[nom] || nom) + '</b><small>' + sous + '</small></span><button type="button" data-a="' + esc(nom) + '">' + bt + (n ? '<i>' + n + '</i>' : '') + '</button></div>'; };
+    var famille = deFamille() ? '<div class="qui fam"><span style="font-size:34px;width:46px;text-align:center">👨‍👩‍👧‍👦</span><span><b>Toute la famille</b><small>un message pour tout le monde</small></span><button type="button" data-a="Famille">💬 Écrire' + (nonLus('Famille') ? '<i>' + nonLus('Famille') + '</i>' : '') + '</button></div>' +
+      FAMN.filter(function(f){ return f !== m; }).map(function(f){ var p = enL[f]; return ligne(f, p ? '● en ligne' + (p.page ? ' · sur ' + esc(p.page) : '') : 'pas là : lira plus tard', '💬 Écrire'); }).join('') : '';
+    O = O.filter(function(p){ return !deFamille() || FAMN.indexOf(p.nom) < 0; }); anciens = anciens.filter(function(q){ return q !== 'Famille' && (!deFamille() || FAMN.indexOf(q) < 0); });
+    P.innerHTML = '<header><b>' + (deFamille() ? '💬 Les messages' : 'Sur le site en ce moment') + '</b><button type="button" data-f aria-label="Fermer">✕</button></header><div class="corps">' + famille +
       (O.length ? O.map(function(p){ var n = nonLus(p.nom); return '<div class="qui"><img alt="" src="' + tete(p.nom, p.av) + '"><span><b>' + esc(p.nom) + '</b><small>' + (p.page ? 'sur ' + esc(p.page) : 'sur le site') + '</small></span><button type="button" data-a="' + esc(p.nom) + '">💬 Écrire' + (n ? '<i>' + n + '</i>' : '') + '</button></div>'; }).join('')
-        : '<p class="vide">Personne d\'autre n\'est sur le site pour l\'instant.</p>') +
+        : (famille ? '' : '<p class="vide">Personne d\'autre n\'est sur le site pour l\'instant.</p>')) +
       (anciens.length ? '<p class="vide" style="padding:6px 0 0;text-align:left">Discussions de tout à l\'heure</p>' + anciens.map(function(q){ var n = nonLus(q); return '<div class="qui"><img alt="" src="' + tete(q) + '"><span><b>' + esc(q) + '</b><small>n\'est plus là</small></span><button type="button" data-a="' + esc(q) + '">💬 Relire' + (n ? '<i>' + n + '</i>' : '') + '</button></div>'; }).join('') : '') +
       '</div><div class="pied">' + (explo ? '<a href="/?profil">⇄ Changer d\'avatar</a>' : '<span></span>') + '<button type="button" class="g" data-voix title="Touche V">' + (FamilleVoix.on() ? '🗣️ Voix' : '🔇 Muet') + '</button><button type="button" class="g" data-f>Fermer</button></div>';
   }
@@ -369,8 +382,8 @@
     var r = B.getBoundingClientRect(), d = document.createElement('div'); d.id = 'famBulle';
     d.style.bottom = (innerHeight - r.top + 10) + 'px'; d.style.left = Math.max(8, Math.min(innerWidth - 390, r.left)) + 'px';
     d.innerHTML = '<img alt="" src="' + tete(m.nom) + '"><span>💬 <b></b> : <q></q></span><button type="button">Répondre</button><button type="button" class="x" aria-label="Fermer">✕</button>';
-    d.querySelector('b').textContent = m.nom; d.querySelector('q').textContent = m.type === 'v' ? '🎤 un message vocal' : m.texte;
-    d.querySelector('button').onclick = function(){ d.remove(); S.avec = m.nom; S.vue = 'conv'; B.classList.remove('replie'); dessine(); P.classList.add('on'); place(); };
+    d.querySelector('b').textContent = (NOMS[m.nom] || m.nom) + (m.a === 'Famille' ? ' (à toute la famille)' : ''); d.querySelector('q').textContent = m.type === 'v' ? '🎤 un message vocal' : m.texte;
+    d.querySelector('button').onclick = function(){ d.remove(); S.avec = m.a === 'Famille' ? 'Famille' : m.nom; S.vue = 'conv'; B.classList.remove('replie'); dessine(); P.classList.add('on'); place(); };
     d.querySelector('.x').onclick = function(){ d.remove(); };
     document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 12000);
     litMessage(m, true);
@@ -390,7 +403,8 @@
       if(nv.length){ S.msgs = S.msgs.concat(nv).slice(-200);
         if(luGet(m) === null){ var lu0 = {}, vieux = Date.now() / 1000 - 86400; S.msgs.forEach(function(x){ if(x.a === m && x.ts < vieux) lu0[x.nom] = Math.max(lu0[x.nom] || 0, x.id); }); luSet(m, lu0); }   // nouvel appareil : les messages de plus d'un jour ne comptent pas
         var max = S.msgs[S.msgs.length - 1].id;
-        if(dernier >= 0) nv.filter(function(x){ return x.a === m && x.id > dernier; }).forEach(function(x){ if(!(P.classList.contains('on') && S.vue === 'conv' && S.avec === x.nom)) bulle(x); else litMessage(x, false); });
+        if(dernier >= 0 && nv.some(function(x){ return (x.a === m || x.a === 'Famille') && x.nom !== m && x.id > dernier; })) ding();
+        if(dernier >= 0) nv.filter(function(x){ return (x.a === m || x.a === 'Famille') && x.nom !== m && x.id > dernier; }).forEach(function(x){ var ici = x.a === 'Famille' ? 'Famille' : x.nom; if(!(P.classList.contains('on') && S.vue === 'conv' && S.avec === ici)) bulle(x); else litMessage(x, false); });
         sset(cle, Math.max(max, dernier));
       } else if(dernier < 0) sset(cle, 0);
       var sig = JSON.stringify(S.enLigne) + '|' + S.msgs.length, change = sig !== S.sig; S.sig = sig;

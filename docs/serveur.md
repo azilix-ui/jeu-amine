@@ -192,3 +192,8 @@ Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de co
 
 ### Après un appel FaceTime (20/11)
 Sur iPad, un appel (FaceTime, téléphone), Siri ou une alarme interrompt le son de la page : les `AudioContext` passent en `interrupted`/`suspended` et l'élément `<audio>` est mis en pause, sans reprise automatique. `explorateur.js` remplace `AudioContext` par un petit constructeur qui garde la liste des moteurs de la page et les relance (`resume`) au retour sur la page (`visibilitychange`, `pageshow`, `focus`) et au premier toucher ; `FamilleSon` se redébloque au toucher suivant et reprend une voix coupée. Le moteur des cours (`salma/ollie/cours.js`) refait un moteur neuf s'il refuse de repartir, et une phrase qui ne peut pas passer par Web Audio passe par `FamilleSon` (bouton « 🔊 Touche pour entendre » si l'iPad refuse).
+
+### Le salon du site, version 2 (20/11)
+- Le bouton des messages est toujours visible pour Essil, Salma et Amine. La liste montre toute la famille (`FAMN` dans `explorateur.js`), en ligne ou non ; on peut écrire à quelqu'un qui n'est pas là (il lira plus tard).
+- **« Toute la famille »** : messages avec `a = 'Famille'` (`ecrit` et `voix`), acceptés seulement si l'auteur est de la famille (`HL_FAMILLE` dans `api/houma.php`) et renvoyés par `site` seulement à la famille.
+- Phrases prêtes, « ding » (Web Audio) à l'arrivée d'un message, nouvelles toutes les 3 s quand le panneau est ouvert (8 s sinon).
