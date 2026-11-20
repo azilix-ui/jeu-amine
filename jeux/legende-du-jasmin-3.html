@@ -742,7 +742,7 @@ function musicTick(){
   }
 }
 // L'ambiance de chaque monde (13/11) : jeux/sons/jasmin-amb-<monde>.mp3, ElevenLabs, 15 s en boucle ; chargée seulement quand on entre dans le monde
-function ambStart(){ if(!prefs.amb || !window.Sons || !G0 || !audio()) return; const k = 'amb-' + ({ 25:19, 26:7, 27:4 }[G0.lv.n] || G0.lv.n);   // 25 à 27 (20/11) reprennent l'ambiance d'un monde voisin Sons.charger('jasmin', [k]); Sons.boucle(AC, master, k, .5); }
+function ambStart(){ if(!prefs.amb || !window.Sons || !G0 || !audio()) return; const k = 'amb-' + ({ 25:19, 26:7, 27:4 }[G0.lv.n] || G0.lv.n);   /* 25 à 27 (20/11) reprennent l'ambiance d'un monde voisin */ Sons.charger('jasmin', [k]); Sons.boucle(AC, master, k, .5); }
 function ambStop(){ if(window.Sons) Sons.stop(); }
 function musicStart(){ ambStart(); if(!prefs.music || !audio() || MUS.on) return; genMelody(); MUS.on = true; MUS.next = AC.currentTime + .05; MUS.timer = setInterval(musicTick, 25); }
 function musicStop(){ MUS.on = false; clearInterval(MUS.timer); ambStop(); }
