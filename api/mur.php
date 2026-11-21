@@ -10,7 +10,10 @@
  *                                                3 images par personne et par jour (heure de Paris), photo du jour et images envoyées comptées ensemble ; effacer ne rend pas le droit
  *   GET  ?action=quota&auteur=X                  -> {restant} : photos polaroid encore permises aujourd'hui
  *   POST action=reagit id emoji jeton            -> met ou enlève une réaction
- *   POST action=supprime id (jeton de l'auteur | pass = mot de passe parent)
+ *   POST action=supprime id (jeton de l'auteur | pass = mot de passe parent | Anis administrateur, sans mot de passe : 21/11)
+ *   POST action=video auteur texte musique jeton + fichier « video » (mp4 ou webm, 30 s, fabriqué par le studio de la page) + poster (JPEG)
+ *                                                -> (21/11) une petite vidéo ; 3 vidéos par personne et par jour
+ *   GET  ?vid=ID                                 -> la vidéo (avec les requêtes « Range » qu'exige Safari)
  * Le « jeton » est un nombre au hasard gardé dans le navigateur : il dit « c'est moi qui ai écrit ça » (pour pouvoir effacer son message).
  * Données : famille-data/mur.sqlite et famille-data/mur/<id>.webp (hors du site public).
  */
@@ -20,6 +23,8 @@ require __DIR__ . '/../acces/garde.php'; ga_garde_api();
 const MUR_EMOJIS = ['❤️', '👏', '😂', '😮'];
 const MUR_TEXTE = 500;
 const MUR_IMAGE_MAX = 2500000;   // la photo arrive déjà réduite par la page (1280 px), en JPEG
+const MUR_VIDEO_MAX = 16000000;  // 30 s fabriquées par la tablette (540 × 960, environ 2 Mbit/s) : 8 Mo en moyenne
+const MUR_VIDEOS_JOUR = 3;
 
 header('X-Content-Type-Options: nosniff');
 function out(int $c, array $d): void { http_response_code($c); header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; }
@@ -37,6 +42,7 @@ function mur(): PDO {
     if (!in_array('genre', $cols, true)) $p->exec("ALTER TABLE messages ADD COLUMN genre TEXT NOT NULL DEFAULT ''");
     if (!in_array('deco', $cols, true)) $p->exec("ALTER TABLE messages ADD COLUMN deco TEXT NOT NULL DEFAULT ''");
     $p->exec('CREATE TABLE IF NOT EXISTS photos_jour (auteur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (auteur, jour))');
+    if (!in_array('media', $cols, true)) $p->exec("ALTER TABLE messages ADD COLUMN media TEXT NOT NULL DEFAULT ''");   // 21/11 : « mp4|joyeux » pour une vidéo
     return $p;
 }
 function auteur($a): string {
@@ -48,6 +54,7 @@ const MUR_PHOTOS_JOUR = 3;
 const MUR_DECOS = ['polaroid', 'jasmin', 'zellige', 'etoiles', 'mer'];
 function jour(): string { return (new DateTime('now', new DateTimeZone('Europe/Paris')))->format('Y-m-d'); }
 function photos_prises(string $qui): int { $s = mur()->prepare('SELECT n FROM photos_jour WHERE auteur = ? AND jour = ?'); $s->execute([mb_strtolower($qui), jour()]); return (int)$s->fetchColumn(); }
+function ini_octets(string $k): int { $v = trim((string)ini_get($k)); $n = (int)$v; $u = strtolower(substr($v, -1)); return $u === 'g' ? $n << 30 : ($u === 'm' ? $n << 20 : ($u === 'k' ? $n << 10 : ($n ?: PHP_INT_MAX))); }
 function jeton(): string { $j = (string)($_POST['jeton'] ?? $_GET['jeton'] ?? ''); return preg_match('/^[0-9a-f]{32,64}$/', $j) ? hash('sha256', $j) : ''; }
 
 try {
@@ -57,12 +64,34 @@ try {
         if (!is_file($f)) { http_response_code(404); exit; }
         header('Content-Type: image/webp'); header('Cache-Control: private, max-age=31536000, immutable'); header('Content-Length: ' . filesize($f)); readfile($f); exit;
     }
+    if ($m === 'GET' && isset($_GET['mus'])) {   // 21/11 : les musiques ElevenLabs du studio (famille-data/mur-musique, déposées par mur/depot.php)
+        $id = (string)$_GET['mus']; $f = dirname(ga_racine()) . '/famille-data/mur-musique/' . $id . '.mp3';
+        if (!preg_match('/^[a-z0-9-]{2,30}$/', $id) || !is_file($f)) { http_response_code(404); exit; }
+        header('Content-Type: audio/mpeg'); header('Cache-Control: private, max-age=604800'); header('Content-Length: ' . filesize($f)); readfile($f); exit;
+    }
+    if ($m === 'GET' && isset($_GET['vid'])) {   // 21/11 : la vidéo, par morceaux (Safari ne lit une vidéo que si le serveur accepte « Range »)
+        $id = (int)$_GET['vid']; $f = '';
+        foreach (['mp4' => 'video/mp4', 'webm' => 'video/webm'] as $x => $mime) if (is_file(dossier() . "/$id.$x")) { $f = dossier() . "/$id.$x"; break; }
+        if ($f === '') { http_response_code(404); exit; }
+        $n = filesize($f); $de = 0; $a2 = $n - 1;
+        header('Content-Type: ' . $mime); header('Accept-Ranges: bytes'); header('Cache-Control: private, max-age=31536000, immutable');
+        if (preg_match('/bytes=(\d*)-(\d*)/', (string)($_SERVER['HTTP_RANGE'] ?? ''), $rg)) {
+            if ($rg[1] === '' && $rg[2] !== '') { $de = max(0, $n - (int)$rg[2]); } else { $de = (int)$rg[1]; if ($rg[2] !== '') $a2 = min($a2, (int)$rg[2]); }
+            if ($de > $a2 || $de >= $n) { http_response_code(416); header("Content-Range: bytes */$n"); exit; }
+            http_response_code(206); header("Content-Range: bytes $de-$a2/$n");
+        }
+        header('Content-Length: ' . ($a2 - $de + 1));
+        $h = fopen($f, 'rb'); fseek($h, $de); $reste = $a2 - $de + 1;
+        while ($reste > 0 && !feof($h)) { $bloc = fread($h, min(65536, $reste)); echo $bloc; $reste -= strlen($bloc); flush(); }
+        fclose($h); exit;
+    }
     if ($m === 'GET' && $a === 'quota') {
-        out(200, ['restant' => max(0, MUR_PHOTOS_JOUR - photos_prises(auteur($_GET['auteur'] ?? ''))), 'max' => MUR_PHOTOS_JOUR]);
+        $q = auteur($_GET['auteur'] ?? '');
+        out(200, ['restant' => max(0, MUR_PHOTOS_JOUR - photos_prises($q)), 'max' => MUR_PHOTOS_JOUR, 'videos' => max(0, MUR_VIDEOS_JOUR - photos_prises('🎬' . $q)), 'videos_max' => MUR_VIDEOS_JOUR, 'envoi_max' => min(MUR_VIDEO_MAX, ini_octets('upload_max_filesize'), ini_octets('post_max_size') - 400000)]);
     }
     if ($m === 'GET' && $a === 'liste') {
         $avant = (int)($_GET['avant'] ?? 0); $j = jeton();
-        $s = mur()->prepare('SELECT id, auteur, texte, img, cree, jeton, genre, deco FROM messages' . ($avant ? ' WHERE id < ?' : '') . ' ORDER BY id DESC LIMIT 30'); $s->execute($avant ? [$avant] : []);
+        $s = mur()->prepare('SELECT id, auteur, texte, img, cree, jeton, genre, deco, media FROM messages' . ($avant ? ' WHERE id < ?' : '') . ' ORDER BY id DESC LIMIT 30'); $s->execute($avant ? [$avant] : []);
         $l = $s->fetchAll(); $ids = array_column($l, 'id'); $reac = []; $moi = [];
         if ($ids) {
             $in = implode(',', array_map('intval', $ids));
@@ -70,7 +99,7 @@ try {
             if ($j) { $q = mur()->prepare("SELECT message, emoji FROM reactions WHERE message IN ($in) AND jeton = ?"); $q->execute([$j]); foreach ($q as $r) $moi[$r['message']][] = $r['emoji']; }
         }
         out(200, ['messages' => array_map(fn($x) => ['id' => (int)$x['id'], 'auteur' => $x['auteur'], 'texte' => $x['texte'], 'img' => (bool)$x['img'], 'cree' => (int)$x['cree'],
-            'genre' => $x['genre'], 'deco' => $x['deco'], 'reac' => $reac[$x['id']] ?? (object)[], 'moi' => $moi[$x['id']] ?? [], 'mien' => $j !== '' && hash_equals($x['jeton'], $j)], $l), 'emojis' => MUR_EMOJIS]);
+            'genre' => $x['genre'], 'deco' => $x['deco'], 'media' => $x['media'], 'reac' => $reac[$x['id']] ?? (object)[], 'moi' => $moi[$x['id']] ?? [], 'mien' => $j !== '' && hash_equals($x['jeton'], $j)], $l), 'emojis' => MUR_EMOJIS, 'admin' => ga_passe_autorise()]);
     }
     if ($m !== 'POST') fail(405, 'Action inconnue.');
     $j = jeton();
@@ -109,6 +138,27 @@ try {
         $db->prepare('INSERT INTO envois (ip, ts) VALUES (?, ?)')->execute([$ip, $t]);
         out(200, ['ok' => true, 'id' => $id]);
     }
+    if ($a === 'video') {   // 21/11 : une petite vidéo du studio (filmée, importée, ou des photos animées, avec ou sans musique)
+        if (!$j) fail(400, 'Recharge la page.');
+        $qui = auteur($_POST['auteur'] ?? ''); $txt = trim(mb_substr((string)($_POST['texte'] ?? ''), 0, 200));
+        $mus = preg_match('/^[a-z0-9-]{1,30}$/', (string)($_POST['musique'] ?? '')) ? (string)$_POST['musique'] : '';
+        $v = $_FILES['video'] ?? null;
+        if (!$v || ($v['error'] ?? 1) !== UPLOAD_ERR_OK) fail(400, ($v['error'] ?? 0) === UPLOAD_ERR_INI_SIZE ? 'Vidéo trop lourde pour le serveur.' : "La vidéo n'est pas arrivée : réessaie.");
+        if ($v['size'] > MUR_VIDEO_MAX) fail(400, 'Vidéo trop lourde (16 Mo au plus).');
+        $tete = (string)file_get_contents($v['tmp_name'], false, null, 0, 12);
+        $ext = substr($tete, 0, 4) === "\x1A\x45\xDF\xA3" ? 'webm' : (substr($tete, 4, 4) === 'ftyp' ? 'mp4' : '');
+        if ($ext === '') fail(400, "Ce fichier n'est pas une vidéo lisible.");
+        if (photos_prises('🎬' . $qui) >= MUR_VIDEOS_JOUR) fail(429, 'Tu as déjà posté tes ' . MUR_VIDEOS_JOUR . ' vidéos aujourd\'hui : à demain ! 🎬');
+        $pd = (string)($_POST['poster'] ?? ''); $img = null;
+        if (preg_match('#^data:image/(jpeg|png|webp);base64,#', $pd)) { $bin = base64_decode(substr($pd, strpos($pd, ',') + 1), true); if ($bin !== false && strlen($bin) < MUR_IMAGE_MAX) $img = @imagecreatefromstring($bin) ?: null; }
+        $db = mur(); $t = time(); $ip = hash('sha256', ga_ip());
+        $db->prepare('INSERT INTO photos_jour (auteur, jour, n) VALUES (?, ?, 1) ON CONFLICT(auteur, jour) DO UPDATE SET n = n + 1')->execute([mb_strtolower('🎬' . $qui), jour()]);
+        $db->prepare('INSERT INTO messages (auteur, texte, img, jeton, cree, ip, genre, deco, media) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$qui, $txt, $img ? 1 : 0, $j, $t, $ip, 'video', '', $ext . '|' . $mus]);
+        $id = (int)$db->lastInsertId();
+        if (!move_uploaded_file($v['tmp_name'], dossier() . "/$id.$ext")) { $db->prepare('DELETE FROM messages WHERE id = ?')->execute([$id]); fail(500, "La vidéo n'a pas pu être rangée."); }
+        if ($img) { imagepalettetotruecolor($img); imagewebp($img, dossier() . '/' . $id . '.webp', 80); imagedestroy($img); }
+        out(200, ['ok' => true, 'id' => $id]);
+    }
     if ($a === 'reagit') {
         $id = (int)($_POST['id'] ?? 0); $e = (string)($_POST['emoji'] ?? '');
         if (!$j || !in_array($e, MUR_EMOJIS, true)) fail(400, 'Réaction inconnue.');
@@ -121,13 +171,13 @@ try {
         $s = mur()->prepare('SELECT jeton FROM messages WHERE id = ?'); $s->execute([$id]); $jt = $s->fetchColumn();
         if ($jt === false) out(200, ['ok' => true]);
         $parent = false;
-        if (!($j && hash_equals((string)$jt, $j))) {   // pas l'auteur : il faut le mot de passe parent
+        if (!($j && hash_equals((string)$jt, $j)) && !ga_passe_autorise()) {   // pas l'auteur ni Anis administrateur : il faut le mot de passe parent
             $auth = json_decode((string)@file_get_contents(dirname(ga_racine()) . '/nahki-voix/auth.json'), true);
             if (ga_trop_essais()) fail(429, "Trop d'essais. Réessaie dans 15 minutes.");
             if (empty($auth['hash']) || !password_verify((string)($_POST['pass'] ?? ''), (string)$auth['hash'])) { ga_note_echec(); fail(403, 'Mot de passe parent incorrect.'); }
         }
         mur()->prepare('DELETE FROM messages WHERE id = ?')->execute([$id]); mur()->prepare('DELETE FROM reactions WHERE message = ?')->execute([$id]);
-        @unlink(dossier() . '/' . $id . '.webp');
+        foreach (['webp', 'mp4', 'webm'] as $x) @unlink(dossier() . '/' . $id . '.' . $x);
         out(200, ['ok' => true]);
     }
     fail(400, 'Action inconnue.');

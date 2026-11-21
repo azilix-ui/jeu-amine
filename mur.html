@@ -96,6 +96,52 @@
 .styles button{min-height:46px;padding:0 14px;border-radius:999px;border:2px solid #ffffff44;background:#ffffff14;color:#fff;font:inherit;font-weight:800;cursor:pointer}
 .styles button.on{background:var(--gold);color:#3a2600;border-color:var(--gold)}
 .cab-btns .go{background:var(--mint);color:#0d2a1d;box-shadow:0 5px 0 var(--mint-deep)}
+/* 21/11 : le studio vidéo (mur/studio.js) */
+.btn.vid{background:linear-gradient(135deg,#7a4fd8,#ff5f7e);color:#fff;box-shadow:0 4px 0 #4b2c97}
+.btn.fil-btn{background:#14102b;color:#ffc93c}
+.studio{justify-content:flex-start}
+.st-choix{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;width:min(640px,100%)}
+.st-choix>*{display:flex;flex-direction:column;align-items:center;gap:4px;padding:22px 12px;border-radius:24px;border:2px solid #ffffff33;background:#ffffff12;color:#fff;font:inherit;cursor:pointer;text-align:center}
+.st-choix span{font-size:54px}.st-choix b{font-size:21px}.st-choix small{opacity:.8}
+.st-ecran{position:relative;width:min(56vh,360px);aspect-ratio:9/16;border-radius:20px;overflow:hidden;background:#000;box-shadow:0 14px 40px #0009;flex:none}
+.st-ecran video,.st-ecran canvas{width:100%;height:100%;object-fit:cover;display:block}
+.st-ecran video.miroir{transform:scaleX(-1)}
+.st-temps{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#d7263d;color:#fff;font-weight:800;padding:4px 12px;border-radius:999px}
+.declencheur.enreg{border-radius:18px;background:#d7263d;animation:pulse 1s infinite alternate}
+@keyframes pulse{to{box-shadow:0 0 0 10px #ff5f7e33}}
+.st-play{position:absolute;inset:0;margin:auto;width:90px;height:90px;border-radius:50%;border:0;background:#fffc;font-size:40px;cursor:pointer}
+.st-monte{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;align-items:flex-start;width:min(900px,100%)}
+.st-reglages{flex:1;min-width:260px;display:flex;flex-direction:column;gap:8px;background:#ffffff10;border-radius:20px;padding:14px}
+.st-reglages label{font-weight:800}.st-reglages input[type=range]{width:100%;height:40px;accent-color:#ffc93c}
+.st-reglages input[type=text]{font:inherit;font-size:18px;padding:10px 14px;border-radius:14px;border:0}
+.st-mus{display:flex;flex-wrap:wrap;gap:8px}
+.st-mus button{min-height:46px;padding:0 14px;border-radius:999px;border:2px solid #ffffff44;background:#ffffff14;color:#fff;font:inherit;font-weight:800;cursor:pointer}
+.st-mus button.on{background:#ffc93c;color:#3a2600;border-color:#ffc93c}
+.st-barre{position:absolute;left:12px;right:12px;bottom:12px;height:34px;border-radius:999px;background:#0009;overflow:hidden;display:grid;place-items:center}
+.st-barre.envoi{position:relative;left:auto;right:auto;bottom:auto;width:min(360px,100%)}
+.st-barre i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#5fe0a8,#ffc93c);transition:width .2s}
+.st-barre span{position:relative;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
+/* les vidéos sur le mur, et le fil façon Instagram (21/11) */
+.carte.video .vignette{position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:9/16;max-height:460px;cursor:pointer;border:0;padding:0;width:100%}
+.carte.video .vignette img{width:100%;height:100%;object-fit:cover;display:block}
+.carte.video .vignette span{position:absolute;inset:0;margin:auto;width:74px;height:74px;border-radius:50%;background:#fffd;display:grid;place-items:center;font-size:32px;box-shadow:0 6px 20px #0006}
+.carte .mus{font-size:14px;color:var(--soft);font-weight:700}
+.reels{position:fixed;inset:0;z-index:1000;background:#000;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain}
+.reel{height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:grid;place-items:center;overflow:hidden}
+.reel video,.reel img.ph{max-width:100%;max-height:100dvh;width:auto;height:100dvh;object-fit:contain;display:block}
+.reel img.ph{animation:kb 9s ease-in-out infinite alternate}
+@keyframes kb{to{transform:scale(1.08)}}
+.reel .info{position:absolute;left:14px;right:90px;bottom:max(84px,env(safe-area-inset-bottom));color:#fff;text-shadow:0 1px 4px #000;display:flex;flex-direction:column;gap:6px}
+.reel .info .qui{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;background:none;padding:0;min-height:0;color:#fff}
+.reel .info .qui img{width:44px;height:44px;border-radius:50%;border:2px solid #fff;object-fit:cover}
+.reel .info p{margin:0;font-size:17px}.reel .info small{opacity:.85}
+.reel .cote{position:absolute;right:10px;bottom:max(90px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.reel .cote button{width:60px;min-height:60px;border-radius:50%;border:0;background:#ffffff26;color:#fff;font-size:26px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.reel .cote button small{font-size:13px;font-weight:800}.reel .cote button.on{background:#ffc93ccc}
+.reels-haut{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;z-index:1001;display:flex;justify-content:space-between;pointer-events:none}
+.reels-haut button{pointer-events:auto;min-height:48px;padding:0 16px;border-radius:999px;border:0;background:#0008;color:#fff;font:inherit;font-weight:800;font-size:17px;cursor:pointer}
+.reel .tap{position:absolute;inset:0;margin:auto;width:96px;height:96px;border-radius:50%;background:#0007;color:#fff;font-size:44px;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .2s}
+.reel.pause .tap{opacity:1}
 </style>
 </head>
 <body>
@@ -103,7 +149,7 @@
   <a class="back" href="./">← Famille Missaoui</a>
   <header class="mur-tete">
     <h1>Le mur de la famille<span>.</span></h1>
-    <p>Un mot, un dessin, la photo d'une création dans Ma Houma ou à l'Atelier, ou ta <b>photo du jour</b> avec un petit mot (3 photos ou images par jour chacun) : tout le monde le voit, la famille et les proches invités.</p>
+    <p>Un mot, un dessin, ta <b>photo du jour</b> (3 photos ou images par jour chacun), ou une <b>petite vidéo</b> en musique : filmée, prise dans la tablette, ou des photos qui s'animent (3 vidéos de 30 s par jour). Tout le monde le voit, la famille et les proches invités. Regarde tout en grand dans <b>📱 Le fil</b> !</p>
   </header>
 
   <section class="ecrire" aria-label="Écrire sur le mur">
@@ -114,6 +160,8 @@
       <button class="btn cam" id="cabine" type="button">📸 Photo du jour</button>
       <label class="btn" for="photo">🖼️ Image<input type="file" id="photo" accept="image/*" hidden></label>
       <button class="btn" id="dessiner" type="button">🎨 Dessiner</button>
+      <button class="btn vid" id="studio" type="button">🎬 Vidéo</button>
+      <button class="btn fil-btn" id="ouvreFil" type="button">📱 Le fil</button>
       <button class="btn go" id="publier" type="button">Épingler sur le mur</button>
     </div>
     <p class="msgerr" id="err" role="alert"></p>
@@ -123,6 +171,8 @@
   <button class="btn" id="plus" type="button" hidden style="align-self:center">Voir les messages plus anciens</button>
   <footer><span>© 2026 Anis Missaoui · Famille Missaoui</span></footer>
 </main>
+<script src="/mur/musique/liste.js?v=1"></script>
+<script src="/mur/studio.js?v=1"></script>
 <script>
 'use strict';
 const API = '/api/mur.php', $ = id => document.getElementById(id);
@@ -245,27 +295,36 @@ async function majReste(){ if(!qui) return; resteJour = await quota(); $('cabine
 $('photo').addEventListener('click', e => { if(qui && resteJour <= 0){ e.preventDefault(); $('err').textContent = 'Tu as déjà accroché tes 3 photos aujourd\'hui : à demain ! 📸 Tu peux encore écrire un petit mot.'; } });
 majReste(); setInterval(majReste, 60000);
 
+let ADMIN = false;
+const supprBtn = m => '<button type="button" class="suppr" data-suppr="' + (m.mien ? 'moi' : ADMIN ? 'admin' : 'parent') + '">' + (m.mien ? 'Effacer' : ADMIN ? '🗑️ Effacer (admin)' : '🔒 Retirer') + '</button>';
+const titreMus = m => { const id = (m.media || '').split('|')[1]; const x = (window.MUR_MUSIQUES || []).find(y => y.id === id); return x ? x.emoji + ' ' + x.titre : ''; };
 function carte(m){
   const r = m.reac || {};
+  if(m.genre === 'video'){
+    return '<article class="carte video" data-id="' + m.id + '"><div class="de">' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="">' : '') + '<span><b>' + esc(m.auteur) + '</b><small>' + quand(m.cree) + '</small></span></div>' +
+      '<button type="button" class="vignette" data-voir="' + m.id + '" aria-label="Regarder la vidéo de ' + esc(m.auteur) + '">' + (m.img ? '<img loading="lazy" src="' + API + '?img=' + m.id + '" alt="">' : '') + '<span>▶</span></button>' +
+      (m.texte ? '<p>' + esc(m.texte) + '</p>' : '') + (titreMus(m) ? '<span class="mus">🎵 ' + esc(titreMus(m)) + '</span>' : '') +
+      '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') + supprBtn(m) + '</div></article>';
+  }
   if(m.genre === 'polaroid'){
     const rot = ((m.id * 37) % 7 - 3) * 1.1;
     return '<article class="carte pola deco-' + esc(m.deco || 'polaroid') + '" data-id="' + m.id + '" style="--r:' + rot + 'deg"><div class="cadre"><img class="photo" loading="lazy" src="' + API + '?img=' + m.id + '" alt="Photo de ' + esc(m.auteur) + '"></div>' +
       (m.texte ? '<p class="mot">' + esc(m.texte) + '</p>' : '') + stickers(m.deco) +
       '<div class="de"><span style="text-align:right"><b style="font-size:15px">' + esc(m.auteur) + '</b><small>' + quand(m.cree) + '</small></span>' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="" style="width:34px;height:34px">' : '') + '</div>' +
       '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') +
-      '<button type="button" class="suppr" data-suppr="' + (m.mien ? 'moi' : 'parent') + '">' + (m.mien ? 'Effacer' : '🔒 Retirer') + '</button></div></article>';
+      supprBtn(m) + '</div></article>';
   }
   return '<article class="carte" data-id="' + m.id + '"><div class="de">' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="">' : '') + '<span><b>' + esc(m.auteur) + '</b><small>' + quand(m.cree) + '</small></span></div>' +
     (m.texte ? '<p>' + esc(m.texte) + '</p>' : '') + (m.img ? '<img class="photo" loading="lazy" src="' + API + '?img=' + m.id + '" alt="Image de ' + esc(m.auteur) + '">' : '') +
     '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') +
-    '<button type="button" class="suppr" data-suppr="' + (m.mien ? 'moi' : 'parent') + '">' + (m.mien ? 'Effacer' : '🔒 Retirer') + '</button></div></article>';
+    supprBtn(m) + '</div></article>';
 }
 let tous = [];
 async function charge(plus){
   try{
     const r = await fetch(API + '?action=liste&jeton=' + JETON + (plus ? '&avant=' + tous[tous.length - 1].id : ''), { cache:'no-store', credentials:'same-origin' });
     const j = await r.json(); if(!r.ok) throw new Error(j.error || '');
-    EMO = j.emojis || EMO; tous = plus ? tous.concat(j.messages) : j.messages;
+    EMO = j.emojis || EMO; ADMIN = !!j.admin; tous = plus ? tous.concat(j.messages) : j.messages;
     $('fil').innerHTML = tous.length ? tous.map(carte).join('') : '<p class="vide-mur">Le mur est encore tout neuf : écris le premier message ! ✨</p>';
     $('plus').hidden = j.messages.length < 30;
   }catch(e){ $('fil').innerHTML = '<p class="vide-mur">Le mur ne se charge pas pour l\'instant.</p>'; }
@@ -273,11 +332,48 @@ async function charge(plus){
 $('plus').onclick = () => charge(true);
 $('fil').addEventListener('click', async e => {
   const b = e.target.closest('button'); if(!b) return; const id = +b.closest('.carte').dataset.id;
+  if(b.dataset.voir){ fil(id); return; }
+  if(b.dataset.suppr === 'admin' && confirm('Effacer définitivement ce message (et sa photo ou sa vidéo) ?')){ try{ await api({ action:'supprime', id }); await charge(); }catch(err){ alert(err.message); } }
   if(b.dataset.e){ try{ await api({ action:'reagit', id, emoji:b.dataset.e }); await charge(); }catch(err){} }
   if(b.dataset.suppr === 'moi' && confirm('Effacer ton message ?')){ try{ await api({ action:'supprime', id }); await charge(); }catch(err){ alert(err.message); } }
   if(b.dataset.suppr === 'parent'){ const p = prompt('Pour retirer le message de quelqu\'un d\'autre, il faut le mot de passe parent :'); if(p){ try{ await api({ action:'supprime', id, pass:p }); await charge(); }catch(err){ alert(err.message); } } }
 });
-charge(); setInterval(() => { if(!document.hidden) charge(); }, 30000);
+/* ---------- 🎬 le studio vidéo et 📱 le fil (21/11) ---------- */
+$('studio').onclick = async () => {
+  $('err').textContent = ''; if(!qui){ $('qui').click(); return; }
+  let q = { videos:3, envoi_max:16e6 }; try{ const r = await fetch(API + '?action=quota&auteur=' + encodeURIComponent(qui), { cache:'no-store', credentials:'same-origin' }); if(r.ok) q = await r.json(); }catch(e){}
+  if(q.videos <= 0){ $('err').textContent = 'Tu as déjà posté tes 3 vidéos aujourd\'hui : à demain ! 🎬'; return; }
+  Studio.ouvre({ qui, jeton:JETON, api:API, reste:q.videos, envoiMax:Math.min(16e6, q.envoi_max || 16e6), fini:async id => { await charge(); fil(id); } });
+};
+// le fil : une photo ou une vidéo par écran, on glisse vers le haut ; la vidéo visible joue, les autres se taisent
+function fil(depuis){
+  const items = tous.filter(m => m.genre === 'video' || m.img);
+  if(!items.length){ $('err').textContent = 'Pas encore de photo ni de vidéo sur le mur : poste la première ! 🎬'; return; }
+  const box = document.createElement('div'); box.className = 'reels'; let son = true;
+  const reac = m => EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + '<small>' + ((m.reac || {})[e] || '') + '</small></button>').join('');
+  box.innerHTML = items.map(m => '<section class="reel" data-id="' + m.id + '">' + (m.genre === 'video' ? '<video playsinline loop preload="none"' + (m.img ? ' poster="' + API + '?img=' + m.id + '"' : '') + ' src="' + API + '?vid=' + m.id + '"></video><div class="tap">▶</div>' : '<img class="ph" loading="lazy" src="' + API + '?img=' + m.id + '" alt="">') +
+    '<div class="info"><span class="qui">' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="">' : '') + esc(m.auteur) + ' <small>· ' + quand(m.cree) + '</small></span>' + (m.texte ? '<p>' + esc(m.texte) + '</p>' : '') + (titreMus(m) ? '<small>🎵 ' + esc(titreMus(m)) + '</small>' : '') + '</div>' +
+    '<div class="cote">' + reac(m) + (m.mien || ADMIN ? '<button type="button" data-del="' + m.id + '" aria-label="Effacer">🗑️</button>' : '') + '</div></section>').join('');
+  const haut = document.createElement('div'); haut.className = 'reels-haut'; haut.innerHTML = '<button type="button" id="fFerme">✕ Fermer</button><button type="button" id="fSon">🔊 Son</button>';
+  document.body.append(box, haut); document.body.style.overflow = 'hidden';
+  const ferme = () => { box.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); }); box.remove(); haut.remove(); document.body.style.overflow = ''; charge(); };
+  haut.querySelector('#fFerme').onclick = ferme;
+  haut.querySelector('#fSon').onclick = () => { son = !son; haut.querySelector('#fSon').textContent = son ? '🔊 Son' : '🔇 Muet'; box.querySelectorAll('video').forEach(v => v.muted = !son); };
+  document.addEventListener('keydown', function esc(e){ if(e.key === 'Escape' && document.body.contains(box)){ ferme(); document.removeEventListener('keydown', esc); } });
+  const io = new IntersectionObserver(es => es.forEach(en => { const v = en.target.querySelector('video'); if(!v) return;
+    if(en.isIntersecting && en.intersectionRatio > .6){ v.muted = !son; v.preload = 'auto'; v.play().then(() => en.target.classList.remove('pause')).catch(() => { v.muted = true; son = false; haut.querySelector('#fSon').textContent = '🔇 Muet'; v.play().catch(() => en.target.classList.add('pause')); });
+      const n = en.target.nextElementSibling && en.target.nextElementSibling.querySelector('video'); if(n) n.preload = 'auto'; }
+    else { v.pause(); } }), { root:box, threshold:[0, .6] });
+  box.querySelectorAll('.reel').forEach(r => io.observe(r));
+  box.addEventListener('click', async e => { const b = e.target.closest('button'), r = e.target.closest('.reel'); if(!r) return; const id = +r.dataset.id, m = items.find(x => x.id === id);
+    if(b && b.dataset.e){ try{ await api({ action:'reagit', id, emoji:b.dataset.e }); const on = b.classList.toggle('on'); const sm = b.querySelector('small'); const n = (+sm.textContent || 0) + (on ? 1 : -1); sm.textContent = n > 0 ? n : ''; }catch(err){} return; }
+    if(b && b.dataset.del){ if(!confirm('Effacer définitivement ' + (m.genre === 'video' ? 'cette vidéo' : 'cette photo') + ' ?')) return; try{ await api({ action:'supprime', id }); r.remove(); if(!box.querySelector('.reel')) ferme(); }catch(err){ alert(err.message); } return; }
+    const v = r.querySelector('video'); if(v){ if(v.paused){ v.play(); r.classList.remove('pause'); } else { v.pause(); r.classList.add('pause'); } } });
+  const cible = box.querySelector('.reel[data-id="' + depuis + '"]'); if(cible) box.scrollTop = cible.offsetTop;
+}
+$('ouvreFil').onclick = () => fil();
+window.__mur = { fil, get tous(){ return tous; } };
+charge(); setInterval(() => { if(!document.hidden && !document.querySelector('.reels,.studio')) charge(); }, 30000);
 if(window.Famille && Famille.loadHeads) Famille.loadHeads().then(() => charge());
 </script>
 </body>
