@@ -1,0 +1,84 @@
+"""Français 5e · Essil (21/11) : fabrique essil/francais-5e-<n>.html (les 6 cours) et la page des cours essil/francais-5e.html (même gabarit que English B2)."""
+import re, json, os
+R = os.path.join(os.path.dirname(__file__), '..', '..')
+src = open(os.path.join(R, 'essil/francais/lecons.js')).read()
+lec = [(int(m.group(1)), m.group(2), m.group(3)) for m in re.finditer(r'"n": (\d+),\s*"icon": "([^"]+)",\s*"titre": "((?:[^"\\]|\\.)*)"' , src)]
+TITRES = [(n, i, t.replace("\\'", "'")) for n, i, t in lec]
+SOUS = [s.replace("\\'", "'") for s in re.findall(r'"sous": "((?:[^"\\]|\\.)*)"', src)]
+HEAD = '''<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{titre}</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+'''
+CSS = '''<style>
+/* Français 5e (21/11) : couleurs d'Essil, même gabarit qu'English B2 */
+:root{ --pen:#1f3c88; --plum:#d7263d; --sun:#f2c230; }
+body{background:linear-gradient(#cfe7ff,#f3f8ff 40%,#fff8ec) fixed}
+h1{color:#1f3c88}.lead,.help{color:#33415c;text-shadow:none}.en{color:#1f3c88;font-weight:800}
+.b2band{width:100%;border-radius:22px;background:linear-gradient(90deg,#1f3c88,#2a5bd7);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;box-shadow:0 6px 0 #d7263d;font-family:'Baloo 2',sans-serif;font-size:22px}
+.b2band a{background:#fff;color:#1f3c88;border-radius:14px;padding:6px 12px;font-size:16px;text-decoration:none}
+.lettre{background:#fffdf5;border:2px solid #e8dcc0;border-radius:12px;padding:10px 14px;text-align:left;font-size:17px;line-height:1.5}
+.tableau{width:100%;border-collapse:collapse;font-size:16px}.tableau th,.tableau td{border-bottom:1px solid #e3e8f2;padding:6px 8px;text-align:left}.tableau th{background:#eef2f8;white-space:nowrap}
+.trou{color:#d7263d}
+</style>
+'''
+for n, icon, t in TITRES:
+    open(os.path.join(R, f'essil/francais-5e-{n}.html'), 'w').write(HEAD.format(titre=f'Français 5e · {t}') + '<link rel="stylesheet" href="../salma/ollie/cours.css?v=4">\n' + CSS +
+      f'''</head>
+<body>
+<main class="wrap" id="app"></main>
+<!-- Français 5e, cours {n}/6 (21/11) : données essil/francais/lecons.js (docs/francais5/lecons.py), code essil/francais/fr.js, moteur salma/ollie/cours.js -->
+<script src="../famille.js"></script>
+<script src="../amine/lire/voix.php"></script>
+<script>window.FR5N = {n};</script>
+<script src="francais/lecons.js?v=1"></script>
+<script src="francais/fr.js?v=1"></script>
+<script src="../salma/ollie/cours.js?v=8"></script>
+</body></html>
+''')
+cartes = '\n'.join(f'''    <a class="lec" href="francais-5e-{n}.html" data-k="essil-fr{n}"><img src="francais/img/f{n}_1.webp" alt="" loading="lazy"><span class="num">{n}</span><b>{icon} {t}</b><small>{SOUS[k]}</small><i class="et"></i></a>''' for k, (n, icon, t) in enumerate(TITRES))
+open(os.path.join(R, 'essil/francais-5e.html'), 'w').write(HEAD.format(titre='Français 5e · Essil') + CSS + '''<style>
+.wrapb{max-width:980px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 40px;font-family:Nunito,system-ui,sans-serif;color:#1c2340}
+.wrapb h1{font-family:'Baloo 2',sans-serif;font-size:clamp(34px,7vw,56px);margin:10px 0 0;line-height:1}
+.wrapb .lead{font-size:18px;margin:6px 0 16px}
+.back{display:inline-flex;align-items:center;min-height:48px;padding:0 16px;border-radius:999px;background:#fff;box-shadow:0 4px 0 #0002;color:#1f3c88;font-weight:800;text-decoration:none}
+.grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.lec{position:relative;display:flex;flex-direction:column;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 6px 0 #1f3c8822;text-decoration:none;color:inherit;padding-bottom:12px}
+.lec img{width:100%;aspect-ratio:16/9;object-fit:cover;background:#cfe7ff}
+.lec .num{position:absolute;left:10px;top:10px;width:40px;height:40px;border-radius:50%;background:#d7263d;color:#fff;display:grid;place-items:center;font:800 20px 'Baloo 2'}
+.lec b{font-family:'Baloo 2',sans-serif;font-size:21px;margin:8px 12px 0;line-height:1.1;color:#1f3c88}
+.lec small{margin:2px 12px 0;color:#5b6478;font-size:14px}
+.lec .et{font-style:normal;margin:6px 12px 0;font-weight:800;color:#c99a00}
+</style>
+</head>
+<body>
+<div class="wrapb">
+  <a class="back" href="./">← Espace Essil</a>
+  <h1>Français 5e 📚</h1>
+  <p class="lead">6 cours du programme de 5e avec <b>Plume, la huppe</b> : chaque cours commence par un dessin animé dont tu es l'héroïne, puis des exercices du plus facile au plus difficile, les pièges, un petit texte et un bilan.</p>
+  <div class="grille">
+''' + cartes + '''
+  </div>
+</div>
+<script src="../famille.js"></script>
+<script>
+// les étoiles gagnées dans chaque cours (7 étapes × 3 étoiles)
+document.querySelectorAll('.lec').forEach(a => { let d = null; try{ d = JSON.parse(localStorage.getItem(a.dataset.k) || 'null'); }catch(e){}
+  const s = d && d.stars ? Object.values(d.stars).reduce((x, y) => x + y, 0) : 0; a.querySelector('.et').textContent = s ? '⭐ ' + s + ' / 21' : 'Pas encore commencé'; });
+if(window.Famille && Famille.track){ for(let n = 1; n <= 6; n++) Famille.load('essil-fr' + n, 'Essil').then(r => { const d = r && r['essil-fr' + n]; const a = document.querySelector(`[data-k="essil-fr${n}"]`); if(d && d.stars && a){ const s = Object.values(d.stars).reduce((x, y) => x + y, 0); if(s) a.querySelector('.et').textContent = '⭐ ' + s + ' / 21'; } }).catch(() => {}); }
+</script>
+</body></html>
+''')
+print(len(TITRES), 'cours')
