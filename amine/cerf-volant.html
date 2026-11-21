@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1b5e8a">
+<title>Le grand cerf-volant d'Amine</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%AA%81%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* Le grand cerf-volant d'Amine (22/11, demandé par le papa : « une petite histoire en dessin animé avec son avatar et les avatars de ses
+   sœurs, de son papa et de sa maman »). 8 scènes (images ComfyUI FLUX.2 d'après l'affiche de la famille, films Wan 2.2), racontées par
+   Lulu (voix du site, api/voix.php, p=amine) ; 4 petites questions dans l'histoire (compter, couleurs, où, qui), contrôlées par controle.js ;
+   puis « Mon cerf-volant » : Amine le colorie, compte les rubans et le fait voler. Sauvegarde « amine-cerfvolant ». Images : docs/cerfvolant/build.py */
+:root{ --ciel:#1b5e8a; --panel:rgba(255,255,255,.96); --encre:#23324a; --or:#ffd23f; --menthe:#3ddc97; --ombre:0 7px 0 rgba(0,0,0,.28) }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;color:#fff;font-family:Nunito,system-ui,sans-serif;font-weight:800;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+body{background:linear-gradient(180deg,#58b7e8 0%,#1b5e8a 70%,#12405f 100%)}
+button{font:inherit;color:inherit;border:0;cursor:pointer;padding:0;background:none}
+[hidden]{display:none!important}
+h1,h2{font-family:"Baloo 2",Nunito,sans-serif;font-weight:800;margin:0;line-height:1.05}
+.scr{position:fixed;inset:0;display:none;flex-direction:column;padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));overflow:auto}
+.scr.on{display:flex}
+.haut{display:flex;align-items:center;gap:10px;min-height:64px}
+.rond{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.18);border:3px solid #fff4;font-size:26px;display:grid;place-items:center;box-shadow:var(--ombre);flex:none;text-decoration:none;color:#fff}
+.rond:active,.gros:active,.choix:active,.pot:active{transform:translateY(4px)}
+.titre{flex:1;text-align:center;font-family:"Baloo 2";font-size:clamp(24px,4.4vw,40px);text-shadow:0 3px 0 #0005}
+.etoiles{background:rgba(255,255,255,.18);border-radius:999px;padding:8px 14px;font-size:20px}
+/* accueil */
+.affiche{position:relative;width:min(100%,900px,calc((100vh - 260px) * 1.73));aspect-ratio:16/9;margin:6px auto 0;border-radius:28px;overflow:hidden;background:#000 center/cover;box-shadow:0 10px 30px #0007;display:block}
+.affiche::after{content:"▶";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.94);color:var(--ciel);font-size:52px;display:grid;place-items:center;padding-left:10px;box-shadow:0 6px 0 rgba(0,0,0,.3)}
+.affiche span{position:absolute;left:0;right:0;bottom:0;padding:14px 18px;background:linear-gradient(transparent,#0009);font-family:"Baloo 2";font-size:clamp(24px,4vw,38px);text-align:left}
+.boutons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.gros{min-height:68px;min-width:68px;padding:0 22px;border-radius:34px;background:var(--panel);color:var(--encre);font-size:24px;box-shadow:var(--ombre);display:inline-flex;align-items:center;gap:10px;justify-content:center}
+.gros.or{background:var(--or);color:#4a2d00}
+.gros:disabled{opacity:.45}
+/* le film */
+.ecran{position:relative;width:min(100%,calc((100vh - 250px) * 1.733));aspect-ratio:832/480;margin:0 auto;border-radius:24px;overflow:hidden;background:#000;box-shadow:0 10px 30px #0008;flex:none}
+.ecran img,.ecran video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ecran video{opacity:0;transition:opacity .35s}.ecran video.joue{opacity:1}
+.ecran .num{position:absolute;right:12px;top:10px;background:#0009;border-radius:14px;padding:3px 10px;font-size:15px;z-index:2}
+.sous{max-width:900px;width:100%;margin:10px auto 0;background:var(--panel);color:var(--encre);border-radius:20px;padding:12px 18px;font-size:clamp(18px,2.6vw,24px);line-height:1.4;min-height:76px}
+.sous b{color:#c8473a}
+.question{max-width:900px;width:100%;margin:10px auto 0;display:flex;flex-direction:column;align-items:center;gap:10px}
+.question[hidden]{display:none}
+.choix-l{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.choix{min-width:clamp(100px,16vw,150px);min-height:clamp(96px,15vw,130px);border-radius:26px;background:var(--panel);color:var(--encre);font-family:"Baloo 2";font-size:clamp(40px,7vw,60px);box-shadow:var(--ombre);padding:6px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;line-height:1}
+.choix small{font-family:Nunito;font-size:16px}
+.choix img{width:clamp(70px,11vw,100px);height:clamp(70px,11vw,100px);border-radius:50%;object-fit:cover}
+.choix.oui{background:var(--menthe);color:#fff}
+.rubans{display:flex;gap:12px;justify-content:center}
+.ruban{position:relative;width:64px;height:96px;border-radius:14px;font-size:54px;display:grid;place-items:center;background:rgba(255,255,255,.2)}
+/* mon cerf-volant */
+.atelier{flex:1;display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;min-height:0}
+.kite{height:min(50vh,520px);width:auto;max-width:78vw;filter:drop-shadow(0 10px 10px #0005)}
+.kite .part{cursor:pointer;stroke:#3a2a1a;stroke-width:5;transition:fill .2s}
+.pots{display:grid;grid-template-columns:repeat(3,auto);gap:12px}
+.pot{width:clamp(70px,11vw,92px);height:clamp(70px,11vw,92px);border-radius:50%;border:6px solid #fff;box-shadow:var(--ombre)}
+.pot.on{outline:6px solid var(--or);outline-offset:3px}
+.consigne{background:var(--panel);color:var(--encre);border-radius:22px;padding:10px 18px;font-size:clamp(20px,3vw,28px);text-align:center;max-width:900px;margin:0 auto;box-shadow:var(--ombre)}
+.vol{position:fixed;inset:0;z-index:30;background:#000 center/cover;overflow:hidden}
+.vol .kv{position:absolute;width:min(30vw,220px);left:50%;top:60%;transform:translate(-50%,-50%);animation:vole 6s ease-in-out forwards}
+@keyframes vole{0%{left:50%;top:85%;transform:translate(-50%,-50%) rotate(0)}30%{left:40%;top:40%;transform:translate(-50%,-50%) rotate(-12deg)}55%{left:62%;top:26%;transform:translate(-50%,-50%) rotate(10deg)}80%{left:46%;top:20%;transform:translate(-50%,-50%) rotate(-6deg)}100%{left:55%;top:22%;transform:translate(-50%,-50%) rotate(4deg)}}
+.vol .fin{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px}
+#fete{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+#fete i{position:absolute;top:-60px;font-style:normal;animation:tombe 1.8s linear forwards}
+@keyframes tombe{to{transform:translateY(115vh) rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#fete{display:none}.vol .kv{animation:none;top:30%}}
+</style>
+</head>
+<body>
+<div id="fete"></div>
+
+<section class="scr on" id="accueil">
+  <div class="haut"><a class="rond" href="./" aria-label="Retour">←</a><h1 class="titre">🪁 Le grand cerf-volant d'Amine</h1><span class="etoiles" id="total">⭐ 0</span></div>
+  <button class="affiche" id="aFilm" aria-label="Regarder le dessin animé"><span>🎬 Le dessin animé</span></button>
+  <div class="boutons"><button class="gros or" id="aKite">🪁 Mon cerf-volant</button></div>
+</section>
+
+<section class="scr" id="film">
+  <div class="haut"><button class="rond" id="fRetour" aria-label="Retour">←</button><h2 class="titre">🪁 Le grand cerf-volant d'Amine</h2></div>
+  <div class="ecran"><img id="fImg" alt=""><video id="fVid" muted loop playsinline preload="auto"></video><span class="num" id="fNum"></span></div>
+  <p class="sous" id="fTexte"></p>
+  <div class="question" id="fQ" hidden></div>
+  <div class="boutons" id="fBtns"><button class="gros" id="fAv" aria-label="Scène d'avant">⏮</button><button class="gros" id="fPause" aria-label="Pause">⏸</button><button class="gros" id="fAp" aria-label="Scène suivante">⏭</button></div>
+</section>
+
+<section class="scr" id="kite">
+  <div class="haut"><button class="rond" id="kRetour" aria-label="Retour">←</button><h2 class="titre">🪁 Mon cerf-volant</h2><button class="rond" id="kRedis" aria-label="Répéter">🔊</button></div>
+  <p class="consigne" id="kCons"></p>
+  <div class="atelier" id="kZone"></div>
+  <div class="boutons" id="kBtns"></div>
+</section>
+
+<script src="../famille.js"></script>
+<script src="controle.js?v=1"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = [...a]; for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const IMG = n => `cerfvolant/img/${n}.webp`, VID = n => `cerfvolant/img/${n}.mp4`;
+const KEY = 'amine-cerfvolant';
+let S = { vus:0, et:0, q:{}, kite:null, t:0 };
+try{ Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); }catch(e){}
+function save(){ S.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ---------- la voix : Lulu, par la voix du site (explorateur.js → api/voix.php, p=amine) ---------- */
+let jetonV = 0, parleEncore = false, dernier = [];
+function dit(t){ return new Promise(res => { if(!('speechSynthesis' in window) || (window.FamilleVoix && !FamilleVoix.on())){ setTimeout(res, 700 + String(t).length * 50); return; }
+  try{ const u = new SpeechSynthesisUtterance(String(t)); u.lang = 'fr-FR'; u.rate = .95; let fait = false; const fin = () => { if(!fait){ fait = true; res(); } };
+    u.onend = fin; u.onerror = fin; setTimeout(fin, 3000 + String(t).length * 110); speechSynthesis.speak(u); }catch(e){ res(); } }); }
+async function parle(liste, garder = true){ chut(); if(garder) dernier = liste.slice(); const j = ++jetonV; parleEncore = true; for(const t of liste){ if(j !== jetonV) return; await dit(t); } if(j === jetonV) parleEncore = false; }
+function chut(){ jetonV++; parleEncore = false; try{ speechSynthesis.cancel(); }catch(e){} try{ if(window.FamilleSon) FamilleSon.stop(); }catch(e){} }
+const occupe = () => parleEncore;
+Controle.dire(l => parle(l, false));
+let AC = null;
+function ton(f, d = .15, type = 'triangle', vol = .14, when = 0){ try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if(AC.state === 'suspended') AC.resume(); const t = AC.currentTime + when, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + .05); }catch(e){} }
+const sfx = { tape(){ ton(880, .06, 'triangle', .08); }, oui(){ ton(660, .12); ton(990, .18, 'triangle', .14, .1); }, non(){ ton(220, .25, 'sine', .12); }, ding(n){ ton(500 + (n % 12) * 40, .12, 'sine', .1); }, gagne(){ [523, 659, 784, 1047].forEach((f, i) => ton(f, .22, 'triangle', .14, i * .11)); }, vent(){ try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const n = AC.sampleRate * 2, b = AC.createBuffer(1, n, AC.sampleRate), d = b.getChannelData(0); for(let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / n) * .25; const s = AC.createBufferSource(), f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 700; s.buffer = b; s.connect(f).connect(AC.destination); s.start(); }catch(e){} } };
+function fete(em = ['🪁', '⭐', '✨', '🎉', '🌈']){ const F = $('fete'); for(let i = 0; i < 24; i++){ const s = document.createElement('i'); s.textContent = pick(em); s.style.left = Math.random() * 100 + 'vw'; s.style.fontSize = 24 + Math.random() * 26 + 'px'; s.style.animationDelay = Math.random() * .6 + 's'; F.appendChild(s); setTimeout(() => s.remove(), 2600); } }
+function ecran(id){ document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === id)); }
+
+/* ---------- l'histoire : 8 scènes, 4 questions ---------- */
+const AV = n => `/jeux/avatars/${n}.webp`;
+const SCENES = [
+  { img:'c1', txt:`Ce matin, à Sidi Bou Saïd, toute la famille est au salon. <b>Amine</b> regarde le ciel par la fenêtre. Les mouettes volent si haut ! Amine soupire : « Moi aussi, je voudrais voler… »` },
+  { img:'c2', txt:`<b>Papa</b> arrive avec du papier, deux baguettes et une pelote de ficelle. « Et si on fabriquait un <b>cerf-volant</b>, tous ensemble ? » Amine tape dans ses mains : « Ouiii ! »` },
+  { img:'c3', txt:`Tout le monde peint le cerf-volant ! <b>Salma</b> et Amine trempent leurs pinceaux dans les pots : du <b>rouge</b>, du <b>jaune</b>, du <b>bleu</b>… Ils ont de la peinture jusqu'au bout du nez !`,
+    q:{ id:'couleurs', dit:'Montre-moi la couleur rouge, comme le cerf-volant !', choix:[['🔴', 'rouge'], ['🟢', 'vert'], ['🔵', 'bleu']], bon:'🔴', bravo:'Oui ! Ça, c\'est rouge.', indice:'Rouge, comme une tomate…' } },
+  { img:'c4', txt:`Le cerf-volant est prêt ! <b>Maman</b> lui a fait une longue queue avec des rubans de toutes les couleurs. Amine le lève bien haut, tout fier.`,
+    q:{ id:'rubans', compte:4, dit:'Maman avait préparé des rubans. Compte-les avec moi : touche-les un par un !', apres:'Combien y a-t-il de rubans ?', choix:[['3', ''], ['4', ''], ['5', '']], bon:'4', bravo:'Bravo ! Il y a quatre rubans.', indice:'Le dernier nombre que tu as dit, c\'est combien il y en a.' } },
+  { img:'c5', txt:`L'après-midi, toute la famille va à la plage. Le vent souffle fort ! Tout le monde court sur le sable… et hop, le cerf-volant s'envole ! Amine court derrière en riant.` },
+  { img:'c6', txt:`Il monte, il monte… mais oh non ! Le vent tire très fort, la ficelle glisse des mains d'Amine, et le cerf-volant s'accroche tout en haut d'un palmier. Amine est tout triste.`,
+    q:{ id:'ou', dit:'Où est le cerf-volant ?', choix:[['🌴', 'dans le palmier'], ['🌊', 'dans la mer'], ['🏠', 'sur la maison']], bon:'🌴', bravo:'Oui, il est coincé dans le palmier !', indice:'Regarde bien le dessin, tout en haut…' } },
+  { img:'c7', txt:`« J'ai une idée ! » dit <b>Essil</b>. <b>Papa</b> porte Amine sur ses épaules. Amine tend le bras, encore un peu… il l'attrape ! « Bravo Amine ! » crient Maman, Essil et Salma.`,
+    q:{ id:'qui', dit:'Qui porte Amine sur ses épaules ?', choix:[['img:anis', 'Papa'], ['img:imen', 'Maman'], ['img:salma', 'Salma']], bon:'img:anis', bravo:'Oui, c\'est Papa, le plus grand !', indice:'C\'est le plus grand de la famille…' } },
+  { img:'c8', txt:`Le soir, le soleil se couche sur la mer. Cette fois, Amine tient la ficelle <b>très fort</b>, et le cerf-volant danse dans le ciel orange. Tous ensemble, on y arrive toujours !` },
+];
+let F = null;
+function film(){ chut(); F = { k:0, tok:0, pause:false }; ecran('film'); scene(0); }
+async function scene(k){
+  if(k >= SCENES.length){ finFilm(); return; } F.k = Math.max(0, k); const sc = SCENES[F.k], t = ++F.tok, v = $('fVid'), im = $('fImg');
+  $('fQ').hidden = true; $('fBtns').hidden = false;
+  im.src = IMG(sc.img); v.classList.remove('joue'); v.onplaying = () => v.classList.add('joue'); v.onerror = () => v.classList.remove('joue'); v.src = VID(sc.img); v.play().catch(() => {});
+  $('fTexte').innerHTML = sc.txt; $('fNum').textContent = (F.k + 1) + ' / ' + SCENES.length;
+  await parle([sc.txt.replace(/<[^>]+>/g, '')]); if(t !== F.tok || F.pause) return;
+  if(sc.q){ question(sc.q, t); return; }
+  setTimeout(() => { if(t === F.tok && !F.pause) scene(F.k + 1); }, 900);
+}
+// une question dans l'histoire : on répond, puis l'histoire continue (jamais d'échec : à la 2e erreur, on montre la bonne réponse)
+function question(q, t){
+  const Q = $('fQ'); Q.hidden = false; $('fBtns').hidden = true; Controle.nouvelle(); let faute = false;
+  const montreChoix = () => {
+    Q.innerHTML = `<div class="choix-l" id="qRep">${shuffle(q.choix).map(([v, l]) => `<button class="choix" data-v="${v}">${v.startsWith('img:') ? `<img src="${AV(v.slice(4))}" alt="">` : v}${l ? `<small>${l}</small>` : ''}</button>`).join('')}</div>`;
+    const r = $('qRep'); Controle.arme(r, occupe);
+    r.querySelectorAll('.choix').forEach(b => b.onclick = () => { if(t !== F.tok) return;
+      if(b.dataset.v === q.bon){ b.classList.add('oui'); sfx.oui(); fete(); if(!faute){ S.q[q.id] = 1; save(); } parle([q.bravo]).then(() => { if(t === F.tok) setTimeout(() => scene(F.k + 1), 600); }); }
+      else { faute = true; sfx.non(); if(Controle.faux(b) === 'fini'){ const g = r.querySelector(`[data-v="${q.bon}"]`); g.classList.add('oui'); parle(['Regarde.', q.bravo]).then(() => { if(t === F.tok) setTimeout(() => scene(F.k + 1), 900); }); }
+        else parle(['Essaie encore.', q.indice], false); } });
+  };
+  if(q.compte){   // compter les rubans un par un, PUIS répondre
+    Q.innerHTML = `<div class="rubans" id="qRub">${['🎀', '🎗️', '🎀', '🎗️'].slice(0, q.compte).map(e => `<button class="ruban">${e}</button>`).join('')}</div>`;
+    parle([q.dit]);
+    Controle.compte([...document.querySelectorAll('#qRub .ruban')], c => { sfx.ding(c); chut(); dit(String(c)); }, () => { setTimeout(() => { if(t !== F.tok) return; parle([q.apres]); montreChoix(); }, 700); });
+  } else { parle([q.dit]); montreChoix(); }
+}
+function finFilm(){ F.tok++; chut(); $('fVid').pause(); S.vus = (S.vus || 0) + 1; save(); accueil(); parle(['Bravo Amine ! Maintenant, fabrique ton cerf-volant à toi !']); }
+$('fAv').onclick = () => { F.pause = false; scene(F.k - 1); };
+$('fAp').onclick = () => { F.pause = false; scene(F.k + 1); };
+$('fPause').onclick = e => { F.pause = !F.pause; e.currentTarget.textContent = F.pause ? '▶' : '⏸'; if(F.pause){ F.tok++; chut(); $('fVid').pause(); } else { $('fVid').play().catch(() => {}); scene(F.k); } };
+$('fRetour').onclick = () => { F.tok++; chut(); $('fVid').pause(); accueil(); };
+
+/* ---------- 🪁 Mon cerf-volant : colorier les 4 morceaux, compter les rubans, le faire voler ---------- */
+const COUL = [['rouge', '#e63946'], ['jaune', '#ffd23f'], ['bleu', '#2a7fd4'], ['vert', '#3bb273'], ['orange', '#ff8c1a'], ['violet', '#8e5bd6']];
+const PARTS = ['M150 20 L150 190 L40 160 Z', 'M150 20 L260 160 L150 190 Z', 'M40 160 L150 190 L150 330 Z', 'M260 160 L150 330 L150 190 Z'];
+let K = null;
+function kiteSVG(parts, rub, cls = 'kite'){
+  const queue = Array.from({ length:rub }, (_, i) => { const y = 350 + i * 46, x = 150 + Math.sin(i * 1.3) * 22; return `<path d="M${x - 16} ${y} l16 10 l16 -10 l-16 -10 Z" fill="${COUL[i % COUL.length][1]}" stroke="#3a2a1a" stroke-width="3"/>`; }).join('');
+  return `<svg viewBox="0 0 300 ${Math.max(360, 360 + rub * 46)}" class="${cls}"><path d="M150 330 Q 170 ${340 + rub * 23} 150 ${340 + rub * 46}" stroke="#3a2a1a" stroke-width="3" fill="none"/>${queue}
+    ${PARTS.map((d, i) => `<path class="part" data-p="${i}" d="${d}" fill="${parts[i] || '#ffffff'}"/>`).join('')}<path d="M150 20 L150 330 M40 160 L260 160" stroke="#7a5a3a" stroke-width="5"/></svg>`; }
+function kite(){
+  chut(); ecran('kite'); K = { etape:1, parts:[null, null, null, null], coul:null, rub:0 }; peindre();
+}
+function peindre(){
+  $('kCons').textContent = 'Choisis une couleur, puis touche un morceau du cerf-volant.';
+  $('kZone').innerHTML = `<div id="kSvg">${kiteSVG(K.parts, 0)}</div><div class="pots">${COUL.map(([n, c]) => `<button class="pot" data-c="${c}" data-n="${n}" style="background:${c}" aria-label="${n}"></button>`).join('')}</div>`;
+  $('kBtns').innerHTML = `<button class="gros or" id="kSuite" disabled>Les rubans →</button>`;
+  parle(['Choisis une couleur, puis touche un morceau du cerf-volant.']);
+  const lie = () => { document.querySelectorAll('#kSvg .part').forEach(p => p.onclick = () => { if(!K.coul){ parle(['Choisis d\'abord une couleur !'], false); return; } K.parts[+p.dataset.p] = K.coul; sfx.ding(+p.dataset.p + 2); $('kSvg').innerHTML = kiteSVG(K.parts, 0); lie();
+      if(K.parts.every(Boolean)){ $('kSuite').disabled = false; sfx.oui(); parle(['Il est magnifique ! Maintenant, les rubans.'], false); } }); };
+  lie();
+  document.querySelectorAll('.pot').forEach(b => b.onclick = () => { K.coul = b.dataset.c; document.querySelectorAll('.pot').forEach(x => x.classList.toggle('on', x === b)); sfx.tape(); chut(); dit(b.dataset.n); });
+  $('kSuite').onclick = rubans;
+}
+function rubans(){
+  const but = pick([3, 4, 5]); K.but = but; K.rub = 0;
+  $('kCons').innerHTML = `Ajoute <b>${but}</b> rubans à la queue du cerf-volant.`;
+  $('kZone').innerHTML = `<div id="kSvg">${kiteSVG(K.parts, 0)}</div><div class="pots" style="grid-template-columns:1fr"><button class="gros" id="kPlus" style="font-size:30px">🎀 + 1</button><button class="gros" id="kMoins">↩ Enlever</button></div>`;
+  $('kBtns').innerHTML = `<button class="gros or" id="kOk">✔ J'ai fini</button>`;
+  parle([`Ajoute ${but} rubans. Compte bien !`]);
+  const maj = () => { $('kSvg').innerHTML = kiteSVG(K.parts, K.rub); };
+  $('kPlus').onclick = () => { if(K.rub >= 8) return; K.rub++; maj(); sfx.ding(K.rub); chut(); dit(String(K.rub)); };
+  $('kMoins').onclick = () => { if(!K.rub) return; K.rub--; maj(); sfx.tape(); };
+  let essais = 0;
+  $('kOk').onclick = () => { if(K.rub === but){ sfx.gagne(); fete(); vole(); return; } essais++; sfx.non();
+    if(essais >= 2){ K.rub = but; maj(); parle([`Regarde : ${but} rubans. ${Array.from({ length:but }, (_, i) => i + 1).join(', ')}.`]).then(vole); return; }
+    parle([K.rub < but ? 'Il en manque ! Ajoute un ruban.' : 'Il y en a trop ! Enlève un ruban.'], false); };
+}
+function vole(){
+  const v = document.createElement('div'); v.className = 'vol'; v.style.backgroundImage = `url(${IMG('c8')})`;
+  v.innerHTML = `<div class="kv">${kiteSVG(K.parts, K.rub, '')}</div><div class="fin"><div class="consigne">🪁 Ton cerf-volant vole ! Bravo Amine ! ⭐</div><div class="boutons" style="margin:0"><button class="gros" id="vRe">↻ Un autre</button><button class="gros or" id="vFin">🏠 Fini</button></div></div>`;
+  document.body.appendChild(v); sfx.vent(); setTimeout(sfx.vent, 1800);
+  S.et = (S.et || 0) + 1; S.kite = { parts:K.parts, rub:K.rub }; save();
+  parle(['Regarde ! Ton cerf-volant vole très haut dans le ciel. Bravo Amine, tu gagnes une étoile !']);
+  v.querySelector('#vRe').onclick = () => { v.remove(); kite(); };
+  v.querySelector('#vFin').onclick = () => { v.remove(); accueil(); };
+}
+$('kRetour').onclick = () => { chut(); accueil(); };
+$('kRedis').onclick = () => parle(dernier, false);
+
+function accueil(){
+  ecran('accueil'); $('total').textContent = '⭐ ' + ((S.et || 0) + Object.keys(S.q || {}).length);
+  $('aFilm').style.backgroundImage = `url(${IMG('c5')})`;
+}
+$('aFilm').onclick = () => { sfx.tape(); film(); };
+$('aKite').onclick = () => { sfx.tape(); kite(); };
+accueil();
+if(window.Famille){ Famille.track(KEY, 'Amine', [KEY]); Famille.load(KEY, 'Amine').then(r => { const d = r && r[KEY]; if(d && (d.t || 0) > (S.t || 0)){ S = Object.assign({ vus:0, et:0, q:{} }, d); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} if($('accueil').classList.contains('on')) accueil(); } }).catch(() => {}); }
+window.__cerf = { get S(){ return S; }, SCENES, film, kite, get K(){ return K; } };
+</script>
+</body>
+</html>
