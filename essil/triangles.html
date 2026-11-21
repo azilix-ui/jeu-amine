@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1f3c88">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Les triangles au compas · Essil</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="maths5/maths5.css?v=1">
+<link rel="stylesheet" href="triangles/tri.css?v=1">
+<style>
+.lecons{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px; margin-top:14px; }
+.lecon{ display:flex; flex-direction:column; background:#fff; border-radius:22px; overflow:hidden; box-shadow:0 6px 0 #0002; text-decoration:none; color:var(--encre); }
+.lecon img{ width:100%; aspect-ratio:16/9; object-fit:cover; } .lecon span{ padding:12px 16px 4px; font-size:19px; font-weight:800; display:flex; flex-direction:column; }
+.lecon b{ font-family:'Baloo 2', sans-serif; color:var(--rouge); font-size:16px; } .lecon .et{ padding:0 16px 14px; color:#c99a00; font-style:normal; font-size:20px; }
+.intro{ background:#fff; border-radius:20px; padding:14px 18px; box-shadow:0 4px 0 #0001; line-height:1.55; font-size:18px; }
+</style>
+</head>
+<body>
+<main id="app">
+<div class="haut"><a class="chip" href="index.html">← Mon espace</a></div>
+<div class="titre"><span class="num">🧭</span><div><h1>Les triangles au compas</h1><p>3 leçons · d'après ta fiche « L'inégalité triangulaire » et ta Série 4 « Triangles »</p></div></div>
+<p class="intro">Avec ta jument, ta longe et ton compas, tu vas comprendre <b>quand un triangle existe</b>, comment le <b>construire</b>, et le secret de ses <b>angles</b>. Chaque leçon : un dessin animé, le cours au tableau, un atelier pour manipuler, le mémo, des flash cards et trois séries d'exercices.</p>
+<div class="lecons"><a class="lecon" href="triangles-1.html" data-n="1"><img src="triangles/img/t1_1.webp" alt=""><span><b>Leçon 1</b>L'inégalité triangulaire</span><i class="et" id="e1"></i></a><a class="lecon" href="triangles-2.html" data-n="2"><img src="triangles/img/t2_0.webp" alt=""><span><b>Leçon 2</b>Construire des triangles</span><i class="et" id="e2"></i></a><a class="lecon" href="triangles-3.html" data-n="3"><img src="triangles/img/t3_0.webp" alt=""><span><b>Leçon 3</b>La somme des angles : 180°</span><i class="et" id="e3"></i></a></div>
+</main>
+<script src="../famille.js"></script>
+<script>
+// les étoiles de chaque leçon (sur 21) : copie de la tablette, puis celle du serveur
+for(const n of [1, 2, 3]){ const k = 'essil-tri' + n, aff = d => { const e = d && d.etoiles ? Object.values(d.etoiles).reduce((a, b) => a + b, 0) : 0; document.getElementById('e' + n).textContent = '⭐ ' + e + ' / 21'; };
+  try{ aff(JSON.parse(localStorage.getItem(k) || 'null')); }catch(e){ aff(null); }
+  if(window.Famille) Famille.load(k, 'Essil').then(r => { const d = r && r[k], l = JSON.parse(localStorage.getItem(k) || 'null'); if(d && (!l || (d.t || 0) > (l.t || 0))) aff(d); }).catch(() => {}); }
+</script>
+</body></html>
