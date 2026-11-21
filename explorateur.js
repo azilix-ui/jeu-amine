@@ -348,11 +348,25 @@
   function porteVisee(e){ var p = B.querySelector('.porte'); if(!p) return false; var r = p.getBoundingClientRect(); return e.clientX >= r.left - 4 && e.clientX <= r.right + 4 && e.clientY >= r.top - 4 && e.clientY <= r.bottom + 4; }
   function sortir(){ location.href = '/?profil'; }   // l'accueil oublie le profil et montre « Qui es-tu ? »
   function replie(){ P.classList.remove('on'); B.classList.add('replie'); }
-  function bascule(){ if(!B.classList.contains('replie')){ replie(); return; } B.classList.remove('replie'); S.vue = S.avec ? 'conv' : 'liste'; dessine(); P.classList.add('on'); place(); }
+  function bascule(){ if(!B.classList.contains('replie')){ replie(); return; } B.classList.remove('replie'); S.vue = S.avec ? 'conv' : 'liste'; dessine(); ouvrePanneau(); place(); }
+  /* 21/11 (demande du papa) : quand le salon s'ouvre, le jeu en cours se met en pause (les jeux font pause quand la page « se cache » :
+     on le leur fait croire un instant, et on relâche les touches), et tant qu'il est ouvert les touches du clavier sont pour le salon. */
+  function ouvrePanneau(){ var deja = P.classList.contains('on'); P.classList.add('on'); if(deja) return;
+    try{ dispatchEvent(new Event('blur')); }catch(e){}
+    try{ Object.defineProperty(document, 'hidden', { configurable:true, get:function(){ return true; } }); Object.defineProperty(document, 'visibilityState', { configurable:true, get:function(){ return 'hidden'; } });
+      document.dispatchEvent(new Event('visibilitychange')); }catch(e){}
+    try{ delete document.hidden; delete document.visibilityState; }catch(e){} }
+  ['keydown', 'keyup', 'keypress'].forEach(function(t){ addEventListener(t, function(e){ if(!P || !P.classList.contains('on')) return;
+    if(t === 'keydown' && e.key === 'Escape'){ replie(); e.preventDefault(); }
+    var dedans = e.target && P.contains(e.target); e.stopImmediatePropagation(); if(!dedans && t === 'keydown' && /^( |Arrow|Enter$|Tab$)/.test(e.key)) e.preventDefault(); }, true); });
   function autres(){ var m = moi(); return S.enLigne.filter(function(p){ return p.nom !== m; }); }
   var FAMN = ['Anis', 'Imen', 'Essil', 'Salma', 'Amine'], NOMS = { Anis:'Papa', Imen:'Maman' };
   var deFamille = function(){ return FAMN.indexOf(moi()) >= 0; };
-  var conv = function(a, m){ return a === 'Famille' ? S.msgs.filter(function(x){ return x.a === 'Famille'; }) : S.msgs.filter(function(x){ return (x.nom === a && x.a === m) || (x.nom === m && x.a === a); }); };
+  /* 21/11 (demande du papa) : l'historique s'efface à chaque déconnexion : une conversation ne montre que les messages de cette visite
+     (depuis l'ouverture de l'onglet), plus ceux qui n'étaient pas encore lus en arrivant. Le serveur les garde pour l'onglet 💬 de Progression. */
+  var debut = function(m){ var k = 'salon-debut:' + m, d = sget(k, 0); if(!d){ d = Date.now() / 1000 - 5; sset(k, d); sset('salon-lu0:' + m, luGet(m) || {}); } return d; };
+  var deCetteVisite = function(x, m){ var d = debut(m), lu0 = sget('salon-lu0:' + m, {}) || {}; return x.ts >= d || x.nom === m ? x.ts >= d : x.id > (lu0[x.a === 'Famille' ? 'Famille' : x.nom] || 0); };
+  var conv = function(a, m){ return (a === 'Famille' ? S.msgs.filter(function(x){ return x.a === 'Famille'; }) : S.msgs.filter(function(x){ return (x.nom === a && x.a === m) || (x.nom === m && x.a === a); })).filter(function(x){ return deCetteVisite(x, m); }); };
   // 20/11 : un petit « ding » quand un message arrive (sons du navigateur) ; 21/11 (demande du papa) : jamais pour les enfants, qui ne doivent pas être dérangés pendant un cours
   var ding = function(){ try{ var C = window.AudioContext || window.webkitAudioContext, a = ding.c = ding.c || new C(), t = a.currentTime; [880, 1320].forEach(function(f, i){ var o = a.createOscillator(), g = a.createGain(); o.frequency.value = f; g.gain.setValueAtTime(.12, t + i * .12); g.gain.exponentialRampToValueAtTime(.001, t + i * .12 + .25); o.connect(g).connect(a.destination); o.start(t + i * .12); o.stop(t + i * .12 + .3); }); }catch(e){} };
   function nonLus(nom){ var lu = luGet(moi()) || {}, m = moi(); if(nom === 'Famille') return S.msgs.filter(function(x){ return x.a === 'Famille' && x.nom !== m && x.id > (lu.Famille || 0); }).length; return S.msgs.filter(function(x){ return x.nom === nom && x.a === m && x.id > (lu[nom] || 0); }).length; }
@@ -430,7 +444,7 @@
     d.style.bottom = (innerHeight - r.top + 10) + 'px'; d.style.left = Math.max(8, Math.min(innerWidth - 390, r.left)) + 'px';
     d.innerHTML = '<img alt="" src="' + tete(m.nom) + '"><span>💬 <b></b> : <q></q></span><button type="button">Répondre</button><button type="button" class="x" aria-label="Fermer">✕</button>';
     d.querySelector('b').textContent = (NOMS[m.nom] || m.nom) + (m.a === 'Famille' ? ' (à toute la famille)' : ''); d.querySelector('q').textContent = m.type === 'v' ? '🎤 (ancien message vocal)' : m.texte;
-    d.querySelector('button').onclick = function(){ d.remove(); S.avec = m.a === 'Famille' ? 'Famille' : m.nom; S.vue = 'conv'; B.classList.remove('replie'); dessine(); P.classList.add('on'); place(); };
+    d.querySelector('button').onclick = function(){ d.remove(); S.avec = m.a === 'Famille' ? 'Famille' : m.nom; S.vue = 'conv'; B.classList.remove('replie'); dessine(); ouvrePanneau(); place(); };
     d.querySelector('.x').onclick = function(){ d.remove(); };
     document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 12000);
     litMessage(m, true);
