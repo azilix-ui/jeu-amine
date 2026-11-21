@@ -64,7 +64,7 @@ try {
         if (!is_file($f)) { http_response_code(404); exit; }
         header('Content-Type: image/webp'); header('Cache-Control: private, max-age=31536000, immutable'); header('Content-Length: ' . filesize($f)); readfile($f); exit;
     }
-    if ($m === 'GET' && isset($_GET['mus'])) {   // 21/11 : les musiques ElevenLabs du studio (famille-data/mur-musique, déposées par mur/depot.php)
+    if ($m === 'GET' && isset($_GET['mus'])) {   // 21/11 : les musiques ElevenLabs du studio (famille-data/mur-musique, déposées le 21/11 par un mur/depot.php à jeton, retiré ensuite : voir docs/serveur.md)
         $id = (string)$_GET['mus']; $f = dirname(ga_racine()) . '/famille-data/mur-musique/' . $id . '.mp3';
         if (!preg_match('/^[a-z0-9-]{2,30}$/', $id) || !is_file($f)) { http_response_code(404); exit; }
         header('Content-Type: audio/mpeg'); header('Cache-Control: private, max-age=604800'); header('Content-Length: ' . filesize($f)); readfile($f); exit;
