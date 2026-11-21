@@ -387,10 +387,10 @@
       (O.length ? O.map(function(p){ var n = nonLus(p.nom); return '<div class="qui"><img alt="" src="' + tete(p.nom, p.av) + '"><span><b>' + esc(p.nom) + '</b><small>' + (p.page ? 'sur ' + esc(p.page) : 'sur le site') + '</small></span><button type="button" data-a="' + esc(p.nom) + '">💬 Écrire' + (n ? '<i>' + n + '</i>' : '') + '</button></div>'; }).join('')
         : (famille ? '' : '<p class="vide">Personne d\'autre n\'est sur le site pour l\'instant.</p>')) +
       (anciens.length ? '<p class="vide" style="padding:6px 0 0;text-align:left">Discussions de tout à l\'heure</p>' + anciens.map(function(q){ var n = nonLus(q); return '<div class="qui"><img alt="" src="' + tete(q) + '"><span><b>' + esc(q) + '</b><small>n\'est plus là</small></span><button type="button" data-a="' + esc(q) + '">💬 Relire' + (n ? '<i>' + n + '</i>' : '') + '</button></div>'; }).join('') : '') +
-      '</div><div class="pied">' + (explo ? '<a href="/?profil">⇄ Changer d\'avatar</a>' : '<span></span>') + '<button type="button" class="g" data-voix title="Touche V">' + (FamilleVoix.on() ? '🗣️ Voix' : '🔇 Muet') + '</button><button type="button" class="g" data-f>Fermer</button></div>';
+      '</div><div class="pied">' + (explo ? '<a href="/?profil">⇄ Changer d\'avatar</a>' : '<span></span>') + (explo ? '<button type="button" class="g" data-voix title="Touche V">' + (FamilleVoix.on() ? '🗣️ Consignes' : '🔇 Consignes') + '</button>' : '') + '<button type="button" class="g" data-f>Fermer</button></div>';
   }
   function clicPanneau(e){ var t = e.target.closest('button,a'); if(!t) return;
-    if(t.hasAttribute('data-voix')){ FamilleVoix.basculer(); t.textContent = FamilleVoix.on() ? '🗣️ Voix' : '🔇 Muet'; return; }
+    if(t.hasAttribute('data-voix')){ FamilleVoix.basculer(); t.textContent = FamilleVoix.on() ? '🗣️ Consignes' : '🔇 Consignes'; return; }
     if(t.hasAttribute('data-f')){ replie(); return; }
     if(t.hasAttribute('data-r')){ S.avec = null; S.vue = 'liste'; dessine(); place(); return; }
     if(t.dataset.a){ S.avec = t.dataset.a; S.vue = 'conv'; dessine(); place(); var i = P.querySelector('input'); if(i && !('ontouchstart' in window)) i.focus(); return; }
