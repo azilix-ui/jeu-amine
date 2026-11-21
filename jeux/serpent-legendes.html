@@ -377,6 +377,17 @@ const STUDY = { salma:[{ course:'salma-verbes', key:'salma-verbes', name:"L'Atel
                        { course:'defi', key:'defi:Salma', name:'Le défi du jour', href:'../salma/' }],
   amine:[{ course:'amine-ecriture', key:'amine-ecriture', name:"L'Ardoise magique", href:'../amine/ardoise-magique.html', cards:true }, { course:'jasmin', key:'jasmin:Amine', name:'La Légende du Jasmin', href:'legende-du-jasmin-3.html' }, { course:'defi', key:'defi:Amine', name:'Le défi du jour', href:'../amine/' }, { course:'amine-lecture', key:'amine-lecture', name:'Je lis !', href:'../amine/je-lis.html' }, { course:'amine-epicerie', key:'amine-epicerie', name:"L'Épicerie de Lulu", href:'../amine/epicerie-de-lulu.html' }],
   essil:[{ course:'essil-deutsch2', key:'essil-deutsch2', name:'Deutsch Express 2', href:'../essil/deutsch-express-2.html' }, { course:'essil-latin2', key:'essil-latin2', name:'Via Romana II', href:'../essil/via-romana-2.html' }, { course:'jasmin', key:'jasmin:Essil', name:'La Légende du Jasmin', href:'legende-du-jasmin-3.html' }, { course:'defi', key:'defi:Essil', name:'Le défi du jour', href:'../essil/' }] };   // le défi du jour (13/11) : 5 tickets par jour réussi
+// 22/11 (le papa : « les enfants ne retrouvent pas leurs tickets ») : tous les cours qui donnent des tickets 🎟️ depuis le 16/11
+// n'avaient pas été ajoutés ici. Chaque cours du moteur commun (salma/ollie/cours.js) garde ses tickets dans sa propre clé.
+const plus = (enf, liste) => liste.forEach(([course, name, href]) => STUDY[enf].push({ course, key:course, name, href }));
+plus('salma', [['salma-phrases2', 'La Fabrique des Phrases 2', '../salma/fabrique-des-phrases-2.html'], ['salma-doubles', "Les Doubles d'Ollie", '../salma/les-doubles.html'],
+  ['salma-futur', 'La Machine du Futur', '../salma/machine-du-futur.html'], ['salma-tables', 'Les Tables du Souk', '../salma/tables-du-souk.html'],
+  ...[1, 2, 3, 4, 5].map(n => ['salma-en' + n, 'My First English ' + n, '../salma/first-english-' + n + '.html']),
+  ...Array.from({ length:10 }, (_, i) => ['salma-pip' + (i + 1), 'Salma & Pip ' + (i + 1), '../salma/english-pip-' + (i + 1) + '.html'])]);
+plus('amine', [['amine-epicerie', "L'Épicerie de Lulu", '../amine/epicerie-de-lulu.html'],
+  ...Array.from({ length:10 }, (_, i) => ['amine-kiko' + (i + 1), 'Amine & Kiko ' + (i + 1), '../amine/english-kiko-' + (i + 1) + '.html'])]);
+plus('essil', [...Array.from({ length:10 }, (_, i) => ['essil-en' + (i + 1), 'English B2 ' + (i + 1), '../essil/english-b2-' + (i + 1) + '.html']),
+  ...Array.from({ length:6 }, (_, i) => ['essil-fr' + (i + 1), 'Français 5e ' + (i + 1), '../essil/francais-5e-' + (i + 1) + '.html'])]);
 const SHOP = [
   { id:'w:plage',  icon:'🏖️', name:'Monde Plage',  sub:'Sans attendre le record 15', cost:15, world:'plage' },
   { id:'w:neige',  icon:'❄️', name:'Monde Neige',  sub:'Sans attendre le record 25', cost:30, world:'neige' },
@@ -393,9 +404,10 @@ const studySources = () => STUDY[(player || '').toLowerCase()] || [];
 const ticketsLeft = () => Math.max(0, studyEarned - (data.spentT || 0));
 async function loadStudy(name){
   let sum = 0; const cards = new Set(), shinyCards = new Set();
-  for(const src of STUDY[name.toLowerCase()] || []){
-    let d = store.get(src.key, null) || {};
-    if(window.Famille){ const r = await Famille.load(src.course, name); const rd = r && r[src.key]; if(rd && (rd.tickets || 0) > (d.tickets || 0)) d = rd; }
+  // toutes les sources en même temps (il y en a une quarantaine), la copie du serveur si elle a plus de tickets
+  const dd = await Promise.all((STUDY[name.toLowerCase()] || []).map(async src => { let d = store.get(src.key, null) || {};
+    if(window.Famille){ try{ const r = await Famille.load(src.course, name); const rd = r && r[src.key]; if(rd && (rd.tickets || 0) > (d.tickets || 0)) d = rd; }catch(e){} } return [src, d]; }));
+  for(const [src, d] of dd){
     sum += d.tickets || 0;
       if(src.cards){ (d.cards || []).forEach(c => cards.add(c)); (d.shiny || []).forEach(c => shinyCards.add(c)); }
   }
