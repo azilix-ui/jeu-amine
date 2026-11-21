@@ -283,10 +283,14 @@ function tire(){ const r = Math.random();
   if(r < .6) return 1000 + Math.floor(Math.random() * 99000);
   if(r < .85) return 100000 + Math.floor(Math.random() * 9900000);
   return 1e6 * (1 + Math.floor(Math.random() * 999)) + Math.floor(Math.random() * 1000) * (Math.random() < .5 ? 1000 : 1); }
-$('defi').onclick = async () => { defiNb = tire(); nb.value = ''; nettoie(); toast('🎯 Écoute bien, et écris le nombre !');
+/* 21/11 (demande du papa) : pendant un défi, le bouton devient « ⏹ Arrêter le défi » */
+const BT_DEFI = '🎯 Un défi', BT_STOP = '⏹ Arrêter le défi';
+function boutonsDefi(){ $('defi').textContent = defiNb !== null ? BT_STOP : BT_DEFI; $('defi-h').textContent = defiH ? BT_STOP : BT_DEFI; }
+$('defi').onclick = async () => { if(defiNb !== null){ defiNb = null; tais(); boutonsDefi(); toast('Défi arrêté. Tu peux écrire le nombre que tu veux.'); return; }
+  defiNb = tire(); boutonsDefi(); nb.value = ''; nettoie(); toast('🎯 Écoute bien, et écris le nombre !');
   await dis('Défi ! Écris ce nombre avec les chiffres : ' + enLettres(defiNb) + '. Puis touche : lis-le.'); nb.focus({ preventScroll:true }); };
 async function verifieNb(v){
-  const bon = defiNb; defiNb = null;
+  const bon = defiNb; defiNb = null; boutonsDefi();
   if(v === bon){ sv.nb++; sauve(); montreScore(); toast('⭐ Bravo, c\'est exactement ça !'); await dis('Bravo ! C\'est exactement ça. Tu gagnes une étoile.'); }
   else { toast('Presque ! La réponse : ' + joli(bon), false); await dis('Presque ! Le nombre était : ' + enLettres(bon) + '. Il s\'écrit ainsi : regarde.'); nb.value = String(bon); nettoie(); $('ecrit').textContent = enLettres(bon); }
 }
@@ -386,10 +390,11 @@ ana.addEventListener('pointerup', () => { tire_ = null; });
 ana.addEventListener('pointercancel', () => { tire_ = null; });
 /* les défis de l'heure */
 let defiH = null;
-$('defi-h').onclick = async () => { const h = petit() ? 1 + Math.floor(Math.random() * 12) : Math.floor(Math.random() * 24), m = petit() ? (Math.random() < .5 ? 0 : 30) : 5 * Math.floor(Math.random() * 12);
-  defiH = [h, m]; toast('🎯 Règle l\'horloge, puis touche « Quelle heure est-il ? »');
+$('defi-h').onclick = async () => { if(defiH){ defiH = null; tais(); boutonsDefi(); toast('Défi arrêté. Règle l\'horloge comme tu veux.'); return; }
+  const h = petit() ? 1 + Math.floor(Math.random() * 12) : Math.floor(Math.random() * 24), m = petit() ? (Math.random() < .5 ? 0 : 30) : 5 * Math.floor(Math.random() * 12);
+  defiH = [h, m]; boutonsDefi(); toast('🎯 Règle l\'horloge, puis touche « Quelle heure est-il ? »');
   await dis('Défi ! Règle l\'horloge sur : ' + heureEnLettres(h, m) + '. Puis touche : quelle heure est-il ?'); };
-async function verifieH(){ const [h, m] = defiH; defiH = null;
+async function verifieH(){ const [h, m] = defiH; defiH = null; boutonsDefi();
   const ok = M === m && (H === h || (H % 12 === h % 12 && petit()));
   if(ok){ sv.h++; sauve(); montreScore(); toast('⭐ Bravo, c\'est la bonne heure !'); await dis('Bravo ! C\'est la bonne heure. Tu gagnes une étoile.'); }
   else { toast('Presque ! Regarde la bonne heure.', false); await dis('Presque ! Regarde, voici ' + heureEnLettres(h, m) + '.'); H = h; M = m; montreHeure(); }
