@@ -145,6 +145,9 @@ Demandé par le papa : le site n'est ouvert qu'à la maison, aux appareils de co
   - `summary` renvoie aussi `ecran` et `aujourdhui`.
 - Cours ajoutés : `defi` (défi du jour) et `amine-lecture` (Je lis !), dans `COURSES`, `READABLE` et `LEARNING`.
 - `api/mur.php` : le mur de la famille (voir `docs/contenus.md`), gardé par la porte comme les autres API.
+  - **Vidéos (21/11)** : `POST action=video` (fichier `video` mp4 ou webm reconnu à ses premiers octets, 16 Mo au plus, `poster` JPEG, `musique`, `texte` 200 car.) → `famille-data/mur/<id>.mp4|webm` + `<id>.webp` ; colonne `media` = « mp4|<musique> », `genre` = `video` ; **3 vidéos par personne et par jour** (compte `🎬<prénom>` dans `photos_jour`). `GET ?vid=ID` sert la vidéo **avec `Range`** (206, indispensable à Safari). `GET ?mus=ID` sert une musique ElevenLabs de `famille-data/mur-musique/` (hors du site public). `quota` donne aussi `videos` et `envoi_max` (limite d'envoi de PHP : 16 Mo vérifiés en ligne le 21/11).
+  - **Effacer en admin (21/11)** : `supprime` n'exige plus le mot de passe parent quand `ga_passe_autorise()` (session Administration, session « Anis », ou son appareil d'administration) ; `liste` renvoie `admin` pour afficher « 🗑️ Effacer (admin) ». Les fichiers (webp, mp4, webm) sont effacés avec le message.
+  - Les 8 musiques ElevenLabs ont été déposées le 21/11 depuis la page du son (elevenlabsusercontent.com) par un `mur/depot.php` à jeton (même principe que `amine/lire/depot.php`), **retiré juste après** ; pour en ajouter : le remettre (historique git, commit « studio vidéo »), avec un nouveau jeton.
 
 ## `api/houma.php` (Ma Houma en ligne, 14/11)
 - `salut` (toutes les 3 s : client, nom, lieu, chez, depuis) → qui est là (15 s), nouveaux messages, échanges qui me concernent. `dit` (texte), `voix` (fichier audio vérifié : webm, mp4, ogg, wav ; 1,5 Mo, 60 s), `montre` (lieu), `?son=ID`.
