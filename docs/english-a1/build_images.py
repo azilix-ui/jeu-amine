@@ -8,7 +8,7 @@ import sys, os, re, subprocess
 from PIL import Image
 R = os.path.join(os.path.dirname(__file__), '..', '..')
 OUT = {'engs': 'salma/pip/img', 'engk': 'amine/kiko/img', 'engsv': 'salma/pip/img', 'engkv': 'amine/kiko/img'}
-COUPE = {}
+COUPE = { 'k1_0':1.5, 'k5_1':2.4, 'k9_2':1.9 }   # Amine sort du cadre, le ciel reste vide, Kiko sort du cadre
 for d in OUT.values(): os.makedirs(os.path.join(R, d), exist_ok=True)
 n_img = n_vid = 0
 for base in sys.argv[1:]:
