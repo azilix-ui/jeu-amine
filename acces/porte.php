@@ -17,7 +17,14 @@ if (!$fichier || strpos($fichier, $racine . DIRECTORY_SEPARATOR) !== 0 || !is_fi
     http_response_code(404); header('Content-Type: text/html; charset=utf-8');
     echo '<!doctype html><meta charset="utf-8"><title>Page introuvable</title><p style="font-family:sans-serif;padding:40px">Cette page n\'existe pas. <a href="/">Retour à l\'accueil</a></p>'; exit;
 }
+$passe = null;
 if (!ga_peut_entrer()) {
+    // 21/11 : un ami invité à UN jeu (laissez-passer de partie) : sa page de jeu, et pour toute autre page, retour à son jeu
+    $passe = ga_passe();
+    if ($passe && $ext !== 'html') { http_response_code(403); exit; }   // les photos de famille : jamais
+    if ($passe && $ext === 'html' && $chemin !== GA_PASSE_JEUX[$passe['jeu']][1]) { header('Cache-Control: no-store'); header('Location: ' . ga_passe_page($passe), true, 302); exit; }
+}
+if (!ga_peut_entrer() && !$passe) {
     ga_note_refus($chemin);
     if ($ext === 'html') ga_note_demande($chemin);
     header('Cache-Control: no-store');
@@ -33,7 +40,8 @@ if ($ext === 'html') {
     $html = (string)file_get_contents($fichier);
     // 20/11 : la session de la personne (acces/session.php) est donnée à la page AVANT explorateur.js, sans requête en plus
     $qui = '';
-    try { if (ga_qui_actif()) $qui = '<script>window.FAMILLE_QUI=' . json_encode(ga_qui_public(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';</script>'; } catch (Throwable $e) {}
+    if ($passe) $qui = '<script>window.FAMILLE_QUI=' . json_encode(['actif' => true, 'nom' => $passe['nom'], 'role' => 'invite', 'av' => '', 'v' => 'p' . $passe['id'], 'passe' => ['jeu' => $passe['jeu'], 'fin' => (int)$passe['expire']]], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';</script>';
+    else try { if (ga_qui_actif()) $qui = '<script>window.FAMILLE_QUI=' . json_encode(ga_qui_public(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';</script>'; } catch (Throwable $e) {}
     $html = preg_replace('/<head(\s[^>]*)?>/i', '$0' . str_replace('$', '\\$', $qui) . '<script src="/explorateur.js"></script>', $html, 1);
     header('Content-Length: ' . strlen($html));
     echo $html;

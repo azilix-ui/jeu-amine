@@ -266,7 +266,7 @@ const LIGNE = {
   invitation(i){ if(this.code === i.code || (P && P.mode === 'ligne')) return; const d = $('invit');
     d.innerHTML = `<div class="carte-ui" style="display:flex;gap:10px;align-items:center;margin:0">${i.tete ? `<img src="${esc(i.tete)}" style="width:48px;height:48px;border-radius:50%">` : '🃏'}<b>${esc(i.name)} t'invite à une chkobba !</b><button class="pill" style="background:#0f3d2e;color:#fff" id="invOk">Rejoindre</button><button class="pill" id="invNo">✕</button></div>`;
     d.classList.add('on'); SON.chkobba(); $('invOk').onclick = () => { d.classList.remove('on'); this.rejoindre(i.code); }; $('invNo').onclick = () => d.classList.remove('on'); setTimeout(() => d.classList.remove('on'), 30000); },
-  ouvre(){ sons(); this.status = 'salon'; montre('salon'); $('salonRetour').onclick = () => { this.sort(); menu(); }; if(this.code) this.rendSalle(); else this.rendSalon(); this.hello(); },
+  ouvre(){ sons(); this.verifiePasse(); this.status = 'salon'; montre('salon'); $('salonRetour').onclick = () => { this.sort(); menu(); }; if(this.code) this.rendSalle(); else this.rendSalon(); this.hello(); },
   rendSalon(){ const gens = this.online.filter(g => g.status !== 'joue'), s = sv || neuf();
     $('salonCorps').innerHTML = `<h2>Créer une table</h2><p style="margin:0 0 8px">Tu crées la table, puis tu invites (ou tu donnes le code). Les places vides sont prises par l'ordi.</p>
       <div class="choix" id="sNb"><button data-v="2" class="${s.n == 2 ? 'on' : ''}">À 2</button><button data-v="3" class="${s.n == 3 ? 'on' : ''}">À 3</button><button data-v="4" class="${s.n == 4 ? 'on' : ''}">À 4 (2 contre 2)</button></div>
@@ -299,6 +299,7 @@ const LIGNE = {
     const libres = this.online.filter(g => g.status !== 'joue' && !r.sieges.some(s => s.nom === g.name));
     $('salonCorps').innerHTML = `<p style="margin:0">Code de la table :</p><div class="code">${this.code}</div>
       <h2>À la table (${r.sieges.length} / ${r.n})</h2><div class="gens">${r.sieges.map(s => `<button disabled>${s.tete ? `<img src="${esc(s.tete)}">` : '🙂'}<span>${esc(s.nom)}<small>prêt</small></span></button>`).join('')}${Array.from({ length:r.n - r.sieges.length }, () => '<button disabled>🤖<span>Place libre<small>sinon, l\'ordi</small></span></button>').join('')}</div>
+      ${r.hote && this.peutPasse ? `<h2 style="margin-top:14px">Un ami qui n'a pas accès au site ?</h2><button class="grand" id="rPasse" style="background:#0f766e">📤 Inviter un ami (juste cette partie)</button><div id="rPasseBox">${this.passeCode === this.code && this.passeHtml || ''}</div>` : ''}
       ${libres.length ? `<h2 style="margin-top:14px">Inviter</h2><div class="gens">${libres.map(g => `<button data-inv="${g.client}">${g.tete ? `<img src="${esc(g.tete)}">` : '🙂'}<span>${esc(g.name)}<small>✉️ inviter</small></span></button>`).join('')}</div>` : ''}
       ${r.hote ? `<h2 style="margin-top:14px">Réglages</h2><div class="choix" id="rNb">${[2, 3, 4].map(n => `<button data-v="${n}" class="${r.n === n ? 'on' : ''}">${n === 4 ? 'À 4 (2 contre 2)' : 'À ' + n}</button>`).join('')}</div>
         <div class="choix" id="rCible">${[11, 21, 31].map(n => `<button data-v="${n}" class="${r.cible === n ? 'on' : ''}">${n} points</button>`).join('')}</div>
@@ -307,9 +308,22 @@ const LIGNE = {
     $('salonCorps').onclick = async e => { const b = e.target.closest('button'); if(!b) return;
       if(b.dataset.inv){ try{ await post({ action:'invite', client:this.client, name:joueur, tete:tete(joueur) || '', to:b.dataset.inv, code:this.code }); b.querySelector('small').textContent = '✔ invité'; }catch(err){ alert(err.message); } return; }
       if(!r.hote) return; const g = b.parentElement && b.parentElement.id;
+      if(b.id === 'rPasse'){ this.invitePasse(); return; }
+      if(b.dataset.copie){ try{ await navigator.clipboard.writeText(b.dataset.copie); b.textContent = '✔ Copié'; }catch(err){} return; }
       if(b.id === 'rGo'){ try{ await post({ action:'start', code:this.code, client:this.client }); this.etat(); }catch(err){ alert(err.message); } return; }
       const k = g === 'rNb' ? 'n' : g === 'rCible' ? 'cible' : g === 'rMonde' ? 'monde' : null; if(!k) return;
       const d = { action:'config', code:this.code, client:this.client, n:r.n, cible:r.cible, niveau:r.niveau, monde:r.monde }; d[k] = b.dataset.v; try{ await post(d); this.etat(); }catch(err){ alert(err.message); } }; },
+  /* 21/11 (demande du papa) : inviter un ami qui n'a pas accès au site, pour cette partie seulement (laissez-passer de 3 heures, api/passe.php).
+     Seul Anis voit le bouton (le serveur vérifie aussi). L'ami arrive directement à cette table. */
+  peutPasse:false,
+  async verifiePasse(){ if(joueur !== 'Anis') return; try{ const f = new FormData(); f.append('action', 'peut'); const r = await fetch('/api/passe.php', { method:'POST', body:f }); if(r.ok){ this.peutPasse = !!(await r.json()).peut; if(this.salle) this.rendSalle(); } }catch(e){} },
+  async invitePasse(){ const nom = (prompt('Le prénom de ton ami :') || '').trim(); if(!nom) return;
+    try{ const f = new FormData(); f.append('action', 'cree'); f.append('jeu', 'chkobba'); f.append('nom', nom); f.append('table', this.code);
+      const r = await fetch('/api/passe.php', { method:'POST', body:f }), j = await r.json(); if(!r.ok) throw new Error(j.error || 'Erreur');
+      const txt = 'Viens faire une partie de Chkobba avec moi, ' + j.nom + ' ! Ouvre ce lien puis touche « Jouer » (il marche 3 heures) : ';
+      this.passeCode = this.code; this.passeHtml = `<p style="margin:8px 0 4px;font-weight:800">Le lien pour ${esc(j.nom)} (3 heures, un seul appareil) :</p><input readonly value="${esc(j.lien)}" style="width:100%;font:600 14px Nunito;padding:8px;border-radius:10px;border:2px solid #ddd;box-sizing:border-box"><div class="choix" style="margin-top:8px"><button data-copie="${esc(j.lien)}">📋 Copier</button><a class="btn" style="display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 16px;border-radius:14px;background:#25d366;color:#fff;font-weight:800;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent(txt + j.lien)}" target="_blank" rel="noopener">WhatsApp</a></div>`; $('rPasseBox').innerHTML = this.passeHtml;
+      if(navigator.share) try{ await navigator.share({ title:'Une partie de Chkobba', text:txt, url:j.lien }); }catch(e){}
+    }catch(e){ alert(e.message); } },
   async rejouer(){ try{ await post({ action:'rejouer', code:this.code, client:this.client }); P = null; this.lastV = 0; this.etat(); }catch(e){ alert(e.message); } },
   quitte(){ if(this.code) post({ action:'quitter', code:this.code, client:this.client }).catch(() => {}); this.sort(); },
 };
@@ -321,4 +335,7 @@ $('ligne').onclick = async () => { if(!joueur && !(await choisirJoueur())) retur
 /* ---------- au démarrage ---------- */
 sv = neuf(); menu(); VOIX.init(ac).then(() => VOIX.prepare(['garde', 'marchand', 'voleur', 'controleur', 'commentateur']));
 const p0 = window.Famille ? Famille.player() : null; if(p0) setJoueur(p0);
+LIGNE.verifiePasse();
+// 21/11 : un ami invité à une partie (laissez-passer) arrive avec ?table=CODE : on le fait asseoir à la table
+{ const t = new URLSearchParams(location.search).get('table'); if(t && /^[A-Z0-9]{4}$/.test(t) && joueur){ LIGNE.ouvre(); LIGNE.rejoindre(t); } }
 window.__chk = { get P(){ return P; }, partieSolo, LIGNE, VOIX, set niveau(v){ if(P) P.niveau = v; } };

@@ -29,6 +29,9 @@ function ga_etat_admin(): array {
             'ips' => $db->query('SELECT id, ip, nom, cree FROM ips ORDER BY cree')->fetchAll(),
             'appareils' => $db->query('SELECT id, nom, via, invitation, cree, expire, vu, ip, ua FROM appareils WHERE revoque = 0 AND expire > ' . $t . ' ORDER BY vu DESC')->fetchAll(),
             'invitations' => $invs,
+            'passes' => (function() use ($db, $t, $base){ $l = $db->query('SELECT id, code, nom, jeu, tab, cree, expire, utilise FROM passes WHERE revoque = 0 AND expire > ' . $t . ' ORDER BY cree DESC LIMIT 40')->fetchAll();
+                foreach ($l as &$x) { $x['lien'] = $base . '/acces/partie.php?c=' . $x['code']; $x['nomjeu'] = GA_PASSE_JEUX[$x['jeu']][0] ?? $x['jeu']; unset($x['code']); } unset($x); return $l; })(),
+            'jeux_passe' => array_map(fn($k, $v) => [$k, $v[0]], array_keys(GA_PASSE_JEUX), GA_PASSE_JEUX),
             'sauvegardes' => ga_liste_sauvegardes(), 'zip' => class_exists('ZipArchive'),
             'alertes' => ['email' => (string)ga_reglage('alerte_email'), 'email_on' => ga_reglage('alerte_email_on') !== '0', 'ntfy' => ga_canal_ntfy(), 'ntfy_on' => ga_reglage('alerte_ntfy_on') !== '0'],
             'demandes' => $db->query("SELECT id, nom, statut, duree, cree, vu, ip, ua, page, pages FROM demandes WHERE statut IN ('vu', 'attente', 'accepte') AND vu > " . ($t - 30 * 86400) . " ORDER BY (statut = 'attente') DESC, vu DESC LIMIT 60")->fetchAll(),
@@ -96,6 +99,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $usages = max(0, min(50, (int)($in['usages'] ?? 1)));
             $code = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
             $db->prepare('INSERT INTO invitations (code, nom, cree, lien_expire, duree, usages_max) VALUES (?, ?, ?, ?, ?, ?)')->execute([$code, $nom, $t, $t + $lien, $duree, $usages]);
+        } elseif ($a === 'passe_cree') {   // 21/11 : inviter un ami à UN jeu, 3 heures
+            try { ga_passe_cree((string)($in['jeu'] ?? ''), $nom); } catch (RuntimeException $e) { rep(400, ['error' => $e->getMessage()]); }
+        } elseif ($a === 'passe_supprime') {
+            $db->prepare('UPDATE passes SET revoque = 1 WHERE id = ?')->execute([$id]);
         } elseif ($a === 'invitation_supprime') {
             $db->prepare('UPDATE invitations SET revoque = 1 WHERE id = ?')->execute([$id]);
             $db->prepare('UPDATE appareils SET revoque = 1 WHERE invitation = ?')->execute([$id]);   // les invités entrés avec ce lien n'ont plus accès
@@ -208,6 +215,17 @@ details summary{cursor:pointer;font-weight:800;color:var(--soft)}
     </div>
     <button type="button" id="invCree">Créer le lien d'invitation</button>
     <div class="liste" id="invs"></div>
+  </section>
+
+  <section class="carte">
+    <h2>🎮 Inviter un ami à un jeu</h2>
+    <p>Ton ami ne pourra ouvrir que <b>ce jeu</b>, pendant <b>3 heures</b>, sur un seul appareil : rien d'autre du site. Pour jouer contre toi à la Chkobba, le plus simple est le bouton « Inviter un ami » à ta table en ligne (il arrive directement à ta table).</p>
+    <div class="grille">
+      <label>Le jeu<select id="paJeu"></select></label>
+      <label>Son prénom<input id="paNom" placeholder="ex. Mourad" maxlength="20"></label>
+    </div>
+    <button type="button" id="paCree">Créer le lien de partie</button>
+    <div class="liste" id="passes"></div>
   </section>
 
   <section class="carte">
@@ -331,6 +349,10 @@ function dessine(){
     return `<div class="ligne"><span class="q"><b>${esc(v.nom || 'Invitation')}</b><small>${fini ? 'Lien terminé' : 'Lien valable jusqu\'au ' + quand(v.lien_expire)} · accès ${duree(v.duree)} · ${v.usages}/${v.usages_max || '∞'} appareil(s) · ${v.actifs} entré(s)</small>
       ${fini ? '' : `<span class="lienbox"><input readonly value="${esc(v.lien)}"><button class="petit" data-copie="${esc(v.lien)}">Copier</button>${navigator.share ? `<button class="petit" data-partage="${esc(v.lien)}" data-nom="${esc(v.nom)}">Envoyer</button>` : ''}</span>`}</span>
       <button class="petit rouge" data-invdel="${v.id}">Supprimer</button></div>`; }).join('');
+  if(!$('paJeu').options.length) $('paJeu').innerHTML = (E.jeux_passe || []).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('');
+  $('passes').innerHTML = (E.passes || []).length ? E.passes.map(v => `<div class="ligne"><span class="q"><b>${esc(v.nom)} · ${esc(v.nomjeu)}${v.tab ? ' · table ' + esc(v.tab) : ''}</b><small>${v.utilise ? 'Entré le ' + quand(v.utilise) : 'Lien pas encore ouvert'} · jusqu'à ${quand(v.expire)}</small>
+      ${v.utilise ? '' : `<span class="lienbox"><input readonly value="${esc(v.lien)}"><button class="petit" data-copie="${esc(v.lien)}">Copier</button>${navigator.share ? `<button class="petit" data-partage="${esc(v.lien)}" data-nom="${esc(v.nom)}" data-jeu="${esc(v.nomjeu)}">Envoyer</button>` : ''}</span>`}</span>
+      <button class="petit rouge" data-passedel="${v.id}">Retirer</button></div>`).join('') : '<p class="vide">Aucune partie en cours.</p>';
   const optD = '<option value="86400">1 jour</option><option value="604800">7 jours</option><option value="2592000">30 jours</option><option value="31536000" selected>1 an</option>';
   $('dems').innerHTML = E.demandes.length ? E.demandes.map(d => `<div class="ligne"><span class="q"><b>${d.nom ? esc(d.nom) : esc(nomApp(d.ua))}${d.statut === 'attente' ? '<span class="badge moi">attend ta réponse</span>' : ''}${d.statut === 'accepte' ? '<span class="badge">accepté</span>' : ''}</b>
       <small>${d.nom ? esc(nomApp(d.ua)) + ' · ' : ''}${esc(d.ip)} · vu le ${quand(d.vu)} · ${d.pages} page(s)${d.page ? ' · ' + esc(d.page) : ''}</small></span>
@@ -357,6 +379,11 @@ $('invCree').onclick = async () => {
   await charge('invitation_cree', { nom:$('invNom').value, lien:+$('invLien').value, duree:+$('invDuree').value, usages:+$('invUsages').value });
   $('invNom').value = ''; const l = E.invitations[0]; if(l) { try { await navigator.clipboard.writeText(l.lien); toast('Lien créé et copié 💌'); } catch(e){ toast('Lien créé 💌'); } }
 };
+$('paCree').onclick = async () => {
+  if(!$('paNom').value.trim()){ toast('Écris d\'abord le prénom de ton ami'); $('paNom').focus(); return; }
+  await charge('passe_cree', { jeu:$('paJeu').value, nom:$('paNom').value }); $('paNom').value = '';
+  const l = (E.passes || [])[0]; if(l){ try { await navigator.clipboard.writeText(l.lien); toast('Lien de partie créé et copié 🎮'); } catch(e){ toast('Lien de partie créé 🎮'); } }
+};
 $('alOk').onclick = async () => { await charge('alertes', { email:$('alMail').value.trim(), email_on:$('alMailOn').checked, ntfy_on:$('alNtfyOn').checked }); toast('Alertes enregistrées 🔔'); };
 $('alEssai').onclick = async () => { const r = await api('alerte_essai'); E = r; dessine(); const e = r.essai || {}; toast(['e-mail ' + (e.email === null ? 'non réglé' : e.email ? 'envoyé' : 'pas parti'), 'ntfy ' + (e.ntfy === null ? 'éteint' : e.ntfy ? 'envoyé' : 'pas parti')].join(' · ')); };
 $('alCopie').onclick = async () => { try { await navigator.clipboard.writeText(E.alertes.ntfy); toast('Nom du canal copié'); } catch(e){} };
@@ -373,10 +400,11 @@ document.addEventListener('click', async e => {
   if(d.non) await charge('demande_ignore', { id:+d.non });
   if(d.ipdel && confirm('Retirer cette adresse ?')) await charge('ip_supprime', { id:+d.ipdel });
   if(d.invdel && confirm('Supprimer cette invitation ? Les appareils entrés avec ce lien perdront aussi l\'accès.')) await charge('invitation_supprime', { id:+d.invdel });
+  if(d.passedel && confirm('Retirer cette invitation à jouer ? Ton ami ne pourra plus jouer.')) await charge('passe_supprime', { id:+d.passedel });
   if(d.appdel && confirm('Retirer cet appareil ? Il ne pourra plus entrer.')) await charge('appareil_revoque', { id:+d.appdel });
   if(d.ren){ const n = prompt('Nouveau nom de cet appareil :', d.nom); if(n) await charge('appareil_renomme', { id:+d.ren, nom:n }); }
   if(d.copie){ try { await navigator.clipboard.writeText(d.copie); toast('Lien copié'); } catch(err){ toast('Sélectionne le lien pour le copier'); } }
-  if(d.partage){ try { await navigator.share({ title:'Invitation · Famille Missaoui', text:'Je t\'invite sur le site de jeux de la famille Missaoui' + (d.nom ? ', ' + d.nom : '') + ' : ouvre ce lien puis touche « Entrer ».', url:d.partage }); } catch(err){} }
+  if(d.partage){ try { await navigator.share({ title:'Invitation · Famille Missaoui', text:d.jeu ? 'Viens faire une partie de ' + d.jeu + ' avec moi' + (d.nom ? ', ' + d.nom : '') + ' ! Ouvre ce lien puis touche « Jouer ».' : 'Je t\'invite sur le site de jeux de la famille Missaoui' + (d.nom ? ', ' + d.nom : '') + ' : ouvre ce lien puis touche « Entrer ».', url:d.partage }); } catch(err){} }
 });
 charge();
 setInterval(() => { if(!document.hidden && !(document.activeElement && /INPUT|SELECT/.test(document.activeElement.tagName))) charge().catch(() => {}); }, 20000);   // la liste se met à jour toute seule

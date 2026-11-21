@@ -476,5 +476,5 @@
       badges();
     }).catch(function(){ occupe = false; });
   }
-  if(QUI && !QUI.nom){} /* 20/11 : personne n'est entré : pas d'étiquette */ else if(document.body) construit(); else document.addEventListener('DOMContentLoaded', construit);
+  if(QUI && (!QUI.nom || QUI.passe)){} /* 20/11 : personne n'est entré : pas d'étiquette ; 21/11 : un ami invité à un seul jeu (laissez-passer) n'a ni étiquette ni salon */ else if(document.body) construit(); else document.addEventListener('DOMContentLoaded', construit);
 })();

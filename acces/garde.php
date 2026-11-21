@@ -41,6 +41,8 @@ function ga_db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS appareils (id INTEGER PRIMARY KEY, hash TEXT UNIQUE NOT NULL, nom TEXT, via TEXT, invitation INTEGER, cree INTEGER NOT NULL, expire INTEGER NOT NULL, vu INTEGER, ip TEXT, ua TEXT, revoque INTEGER NOT NULL DEFAULT 0)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS invitations (id INTEGER PRIMARY KEY, code TEXT UNIQUE NOT NULL, nom TEXT, cree INTEGER NOT NULL, lien_expire INTEGER NOT NULL, duree INTEGER NOT NULL, usages_max INTEGER NOT NULL, usages INTEGER NOT NULL DEFAULT 0, revoque INTEGER NOT NULL DEFAULT 0)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS sessions (hash TEXT PRIMARY KEY, expire INTEGER NOT NULL)');
+    // 21/11 : les laissez-passer de partie (un ami invité à UN jeu, 3 heures, un seul appareil)
+    $pdo->exec('CREATE TABLE IF NOT EXISTS passes (id INTEGER PRIMARY KEY, code TEXT UNIQUE NOT NULL, hash TEXT, nom TEXT NOT NULL, jeu TEXT NOT NULL, tab TEXT, cree INTEGER NOT NULL, expire INTEGER NOT NULL, utilise INTEGER, revoque INTEGER NOT NULL DEFAULT 0, ip TEXT, ua TEXT)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS refus (id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, ip TEXT, page TEXT, ua TEXT)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS echecs (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
     // statut : vu (refusé, sans nom) · attente (il a écrit son prénom) · accepte (Anis a dit oui, l'appareil sera reconnu à sa prochaine page) · fait · ignore
@@ -191,8 +193,68 @@ function ga_note_demande(string $page, ?string $nom = null): ?array {
     } catch (Throwable $e) { error_log('demande : ' . $e->getMessage()); return null; }
 }
 // Pour les API : réponse 401 si l'appareil n'est pas de confiance.
+/* ---------- 21/11 : le laissez-passer de partie (demandé par le papa) ----------
+   Anis invite un ami à UN jeu (depuis la Chkobba en ligne, ou depuis l'administration pour n'importe quel jeu de la liste).
+   Le lien /acces/partie.php?c=… donne à UN appareil un cookie « mf_partie » valable 3 heures après la création du lien :
+   cet appareil n'ouvre que la page du jeu (la porte le renvoie au jeu pour toute autre page) et les API dont ce jeu a besoin.
+   Le reste du site, les sessions, les invitations normales ne changent pas. */
+const GA_COOKIE_PASSE = 'mf_partie';
+const GA_PASSE_DUREE = 3 * 3600;
+const GA_PASSE_JEUX = [   // clé => [nom, page, API en plus de voix.php et des lectures de famille.php]
+    'chkobba' => ['La Chkobba', '/jeux/chkobba.html', ['chkobba.php', 'chkobba_voix.php']],
+    'jasmin'  => ['La Légende du Jasmin', '/jeux/legende-du-jasmin-3.html', []],
+    'stage2'  => ['Jasmin · Stage 2', '/jeux/jasmin-stage2.html', []],
+    'tebni'   => ['Tebni (les briques)', '/jeux/tebni.html', []],
+    'kelma'   => ['Kelma (la tour des mots)', '/jeux/kelma.html', []],
+    'khyout'  => ['Khyout (les fils)', '/jeux/khyout.html', []],
+    'kassar'  => ['Kassar (casse-carreaux)', '/jeux/kassar.html', []],
+    'yajour'  => ['Yajour', '/jeux/yajour.html', []],
+    'koora'   => ['Koora', '/jeux/koora.html', []],
+    'zarbia'  => ['Zarbia (en ligne)', '/jeux/zarbia.html', ['zarbia.php']],
+    'arene'   => ['L\'Arène des serpents (en ligne)', '/jeux/serpent-arene.html', ['arene.php']],
+    'ludo'    => ['Ludo Légendes (en ligne)', '/jeux/ludo-legendes.html', ['ludo.php']],
+    'serpent' => ['Serpent Légendes', '/jeux/serpent-legendes.html', []],
+    'grimpe'  => ['Grimpe-Glace', '/jeux/grimpe-glace.html', []],
+    'medina'  => ['Médina Express', '/jeux/medina-express.html', []],
+    'atelier' => ['L\'Atelier du Jasmin', '/jeux/atelier-du-jasmin.html', []],
+    'ecuries' => ['Les Écuries (concours en ligne)', '/jeux/les-ecuries.html', ['ecuries.php']],
+];
+function ga_passe(): ?array {
+    $j = (string)($_COOKIE[GA_COOKIE_PASSE] ?? '');
+    if (!preg_match('/^[0-9a-f]{64}$/', $j)) return null;
+    try { $s = ga_db()->prepare('SELECT * FROM passes WHERE hash = ? AND revoque = 0 AND expire > ?'); $s->execute([hash('sha256', $j), time()]); $p = $s->fetch(); }
+    catch (Throwable $e) { return null; }
+    return $p && isset(GA_PASSE_JEUX[$p['jeu']]) ? $p : null;
+}
+function ga_passe_page(array $p): string { return GA_PASSE_JEUX[$p['jeu']][1] . ($p['tab'] ? '?table=' . rawurlencode((string)$p['tab']) : ''); }
+// qui peut créer un laissez-passer : Anis seulement (session administrateur, session « Anis », ou l'appareil où il s'est connecté)
+function ga_passe_autorise(): bool {
+    if (ga_admin()) return true;
+    try { if (ga_qui_actif() && ($q = ga_qui()) && ($q['nom'] ?? '') === 'Anis' && empty($q['ctrl'])) return true; } catch (Throwable $e) {}
+    $a = ga_appareil(); return $a && $a['via'] === 'admin';
+}
+function ga_passe_cree(string $jeu, string $nom, string $tab = ''): array {
+    if (!isset(GA_PASSE_JEUX[$jeu])) throw new RuntimeException('Jeu inconnu.');
+    $nom = trim($nom);
+    if ($nom === '' || (function_exists('ga_qui_nom_invite') && ga_qui_nom_invite($nom) === null) || !preg_match("/^[\p{L}][\p{L}\p{M} '\-]{0,19}$/u", $nom))
+        throw new RuntimeException("Écris le prénom de ton ami (des lettres seulement, pas celui de quelqu'un de la famille).");
+    if ($tab !== '' && !preg_match('/^[A-Z0-9]{4}$/', $tab)) $tab = '';
+    $code = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '='); $t = time();
+    ga_db()->prepare('INSERT INTO passes (code, nom, jeu, tab, cree, expire) VALUES (?, ?, ?, ?, ?, ?)')->execute([$code, $nom, $jeu, $tab ?: null, $t, $t + GA_PASSE_DUREE]);
+    $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ? 'https' : 'http';
+    return ['lien' => $schema . '://' . ($_SERVER['HTTP_HOST'] ?? 'www.missaoui-family.com') . '/acces/partie.php?c=' . $code, 'nom' => $nom, 'jeu' => GA_PASSE_JEUX[$jeu][0], 'expire' => $t + GA_PASSE_DUREE];
+}
+// une API que ce laissez-passer peut appeler ?
+function ga_passe_api(array $p): bool {
+    $f = basename((string)($_SERVER['SCRIPT_FILENAME'] ?? '')); $m = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    if ($f === 'voix.php') return true;                       // la voix du commentaire
+    if ($f === 'famille.php') return $m === 'GET';           // lire les records, les têtes ; rien n'est écrit
+    return in_array($f, GA_PASSE_JEUX[$p['jeu']][2], true);
+}
+
 function ga_garde_api(): void {
     if (ga_peut_entrer()) return;
+    $p = ga_passe(); if ($p && ga_passe_api($p)) return;
     ga_note_refus((string)($_SERVER['REQUEST_URI'] ?? ''));
     http_response_code(401); header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store');
     echo json_encode(['error' => 'acces', 'message' => "Accès réservé à la famille."], JSON_UNESCAPED_UNICODE); exit;
