@@ -12,19 +12,22 @@ export const EPISODES = [
     "img": "m1_a",
     "qui": "maman",
     "fr": "Toute la famille se met à table pour le dîner. Avant de manger, Amine dit : « Bismillah ! » Cela veut dire : au nom d’Allah. On commence ce qu’on fait de bien en pensant à Allah.",
-    "ar": "قَبْلَ الأَكْلِ نَقُولُ: بِسْمِ اللهِ."
+    "ar": "قَبْلَ الأَكْلِ نَقُولُ: بِسْمِ اللهِ.",
+    "vid": true
    },
    {
     "img": "m1_c",
     "qui": "maman",
     "fr": "Et si on a oublié de dire Bismillah au début ? On le dit dès qu’on s’en souvient : « Bismillah awwalahou wa âkhirahou » : au nom d’Allah, au début et à la fin.",
-    "ar": "بِسْمِ اللهِ أَوَّلَهُ وَآخِرَهُ."
+    "ar": "بِسْمِ اللهِ أَوَّلَهُ وَآخِرَهُ.",
+    "vid": true
    },
    {
     "img": "m1_d",
     "qui": "papa",
     "fr": "À la fin du repas, on dit : « Al-hamdou lillâh ! » : merci Allah pour cette bonne nourriture. Et on ne gaspille pas : Essil range le pain qui reste pour demain.",
-    "ar": "بَعْدَ الأَكْلِ نَقُولُ: الحَمْدُ لِلّٰهِ."
+    "ar": "بَعْدَ الأَكْلِ نَقُولُ: الحَمْدُ لِلّٰهِ.",
+    "vid": true
    }
   ],
   "lecon": {
@@ -156,25 +159,29 @@ export const EPISODES = [
     "img": "m2_a",
     "qui": "papa",
     "fr": "Le matin, devant l’école, Amine retrouve son ami. Il lui dit : « As-salâmou ’alaykoum ! » Cela veut dire : que la paix soit sur vous.",
-    "ar": "نُلْقِي السَّلَامَ: السَّلَامُ عَلَيْكُمْ."
+    "ar": "نُلْقِي السَّلَامَ: السَّلَامُ عَلَيْكُمْ.",
+    "vid": true
    },
    {
     "img": "m2_b",
     "qui": "maman",
     "fr": "Son ami lui répond : « Wa ’alaykoum as-salâm ! » : et sur vous la paix. Quand quelqu’un nous salue, on répond toujours, gentiment.",
-    "ar": "وَنَرُدُّ: وَعَلَيْكُمُ السَّلَامُ."
+    "ar": "وَنَرُدُّ: وَعَلَيْكُمُ السَّلَامُ.",
+    "vid": true
    },
    {
     "img": "m2_c",
     "qui": "papa",
     "fr": "On peut dire le salut en entier : « As-salâmou ’alaykoum wa rahmatoullâhi wa barakâtouh » : que la paix soit sur vous, ainsi que la miséricorde d’Allah et Ses bénédictions. Essil salue ainsi ses grands-parents.",
-    "ar": "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ."
+    "ar": "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ.",
+    "vid": true
    },
    {
     "img": "m2_d",
     "qui": "maman",
     "fr": "Salma tient la porte à la voisine et lui sourit. Selon un hadith (At-Tirmidhî), sourire à son frère est une aumône : une bonne action offerte. Un salut et un sourire ne coûtent rien et rendent tout le monde heureux !",
-    "ar": "تَبَسُّمُكَ فِي وَجْهِ أَخِيكَ صَدَقَةٌ."
+    "ar": "تَبَسُّمُكَ فِي وَجْهِ أَخِيكَ صَدَقَةٌ.",
+    "vid": true
    }
   ],
   "lecon": {
@@ -308,25 +315,29 @@ export const EPISODES = [
     "img": "m3_a",
     "qui": "papa",
     "fr": "Avant la prière, on fait les ablutions : le woudoû’. Essil montre à Amine comment faire. D’abord, on pense dans son cœur : « Je fais mes ablutions pour prier. » Puis on dit : « Bismillah. »",
-    "ar": "نَنْوِي، ثُمَّ نَقُولُ: بِسْمِ اللهِ."
+    "ar": "نَنْوِي، ثُمَّ نَقُولُ: بِسْمِ اللهِ.",
+    "vid": true
    },
    {
     "img": "m3_b",
     "qui": "maman",
     "fr": "On lave les mains trois fois. Puis on se rince la bouche trois fois, et le nez trois fois. Ensuite, on lave le visage trois fois, du front au menton et d’une oreille à l’autre.",
-    "ar": "نَغْسِلُ اليَدَيْنِ، ثُمَّ نَتَمَضْمَضُ وَنَسْتَنْشِقُ، ثُمَّ نَغْسِلُ الوَجْهَ."
+    "ar": "نَغْسِلُ اليَدَيْنِ، ثُمَّ نَتَمَضْمَضُ وَنَسْتَنْشِقُ، ثُمَّ نَغْسِلُ الوَجْهَ.",
+    "vid": true
    },
    {
     "img": "m3_c",
     "qui": "papa",
     "fr": "Puis les bras jusqu’aux coudes, le droit d’abord puis le gauche, trois fois. On passe les mains mouillées sur la tête, puis sur les oreilles. Enfin, on lave les pieds jusqu’aux chevilles, le droit puis le gauche.",
-    "ar": "ثُمَّ اليَدَيْنِ إِلَى المِرْفَقَيْنِ، ثُمَّ نَمْسَحُ الرَّأْسَ وَالأُذُنَيْنِ، ثُمَّ نَغْسِلُ الرِّجْلَيْنِ."
+    "ar": "ثُمَّ اليَدَيْنِ إِلَى المِرْفَقَيْنِ، ثُمَّ نَمْسَحُ الرَّأْسَ وَالأُذُنَيْنِ، ثُمَّ نَغْسِلُ الرِّجْلَيْنِ.",
+    "vid": true
    },
    {
     "img": "m3_d",
     "qui": "maman",
     "fr": "Salma ferme bien le robinet : on ne gaspille pas l’eau, même pour les ablutions. Et voilà : on est propre et prêt pour la prière !",
-    "ar": "لَا نُسْرِفُ فِي المَاءِ."
+    "ar": "لَا نُسْرِفُ فِي المَاءِ.",
+    "vid": true
    }
   ],
   "lecon": {
@@ -460,25 +471,29 @@ export const EPISODES = [
     "img": "m4_a",
     "qui": "papa",
     "fr": "Cinq fois par jour, les musulmans prient Allah : Al-Fajr à l’aube, Adh-Dhohr à midi, Al-’Asr l’après-midi, Al-Maghrib au coucher du soleil et Al-’Ichâ’ la nuit.",
-    "ar": "نُصَلِّي خَمْسَ صَلَوَاتٍ: الفَجْرَ وَالظُّهْرَ وَالعَصْرَ وَالمَغْرِبَ وَالعِشَاءَ."
+    "ar": "نُصَلِّي خَمْسَ صَلَوَاتٍ: الفَجْرَ وَالظُّهْرَ وَالعَصْرَ وَالمَغْرِبَ وَالعِشَاءَ.",
+    "vid": true
    },
    {
     "img": "m4_b",
     "qui": "maman",
     "fr": "On entend l’appel à la prière, l’adhân, depuis la mosquée du quartier. On se tourne vers la Qibla : la direction de la Ka’ba, à La Mecque. Amine déroule son petit tapis.",
-    "ar": "نَتَّجِهُ إِلَى القِبْلَةِ."
+    "ar": "نَتَّجِهُ إِلَى القِبْلَةِ.",
+    "vid": true
    },
    {
     "img": "m4_c",
     "qui": "papa",
     "fr": "On commence par « Allâhou akbar » : Allah est le plus grand. On se tient debout, on s’incline (le roukoû’), on se prosterne le front sur le sol (le soujoûd), puis on s’assoit. On finit en saluant : « As-salâmou ’alaykoum ».",
-    "ar": "اللهُ أَكْبَرُ: قِيَامٌ، ثُمَّ رُكُوعٌ، ثُمَّ سُجُودٌ."
+    "ar": "اللهُ أَكْبَرُ: قِيَامٌ، ثُمَّ رُكُوعٌ، ثُمَّ سُجُودٌ.",
+    "vid": true
    },
    {
     "img": "m4_d",
     "qui": "maman",
     "fr": "Essil, Salma et Amine prient ensemble, en rang, derrière papa. Dans la prière, on parle à Allah : on Le remercie et on Lui demande ce qui est bon. Le cœur devient calme et heureux.",
-    "ar": "فِي الصَّلَاةِ نَشْكُرُ اللهَ وَنَدْعُوهُ."
+    "ar": "فِي الصَّلَاةِ نَشْكُرُ اللهَ وَنَدْعُوهُ.",
+    "vid": true
    }
   ],
   "lecon": {
@@ -612,25 +627,29 @@ export const EPISODES = [
     "img": "m5_a",
     "qui": "maman",
     "fr": "Voici le mois de Ramadan ! Les grands jeûnent : ils ne mangent pas et ne boivent pas, de l’aube jusqu’au coucher du soleil. Les enfants s’entraînent petit à petit, une demi-journée par exemple.",
-    "ar": "فِي رَمَضَانَ نَصُومُ مِنَ الفَجْرِ إِلَى المَغْرِبِ."
+    "ar": "فِي رَمَضَانَ نَصُومُ مِنَ الفَجْرِ إِلَى المَغْرِبِ.",
+    "vid": true
    },
    {
     "img": "m5_b",
     "qui": "papa",
     "fr": "Au coucher du soleil, à l’appel du Maghrib, on rompt le jeûne, souvent avec des dattes et un verre de lait ou d’eau : c’est l’iftâr. Toute la famille est réunie autour de la chorba.",
-    "ar": "عِنْدَ المَغْرِبِ نُفْطِرُ عَلَى التَّمْرِ."
+    "ar": "عِنْدَ المَغْرِبِ نُفْطِرُ عَلَى التَّمْرِ.",
+    "vid": true
    },
    {
     "img": "m5_c",
     "qui": "maman",
     "fr": "Pendant Ramadan, on pense à ceux qui ont faim : on partage et on donne. Avant l’Aïd, chaque famille donne la zakât al-fitr, pour que les plus pauvres puissent aussi faire la fête.",
-    "ar": "نَتَصَدَّقُ وَنُعْطِي زَكَاةَ الفِطْرِ."
+    "ar": "نَتَصَدَّقُ وَنُعْطِي زَكَاةَ الفِطْرِ.",
+    "vid": true
    },
    {
     "img": "m5_d",
     "qui": "papa",
     "fr": "Et voici l’Aïd al-Fitr ! On met de beaux habits, on va à la prière de l’Aïd, on rend visite à la famille, on mange des gâteaux, et on se dit : « Aïd moubârak ! »",
-    "ar": "عِيدٌ مُبَارَكٌ!"
+    "ar": "عِيدٌ مُبَارَكٌ!",
+    "vid": true
    }
   ],
   "lecon": {
@@ -764,13 +783,15 @@ export const EPISODES = [
     "img": "m6_a",
     "qui": "papa",
     "fr": "Être un bon musulman, c’est aussi être gentil. D’abord avec ses parents : Salma aide maman à mettre la table, Amine range ses jouets, et on parle aux parents avec respect.",
-    "ar": "نُطِيعُ الوَالِدَيْنِ وَنُسَاعِدُهُمَا."
+    "ar": "نُطِيعُ الوَالِدَيْنِ وَنُسَاعِدُهُمَا.",
+    "vid": true
    },
    {
     "img": "m6_b",
     "qui": "maman",
     "fr": "Avec les voisins aussi : on leur porte un peu de notre plat, on ne fait pas de bruit le soir, on les aide. Essil porte les courses de la voisine âgée.",
-    "ar": "نُحْسِنُ إِلَى الجَارِ."
+    "ar": "نُحْسِنُ إِلَى الجَارِ.",
+    "vid": true
    },
    {
     "img": "m6_c",
@@ -782,7 +803,8 @@ export const EPISODES = [
     "img": "m6_d",
     "qui": "maman",
     "fr": "Partager, aider, dire merci, pardonner à son frère ou à sa sœur : chaque bonne action compte. Le soir, chacun raconte la gentillesse qu’il a faite aujourd’hui.",
-    "ar": "كُلُّ عَمَلٍ طَيِّبٍ صَدَقَةٌ."
+    "ar": "كُلُّ عَمَلٍ طَيِّبٍ صَدَقَةٌ.",
+    "vid": true
    }
   ],
   "lecon": {
@@ -916,25 +938,29 @@ export const EPISODES = [
     "img": "m7_a",
     "qui": "maman",
     "fr": "Le matin, en se réveillant, Amine dit : « Al-hamdou lillâhi lladhî ahyânâ ba’da mâ amâtanâ wa ilayhi n-nouchoûr » : louange à Allah qui nous a rendu la vie après le sommeil, et c’est vers Lui que nous retournerons.",
-    "ar": "الحَمْدُ لِلّٰهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ."
+    "ar": "الحَمْدُ لِلّٰهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ.",
+    "vid": true
    },
    {
     "img": "m7_b",
     "qui": "papa",
     "fr": "En sortant de la maison, Salma dit : « Bismillah, tawakkaltou ’ala Allah » : au nom d’Allah, je place ma confiance en Allah.",
-    "ar": "بِسْمِ اللهِ، تَوَكَّلْتُ عَلَى اللهِ."
+    "ar": "بِسْمِ اللهِ، تَوَكَّلْتُ عَلَى اللهِ.",
+    "vid": true
    },
    {
     "img": "m7_c",
     "qui": "maman",
     "fr": "Atchoum ! Quand Essil éternue, elle dit : « Al-hamdou lillâh ». Salma lui répond : « Yarhamouki Allah » (qu’Allah te fasse miséricorde). Et Essil répond : « Yahdîkoumou Allah wa youslihou bâlakoum » (qu’Allah vous guide et améliore votre état).",
-    "ar": "يَرْحَمُكِ اللهُ. يَهْدِيكُمُ اللهُ وَيُصْلِحُ بَالَكُمْ."
+    "ar": "يَرْحَمُكِ اللهُ. يَهْدِيكُمُ اللهُ وَيُصْلِحُ بَالَكُمْ.",
+    "vid": true
    },
    {
     "img": "m7_d",
     "qui": "papa",
     "fr": "Le soir, au lit, Amine dit : « Bismika Allâhoumma amoûtou wa ahyâ » : c’est en Ton nom, ô Allah, que je m’endors et que je me réveille. Bonne nuit !",
-    "ar": "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا."
+    "ar": "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا.",
+    "vid": true
    }
   ],
   "lecon": {
