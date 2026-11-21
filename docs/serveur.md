@@ -27,6 +27,9 @@ Hébergement Hostinger (PHP + SQLite). Données hors du site public, à côté d
 - Codes : 4 caractères parmi `ABCDEFGHJKMNPQRSTUVWXYZ23456789`. État ≤ 24 000 caractères. Parties effacées après 12 h d'inactivité. **1500 envois par 10 min et par adresse** (base à part pour ne pas gêner les autres jeux).
 - Le serveur ne vérifie pas les règles : ce sont les tablettes qui jouent (famille de confiance).
 
+## `api/arene.php` et `api/ecuries.php` (21/11)
+Deux copies de l'API de Zarbia (salon `hello`/`invite`, parties `create`/`room`/`join`/`update`, relais de messages `sync`), chacune avec sa base dans `famille-data/` : `arene.sqlite` (L'Arène des serpents, 6 joueurs, champ `skin` « tête:corps ») et `ecuries-duel.sqlite` (« Concours entre nous » des Écuries, 6 cavaliers). Elles commencent par `ga_garde_api()`. Le serveur ne fait que passer les messages (gardés 90 s).
+
 ## `famille.js` (chargé par toutes les pages)
 
 - `Famille.player()`, `Famille.setPlayer(n)`, `Famille.choosePlayer({title, extra, avatar})` (« Qui joue ? » : Essil, Salma, Amine ; `extra` = Anis, Imen ; un autre prénom), `Famille.score`, `Famille.highscores`, `Famille.track(cours, joueur, clés)` (envoi toutes les 15 s et à la fermeture), `Famille.load(cours, joueur)`.
