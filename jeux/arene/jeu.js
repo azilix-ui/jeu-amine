@@ -255,7 +255,7 @@ const joyEl = $('joy'), boostEl = $('boost');
 function centreJoy(){ const r = joyEl.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }
 addEventListener('keydown', e => { if(!G || G.fini) return; const k = e.key.toLowerCase();
   if(k === 'escape' || k === 'p'){ togglePause(); return; }
-  if(['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' ', 'q', 'd', 'a', 'z', 's', 'w'].includes(k)){ keys.add(k); if(k !== ' ') mode_ = 'clavier'; e.preventDefault(); } });
+  if(['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' ', 'shift', 'q', 'd', 'a', 'z', 's', 'w'].includes(k)){ keys.add(k); if(k !== ' ' && k !== 'shift'){ mode_ = 'clavier'; document.body.classList.add('souris'); } e.preventDefault(); } });
 addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 cv.addEventListener('pointerdown', e => { ac(); sons(); if(!G || G.fini) return;
   if(e.pointerType === 'mouse'){ document.body.classList.add('souris'); mode_ = 'souris'; souris = [e.clientX, e.clientY]; sourisBoost = true; return; }
@@ -276,10 +276,11 @@ boostEl.addEventListener('contextmenu', e => e.preventDefault());
 function commandes(){
   if(window.__pilote) return;
   const p = G.moi; if(!p || !p.vivant) return;
-  if(mode_ === 'clavier'){ if(keys.has('arrowleft') || keys.has('q') || keys.has('a')) p.vise = p.a - .6; else if(keys.has('arrowright') || keys.has('d')) p.vise = p.a + .6; else p.vise = p.a; }
+  // 21/11 (demande du papa) : les flèches donnent la direction à l'écran (← va à gauche, ↑ monte, ↑ + → en diagonale) ; ZQSD / WASD aussi
+  if(mode_ === 'clavier'){ let x = 0, y = 0; if(keys.has('arrowleft') || keys.has('q') || keys.has('a')) x--; if(keys.has('arrowright') || keys.has('d')) x++; if(keys.has('arrowup') || keys.has('z') || keys.has('w')) y--; if(keys.has('arrowdown') || keys.has('s')) y++; if(x || y) p.vise = Math.atan2(y, x); }
   else if(mode_ === 'souris' && souris){ const [sx, sy] = ecran(p.x, p.y); const dx = souris[0] - sx, dy = souris[1] - sy; if(Math.hypot(dx, dy) > 12) p.vise = Math.atan2(dy, dx); }
   else if(joy){ const dx = joy.x - joy.x0, dy = joy.y - joy.y0; if(Math.hypot(dx, dy) > 8) p.vise = Math.atan2(dy, dx); }
-  const avant = p.veutBoost; p.veutBoost = boostDoigt != null || keys.has(' ') || keys.has('arrowup') || keys.has('z') || keys.has('w') || (mode_ === 'souris' && sourisBoost);
+  const avant = p.veutBoost; p.veutBoost = boostDoigt != null || keys.has(' ') || keys.has('shift') || (mode_ === 'souris' && sourisBoost);
   if(p.veutBoost && !avant && mode_ !== 'doigt' && p.masse > CFG.masseMinBoost) SON.boost();
   boostEl.classList.toggle('vide', p.masse <= CFG.masseMinBoost);
 }
