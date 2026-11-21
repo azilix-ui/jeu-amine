@@ -130,7 +130,7 @@ $attente = $dem && $dem['statut'] === 'attente';
     <button type="submit">Entrer</button>
   </form>
 <?php endif; ?>
-  <p class="pied">© 2026 Anis Missaoui · Famille Missaoui</p>
+  <p class="pied">© 2026 Anis Missaoui · Famille Missaoui · <a href="/acces/mentions.php" style="color:inherit">Mentions légales et vie privée</a></p>
 </main>
 </body>
 </html>

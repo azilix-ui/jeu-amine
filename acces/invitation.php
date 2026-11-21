@@ -57,12 +57,12 @@ $duree = $d >= 300 * 86400 ? 'un an' : ($d >= 86400 ? round($d / 86400) . ' jour
   </div>
   <span class="cadenas">💌 Invitation</span>
   <h1>Bienvenue<?= $inv['nom'] ? ', ' . ga_h($inv['nom']) : '' ?> !</h1>
-  <p class="sous">Anis t'invite sur le site de jeux de la famille Missaoui. Cet appareil aura accès au site pendant <b><?= ga_h($duree) ?></b>.</p>
+  <p class="sous">Anis t'invite sur le site de jeux de la famille Missaoui. Cet appareil aura accès au site pendant <b><?= ga_h($duree) ?></b>.<br><small>Le site note ton prénom et tes visites (60 jours) : voir les <a href="/acces/mentions.php" style="color:inherit">mentions légales</a>.</small></p>
   <form method="post" style="width:100%;display:flex;justify-content:center">
     <input type="hidden" name="c" value="<?= ga_h($code) ?>">
     <button type="submit" style="padding:0 34px">Entrer sur le site →</button>
   </form>
-  <p class="pied">© 2026 Anis Missaoui · Famille Missaoui</p>
+  <p class="pied">© 2026 Anis Missaoui · Famille Missaoui · <a href="/acces/mentions.php" style="color:inherit">Mentions légales et vie privée</a></p>
 </main>
 </body>
 </html>
