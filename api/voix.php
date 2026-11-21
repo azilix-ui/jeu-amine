@@ -22,6 +22,24 @@ function vx_voix(string $l): string { $v = ga_reglage('voix_' . $l); return $v &
 $l = (string)($_GET['l'] ?? 'fr'); if (!isset(VX_VOIX[$l])) vx_fin(400);
 $t = trim(preg_replace('/\s+/u', ' ', (string)($_GET['t'] ?? '')));
 if ($t === '' || mb_strlen($t) > 400) vx_fin(400);
+// 21/11 (demandé par le papa) : en français, les unités écrites en abrégé (cm, mm, km, m², cm³, °…) sont lues en toutes lettres,
+// sinon la voix disait « cé-èm » ou l'anglais. « 1 cm » → « 1 centimètre », « 5 cm² » → « 5 centimètres carrés », « (cm) » → « (centimètres) ».
+function vx_unites(string $t): string {
+    static $U = ['km' => 'kilomètre', 'hm' => 'hectomètre', 'dam' => 'décamètre', 'dm' => 'décimètre', 'cm' => 'centimètre', 'mm' => 'millimètre', 'm' => 'mètre',
+                 'kg' => 'kilogramme', 'mg' => 'milligramme', 'g' => 'gramme', 'cL' => 'centilitre', 'cl' => 'centilitre', 'mL' => 'millilitre', 'ml' => 'millilitre', 'dL' => 'décilitre', 'L' => 'litre'];
+    $t = preg_replace('/(\d)\s*°\s*C\b/u', '$1 degrés Celsius', $t);
+    $t = preg_replace_callback('/(\d+(?:[,.]\d+)?)?\s*°/u', fn($m) => ($m[1] ?? '') === '' ? ' degrés' : $m[1] . ((float)str_replace(',', '.', $m[1]) < 2 ? ' degré' : ' degrés'), $t);
+    $t = preg_replace_callback('/(?<![\p{L}\d])(\d+(?:[,.]\d+)?\s*)?(km|hm|dam|dm|cm|mm|kg|mg|cL|cl|mL|ml|dL|m|g|L)([²³23])?(?![\p{L}\d])/u', function ($m) use ($U) {
+        $n = trim($m[1] ?? ''); $u = $m[2]; $p = $m[3] ?? '';
+        if ($n === '' && in_array($u, ['m', 'g', 'L'], true)) return $m[0];   // une lettre seule (le point m, la lettre L…) : on n'y touche pas
+        $mot = $U[$u]; $pl = $n === '' || (float)str_replace(',', '.', $n) >= 2;
+        $suf = $p === '²' || $p === '2' ? ($pl ? ' carrés' : ' carré') : ($p === '³' || $p === '3' ? ($pl ? ' cubes' : ' cube') : '');
+        if ($p === '2' || $p === '3') { if ($n === '') return $m[0]; }
+        return ($n !== '' ? $n . ' ' : '') . $mot . ($pl ? 's' : '') . $suf;
+    }, $t);
+    return trim(preg_replace('/\s+/u', ' ', $t));
+}
+if ($l === 'fr') $t = vx_unites($t);
 $lulu = $l === 'fr' && ($_GET['p'] ?? '') === 'amine';
 // d'autres voix françaises choisies par le papa (v=…) : Jon, la voix de papa dans « La vie du Prophète ﷺ » (17/11)
 // 18/11 : le salon du site lit chaque message avec la voix de celui qui l'a écrit (explorateur.js, v=<prénom>) :
