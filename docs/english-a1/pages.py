@@ -26,14 +26,14 @@ HEAD = '''<!doctype html>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
 '''
 CFG = {
-  'pip': dict(dir='salma', js='pip', var='PIPN', data='pip/lecons.js', code='pip/pip.js', moteur='ollie/cours.js', css='ollie/cours.css?v=4', key='salma-pip', qui='Salma', theme='#1f6b44', ico='%F0%9F%95%8A%EF%B8%8F',
+  'pip': dict(dir='salma', js='pip', var='PIPN', data='pip/lecons.js', code='pip/pip.js', moteur='ollie/cours.js', css='ollie/cours.css?v=5', key='salma-pip', qui='Salma', theme='#1f6b44', ico='%F0%9F%95%8A%EF%B8%8F',
     titre='Salma & Pip', img='pip/img/p{n}_0.webp', max=24, couleur='#1f6b44', rail='#5aaedc',
     lead="10 leçons pour commencer l'anglais avec <b>Pip</b>, le bébé cigogne venu d'Angleterre. Chaque leçon commence par un dessin animé dont tu es l'héroïne, puis tu écoutes, tu répètes, tu lis, tu écris et tu parles avec Pip. Niveau <b>A1</b> ; les leçons 11 à 20 t'emmèneront au <b>A2</b>.",
     css2='''body{background:linear-gradient(#d6efff,#f2fbff 40%,#fff9ef) fixed}h1{color:#1f6b44}.lead,.help{color:#2d4a3a;text-shadow:none}.en{color:#1f6b44;font-weight:800}
 .pipband{width:100%;border-radius:22px;background:linear-gradient(90deg,#1f6b44,#2f9a66);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;box-shadow:0 6px 0 #5aaedc;font-family:'Baloo 2',sans-serif;font-size:22px}
 .pipband a{background:#fff;color:#1f6b44;border-radius:14px;padding:6px 12px;font-size:16px;text-decoration:none}
 .tab{border-collapse:collapse;margin:6px 0}.tab td{border-bottom:1px solid #dfe8e2;padding:4px 10px}.trou{color:#d7263d}'''),
-  'kiko': dict(dir='amine', js='kiko', var='KIKON', data='kiko/lecons.js', code='kiko/kiko.js', moteur='../salma/ollie/cours.js', css='../salma/ollie/cours.css?v=4', key='amine-kiko', qui='Amine', theme='#2a1f4f', ico='%F0%9F%90%AB',
+  'kiko': dict(dir='amine', js='kiko', var='KIKON', data='kiko/lecons.js', code='kiko/kiko.js', moteur='../salma/ollie/cours.js', css='../salma/ollie/cours.css?v=5', key='amine-kiko', qui='Amine', theme='#2a1f4f', ico='%F0%9F%90%AB',
     titre='Amine & Kiko', img='kiko/img/k{n}_0.webp', max=18, couleur='#2a1f4f', rail='#ff8c1a',
     lead="Kiko, le bébé chameau du désert, ne parle qu'anglais ! Avec lui, Amine écoute, répète et joue : 10 leçons, un dessin animé à chaque fois, et rien à lire.",
     css2='''body{background:linear-gradient(#ffe9c7,#fff6e6 45%,#fffdf8) fixed}h1{color:#2a1f4f}.lead,.help{color:#3b2f5e;text-shadow:none}

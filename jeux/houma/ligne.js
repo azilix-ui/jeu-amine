@@ -95,8 +95,8 @@ setInterval(() => { if(player !== dernierJoueur){ dernierJoueur = player; HL.msg
 
 function annonce(m){
   const ouvert = !!$('hlMsgs');
-  if(m.type === 't'){ const t = `${m.nom} dit : ${m.texte}`; sfx.tap(); if(!ouvert) note(m.nom, t, 'Répondre', chat); }   /* 21/11 : les messages ne sont plus lus à voix haute (décision du papa : texte et émojis seulement) */
-  else if(m.type === 'v'){ tone(880, .1, 'sine', .08); tone(1170, .12, 'sine', .08, .12); if(!ouvert) note(m.nom, `🎤 ${m.nom} : ancien message vocal`, '▶ Écouter', () => joue(m.id)); }
+  if(m.type === 't'){ const t = `${m.nom} dit : ${m.texte}`; if(!['Essil', 'Salma', 'Amine'].includes(moi())) sfx.tap(); if(!ouvert) note(m.nom, t, 'Répondre', chat); }   /* 21/11 : les messages ne sont plus lus à voix haute (décision du papa : texte et émojis seulement) */
+  else if(m.type === 'v'){ if(!['Essil', 'Salma', 'Amine'].includes(moi())){ tone(880, .1, 'sine', .08); tone(1170, .12, 'sine', .08, .12); } if(!ouvert) note(m.nom, `🎤 ${m.nom} : ancien message vocal`, '▶ Écouter', () => joue(m.id)); }
   else if(m.type === 'm'){ sfx.star(); note(m.nom, `📣 ${m.nom} te montre ${lieuN(m.lieu)} !`, '🚪 J’y vais', () => { closePanel(); visite(m.nom, m.lieu); }, 15000); say(`${m.nom} te montre ${lieuN(m.lieu)}. Viens voir !`); }
 }
 

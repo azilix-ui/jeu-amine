@@ -75,8 +75,10 @@ function speak(html){
   talk(); hush(); if(muted || (window.FamilleVoix && !FamilleVoix.on())) return new Promise(r => setTimeout(r, Math.min(9000, 1200 + clean(html).length * 55)));   // touche V : consignes orales coupées (on laisse le temps de lire)
   const j = jeton, segs = [];
   for(const [t, l] of segments(html)) for(const m of (l === 'en' && fichier(t) ? [t] : morceaux(t))) segs.push([m, l, (l === 'en' && fichier(m)) || enLigne(m, l)]);
-  segs.forEach(([, , f]) => tampon(f).catch(() => {}));   // tout se charge en même temps, puis se joue dans l'ordre
-  return (async () => { for(const [t, l, f] of segs){ if(j !== jeton) return;
+  /* 21/11 : avant, tous les morceaux se chargeaient en même temps : ElevenLabs refuse au-delà de quelques phrases à la fois,
+     et la tablette d'Amine restait muette ou passait à la voix de la tablette. Maintenant : le morceau en cours et les 2 suivants. */
+  const avance = i => segs.slice(i, i + 3).forEach(([, , f]) => tampon(f).catch(() => {}));
+  return (async () => { for(const [i, [t, l, f]] of segs.entries()){ if(j !== jeton) return; avance(i);
     try{ const b = await tampon(f); if(j !== jeton) return;
       if(!(await pret(actx()))){ if(j !== jeton) return; if(window.FamilleSon){ const r = await FamilleSon.joue(f); if(j !== jeton || r === false) return; if(r) continue; } throw 0; }   // moteur bloqué : le lecteur commun (avec « 🔊 Touche pour entendre » si l'iPad refuse)
       await new Promise(res => { const a = actx(), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); joueur = s; s.onended = res; setTimeout(res, b.duration * 1000 + 400); s.start(); }); continue; }catch(e){}
@@ -136,13 +138,17 @@ function histoire(auto){
     app.innerHTML = topbar(false) + `<div><h1>${C.titre}</h1><p class="lead">${C.sous}</p></div><button class="ha-go" id="hgo" style="--img:url('${new URL(H.scenes[0].img, location.href).href}')"><span>▶</span><b>${H.titre}</b><small>Regarde le dessin animé avant les exercices</small></button>
       <div class="tools"><button class="btn" id="hno">Plus tard : aller aux exercices →</button></div>`;
     wireTop(); document.getElementById('hgo').onclick = () => { sfx.tap(); histoire(); }; document.getElementById('hno').onclick = () => { sfx.tap(); home(false); }; return; }
-  app.innerHTML = topbar(true) + `<div class="ha"><div class="ha-ecran"><video id="hv" muted loop playsinline preload="auto"></video><div class="ha-num" id="hn"></div></div>
+  app.innerHTML = topbar(true) + `<div class="ha"><div class="ha-ecran"><img id="hi" alt=""><video id="hv" muted loop playsinline preload="auto"></video><div class="ha-num" id="hn"></div></div>
     <p class="ha-txt" id="ht"></p><div class="ha-bt"><button class="btn" id="hp">⏮</button><button class="btn" id="hz">⏸</button><button class="btn" id="hs">⏭</button><button class="btn go" id="hf">${data.histoire ? 'Aux exercices →' : 'Passer →'}</button></div></div>`;
-  wireTop(); const v = document.getElementById('hv');
+  wireTop(); const v = document.getElementById('hv'), im = document.getElementById('hi'); v.muted = true; v.defaultMuted = true;
   const fin = () => { tok++; hush(); try{ v.pause(); }catch(e){} data.histoire = (data.histoire || 0) + 1; save(); home(true); };
   async function scene(i){
     k = Math.max(0, i); if(k >= N) return fin(); const t = ++tok, sc = H.scenes[k];
-    v.poster = sc.img; v.onerror = () => v.removeAttribute('src'); if(sc.vid){ v.src = sc.vid; v.play().catch(() => {}); } else v.removeAttribute('src');
+    /* 21/11 : sur la tablette d'Amine, la 1re image restait noire (le film pas encore prêt, et l'affiche du <video> pas montrée par l'iPad).
+       L'image de la scène est maintenant une vraie <img> sous le film ; le film n'apparaît qu'une fois qu'il joue vraiment. */
+    im.src = sc.img; v.classList.remove('joue'); v.onplaying = () => { if(t === tok) v.classList.add('joue'); };
+    v.poster = sc.img; v.onerror = () => { v.classList.remove('joue'); v.removeAttribute('src'); }; if(sc.vid){ v.src = sc.vid; v.play().catch(() => {}); } else v.removeAttribute('src');
+    const sv = H.scenes[k + 1]; if(sv){ const pi = new Image(); pi.src = sv.img; }
     document.getElementById('ht').innerHTML = sc.txt; document.getElementById('hn').textContent = (k + 1) + ' / ' + N;
     await speak(sc.txt); if(t !== tok) return;
     await new Promise(r => setTimeout(r, 900)); if(t !== tok || pause) return;

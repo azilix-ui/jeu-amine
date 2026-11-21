@@ -32,7 +32,9 @@ $voix = $lulu ? VX_LULU : ($autre ?: vx_voix($l));
 $dir = ga_donnees() . '/voix-cache/' . $voix;
 // 20/11 : un mot ou une syllabe seule (« to », « lune ») était lu avec l'accent anglais : le modèle multilingue devine la langue
 // et ne suit pas language_code. Pour un texte français très court, on prend le modèle Turbo v2.5, qui suit language_code.
-$modele = ($l === 'fr' && mb_strlen($t) <= 12) ? 'eleven_turbo_v2_5' : VX_MODELE;
+// 21/11 : Lulu (voix d'Amine, faite par Voice Design) lisait le français avec l'accent anglais dans le cours d'anglais :
+// le modèle multilingue « devine » la langue d'après la voix. Pour Lulu, toujours Turbo v2.5, qui obéit à language_code=fr.
+$modele = ($l === 'fr' && ($lulu || mb_strlen($t) <= 12)) ? 'eleven_turbo_v2_5' : VX_MODELE;
 $f = $dir . '/' . sha1($modele . '|' . (in_array($l, ['fr', 'en'], true) ? '' : ($l === 'la' ? 'la-lent|' : $l . '|')) . $t) . '.mp3';   // fr/en : les clés d'avant restent valables
 
 if (!is_file($f)) {
@@ -40,7 +42,7 @@ if (!is_file($f)) {
     if ($cle === '') vx_fin(404, 'pas de clé');
     // le plafond du mois
     $mois = date('Y-m'); [$m, $n] = array_pad(explode(':', (string)ga_reglage('voix_compteur')), 2, '0');
-    $n = $m === $mois ? (int)$n : 0; $max = (int)(ga_reglage('voix_max') ?: 15000);
+    $n = $m === $mois ? (int)$n : 0; $max = (int)(ga_reglage('voix_max') ?: 100000);   // 21/11 : 15 000 était atteint (compte Creator : 138 676 caractères par mois)
     if ($n + mb_strlen($t) > $max) vx_fin(429, 'plafond du mois');
     if (!is_dir($dir) && !@mkdir($dir, 0750, true)) vx_fin(500);
     $verrou = fopen($f . '.lock', 'c'); if ($verrou) flock($verrou, LOCK_EX);
@@ -50,7 +52,13 @@ if (!is_file($f)) {
             CURLOPT_HTTPHEADER => ['xi-api-key: ' . $cle, 'Content-Type: application/json', 'Accept: audio/mpeg'],
             CURLOPT_POSTFIELDS => json_encode(array_merge(['text' => $t, 'model_id' => $modele], $l === 'la' ? [] : ['language_code' => $l]) + [
                 'voice_settings' => ['stability' => $l === 'la' ? 0.65 : 0.5, 'similarity_boost' => 0.75, 'style' => 0.2, 'speed' => $l === 'la' ? 0.8 : ($l === 'en' || $lulu ? 0.9 : ($autre ? 0.92 : 0.95))]], JSON_UNESCAPED_UNICODE)]);
-        $mp3 = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+        // 21/11 : trop de phrases demandées en même temps (429) ou ElevenLabs qui hoquette (5xx) : on réessaie 2 fois avant d'abandonner
+        for ($essai = 0; ; $essai++) {
+            $mp3 = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if ($essai >= 2 || !($code === 429 || $code >= 500 || $code === 0)) break;
+            usleep(700000 * ($essai + 1));
+        }
+        curl_close($ch);
         if ($code !== 200 || !is_string($mp3) || strlen($mp3) < 300) {
             if ($verrou) { flock($verrou, LOCK_UN); fclose($verrou); }
             error_log('voix ElevenLabs : HTTP ' . $code . ' ' . substr(is_string($mp3) ? $mp3 : '', 0, 200));

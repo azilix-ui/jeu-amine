@@ -35,7 +35,7 @@ h1{color:#1f3c88}.lead,.help{color:#33415c;text-shadow:none}.en{color:#1f3c88;fo
 </style>
 '''
 for n, icon, t in TITRES:
-    open(os.path.join(R, f'essil/english-b2-{n}.html'), 'w').write(HEAD.format(titre=f'English B2 · {t}') + '<link rel="stylesheet" href="../salma/ollie/cours.css?v=4">\n' + CSS +
+    open(os.path.join(R, f'essil/english-b2-{n}.html'), 'w').write(HEAD.format(titre=f'English B2 · {t}') + '<link rel="stylesheet" href="../salma/ollie/cours.css?v=5">\n' + CSS +
       f'''</head>
 <body>
 <main class="wrap" id="app"></main>
@@ -45,7 +45,7 @@ for n, icon, t in TITRES:
 <script>window.B2N = {n};</script>
 <script src="english/lecons.js?v=1"></script>
 <script src="english/b2.js?v=1"></script>
-<script src="../salma/ollie/cours.js?v=8"></script>
+<script src="../salma/ollie/cours.js?v=9"></script>
 </body></html>
 ''')
 cartes = '\n'.join(f'''    <a class="lec" href="english-b2-{n}.html" data-k="essil-en{n}"><img src="english/img/l{n}_0.webp" alt="" loading="lazy"><span class="num">{n}</span><b>{icon} {t}</b><small>{SOUS[k]}</small><i class="et"></i></a>''' for k, (n, icon, t) in enumerate(TITRES))

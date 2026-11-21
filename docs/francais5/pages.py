@@ -35,7 +35,7 @@ h1{color:#1f3c88}.lead,.help{color:#33415c;text-shadow:none}.en{color:#1f3c88;fo
 </style>
 '''
 for n, icon, t in TITRES:
-    open(os.path.join(R, f'essil/francais-5e-{n}.html'), 'w').write(HEAD.format(titre=f'Français 5e · {t}') + '<link rel="stylesheet" href="../salma/ollie/cours.css?v=4">\n' + CSS +
+    open(os.path.join(R, f'essil/francais-5e-{n}.html'), 'w').write(HEAD.format(titre=f'Français 5e · {t}') + '<link rel="stylesheet" href="../salma/ollie/cours.css?v=5">\n' + CSS +
       f'''</head>
 <body>
 <main class="wrap" id="app"></main>
@@ -45,7 +45,7 @@ for n, icon, t in TITRES:
 <script>window.FR5N = {n};</script>
 <script src="francais/lecons.js?v=1"></script>
 <script src="francais/fr.js?v=1"></script>
-<script src="../salma/ollie/cours.js?v=8"></script>
+<script src="../salma/ollie/cours.js?v=9"></script>
 </body></html>
 ''')
 cartes = '\n'.join(f'''    <a class="lec" href="francais-5e-{n}.html" data-k="essil-fr{n}"><img src="francais/img/f{n}_1.webp" alt="" loading="lazy"><span class="num">{n}</span><b>{icon} {t}</b><small>{SOUS[k]}</small><i class="et"></i></a>''' for k, (n, icon, t) in enumerate(TITRES))

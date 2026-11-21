@@ -34,7 +34,7 @@ function ga_etat_admin(): array {
             'demandes' => $db->query("SELECT id, nom, statut, duree, cree, vu, ip, ua, page, pages FROM demandes WHERE statut IN ('vu', 'attente', 'accepte') AND vu > " . ($t - 30 * 86400) . " ORDER BY (statut = 'attente') DESC, vu DESC LIMIT 60")->fetchAll(),
             'refus' => $db->query('SELECT ts, ip, page, ua FROM refus ORDER BY ts DESC LIMIT 80')->fetchAll(),
             'voix' => (function(){ [$m, $n] = array_pad(explode(':', (string)ga_reglage('voix_compteur')), 2, '0'); $d = ga_donnees() . '/voix-cache'; $nb = 0; if (is_dir($d)) foreach (glob($d . '/*/*.mp3') ?: [] as $x) $nb++;
-                return ['cle' => (string)ga_reglage('elevenlabs_cle') !== '', 'max' => (int)(ga_reglage('voix_max') ?: 15000), 'mois' => $m === date('Y-m') ? (int)$n : 0, 'phrases' => $nb, 'erreur' => (string)ga_reglage('voix_erreur')]; })(),
+                return ['cle' => (string)ga_reglage('elevenlabs_cle') !== '', 'max' => (int)(ga_reglage('voix_max') ?: 100000), 'mois' => $m === date('Y-m') ? (int)$n : 0, 'phrases' => $nb, 'erreur' => (string)ga_reglage('voix_erreur')]; })(),
         ];
 }
 function rep(int $code, array $d): void { http_response_code($code); header('Content-Type: application/json; charset=utf-8'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; }

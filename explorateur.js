@@ -353,7 +353,7 @@
   var FAMN = ['Anis', 'Imen', 'Essil', 'Salma', 'Amine'], NOMS = { Anis:'Papa', Imen:'Maman' };
   var deFamille = function(){ return FAMN.indexOf(moi()) >= 0; };
   var conv = function(a, m){ return a === 'Famille' ? S.msgs.filter(function(x){ return x.a === 'Famille'; }) : S.msgs.filter(function(x){ return (x.nom === a && x.a === m) || (x.nom === m && x.a === a); }); };
-  // 20/11 : un petit « ding » quand un message arrive (sons du navigateur)
+  // 20/11 : un petit « ding » quand un message arrive (sons du navigateur) ; 21/11 (demande du papa) : jamais pour les enfants, qui ne doivent pas être dérangés pendant un cours
   var ding = function(){ try{ var C = window.AudioContext || window.webkitAudioContext, a = ding.c = ding.c || new C(), t = a.currentTime; [880, 1320].forEach(function(f, i){ var o = a.createOscillator(), g = a.createGain(); o.frequency.value = f; g.gain.setValueAtTime(.12, t + i * .12); g.gain.exponentialRampToValueAtTime(.001, t + i * .12 + .25); o.connect(g).connect(a.destination); o.start(t + i * .12); o.stop(t + i * .12 + .3); }); }catch(e){} };
   function nonLus(nom){ var lu = luGet(moi()) || {}, m = moi(); if(nom === 'Famille') return S.msgs.filter(function(x){ return x.a === 'Famille' && x.nom !== m && x.id > (lu.Famille || 0); }).length; return S.msgs.filter(function(x){ return x.nom === nom && x.a === m && x.id > (lu[nom] || 0); }).length; }
   function badges(){
@@ -451,7 +451,7 @@
       if(nv.length){ S.msgs = S.msgs.concat(nv).slice(-200);
         if(luGet(m) === null){ var lu0 = {}, vieux = Date.now() / 1000 - 86400; S.msgs.forEach(function(x){ if(x.a === m && x.ts < vieux) lu0[x.nom] = Math.max(lu0[x.nom] || 0, x.id); }); luSet(m, lu0); }   // nouvel appareil : les messages de plus d'un jour ne comptent pas
         var max = S.msgs[S.msgs.length - 1].id;
-        if(dernier >= 0 && nv.some(function(x){ return (x.a === m || x.a === 'Famille') && x.nom !== m && x.id > dernier; })) ding();
+        if(explo && dernier >= 0 && nv.some(function(x){ return (x.a === m || x.a === 'Famille') && x.nom !== m && x.id > dernier; })) ding();
         if(dernier >= 0) nv.filter(function(x){ return (x.a === m || x.a === 'Famille') && x.nom !== m && x.id > dernier; }).forEach(function(x){ var ici = x.a === 'Famille' ? 'Famille' : x.nom; if(!(P.classList.contains('on') && S.vue === 'conv' && S.avec === ici)) bulle(x); else litMessage(x, false); });
         sset(cle, Math.max(max, dernier));
       } else if(dernier < 0) sset(cle, 0);
