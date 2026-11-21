@@ -55,7 +55,7 @@ const DISPO = (window.LIRE_VOIX || {})[C.voix || ''] || null, SONS = DISPO ? new
 const fichier = t => { const k = cle(t); return SONS.has(k) ? `../amine/lire/son.php?v=${C.voix}&k=${k}&r=${DISPO.r}` : null; };
 // Le reste passe par les voix ElevenLabs du site (api/voix.php : Céline en français, Alice en anglais, gardées après la 1re fois).
 // Si le site ne peut pas (pas de clé, plafond du mois), la voix de la tablette prend le relais.
-const enLigne = (t, l) => `/api/voix.php?l=${l}&t=${encodeURIComponent(t)}`;
+const enLigne = (t, l) => `/api/voix.php?l=${l}&t=${encodeURIComponent(t)}` + (l === 'fr' && C.lulu ? '&p=amine' : '');   // 21/11 : C.lulu → le français dit par Lulu (cours d'Amine)
 const morceaux = (t, n = 330) => { if(t.length <= n) return [t]; const out = []; let cur = ''; for(const p of t.split(/(?<=[.!?:;])\s+/)){ if((cur + ' ' + p).trim().length > n && cur){ out.push(cur.trim()); cur = p; } else cur = (cur + ' ' + p).trim(); } if(cur) out.push(cur); return out; };
 const tampons = {};
 function actx(){ try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.state !== 'running') ac.resume().catch(() => {}); }catch(e){} return ac; }
@@ -300,7 +300,8 @@ const ASK = {
     const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
     const dist = (a, b) => { const d = Array.from({ length:a.length + 1 }, (_, i) => [i]); for(let j = 1; j <= b.length; j++) d[0][j] = j;
       for(let i = 1; i <= a.length; i++) for(let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[a.length][b.length]; };
-    const bon = alts => { const cibles = [q.en, ...(q.aussi || [])].map(norm); return alts.some(t => { t = norm(t); return cibles.some(c => t === c || t.includes(c) || dist(t, c) <= Math.max(1, Math.floor(c.length / 4))); }); };
+    const bon = alts => { if(C.indulgent && alts.some(t => norm(t))) return true;   // 21/11 (Amine, 5 ans) : avoir répété suffit
+      const cibles = [q.en, ...(q.aussi || [])].map(norm); return alts.some(t => { t = norm(t); return cibles.some(c => t === c || t.includes(c) || dist(t, c) <= Math.max(1, Math.floor(c.length / 4))); }); };
     const passe = (ok, txt) => { fini = true; mic.disabled = true;
       if(ok) return answered(true, q.item, q.expl);
       note(q.item, false); save(); say(txt + ' ' + (q.expl || ''));
