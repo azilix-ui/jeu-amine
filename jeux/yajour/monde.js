@@ -60,6 +60,10 @@ export const MONDES = [
   // 20/11 (demande du papa) : deux mondes de plus
   { id:'djerba', nom:'Djerba, les potiers', ar:'جربة', sol:'sol_djerba', pano:'pano_djerba', ciel:0x8fd8f0 },
   { id:'tabarka', nom:'Le fort de Tabarka', ar:'طبرقة', sol:'sol_tabarka', pano:'pano_tabarka', ciel:0x7ec4ec },
+  // 22/11 (demande du papa) : trois mondes de plus
+  { id:'kairouan', nom:'Kairouan, le souk des tapis', ar:'القيروان', sol:'sol_kairouan', pano:'pano_kairouan', ciel:0x9cc8ee },
+  { id:'tozeur', nom:'Tozeur, l’oasis', ar:'توزر', sol:'sol_tozeur', pano:'pano_tozeur', ciel:0xf2b77a },
+  { id:'carthage', nom:'Carthage, le port punique', ar:'قرطاج', sol:'sol_carthage', pano:'pano_carthage', ciel:0x86ccf2 },
 ];
 export const NIVEAUX = [
   // Sidi Bou Saïd : briques et bois (on apprend)
@@ -92,6 +96,24 @@ export const NIVEAUX = [
   { m:4, nom:'Le rocher du corail', tirs:3, but:{ type:'cible' }, par:1050, aide:'Rebondis sur le matelas de corail pour toucher la jarre d’or tout en haut !', blocs:[B('matelas', 0, .3, -1.6, 2.6, .6, 1.4), ...tour('pierre', 0, 1.5, 3, .9), jarre(0, 2.7, 1.5, { cible:true })] },
   { m:4, nom:'Le canon du fort', tirs:3, but:{ type:'tomber', min:7 }, par:1400, aide:'Les caisses de poudre du fort : une étincelle, et tout saute !', blocs:[cube('feux', 0, 0, 0, .8), ...tour('bois', -1.1, 0, 3), ...tour('bois', 1.1, 0, 3), dalle('bois', 0, 3, 0, 3, 1, .2)] },
   { m:4, nom:'Le chaton du phare', tirs:4, but:{ type:'chat' }, par:1400, aide:'Le dernier chaton est en haut de la tour de pierre : libère-le sans le faire tomber !', blocs:[dalle('zellige', 0, 1.6, .5, 2.4, 2.4, .3), colonne('zellige', -.9, .5, 1.6, .25), colonne('zellige', .9, .5, 1.6, .25), ...cage(0, 1.9, .5), ...tour('pierre', -2.2, 0, 2), ...tour('pierre', 2.2, 0, 2)] },
+  // Kairouan (22/11) : les tapis (matelas qui rebondissent), les briques de la médina, le bassin des Aghlabides
+  { m:5, nom:'Le souk des tapis', tirs:3, but:{ type:'tomber', min:5 }, par:1200, aide:'Au souk de Kairouan, les rouleaux de tapis rebondissent ! Fais tomber 5 blocs.', blocs:[...tour('matelas', -1.3, 0, 3, .9), ...tour('bois', 1.3, 0, 4), ...tour('bois', 0, 1.2, 3)] },
+  { m:5, nom:'La porte de la médina', tirs:3, but:{ type:'tomber', min:7 }, par:1100, aide:'La vieille porte de la médina : vise le haut de l’arche !', blocs:[...tour('brique', -1.3, 0, 3, .8), ...tour('brique', 1.3, 0, 3, .8), dalle('pierre', 0, 2.4, 0, 3.4, 1, .3), ...pyramide('brique', 0, 1.4, 3, .7)] },
+  { m:5, nom:'Le bassin des Aghlabides', tirs:3, but:{ type:'cible' }, par:950, aide:'La jarre d’or est au milieu du grand bassin rond : vole par-dessus les pierres !', blocs:[...[0, 60, 120, 180, 240, 300].map(a => cube('pierre', 1.5 * Math.cos(a * Math.PI / 180), 0, 1 + 1.5 * Math.sin(a * Math.PI / 180), .7)), jarre(0, 0, 1, { cible:true })] },
+  { m:5, nom:'Les makrouds', tirs:4, but:{ type:'tomber', min:10 }, par:1300, aide:'Une montagne de makrouds en briques : fais-en tomber 10 !', blocs:[...pyramide('brique', 0, .5, 5, .7)] },
+  { m:5, nom:'Le chaton du souk', tirs:3, but:{ type:'chat' }, par:1000, aide:'Un chaton s’est caché entre les tapis : libère-le sans le faire tomber !', blocs:[dalle('zellige', 0, -.25, .8, 3, 3, .25), ...cage(0, 0, .8), ...tour('matelas', -2.2, .8, 2, .9), ...tour('matelas', 2.2, .8, 2, .9)] },
+  // Tozeur (22/11) : les briques décorées, les palmiers dattiers, le chott salé qui glisse, la cascade de Chebika
+  { m:6, nom:'Le mur de Tozeur', tirs:3, but:{ type:'tomber', min:10 }, par:1700, aide:'Les maisons de Tozeur ont des murs de briques dorées : fais-en tomber 10 !', blocs:[...mur('brique', 0, 0, 6, 5)] },
+  { m:6, nom:'Les palmiers dattiers', tirs:3, but:{ type:'tomber', min:5 }, par:1000, aide:'La palmeraie : fais tomber les palmiers comme des quilles !', blocs:[colonne('palmier', -1.6, 0, 2.6, .28), colonne('palmier', -.8, .9, 2.6, .28), colonne('palmier', 0, 0, 2.6, .28), colonne('palmier', .8, .9, 2.6, .28), colonne('palmier', 1.6, 0, 2.6, .28), colonne('palmier', 0, 1.8, 2.6, .28)] },
+  { m:6, nom:'Le chott salé', tirs:3, but:{ type:'tomber', min:5 }, par:850, aide:'Le grand lac de sel glisse comme une patinoire : pousse les blocs jusqu’au bord !', blocs:[dalle('zellige', 0, -.25, 1.5, 6, 3, .25), ...[-1.5, -.5, .5, 1.5].map(x => cube('marbre', x, 0, 1.5, .8)), cube('marbre', -1, 0, 2.5, .8), cube('marbre', 1, 0, 2.5, .8)] },
+  { m:6, nom:'La cascade de Chebika', tirs:3, but:{ type:'cible' }, par:1000, aide:'Rebondis sur le matelas pour toucher les deux jarres d’or près de la cascade !', blocs:[B('matelas', 0, .3, -1.6, 3, .6, 1.4), ...tour('pierre', -1, 1.5, 2, .9), jarre(-1, 1.8, 1.5, { cible:true }), ...tour('pierre', 1, 1.5, 3, .9), jarre(1, 2.7, 1.5, { cible:true })] },
+  { m:6, nom:'Le chaton de l’oasis', tirs:3, but:{ type:'chat' }, par:1000, aide:'Le chaton est caché entre les palmiers : libère-le, mais il ne doit pas tomber !', blocs:[dalle('zellige', 0, -.25, 1, 3.4, 3.4, .25), ...cage(0, 0, 1), ...tour('palmier', -2.3, 0, 2), ...tour('palmier', 2.3, 0, 2)] },
+  // Carthage (22/11) : les colonnes des thermes, les amphores du port, le bateau, la colline de Byrsa
+  { m:7, nom:'Les thermes d’Antonin', tirs:3, vitesse:18, but:{ type:'tomber', min:4 }, par:900, aide:'Les grandes colonnes des thermes, au bord de la mer : renverse-les !', blocs:[...[-2.1, -.7, .7, 2.1].map(x => colonne('marbre', x, 0, 2.6, .32)), dalle('pierre', -1.4, 2.6, 0, 2, 1), dalle('pierre', 1.4, 2.6, 0, 2, 1)] },
+  { m:7, nom:'Les amphores du port', tirs:3, but:{ type:'cible' }, par:1200, aide:'Au port punique : casse les trois amphores d’or sur les étagères !', blocs:[dalle('bois', 0, 1.4, .5, 4.4, 1, .2), ...tour('bois', -2, .5, 1, 1.4), ...tour('bois', 2, .5, 1, 1.4), jarre(-1.2, 1.6, .5, { cible:true }), jarre(0, 1.6, .5, { cible:true }), jarre(1.2, 1.6, .5, { cible:true }), jarre(0, 0, -.5)] },
+  { m:7, nom:'Le bateau phénicien', tirs:3, but:{ type:'tomber', min:6 }, par:1300, aide:'Un bateau phénicien tout en bois : fais tomber sa cargaison !', blocs:[dalle('bois', 0, 0, .5, 4.4, 1.6, .3), ...[-1.6, -.8, 0, .8, 1.6].map(x => cube('bois', x, .3, .5, .7)), ...[-1.2, -.4, .4, 1.2].map(x => cube('bois', x, 1, .5, .7)), colonne('palmier', 0, 1.6, 3, .2)] },
+  { m:7, nom:'La colline de Byrsa', tirs:4, vitesse:17, but:{ type:'tomber', min:10 }, par:2200, aide:'La colline de Byrsa : une caisse de feux d’artifice est cachée sous les pierres !', blocs:[...pyramide('pierre', 0, .6, 5, .75), cube('feux', 0, 0, -.5, .7)] },
+  { m:7, nom:'Le chaton de Carthage', tirs:4, but:{ type:'chat' }, par:1400, aide:'Le dernier chaton est sur le temple : libère-le sans le faire tomber !', blocs:[dalle('zellige', 0, 1.6, .5, 2.4, 2.4, .3), colonne('marbre', -.9, .5, 1.6, .25), colonne('marbre', .9, .5, 1.6, .25), ...cage(0, 1.9, .5), cube('feux', -2.2, 0, -.5, .8), ...tour('pierre', 2.2, -.5, 2, .8)] },
 ];
 export const PLATEAU = { demi:4.5 };   // le plateau fait 9 m × 9 m
 
