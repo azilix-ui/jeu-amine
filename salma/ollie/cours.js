@@ -71,24 +71,99 @@ const pret = async a => { if(a.state === 'running') return true; try{ await Prom
 function tampon(f){ if(tampons[f]) return tampons[f]; const a = actx(); if(!a) return Promise.reject();
   return tampons[f] = fetch(f).then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); }).then(b => new Promise((ok, ko) => { const p = a.decodeAudioData(b, ok, ko); if(p && p.catch) p.catch(ko); })).catch(e => { delete tampons[f]; throw e; }); }
 let jeton = 0, joueur = null;
+/* 21/11 (demande du papa) : la barre de lecture. Quand le prof lit un texte un peu long, une barre apparaît en bas de l'écran :
+   ⏪ reculer de 10 s, ⏸/▶ pause, ⏩ avancer de 10 s, et on touche la barre pour aller à un endroit du texte.
+   Le texte est lu par morceaux (segs) ; dans un morceau joué par le moteur audio (Web Audio) on peut aller à la seconde près,
+   sinon (lecteur commun, voix de la tablette) on passe d'un morceau à l'autre. */
+const LEC = { j:-1, segs:[], cum:[], total:1, i:0, mode:'', debut:0, dur:0, ms:0, t0:0, pause:false, saut:null, fin:null, garde:0 };
+let barreEl = null, barreRaf = 0;
+function barreCree(){
+  if(barreEl) return barreEl;
+  const st = document.createElement('style');
+  st.textContent = `#lecBarre{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9000;display:none;align-items:center;gap:8px;
+    background:#1b1530ee;color:#fff;border-radius:999px;padding:6px 10px;box-shadow:0 8px 24px #0005;width:min(560px,calc(100vw - 24px));box-sizing:border-box;font:700 15px Nunito,system-ui,sans-serif}
+    #lecBarre.on{display:flex}#lecBarre button{flex:none;width:48px;height:48px;border:0;border-radius:50%;background:#ffffff1f;color:#fff;font-size:20px;cursor:pointer;display:grid;place-items:center}
+    #lecBarre button:active{background:#ffffff40}#lecBarre .pp{background:#f2c230;color:#1b1530}
+    #lecBarre .rail{flex:1;height:48px;display:flex;align-items:center;cursor:pointer;touch-action:none}#lecBarre .rail i{display:block;position:relative;width:100%;height:8px;border-radius:4px;background:#ffffff33}
+    #lecBarre .rail b{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:#f2c230;width:0}#lecBarre .rail b::after{content:'';position:absolute;right:-8px;top:-5px;width:18px;height:18px;border-radius:50%;background:#fff}`;
+  document.head.appendChild(st);
+  barreEl = document.createElement('div'); barreEl.id = 'lecBarre'; barreEl.setAttribute('role', 'group'); barreEl.setAttribute('aria-label', 'Lecture du texte');
+  barreEl.innerHTML = '<button type="button" data-a="r" aria-label="Reculer de 10 secondes">⏪</button><button type="button" class="pp" data-a="p" aria-label="Pause">⏸</button><button type="button" data-a="a" aria-label="Avancer de 10 secondes">⏩</button><span class="rail" aria-label="Aller à un endroit du texte"><i><b></b></i></span>';
+  barreEl.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; e.stopPropagation(); if(b.dataset.a === 'p') lecPause(!LEC.pause); else lecSaute(b.dataset.a === 'r' ? -10 : 10); });
+  const rail = barreEl.querySelector('.rail');
+  rail.addEventListener('pointerdown', e => { e.stopPropagation(); const r = rail.querySelector('i').getBoundingClientRect(); lecVa(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width))); });
+  document.body.appendChild(barreEl); return barreEl;
+}
+function lecFrac(){   // où en est la lecture dans le morceau en cours (0 à 1)
+  const n = (LEC.segs[LEC.i] || [''])[0].length || 1;
+  if(LEC.mode === 'wa' && LEC.dur && ac) return Math.max(0, Math.min(1, (ac.currentTime - LEC.debut) / LEC.dur));
+  if(LEC.mode === 'fs') return Math.min(1, LEC.ms / (n * 62));
+  if(LEC.mode === 'ss') return Math.min(1, (performance.now() - LEC.t0) / (n * 65));
+  return 0;
+}
+function barre(on){
+  const b = barreCree(); b.classList.toggle('on', !!on); cancelAnimationFrame(barreRaf); document.body.style.paddingBottom = on ? '84px' : '';
+  if(!on) return;
+  const pp = b.querySelector('.pp'), fill = b.querySelector('.rail b');
+  const tour = () => { const k = Math.min(LEC.i, LEC.segs.length - 1), n = (LEC.segs[k] || [''])[0].length;
+    fill.style.width = Math.min(100, ((LEC.cum[k] || 0) + n * lecFrac()) / LEC.total * 100) + '%';
+    pp.textContent = LEC.pause ? '▶' : '⏸'; pp.setAttribute('aria-label', LEC.pause ? 'Reprendre' : 'Pause'); barreRaf = requestAnimationFrame(tour); };
+  tour();
+}
+function lecArme(reste){ clearTimeout(LEC.garde); if(LEC.fin) LEC.garde = setTimeout(LEC.fin, Math.max(0, reste) * 1000 + 400); }
+function lecPause(p){
+  if(LEC.j !== jeton) return; LEC.pause = p;
+  if(LEC.mode === 'wa' && ac){ if(p){ clearTimeout(LEC.garde); ac.suspend().catch(() => {}); } else { ac.resume().catch(() => {}); lecArme(LEC.dur - (ac.currentTime - LEC.debut)); } }
+  else if(LEC.mode === 'fs' && window.FamilleSon){ p ? FamilleSon.pause() : FamilleSon.reprend(); }
+  else if(LEC.mode === 'ss'){ try{ p ? speechSynthesis.pause() : speechSynthesis.resume(); }catch(e){} }
+}
+function lecCoupe(){   // arrête le morceau en cours ; la boucle de speak() reprend à LEC.saut
+  if(LEC.pause){ LEC.pause = false; if(ac) ac.resume().catch(() => {}); try{ speechSynthesis.resume(); }catch(e){} }
+  if(LEC.mode === 'wa'){ if(joueur){ try{ joueur.onended = null; joueur.stop(); }catch(e){} } if(LEC.fin) LEC.fin(); }
+  else if(LEC.mode === 'fs' && window.FamilleSon) FamilleSon.stop();
+  else { try{ speechSynthesis.cancel(); }catch(e){} }
+}
+function lecSaute(d){
+  if(LEC.j !== jeton || !LEC.segs.length) return; const i = LEC.i;
+  if(LEC.mode === 'wa' && LEC.dur && ac){ const t = ac.currentTime - LEC.debut + d;
+    LEC.saut = t >= 0 && t < LEC.dur - .3 ? { i, off:t } : t < 0 ? (t + 10 > 2 || i === 0 ? { i, off:0 } : { i:i - 1, off:0 }) : { i:i + 1, off:0 }; }
+  else LEC.saut = { i:Math.max(0, i + (d < 0 ? (lecFrac() > .25 ? 0 : -1) : 1)), off:0 };
+  lecCoupe();
+}
+function lecVa(f){
+  if(LEC.j !== jeton || !LEC.segs.length) return; const c = f * LEC.total; let k = 0;
+  while(k < LEC.segs.length - 1 && LEC.cum[k + 1] <= c) k++;
+  const n = LEC.segs[k][0].length || 1; LEC.saut = { i:k, frac:Math.max(0, Math.min(.98, (c - LEC.cum[k]) / n)) }; lecCoupe();
+}
+function joueBuffer(b, off){ return new Promise(res => { const a = actx(), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); joueur = s;
+  off = Math.max(0, Math.min(off || 0, b.duration - .05)); LEC.dur = b.duration; LEC.debut = a.currentTime - off;
+  let fini = false; LEC.fin = () => { if(!fini){ fini = true; clearTimeout(LEC.garde); LEC.fin = null; res(); } }; s.onended = LEC.fin; lecArme(b.duration - off); s.start(0, off); }); }
 function speak(html){
   talk(); hush(); if(muted || (window.FamilleVoix && !FamilleVoix.on())) return new Promise(r => setTimeout(r, Math.min(9000, 1200 + clean(html).length * 55)));   // touche V : consignes orales coupées (on laisse le temps de lire)
   const j = jeton, segs = [];
   for(const [t, l] of segments(html)) for(const m of (l === 'en' && fichier(t) ? [t] : morceaux(t))) segs.push([m, l, (l === 'en' && fichier(m)) || enLigne(m, l)]);
+  const cum = []; let total = 0; segs.forEach(([t]) => { cum.push(total); total += t.length; });
+  Object.assign(LEC, { j, segs, cum, total:total || 1, i:0, pause:false, saut:null, mode:'', dur:0 });
   /* 21/11 : avant, tous les morceaux se chargeaient en même temps : ElevenLabs refuse au-delà de quelques phrases à la fois,
      et la tablette d'Amine restait muette ou passait à la voix de la tablette. Maintenant : le morceau en cours et les 2 suivants. */
   const avance = i => segs.slice(i, i + 3).forEach(([, , f]) => tampon(f).catch(() => {}));
-  return (async () => { for(const [i, [t, l, f]] of segs.entries()){ if(j !== jeton) return; avance(i);
+  if(total > 140 || segs.length > 2) barre(true);
+  return (async () => { try{ while(LEC.i < segs.length){ if(j !== jeton) return; const i = LEC.i, [t, l, f] = segs[i], sa = LEC.saut; LEC.saut = null; avance(i); LEC.ms = 0;
+    let ok = false;
     try{ const b = await tampon(f); if(j !== jeton) return;
-      if(!(await pret(actx()))){ if(j !== jeton) return; if(window.FamilleSon){ const r = await FamilleSon.joue(f); if(j !== jeton || r === false) return; if(r) continue; } throw 0; }   // moteur bloqué : le lecteur commun (avec « 🔊 Touche pour entendre » si l'iPad refuse)
-      await new Promise(res => { const a = actx(), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); joueur = s; s.onended = res; setTimeout(res, b.duration * 1000 + 400); s.start(); }); continue; }catch(e){}
-    await dire(t, l, j); } })();
+      if(!(await pret(actx()))){ if(j !== jeton) return;   // moteur bloqué : le lecteur commun (avec « 🔊 Touche pour entendre » si l'iPad refuse)
+        if(window.FamilleSon){ LEC.mode = 'fs'; const r = await FamilleSon.joue(f, { onTemps:ms => { LEC.ms = ms; } }); if(j !== jeton) return; if(r === false && !LEC.saut) return; if(r || LEC.saut) ok = true; } }
+      else { LEC.mode = 'wa'; await joueBuffer(b, sa ? (sa.frac ? sa.frac * b.duration : sa.off) : 0); ok = true; } }catch(e){}
+    if(!ok && j === jeton){ LEC.mode = 'ss'; LEC.t0 = performance.now(); await dire(t, l, j); }
+    if(j !== jeton) return;
+    LEC.i = LEC.saut ? LEC.saut.i : i + 1; } } finally { if(LEC.j === j){ LEC.mode = ''; barre(false); } } })();
 }
 function dire(t, l, j){ return new Promise(res => { if(!('speechSynthesis' in window) || j !== jeton) return res();
   try{ const u = new SpeechSynthesisUtterance(t); if(l === 'en'){ u.lang = 'en-GB'; if(VE) u.voice = VE; u.rate = .82; } else if(l === 'de'){ u.lang = 'de-DE'; if(VD) u.voice = VD; u.rate = .85; } else if(l === 'la'){ u.lang = 'it-IT'; if(VI) u.voice = VI; u.rate = .85; } else { u.lang = 'fr-FR'; if(VF) u.voice = VF; u.rate = .95; } u.pitch = 1.1;
     let fait = false; const fin = () => { if(!fait){ fait = true; res(); } }; u.onend = fin; u.onerror = fin; setTimeout(fin, 1500 + t.length * 120); speechSynthesis.speak(u); }catch(e){ res(); } }); }
 const en = (t, l = 'en') => speak(`<i lang="${l}">${t}</i>`);
-function hush(){ jeton++; try{ speechSynthesis.cancel(); }catch(e){} if(window.FamilleSon && FamilleSon.enCours()) FamilleSon.stop(); if(joueur){ try{ joueur.onended = null; joueur.stop(); }catch(e){} joueur = null; } }
+window.__lecture = { speak, hush, LEC, lecPause, lecSaute, lecVa };   // pour les tests
+function hush(){ jeton++; if(LEC.pause){ LEC.pause = false; if(ac) ac.resume().catch(() => {}); } clearTimeout(LEC.garde); try{ speechSynthesis.cancel(); }catch(e){} if(window.FamilleSon && FamilleSon.enCours()) FamilleSon.stop(); if(joueur){ try{ joueur.onended = null; joueur.stop(); }catch(e){} joueur = null; } if(LEC.fin) LEC.fin(); if(barreEl) barre(false); }
 function talk(){ document.querySelectorAll('.owl').forEach(o => { o.classList.remove('talk'); void o.offsetWidth; o.classList.add('talk'); }); }
 function confetti(){ for(let i=0;i<10;i++){ const s=document.createElement('span'); s.className='float'; s.textContent=pick(C.confetti || ['⭐','🎟️','🌷','🍀','🎉']); s.style.left=rnd(5,90)+'vw'; s.style.top=rnd(55,90)+'vh'; s.style.animationDelay=(i*60)+'ms'; document.body.appendChild(s); setTimeout(()=>s.remove(),1800); } }
 function topbar(back){

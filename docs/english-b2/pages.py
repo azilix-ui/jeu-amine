@@ -45,7 +45,7 @@ for n, icon, t in TITRES:
 <script>window.B2N = {n};</script>
 <script src="english/lecons.js?v=1"></script>
 <script src="english/b2.js?v=1"></script>
-<script src="../salma/ollie/cours.js?v=9"></script>
+<script src="../salma/ollie/cours.js?v=10"></script>
 </body></html>
 ''')
 cartes = '\n'.join(f'''    <a class="lec" href="english-b2-{n}.html" data-k="essil-en{n}"><img src="english/img/l{n}_0.webp" alt="" loading="lazy"><span class="num">{n}</span><b>{icon} {t}</b><small>{SOUS[k]}</small><i class="et"></i></a>''' for k, (n, icon, t) in enumerate(TITRES))

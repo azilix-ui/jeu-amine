@@ -45,7 +45,7 @@ for n, icon, t in TITRES:
 <script>window.FR5N = {n};</script>
 <script src="francais/lecons.js?v=1"></script>
 <script src="francais/fr.js?v=1"></script>
-<script src="../salma/ollie/cours.js?v=9"></script>
+<script src="../salma/ollie/cours.js?v=10"></script>
 </body></html>
 ''')
 cartes = '\n'.join(f'''    <a class="lec" href="francais-5e-{n}.html" data-k="essil-fr{n}"><img src="francais/img/f{n}_1.webp" alt="" loading="lazy"><span class="num">{n}</span><b>{icon} {t}</b><small>{SOUS[k]}</small><i class="et"></i></a>''' for k, (n, icon, t) in enumerate(TITRES))
