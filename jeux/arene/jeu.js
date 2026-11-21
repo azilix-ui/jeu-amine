@@ -239,7 +239,7 @@ function evenements(){
       if(e.par === moi && s !== moi){ G.killsPartie++; SON.tombe(); message('💥 ' + s.nom + ' est tombé !'); dit('tombe', s.nom); }
       if(s === moi){ SON.perdu(); sv && (sv.survie = Math.max(sv.survie, Math.round(A.t - G.vieT)));
         if(G.mode === 'tranquille' || G.net){ message(e.par ? 'Tu as touché ' + e.par.nom + '… on repart !' : 'Le mur du riad ! On repart !', 2200); dit('perdu'); }
-        else { dit('perdu', '', true); setTimeout(() => fin(e.par ? 'Tu as touché le corps de ' + e.par.nom + '.' : 'Tu as touché le mur du riad.'), 900); } }
+        else { dit('perdu', '', true); setTimeout(() => fin(e.par ? (e.tete ? e.par.nom + ' a foncé sur ta tête.' : 'Tu as touché le corps de ' + e.par.nom + '.') : 'Tu as touché le mur du riad.'), 900); } }
     }
     else if((e.k === 'mangeF' || e.k === 'mangeD') && e.s === moi){ G.perlesPartie++; SON.miam(e.p.v >= 3); }
   }

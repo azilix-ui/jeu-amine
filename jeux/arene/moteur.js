@@ -3,7 +3,10 @@
    - Le serpent avance toujours ; il tourne vers la direction voulue (rotation limitée, pas de demi-tour sec).
    - Il mange les perles et grandit ; le boost va plus vite mais coûte de la masse (des perles tombent derrière lui).
    - Si sa tête touche le corps d'un autre serpent : il meurt et son corps devient une pluie de perles.
-     Tête contre tête : les deux meurent. On ne meurt pas sur son propre corps. Le bord de l'arène est mortel.
+   - 21/11 (règle du papa) : si sa tête touche LA TÊTE d'un autre, c'est l'autre qui meurt (celui qui fonce sur l'autre gagne ;
+     contre une machine, le joueur gagne toujours ; entre deux joueurs ou deux machines, celui qui fonce sur l'autre gagne,
+     bien de face le plus gros). On ne meurt pas sur son propre corps.
+     Le bord de l'arène est mortel.
    - Simulation à pas fixe (60 par seconde depuis le 21/11 : à 30 le corps avançait par saccades), le dessin est interpolé.
    Chaque serpent est « local » (simulé ici : le joueur, et les machines sur la tablette qui les fait jouer)
    ou « distant » (en ligne : sa tablette envoie sa tête, on refait son corps avec le chemin reçu). */
@@ -94,15 +97,29 @@ export function pousseChemin(s){
 }
 
 // la tête d'un serpent local touche-t-elle un autre corps (ou le bord) ?
+// 21/11 : deux têtes se touchent : qui perd ? Un joueur contre une machine : la machine (règle du papa : « on touche l'ennemi
+// dans sa tête, il meurt »). Sinon celui qui ne fonce pas sur l'autre (vers où chaque tête est tournée) ; bien de face, le plus petit.
+// Même calcul sur chaque tablette, dans les deux sens : un seul des deux perd.
+export function perdTete(s, o){
+  if(!s.bot !== !o.bot) return !!s.bot;
+  const dx = o.x - s.x, dy = o.y - s.y, d = Math.hypot(dx, dy) || 1;
+  const vs = (Math.cos(s.a) * dx + Math.sin(s.a) * dy) / d, vo = -(Math.cos(o.a) * dx + Math.sin(o.a) * dy) / d;
+  if(vs - vo > .15) return false; if(vo - vs > .15) return true;
+  if(Math.abs(s.masse - o.masse) > 1) return s.masse < o.masse;
+  return String(s.id) > String(o.id);
+}
 function collision(A, s){
   const r = rayon(s.masse) * .82, T = A.taille;
   if(s.x < r || s.y < r || s.x > T - r || s.y > T - r) return { bord:true };
   if(s.invinc > 0) return null;
-  let par = null;
-  corpsProches(A, s.x, s.y, 40, (o, x, y, ro) => { if(o === s || !o.vivant) return; if(Math.hypot(x - s.x, y - s.y) < r + ro * .8){ par = o; return false; } });
-  if(!par) for(const o of A.serpents){ if(o === s || !o.vivant) continue; const ch = o.chemin;   // les 3 premiers points (le cou) ne sont pas dans la grille
+  let par = null; const gagne = new Set();
+  // d'abord les têtes : toucher la tête d'un autre le fait perdre lui (ou moi si c'est lui qui fonce sur moi)
+  for(const o of A.serpents){ if(o === s || !o.vivant || o.invinc > 0) continue;
+    if(Math.hypot(o.x - s.x, o.y - s.y) < r + rayon(o.masse) * .9){ if(perdTete(s, o)) return { par:o, tete:true }; gagne.add(o); } }
+  corpsProches(A, s.x, s.y, 40, (o, x, y, ro) => { if(o === s || !o.vivant || gagne.has(o)) return; if(Math.hypot(x - s.x, y - s.y) < r + ro * .8){ par = o; return false; } });
+  if(!par) for(const o of A.serpents){ if(o === s || !o.vivant || gagne.has(o)) continue; const ch = o.chemin;   // les 3 premiers points (le cou) ne sont pas dans la grille
     for(let j = 0; j < Math.min(3, ch.length); j++) if(Math.hypot(ch[j].x - s.x, ch[j].y - s.y) < r + rayon(o.masse) * .8){ par = o; break; } if(par) break; }
-  return par ? { par, tete:par.chemin.length && Math.hypot(par.x - s.x, par.y - s.y) < r + rayon(par.masse) } : null;
+  return par ? { par, tete:false } : null;
 }
 // un serpent meurt : son corps devient des perles (le nombre de perles suit sa masse)
 export function meurt(A, s, par, local = true){
@@ -134,7 +151,7 @@ export function pas(A, dt = CFG.pas){
   rangeGrille(A);
   const morts = [];
   for(const s of A.serpents){ if(!s.vivant || !s.local) continue; const c = collision(A, s); if(c) morts.push([s, c]); }
-  for(const [s, c] of morts) meurt(A, s, c.bord ? null : c.par);
+  for(const [s, c] of morts){ meurt(A, s, c.bord ? null : c.par); const e = A.events[A.events.length - 1]; if(e && e.k === 'mort' && e.s === s) e.tete = !!c.tete; }
   for(const s of A.serpents) if(s.vivant && s.local) mange(A, s);
   // les perles tombées disparaissent doucement (pour ne pas en avoir trop)
   if(A.tick % 30 === 0) for(const p of A.perles.values()) if(p.drop && A.t - p.ne > 90) A.perles.delete(p.id);
