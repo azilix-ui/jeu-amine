@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#1d4f7a">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Je lis les nombres et l'heure</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%95%93%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* « Je lis les nombres et l'heure » (21/11, demande du papa) pour Salma et Amine : on tape un nombre (jusqu'à 999 milliards), la tablette
+   le lit (voix ElevenLabs du site : Céline, Lulu pour Amine) et explique pas à pas comment elle l'a lu ; une horloge numérique et une
+   horloge à aiguilles qu'on règle, la tablette lit l'heure et explique. Des défis pour s'entraîner. Suivi : cours « nombres-heure ». */
+:root{ --bleu:#1d4f7a; --ciel:#5aaedc; --or:#f2c230; --rouge:#d7263d; --vert:#1f6b44; --encre:#1c2340; --fond:#f4f8fc; }
+*{ box-sizing:border-box; }
+body{ margin:0; font-family:Nunito, system-ui, sans-serif; color:var(--encre); background:linear-gradient(#dff0fb, #fdf8ee 55%) fixed; min-height:100vh; }
+.wrap{ max-width:980px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top)) 16px 40px; }
+.haut{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.pill{ display:inline-flex; align-items:center; gap:6px; min-height:48px; padding:0 16px; border-radius:999px; border:0; background:#fff; box-shadow:0 4px 0 #0002; color:var(--bleu); font:800 16px Nunito, sans-serif; text-decoration:none; cursor:pointer; }
+.pill.on{ background:var(--bleu); color:#fff; }
+.esp{ flex:1; }
+h1{ font-family:'Baloo 2', sans-serif; font-size:clamp(30px, 6vw, 48px); line-height:1; margin:14px 0 4px; color:var(--bleu); }
+.sous{ margin:0 0 14px; color:#46566e; font-size:17px; }
+.onglets{ display:flex; gap:10px; margin:6px 0 16px; }
+.onglets button{ flex:1; min-height:64px; border-radius:20px; border:3px solid transparent; background:#fff; box-shadow:0 5px 0 #0002; font:800 20px 'Baloo 2', sans-serif; color:var(--bleu); cursor:pointer; }
+.onglets button.on{ border-color:var(--or); background:#fffbea; }
+.carte{ background:#fff; border-radius:26px; box-shadow:0 8px 0 #1d4f7a22; padding:18px; position:relative; overflow:hidden; }
+.carte::before{ content:''; position:absolute; inset:0 0 auto 0; height:10px; background:repeating-linear-gradient(90deg, #1d4f7a 0 18px, #f2c230 18px 36px, #d7263d 36px 54px, #fff 54px 60px); opacity:.9; }
+.zone[hidden]{ display:none; }
+/* les nombres */
+.saisie{ display:flex; gap:10px; align-items:stretch; margin-top:10px; flex-wrap:wrap; }
+.saisie input{ flex:1; min-width:220px; min-height:72px; border-radius:18px; border:3px solid #cfe0ee; padding:0 18px; font:800 clamp(30px, 6vw, 46px) 'Baloo 2', sans-serif; color:var(--bleu); letter-spacing:.04em; text-align:center; }
+.saisie input:focus{ outline:none; border-color:var(--ciel); }
+.gros{ min-height:64px; padding:0 22px; border:0; border-radius:18px; font:800 20px Nunito, sans-serif; cursor:pointer; box-shadow:0 5px 0 #0003; color:#fff; background:var(--bleu); }
+.gros.or{ background:var(--or); color:#2a1f05; } .gros.rouge{ background:var(--rouge); } .gros.vert{ background:var(--vert); } .gros.blanc{ background:#fff; color:var(--bleu); }
+.gros:disabled{ opacity:.45; cursor:default; }
+.clavier{ display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-top:12px; }
+.clavier button{ min-height:58px; border-radius:16px; border:0; background:#eef4fa; font:800 26px 'Baloo 2', sans-serif; color:var(--bleu); box-shadow:0 4px 0 #1d4f7a22; cursor:pointer; }
+.ecrit{ margin:16px 0 4px; font:800 clamp(24px, 4.4vw, 34px) 'Baloo 2', sans-serif; color:var(--vert); min-height:1.3em; line-height:1.25; }
+.joli{ font:800 clamp(28px, 5vw, 40px) 'Baloo 2', sans-serif; color:var(--bleu); letter-spacing:.05em; }
+.actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+.question{ margin-top:14px; background:#fff8dc; border-radius:18px; padding:12px 14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-weight:800; }
+.question[hidden]{ display:none; }
+/* l'explication pas à pas */
+.expl{ margin-top:16px; border-top:3px dashed #e3ecf4; padding-top:12px; }
+.expl[hidden]{ display:none; }
+.classes{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:10px 0; }
+.classe{ border-radius:16px; padding:8px 10px 10px; min-width:120px; text-align:center; background:#f2f6fa; border:3px solid transparent; transition:transform .2s, border-color .2s; }
+.classe.lit{ border-color:var(--or); transform:translateY(-4px); background:#fffbea; }
+.classe small{ display:block; font-weight:800; color:#56667e; text-transform:uppercase; font-size:12px; letter-spacing:.06em; }
+.classe .ch{ display:flex; gap:4px; justify-content:center; margin-top:4px; }
+.classe .ch span{ width:38px; height:48px; border-radius:10px; display:grid; place-items:center; font:800 28px 'Baloo 2', sans-serif; color:#fff; }
+.c-c{ background:#7a4fe0; } .c-d{ background:#2a7fb4; } .c-u{ background:#e0a100; } .c-v{ background:#d9e2ea !important; color:#9aa7b4 !important; }
+.lettres-c{ font-size:12px; color:#56667e; font-weight:800; display:flex; gap:4px; justify-content:center; }
+.lettres-c i{ width:38px; font-style:normal; }
+.etape{ background:#f7fbff; border-radius:16px; padding:10px 14px; margin:8px 0; font-size:19px; line-height:1.45; }
+.etape b{ color:var(--bleu); }
+.etape.lit{ background:#fffbea; box-shadow:inset 4px 0 0 var(--or); }
+/* l'heure */
+.horloges{ display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:center; }
+@media (max-width:760px){ .horloges{ grid-template-columns:1fr; } }
+.analog{ width:min(100%, 380px); margin:0 auto; display:block; touch-action:none; user-select:none; }
+.aig{ cursor:grab; }
+.aig.lit line{ stroke:var(--rouge) !important; }
+.digital{ display:flex; align-items:center; justify-content:center; gap:6px; background:#10202e; color:#7dffb2; border-radius:20px; padding:14px; box-shadow:inset 0 0 0 4px #24435c; }
+.digital .bloc{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+.digital .val{ font:800 clamp(48px, 10vw, 78px) 'Baloo 2', monospace; min-width:2.1ch; text-align:center; line-height:1; }
+.digital .val.lit{ color:var(--or); }
+.digital .sep{ font:800 60px 'Baloo 2'; }
+.digital button{ width:56px; height:48px; border-radius:12px; border:0; background:#24435c; color:#fff; font:800 24px Nunito; cursor:pointer; }
+.momo{ text-align:center; font-weight:800; color:#56667e; margin-top:8px; }
+.toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--vert); color:#fff; padding:14px 20px; border-radius:16px; font-weight:800; font-size:18px; box-shadow:0 8px 24px #0004; z-index:50; }
+.toast.non{ background:var(--rouge); }
+.score{ font-weight:800; color:#7a5a00; }
+@media (prefers-reduced-motion:reduce){ .classe{ transition:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="haut"><a class="pill" href="./" id="retour">← Mon espace</a><span class="esp"></span><span class="pill score" id="score">⭐ 0</span><button class="pill" id="qui">👤</button></div>
+  <h1>Je lis les nombres et l'heure</h1>
+  <p class="sous">Écris un nombre ou règle l'horloge : la tablette le lit à voix haute, et elle t'explique comment elle a fait.</p>
+  <div class="onglets"><button id="o-nb" class="on">🔢 Les nombres</button><button id="o-h">🕓 L'heure</button></div>
+
+  <!-- les nombres -->
+  <section class="zone carte" id="z-nb">
+    <div class="saisie">
+      <input id="nb" inputmode="numeric" autocomplete="off" placeholder="Écris un nombre" aria-label="Le nombre à lire">
+      <button class="gros or" id="lis">🔊 Lis-le !</button>
+    </div>
+    <div class="clavier" id="clav">
+      <button>1</button><button>2</button><button>3</button><button>4</button><button>5</button>
+      <button>6</button><button>7</button><button>8</button><button>9</button><button>0</button>
+    </div>
+    <div class="actions"><button class="gros blanc" id="eff">⌫ Effacer</button><button class="gros blanc" id="vide">🧽 Tout effacer</button>
+      <button class="gros vert" id="explique">🧑‍🏫 Explique-moi</button><button class="gros rouge" id="defi">🎯 Un défi</button></div>
+    <div class="joli" id="joli"></div>
+    <div class="ecrit" id="ecrit"></div>
+    <div class="question" id="q-nb" hidden>🤔 Veux-tu que je t'explique comment j'ai lu ce nombre ?
+      <button class="gros vert" id="oui-nb">Oui !</button><button class="gros blanc" id="non-nb">Non merci</button></div>
+    <div class="expl" id="ex-nb" hidden></div>
+  </section>
+
+  <!-- l'heure -->
+  <section class="zone carte" id="z-h" hidden>
+    <div class="horloges">
+      <svg class="analog" id="analog" viewBox="0 0 300 300" aria-label="Horloge à aiguilles : fais tourner les aiguilles"></svg>
+      <div>
+        <div class="digital" aria-label="Horloge numérique">
+          <div class="bloc"><button id="h-plus" aria-label="Une heure de plus">▲</button><div class="val" id="d-h">10</div><button id="h-moins" aria-label="Une heure de moins">▼</button></div>
+          <div class="sep">:</div>
+          <div class="bloc"><button id="m-plus" aria-label="Plus de minutes">▲</button><div class="val" id="d-m">10</div><button id="m-moins" aria-label="Moins de minutes">▼</button></div>
+        </div>
+        <p class="momo" id="momo"></p>
+        <div class="actions" style="justify-content:center">
+          <button class="gros or" id="lis-h">🔊 Quelle heure est-il ?</button>
+          <button class="gros vert" id="explique-h">🧑‍🏫 Explique-moi</button>
+          <button class="gros rouge" id="defi-h">🎯 Un défi</button>
+          <button class="gros blanc" id="maintenant">⌚ L'heure de maintenant</button>
+        </div>
+      </div>
+    </div>
+    <div class="ecrit" id="ecrit-h" style="text-align:center"></div>
+    <div class="question" id="q-h" hidden>🤔 Veux-tu que je t'explique comment j'ai lu l'heure ?
+      <button class="gros vert" id="oui-h">Oui !</button><button class="gros blanc" id="non-h">Non merci</button></div>
+    <div class="expl" id="ex-h" hidden></div>
+  </section>
+</div>
+<script src="../famille.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const pause = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+
+/* ---------- le joueur, le niveau et les étoiles ---------- */
+let joueur = (window.Famille && Famille.player && Famille.player()) || 'Salma';
+const petit = () => joueur === 'Amine';
+let sv = { nb:0, h:0, t:0 };
+const cle = () => 'nombres-heure:' + joueur;
+function charge(){ try{ sv = Object.assign({ nb:0, h:0, t:0 }, JSON.parse(localStorage.getItem(cle()) || '{}')); }catch(e){}
+  if(window.Famille && Famille.track){ Famille.track('nombres-heure', joueur, [cle()]);
+    Famille.load('nombres-heure', joueur).then(r => { const d = r && r[cle()]; if(d && (d.t || 0) > (sv.t || 0)){ sv = Object.assign(sv, d); sauve(false); } montreScore(); }).catch(() => {}); }
+  montreScore(); $('qui').textContent = '👤 ' + joueur; $('retour').href = petit() ? '/amine/' : './'; }
+function sauve(t = true){ if(t) sv.t = Date.now(); try{ localStorage.setItem(cle(), JSON.stringify(sv)); }catch(e){} }
+function montreScore(){ $('score').textContent = '⭐ ' + (sv.nb + sv.h); }
+$('qui').onclick = async () => { if(!window.Famille || !Famille.choosePlayer) return; const n = await Famille.choosePlayer({ title:'Qui joue ?', cancel:true }); if(n){ joueur = n; charge(); } };
+
+/* ---------- la voix (la couche commune du site envoie la voix de la tablette vers ElevenLabs : Céline, ou Lulu pour Amine) ---------- */
+let jeton = 0;
+function tais(){ jeton++; try{ speechSynthesis.cancel(); }catch(e){} }
+function dis(t){ return new Promise(res => { try{ const u = new SpeechSynthesisUtterance(t); u.lang = 'fr-FR'; u.rate = .95;
+  let f = false; const fin = () => { if(!f){ f = true; res(); } }; u.onend = fin; u.onerror = fin; setTimeout(fin, 2500 + t.length * 110); speechSynthesis.speak(u); }catch(e){ res(); } }); }
+async function suite(etapes, boite){   // dit les étapes l'une après l'autre en les allumant
+  tais(); const moi = jeton;
+  for(let i = 0; i < etapes.length; i++){ if(moi !== jeton) return false;
+    boite.querySelectorAll('[data-e]').forEach(e => e.classList.toggle('lit', +e.dataset.e === i));
+    const e = etapes[i]; if(e.avant) e.avant(); await dis(e.dit); if(e.apres) e.apres(); await pause(350); }
+  if(moi === jeton) boite.querySelectorAll('[data-e]').forEach(e => e.classList.remove('lit'));
+  return moi === jeton;
+}
+function toast(t, ok = true){ const d = document.createElement('div'); d.className = 'toast' + (ok ? '' : ' non'); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); }
+
+/* ---------- les nombres en lettres (orthographe traditionnelle, comme à l'école) ---------- */
+const U = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+const D = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante'];
+function deux(n){   // 0 à 99
+  if(n < 20) return U[n];
+  const d = Math.floor(n / 10), u = n % 10;
+  if(d <= 6) return u === 0 ? D[d] : u === 1 ? D[d] + ' et un' : D[d] + '-' + U[u];
+  if(d === 7) return u === 1 ? 'soixante et onze' : 'soixante-' + U[10 + u];
+  if(d === 8) return u === 0 ? 'quatre-vingts' : 'quatre-vingt-' + U[u];
+  return 'quatre-vingt-' + U[10 + u];
+}
+function trois(n){   // 0 à 999
+  const c = Math.floor(n / 100), r = n % 100;
+  if(c === 0) return deux(r);
+  const cent = c === 1 ? 'cent' : U[c] + ' cent' + (r === 0 ? 's' : '');
+  return r ? cent + ' ' + deux(r) : cent;
+}
+const CLASSES = [['milliards', 1e9], ['millions', 1e6], ['mille', 1e3], ['unités', 1]];
+function groupes(n){ return CLASSES.map(([nom, v]) => [nom, Math.floor(n / v) % 1000]); }
+function morceau(nom, g){   // le nom d'une classe avec son nombre
+  if(nom === 'unités') return trois(g);
+  if(nom === 'mille') return g === 1 ? 'mille' : trois(g).replace(/cents$/, 'cent').replace(/vingts$/, 'vingt') + ' mille';
+  const s = nom.slice(0, -1);   // milliard, million : de vrais noms, ils prennent un s
+  return trois(g) + ' ' + s + (g > 1 ? 's' : '');
+}
+function enLettres(n){ if(n === 0) return 'zéro'; return groupes(n).filter(([, g]) => g).map(([nom, g]) => morceau(nom, g)).join(' '); }
+const joli = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const MAX = 999999999999;
+
+/* ---------- la saisie ---------- */
+const nb = $('nb');
+function valeur(){ const s = nb.value.replace(/\D/g, '').replace(/^0+(?=\d)/, ''); return s === '' ? null : +s; }
+function nettoie(){ let s = nb.value.replace(/\D/g, '').slice(0, 12); nb.value = s; const v = valeur();
+  $('joli').textContent = v === null ? '' : joli(v); $('ecrit').textContent = ''; $('q-nb').hidden = true; $('ex-nb').hidden = true; }
+nb.addEventListener('input', nettoie);
+nb.addEventListener('keydown', e => { if(e.key === 'Enter') lisNombre(); });
+$('clav').querySelectorAll('button').forEach(b => b.onclick = () => { if(nb.value.length < 12){ nb.value += b.textContent; nettoie(); } });
+$('eff').onclick = () => { nb.value = nb.value.slice(0, -1); nettoie(); };
+$('vide').onclick = () => { nb.value = ''; nettoie(); tais(); };
+async function lisNombre(){
+  const v = valeur(); if(v === null){ await dis('Écris d\'abord un nombre avec les chiffres.'); return; }
+  if(v > MAX){ await dis('Ce nombre est trop grand pour moi ! Je sais lire jusqu\'à neuf cent quatre-vingt-dix-neuf milliards.'); return; }
+  const t = enLettres(v); $('ecrit').textContent = t; $('ex-nb').hidden = true; tais();
+  await dis(t);
+  if(defiNb !== null) return verifieNb(v);
+  $('q-nb').hidden = false; await dis('Veux-tu que je t\'explique comment j\'ai lu ce nombre ?');
+}
+$('lis').onclick = lisNombre;
+$('non-nb').onclick = () => { $('q-nb').hidden = true; tais(); };
+$('oui-nb').onclick = () => expliqueNombre();
+$('explique').onclick = () => expliqueNombre();
+
+/* ---------- comment j'ai lu le nombre ---------- */
+function detail(g, nom){   // comment on lit un groupe de 3 chiffres (nom : sa classe)
+  const c = Math.floor(g / 100), d = Math.floor(g / 10) % 10, u = g % 10, r = g % 100, out = [];
+  if(c) out.push(`<b>${c}</b> centaine${c > 1 ? 's' : ''} → « ${c === 1 ? 'cent' : U[c] + ' cent'} »`);
+  if(r){
+    if(r < 10) out.push(`<b>${u}</b> unité${u > 1 ? 's' : ''} → « ${U[u]} »`);
+    else if(r < 20) out.push(`<b>${r}</b> : de 11 à 19, ce sont des mots à apprendre par cœur → « ${U[r]} »`);
+    else if(d === 7 || d === 9) out.push(`<b>${d}</b> dizaines, c'est ${d === 7 ? 'soixante' : 'quatre-vingts'} + ${r - (d === 7 ? 60 : 80)} : on dit « ${deux(r)} »`);
+    else if(d === 8) out.push(`<b>8</b> dizaines, c'est 4 fois 20 : « quatre-vingt${u || nom === 'mille' ? '' : 's'} »${u ? `, plus ${u} → « ${deux(r)} »` : nom === 'mille' ? ' (sans s devant « mille »)' : ''}`);
+    else out.push(`<b>${d}</b> dizaines → « ${D[d]} »${u ? (u === 1 ? ', et 1 unité → « et un »' : `, et <b>${u}</b> unités → « ${U[u]} »`) : ''}`);
+  } else if(c > 1) out.push(nom === 'mille' ? `Devant « mille », « cent » ne prend <b>pas</b> de s.` : `Pas de dizaines ni d'unités après : « cents » prend un <b>s</b>.`);
+  return out;
+}
+function expliqueNombre(){
+  const v = valeur(); $('q-nb').hidden = true;
+  if(v === null || v > MAX){ dis('Écris d\'abord un nombre.'); return; }
+  const box = $('ex-nb'); box.hidden = false;
+  const G = groupes(v), premier = G.findIndex(([, g]) => g), garde = v === 0 ? [['unités', 0]] : G.slice(premier);
+  const etapes = [], html = [];
+  const chif = g => String(g).padStart(3, '0').split('');
+  if(v < 10){
+    html.push(`<div class="etape" data-e="0">Le nombre <b>${v}</b> n'a qu'un chiffre : c'est un mot à connaître, « <b>${U[v]}</b> ».</div>`);
+    etapes.push({ dit:`Le nombre ${U[v]} n'a qu'un chiffre. C'est un mot à connaître : ${U[v]}.` });
+  } else {
+    const tableau = `<div class="classes">${garde.map(([nom, g], k) => { const cs = chif(g), premierG = k === 0;
+      return `<div class="classe" id="cl-${nom}"><small>${nom === 'unités' && garde.length === 1 ? 'le nombre' : 'classe des ' + nom}</small><div class="ch">${cs.map((x, i) => `<span class="${['c-c', 'c-d', 'c-u'][i]}${premierG && +cs.slice(0, i + 1).join('') === 0 ? ' c-v' : ''}">${x}</span>`).join('')}</div>
+        <div class="lettres-c"><i>c</i><i>d</i><i>u</i></div></div>`; }).join('')}</div>`;
+    html.push(tableau);
+    let e = 0;
+    if(garde.length > 1){
+      html.push(`<div class="etape" data-e="${e++}">1. Je fais des paquets de <b>3 chiffres</b>, en partant de la droite : <b>${joli(v)}</b>. Chaque paquet est une <b>classe</b> : les unités, les mille, les millions, les milliards.</div>`);
+      etapes.push({ dit:'D\'abord, je fais des paquets de trois chiffres, en partant de la droite. Chaque paquet est une classe : les unités, les mille, les millions, les milliards.' });
+    } else {
+      html.push(`<div class="etape" data-e="${e++}">1. Je regarde chaque chiffre : <b>c</b> = centaines, <b>d</b> = dizaines, <b>u</b> = unités.</div>`);
+      etapes.push({ dit:'Je regarde chaque chiffre : les centaines, les dizaines et les unités.' });
+    }
+    let num = 2;
+    for(const [nom, g] of garde){
+      if(!g){ if(garde.length > 1){ html.push(`<div class="etape" data-e="${e}">${num++}. Classe des ${nom} : <b>000</b>, il n'y a rien, je ne dis rien.</div>`); etapes.push({ dit:`Dans la classe des ${nom}, il n'y a que des zéros : je ne dis rien.`, avant:() => allume(nom) }); e++; } continue; }
+      const d = detail(g, nom), lu = morceau(nom, g);
+      const fin = nom === 'unités' ? '' : nom === 'mille' ? ` puis j'ajoute « mille »${g === 1 ? ' (on ne dit pas « un mille »)' : ' (« mille » ne prend jamais de s)'}` : ` puis j'ajoute « ${nom.slice(0, -1)}${g > 1 ? 's' : ''} »${g > 1 ? ' (avec un s, car il y en a plusieurs)' : ''}`;
+      html.push(`<div class="etape" data-e="${e}">${num++}. ${garde.length > 1 ? `Classe des <b>${nom}</b> : <b>${String(g)}</b>.<br>` : ''}${d.join('<br>')}${fin}<br>→ <b>« ${lu} »</b></div>`);
+      etapes.push({ dit:(garde.length > 1 ? `Dans la classe des ${nom}, il y a ${trois(g)}. ` : '') + d.map(x => x.replace(/<[^>]+>/g, '').replace(/→/g, ':').replace(/«|»/g, '')).join('. ') + '. ' + fin.replace(/<[^>]+>/g, '').replace(/«|»/g, '') + '. Je dis : ' + lu + '.', avant:() => allume(nom) });
+      e++;
+    }
+    html.push(`<div class="etape" data-e="${e}">${num}. Je lis tout, de gauche à droite : <b>« ${enLettres(v)} »</b>.</div>`);
+    etapes.push({ dit:'Je lis tout, de gauche à droite : ' + enLettres(v) + '.', avant:() => allume(null) });
+  }
+  box.innerHTML = '<h3 style="font-family:\'Baloo 2\';margin:0;color:#1f6b44">🧑‍🏫 Comment j\'ai lu ' + joli(v) + '</h3>' + html.join('') + '<div class="actions"><button class="gros blanc" id="rejoue-nb">🔁 Réécouter l\'explication</button></div>';
+  $('rejoue-nb').onclick = () => suite(etapes, box);
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
+  suite(etapes, box);
+}
+function allume(nom){ document.querySelectorAll('.classe').forEach(c => c.classList.toggle('lit', nom !== null && c.id === 'cl-' + nom)); }
+
+/* ---------- les défis des nombres ---------- */
+let defiNb = null;
+function tire(){ const r = Math.random();
+  if(petit()) return r < .5 ? 1 + Math.floor(Math.random() * 20) : 10 + Math.floor(Math.random() * 90);
+  if(r < .3) return 100 + Math.floor(Math.random() * 900);
+  if(r < .6) return 1000 + Math.floor(Math.random() * 99000);
+  if(r < .85) return 100000 + Math.floor(Math.random() * 9900000);
+  return 1e6 * (1 + Math.floor(Math.random() * 999)) + Math.floor(Math.random() * 1000) * (Math.random() < .5 ? 1000 : 1); }
+$('defi').onclick = async () => { defiNb = tire(); nb.value = ''; nettoie(); toast('🎯 Écoute bien, et écris le nombre !');
+  await dis('Défi ! Écris ce nombre avec les chiffres : ' + enLettres(defiNb) + '. Puis touche : lis-le.'); nb.focus({ preventScroll:true }); };
+async function verifieNb(v){
+  const bon = defiNb; defiNb = null;
+  if(v === bon){ sv.nb++; sauve(); montreScore(); toast('⭐ Bravo, c\'est exactement ça !'); await dis('Bravo ! C\'est exactement ça. Tu gagnes une étoile.'); }
+  else { toast('Presque ! La réponse : ' + joli(bon), false); await dis('Presque ! Le nombre était : ' + enLettres(bon) + '. Il s\'écrit ainsi : regarde.'); nb.value = String(bon); nettoie(); $('ecrit').textContent = enLettres(bon); }
+}
+
+/* ---------- l'horloge ---------- */
+let H = 10, M = 10;   // de 0 à 23, de 0 à 59
+const pasM = () => petit() ? 5 : 1;
+const ana = $('analog'), NS = 'http://www.w3.org/2000/svg';
+function dessineCadran(){
+  let s = `<circle cx="150" cy="150" r="146" fill="#1d4f7a"/><circle cx="150" cy="150" r="136" fill="#fffdf6"/>
+    <circle cx="150" cy="150" r="128" fill="none" stroke="#f2c230" stroke-width="3" stroke-dasharray="2 6"/>`;
+  for(let i = 0; i < 60; i++){ const a = i * 6 * Math.PI / 180, r1 = i % 5 ? 122 : 114;
+    s += `<line x1="${150 + Math.sin(a) * r1}" y1="${150 - Math.cos(a) * r1}" x2="${150 + Math.sin(a) * 128}" y2="${150 - Math.cos(a) * 128}" stroke="${i % 5 ? '#9fb3c6' : '#1d4f7a'}" stroke-width="${i % 5 ? 2 : 4}"/>`; }
+  for(let i = 1; i <= 12; i++){ const a = i * 30 * Math.PI / 180;
+    s += `<text x="${150 + Math.sin(a) * 96}" y="${150 - Math.cos(a) * 96 + 10}" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="28" fill="#1d4f7a">${i}</text>`;
+    s += `<text class="mn" x="${150 + Math.sin(a) * 142}" y="${150 - Math.cos(a) * 142 + 4}" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="11" fill="#fff">${(i * 5) % 60}</text>`; }
+  s += `<g class="aig" id="a-h"><line x1="150" y1="150" x2="150" y2="84" stroke="#1c2340" stroke-width="10" stroke-linecap="round"/><rect x="134" y="70" width="32" height="96" fill="transparent"/></g>
+    <g class="aig" id="a-m"><line x1="150" y1="150" x2="150" y2="36" stroke="#2a7fb4" stroke-width="6" stroke-linecap="round"/><rect x="138" y="28" width="24" height="130" fill="transparent"/></g>
+    <circle cx="150" cy="150" r="9" fill="#d7263d"/>`;
+  ana.innerHTML = s;
+}
+function montreHeure(){
+  const ah = ((H % 12) + M / 60) * 30, am = M * 6;
+  $('a-h').setAttribute('transform', `rotate(${ah} 150 150)`); $('a-m').setAttribute('transform', `rotate(${am} 150 150)`);
+  $('d-h').textContent = String(H).padStart(2, '0'); $('d-m').textContent = String(M).padStart(2, '0');
+  $('momo').textContent = H < 12 ? (H < 6 ? '🌙 la nuit' : '☀️ le matin') : H === 12 ? '☀️ midi' : H < 18 ? '🌤️ l\'après-midi' : '🌙 le soir';
+  $('ecrit-h').textContent = ''; $('q-h').hidden = true; $('ex-h').hidden = true;
+}
+const fem = t => t.replace(/(^|\s|-)un$/, '$1une');
+function heureEnLettres(h, m){
+  const hh = h === 0 ? 'minuit' : h === 12 ? 'midi' : fem(deux(h)) + (h === 1 ? ' heure' : ' heures');
+  return m === 0 ? hh : hh + ' ' + fem(deux(m));
+}
+function heureFamiliere(h, m){   // comme on le dit à la maison, sur 12 heures
+  const h12 = x => { const y = x % 12; return y === 0 ? (x % 24 === 0 ? 'minuit' : 'midi') : fem(deux(y)) + (y === 1 ? ' heure' : ' heures'); };
+  const moment = x => { x = x % 24; return x === 0 || x === 12 ? '' : x < 12 ? (x < 6 ? ' du matin' : ' du matin') : x < 18 ? ' de l\'après-midi' : ' du soir'; };
+  if(m === 0) return h12(h) + moment(h);
+  if(m === 15) return h12(h) + ' et quart' + moment(h);
+  if(m === 30) return h12(h) + ' et demie' + moment(h);
+  if(m === 45) return h12(h + 1) + ' moins le quart' + moment(h + 1);
+  if(m > 30 && m % 5 === 0) return h12(h + 1) + ' moins ' + deux(60 - m) + moment(h + 1);
+  return h12(h) + ' ' + fem(deux(m)) + moment(h);
+}
+async function lisHeure(){
+  tais(); const a = heureEnLettres(H, M), b = heureFamiliere(H, M);
+  const dit = 'Il est ' + a + '.' + (b.replace(/ du matin| de l'après-midi| du soir/, '') !== a ? ' On peut aussi dire : ' + b + '.' : '');
+  $('ecrit-h').textContent = dit;
+  await dis(dit);
+  if(defiH) return verifieH();
+  $('q-h').hidden = false; await dis('Veux-tu que je t\'explique comment j\'ai lu l\'heure ?');
+}
+$('lis-h').onclick = lisHeure;
+$('non-h').onclick = () => { $('q-h').hidden = true; tais(); };
+$('oui-h').onclick = () => expliqueHeure();
+$('explique-h').onclick = () => expliqueHeure();
+function expliqueHeure(){
+  $('q-h').hidden = true; const box = $('ex-h'); box.hidden = false;
+  const h12 = H % 12, chiffre = M / 5, entre = h12 === 0 ? 12 : h12, apres = entre === 12 ? 1 : entre + 1, sur = M % 5 === 0;
+  const pos = sur ? `sur le <b>${chiffre === 0 ? 12 : chiffre}</b>` : `entre le ${Math.floor(chiffre) || 12} et le ${Math.floor(chiffre) + 1}`;
+  const html = [], et = [];
+  html.push(`<div class="etape" data-e="0">1. <b>L'horloge numérique</b> : le nombre avant les deux points, ce sont les <b>heures</b> (${H}), le nombre après, ce sont les <b>minutes</b> (${M}).</div>`);
+  et.push({ dit:`Sur l'horloge numérique, le nombre avant les deux points, ce sont les heures : ${deux(H)}. Le nombre après, ce sont les minutes : ${deux(M)}.`, avant:() => { $('d-h').classList.add('lit'); $('d-m').classList.add('lit'); }, apres:() => { $('d-h').classList.remove('lit'); $('d-m').classList.remove('lit'); } });
+  html.push(`<div class="etape" data-e="1">2. <b>La petite aiguille</b> montre les heures. Elle est ${M === 0 ? `sur le <b>${entre}</b>` : `entre le <b>${entre}</b> et le <b>${apres}</b> : elle a passé le ${entre}`} → <b>${entre} heure${entre > 1 ? 's' : ''}</b>.</div>`);
+  et.push({ dit:`La petite aiguille montre les heures. Elle est ${M === 0 ? 'sur le ' + deux(entre) : 'entre le ' + deux(entre) + ' et le ' + deux(apres) + '. Elle a passé le ' + deux(entre)} : donc ${fem(deux(entre))} heure${entre > 1 ? 's' : ''}.`, avant:() => $('a-h').classList.add('lit'), apres:() => $('a-h').classList.remove('lit') });
+  html.push(`<div class="etape" data-e="2">3. <b>La grande aiguille</b> montre les minutes. Elle est ${pos}. Chaque chiffre vaut <b>5 minutes</b>${sur ? ` : ${chiffre === 0 ? '12, c\'est le tout début de l\'heure → <b>0 minute</b>' : `${chiffre} × 5 = <b>${M} minutes</b>`}` : ` : ${Math.floor(chiffre)} × 5 = ${Math.floor(chiffre) * 5}, plus ${M % 5} petit${M % 5 > 1 ? 's' : ''} trait${M % 5 > 1 ? 's' : ''} → <b>${M} minutes</b>`}.</div>`);
+  et.push({ dit:`La grande aiguille montre les minutes. Chaque chiffre vaut cinq minutes. ` + (sur ? (chiffre === 0 ? 'Elle est sur le douze : c\'est le début de l\'heure, zéro minute.' : `Elle est sur le ${deux(chiffre)} : ${deux(chiffre)} fois cinq, ça fait ${deux(M)} minutes.`) : `Elle a passé le ${deux(Math.floor(chiffre) || 12)}, ça fait ${deux(Math.floor(chiffre) * 5)}, plus ${deux(M % 5)} petit${M % 5 > 1 ? 's' : ''} trait${M % 5 > 1 ? 's' : ''} : ${deux(M)} minutes.`), avant:() => $('a-m').classList.add('lit'), apres:() => $('a-m').classList.remove('lit') });
+  let e = 3;
+  if(H >= 12 || H === 0){
+    html.push(`<div class="etape" data-e="${e}">${e + 1}. L'horloge à aiguilles ne fait qu'un tour de 12 heures. ${H === 0 ? 'Minuit, c\'est 0 heure : le début de la journée.' : H === 12 ? 'Midi, c\'est 12 heures.' : `L'après-midi et le soir, on ajoute 12 : ${h12} + 12 = <b>${H} heures</b>.`}</div>`);
+    et.push({ dit:H === 0 ? 'Minuit, c\'est zéro heure : le début de la journée.' : H === 12 ? 'Midi, c\'est douze heures.' : `L'horloge à aiguilles ne fait qu'un tour de douze heures. L'après-midi et le soir, on ajoute douze : ${deux(h12)} plus douze, ça fait ${deux(H)} heures.` }); e++;
+  }
+  if([15, 30, 45].includes(M) || (M > 30 && M % 5 === 0)){
+    const s = M === 15 ? '15 minutes, c\'est un quart d\'heure : on dit « et quart ».' : M === 30 ? '30 minutes, c\'est une demi-heure : on dit « et demie ».' : M === 45 ? `Il manque 15 minutes pour arriver à ${apres} heures : on dit « ${apres} heures moins le quart ».` : `Il manque ${60 - M} minutes pour arriver à ${apres} heure${apres > 1 ? 's' : ''} : on peut dire « ${fem(deux(apres))} heure${apres > 1 ? 's' : ''} moins ${deux(60 - M)} ».`;
+    html.push(`<div class="etape" data-e="${e}">${e + 1}. ${s}</div>`); et.push({ dit:s.replace(/«|»/g, '') }); e++;
+  }
+  html.push(`<div class="etape" data-e="${e}">${e + 1}. Je mets tout ensemble : <b>il est ${heureEnLettres(H, M)}</b>.</div>`); et.push({ dit:'Je mets tout ensemble : il est ' + heureEnLettres(H, M) + '.' });
+  box.innerHTML = '<h3 style="font-family:\'Baloo 2\';margin:0;color:#1f6b44">🧑‍🏫 Comment j\'ai lu l\'heure</h3>' + html.join('') + '<div class="actions"><button class="gros blanc" id="rejoue-h">🔁 Réécouter l\'explication</button></div>';
+  $('rejoue-h').onclick = () => suite(et, box);
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
+  suite(et, box);
+}
+/* les boutons de l'horloge numérique */
+const change = (dh, dm) => { let t = H * 60 + M + dh * 60 + dm; t = ((t % 1440) + 1440) % 1440; H = Math.floor(t / 60); M = t % 60; montreHeure(); };
+$('h-plus').onclick = () => change(1, 0); $('h-moins').onclick = () => change(-1, 0);
+$('m-plus').onclick = () => change(0, pasM()); $('m-moins').onclick = () => change(0, -pasM());
+$('maintenant').onclick = () => { const d = new Date(); H = d.getHours(); M = d.getMinutes(); montreHeure(); lisHeure(); };
+/* faire tourner les aiguilles avec le doigt */
+let tire_ = null, avant = 0;
+function angle(e){ const r = ana.getBoundingClientRect(), x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2; return (Math.atan2(x, -y) * 180 / Math.PI + 360) % 360; }
+ana.addEventListener('pointerdown', e => { const g = e.target.closest('.aig'); if(!g) return; tire_ = g.id; avant = angle(e); ana.setPointerCapture(e.pointerId); e.preventDefault(); });
+ana.addEventListener('pointermove', e => { if(!tire_) return; const a = angle(e);
+  if(tire_ === 'a-m'){ let m = Math.round(a / 6 / pasM()) * pasM() % 60; const ancien = M;
+    if(ancien > 45 && m < 15) change(1, 0); else if(ancien < 15 && m > 45) change(-1, 0);
+    M = m; montreHeure(); }
+  else { let d = a - avant; if(d > 180) d -= 360; if(d < -180) d += 360; if(Math.abs(d) >= 30){ change(d > 0 ? 1 : -1, 0); avant = a; } } });
+ana.addEventListener('pointerup', () => { tire_ = null; });
+ana.addEventListener('pointercancel', () => { tire_ = null; });
+/* les défis de l'heure */
+let defiH = null;
+$('defi-h').onclick = async () => { const h = petit() ? 1 + Math.floor(Math.random() * 12) : Math.floor(Math.random() * 24), m = petit() ? (Math.random() < .5 ? 0 : 30) : 5 * Math.floor(Math.random() * 12);
+  defiH = [h, m]; toast('🎯 Règle l\'horloge, puis touche « Quelle heure est-il ? »');
+  await dis('Défi ! Règle l\'horloge sur : ' + heureEnLettres(h, m) + '. Puis touche : quelle heure est-il ?'); };
+async function verifieH(){ const [h, m] = defiH; defiH = null;
+  const ok = M === m && (H === h || (H % 12 === h % 12 && petit()));
+  if(ok){ sv.h++; sauve(); montreScore(); toast('⭐ Bravo, c\'est la bonne heure !'); await dis('Bravo ! C\'est la bonne heure. Tu gagnes une étoile.'); }
+  else { toast('Presque ! Regarde la bonne heure.', false); await dis('Presque ! Regarde, voici ' + heureEnLettres(h, m) + '.'); H = h; M = m; montreHeure(); }
+}
+/* les onglets */
+function onglet(n){ $('o-nb').classList.toggle('on', n === 'nb'); $('o-h').classList.toggle('on', n === 'h'); $('z-nb').hidden = n !== 'nb'; $('z-h').hidden = n !== 'h'; tais(); }
+$('o-nb').onclick = () => onglet('nb'); $('o-h').onclick = () => onglet('h');
+dessineCadran(); montreHeure(); charge();
+window.__nh = { enLettres, heureEnLettres, heureFamiliere };
+</script>
+</body></html>
