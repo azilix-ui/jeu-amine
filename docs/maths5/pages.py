@@ -28,7 +28,7 @@ for n, ic, t, s in L:
 <!-- Maths 5e, cours {n}/10 (21/11) : données essil/maths5/lecons.js, moteur essil/maths5/moteur.js -->
 <script src="../famille.js"></script>
 <script>window.M5N = {n};</script>
-<script src="maths5/lecons.js?v=1"></script>
+<script src="maths5/lecons.js?v=2"></script>
 <script src="maths5/moteur.js?v=1"></script>
 </body></html>
 ''')
