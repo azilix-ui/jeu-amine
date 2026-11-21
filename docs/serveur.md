@@ -211,3 +211,8 @@ Interrupteur dans l'administration (`acces/admin.php` › 👤 Les sessions de l
 - **Ce que le serveur accepte** (`ga_qui_peut_ecrire`) : `api/famille.php` (score, progress, ecran, demande, temps) n'écrit au nom d'un enfant que depuis SA session ; `api/houma.php` remplace `nom`/`de` par le nom de la session (on ne peut ni écrire ni lire les messages d'un autre).
 - **Prise de main** (administration, liste des sessions) : « 🔧 Prendre la main » sur la session d'un enfant (30 min ; « enregistrer pour de vrai » en option) : la tablette le voit en moins de 8 s (le salon renvoie `quiv`, la page se recharge), bandeau « 🔧 Papa fait des essais » avec « Rendre la tablette », pas de limite de temps (`ga_qui_libre`), rien n'est enregistré par défaut. « 👀 Voir comme Amine » : la même chose sur l'appareil d'Anis, qui revient ensuite à sa propre session (`ctrl_retour`).
 
+
+
+### Les visiteurs (Progression, 21/11)
+
+En haut de l'onglet « 🌍 Visiteurs et journal » : visiteurs différents (un par pseudo, sinon un par IP), en ligne maintenant (`api/houma.php` `presents`), derniers venus avec lieu (IP), « arrivé par » et appareil. `visits.via` = `appareils.via` de la porte au moment de la visite (`maison`, `invitation:<nom de l'invitation>`, `accepte` = a frappé, `admin`) ; `visits.ref` = origine de l'onglet envoyée par `site.js` (`direct`, `app` ou le domaine du site d'où l'on vient).

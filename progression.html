@@ -573,7 +573,7 @@ function lastSeen(S, name){ const p = S.players.find(x => x.name.toLowerCase() =
 /* ---------- Affichage : un tableau de bord en rubriques (onglets) ---------- */
 const KIDS = ['Essil', 'Salma', 'Amine'], KCOL = { Essil:'var(--essil)', Salma:'var(--salma)', Amine:'var(--amine-2)' }, KSUB = { Essil:'12 ans · collège', Salma:'8 ans · CE2', Amine:'5 ans · grande section' };
 const FAM = ['essil', 'salma', 'amine', 'anis', 'imen'];
-const TABS = [['vue', '📊', 'Vue d\'ensemble'], ['activite', '📅', 'Activités'], ['enfants', '🎓', 'Cours et jeux'], ['suivi', '🧭', 'Suivi'], ['records', '🏆', 'Records'], ['journal', '🌍', 'Journal'], ['houma', '💬', 'Houma en ligne'], ['reglages', '⚙️', 'Réglages']];
+const TABS = [['vue', '📊', 'Vue d\'ensemble'], ['activite', '📅', 'Activités'], ['enfants', '🎓', 'Cours et jeux'], ['suivi', '🧭', 'Suivi'], ['records', '🏆', 'Records'], ['journal', '🌍', 'Visiteurs et journal'], ['houma', '💬', 'Houma en ligne'], ['reglages', '⚙️', 'Réglages']];
 const mem = { get(k, d){ try{ return sessionStorage.getItem(k) || d; }catch(e){ return d; } }, set(k, v){ try{ sessionStorage.setItem(k, v); }catch(e){} } };
 let tab = mem.get('prog-tab', 'vue'), kid = mem.get('prog-kid', 'Salma'), aKid = 'Tous', vdays = +mem.get('prog-days', 7) || 7;
 let TPS = [], CH = null, VIS = null, VERR = '', VKEEP = 60, vLoaded = 0, vBusy = false, jFilter = 'tous', jQuery = '';
@@ -712,6 +712,41 @@ function recordsHTML(S){
       : '<p class="none">Rien pour l\'instant.</p>') + '</section>';
 }
 
+/* --- 👥 Les visiteurs (21/11, demande du papa) : combien de visiteurs, qui est en ligne, les derniers pseudos avec le lieu et l'origine --- */
+let PRES = null, presT = 0;
+async function fetchPres(){ if(Date.now() - presT < 10000) return; presT = Date.now();
+  try{ const fd = new FormData(); fd.append('action', 'presents'); const r = await fetch('api/houma.php', { method:'POST', body:fd, cache:'no-store' }); if(r.ok){ PRES = (await r.json()).en_ligne || []; if(tab === 'journal') draw(); } }catch(e){} }
+setInterval(() => { if(tab === 'journal' && !document.hidden) fetchPres(); }, 10000);
+const MOTEURS = /google|bing|qwant|duckduckgo|yahoo|ecosia|yandex|baidu|startpage|lilo/i;
+function origineTxt(v){
+  const via = String(v.via || ''), ref = String(v.ref || ''), out = [];
+  if(via.startsWith('invitation')) out.push('✉️ lien d\'invitation' + (via.includes(':') ? ' (' + esc(via.split(':').slice(1).join(':')) + ')' : ''));
+  else if(via === 'maison') out.push('🏠 Wi-Fi de la maison'); else if(via === 'accepte') out.push('🚪 a frappé à la porte'); else if(via === 'admin') out.push('🔑 administrateur');
+  if(ref === 'app') out.push('📱 appli installée'); else if(ref === 'direct') out.push('⌨️ adresse tapée ou favori');
+  else if(ref && MOTEURS.test(ref)) out.push('🔎 moteur de recherche (' + esc(ref) + ')'); else if(/whatsapp|wa\.me/i.test(ref)) out.push('💬 WhatsApp');
+  else if(ref) out.push('🔗 lien sur ' + esc(ref));
+  return out.join(' · ') || '—';
+}
+function visiteursHTML(){
+  fetchPres();
+  const P = PRES || [], V = period();
+  const cle = v => v.player ? 'p:' + String(v.player).toLowerCase() : 'ip:' + v.ip;
+  const G = {}; V.forEach(v => { const k = cle(v), g = G[k] || (G[k] = { nom:v.player || '', ip:v.ip, last:0, first:Infinity, n:0, ips:new Set() });
+    g.n++; g.ips.add(v.ip); if(v.ts > g.last){ g.last = v.ts; g.v = v; } if(v.ts < g.first){ g.first = v.ts; g.v0 = v; } });
+  const L = Object.values(G).sort((a, b) => b.last - a.last);
+  const fmt = t => new Date(t * 1000).toLocaleString('fr-FR', { timeZone:'Europe/Paris', weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  const lieu = v => '<span class="flag">' + flag(v.cc) + '</span>' + esc(v.country || '?') + (v.city ? ' · ' + esc(v.city) : '');
+  const enLigne = new Set(P.map(p => String(p.nom).toLowerCase()));
+  return '<section class="panel" id="visiteurs"><h2>👥 Les visiteurs</h2>' +
+    '<div class="tiles small">' + tile(L.length, 'visiteurs différents', periodLabel()) + tile(L.filter(g => g.nom).length, 'pseudos', periodLabel()) + tile(PRES ? P.length : '…', 'en ligne maintenant') + tile(V.length, 'pages ouvertes', periodLabel()) + '</div>' +
+    '<h3 class="sub">🟢 En ligne maintenant</h3>' + (!PRES ? '<p class="none">Chargement…</p>' : P.length ? '<div class="chips">' + P.map(p => '<span class="chip">🟢 <b>' + esc(p.nom) + '</b>' + (p.page ? ' · ' + esc(p.page) : '') + '</span>').join('') + '</div>' : '<p class="none">Personne n\'est sur le site en ce moment.</p>') +
+    '<h3 class="sub">Les derniers venus (un par pseudo ; sans pseudo, un par adresse IP)</h3>' +
+    (L.length ? '<div class="table-wrap"><table class="vtable"><thead><tr><th>Dernière visite</th><th>Pseudo</th><th>Lieu (d\'après l\'IP)</th><th>Arrivé par</th><th>Appareil</th><th class="n">Pages</th></tr></thead><tbody>' +
+      L.slice(0, 60).map(g => '<tr class="' + (FAM.includes(g.nom.toLowerCase()) ? 'fam' : '') + '"><td>' + (enLigne.has(g.nom.toLowerCase()) ? '🟢 ' : '') + fmt(g.last) + '</td><td><b>' + esc(g.nom || '(sans pseudo)') + '</b>' + (g.nom ? '' : ' <small class="ip">' + esc(g.ip) + '</small>') + '</td><td>' + lieu(g.v) + (g.v.isp ? ' <small style="color:var(--soft)">' + esc(g.v.isp) + '</small>' : '') + '</td><td>' + origineTxt(g.v0) + '</td><td>' + esc(device(g.v.ua || '', g.v.screen)) + '</td><td class="n">' + g.n + '</td></tr>').join('') + '</tbody></table></div>'
+      : '<p class="none">' + (VIS ? 'Aucune visite ' + periodLabel() + '.' : 'Chargement…') + '</p>') +
+    '<p class="when">« Arrivé par » : par où l\'appareil a passé la porte du site (Wi-Fi de la maison, lien d\'invitation, porte, administrateur), et d\'où venait la visite (moteur de recherche, autre site, adresse tapée, appli installée). L\'origine n\'est connue que pour les visites depuis le 21/11. Le lieu vient de l\'adresse IP : c\'est approximatif.</p></section>';
+}
+
 /* --- 🌍 Journal des visites : adresse IP, lieu, appareil, page --- */
 function journalHTML(){
   if(!VIS) return '<section class="panel"><h2>🌍 Journal des visites</h2>' + waitV() + '</section>';
@@ -747,7 +782,7 @@ function draw(){
   document.querySelectorAll('#pdays button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.d === vdays));
   $('#pdays').style.visibility = tab === 'enfants' || tab === 'suivi' || tab === 'records' || tab === 'reglages' || tab === 'houma' ? 'hidden' : '';
   const keep = tab === 'journal' && document.activeElement && document.activeElement.id === 'jQ' ? document.activeElement.selectionStart : null;
-  pane.innerHTML = tab === 'vue' ? vueHTML(S) : tab === 'activite' ? activiteHTML(S) : tab === 'enfants' ? enfantsHTML(S) : tab === 'suivi' ? manageHTML(S) : tab === 'records' ? recordsHTML(S) : tab === 'reglages' ? reglagesHTML(S) : tab === 'houma' ? houmaHTML() : journalHTML();
+  pane.innerHTML = tab === 'vue' ? vueHTML(S) : tab === 'activite' ? activiteHTML(S) : tab === 'enfants' ? enfantsHTML(S) : tab === 'suivi' ? manageHTML(S) : tab === 'records' ? recordsHTML(S) : tab === 'reglages' ? reglagesHTML(S) : tab === 'houma' ? houmaHTML() : visiteursHTML() + journalHTML();
   if(tab === 'suivi') bindManage();
   if(tab === 'reglages') bindReglages();
   if(tab === 'houma') bindHouma();

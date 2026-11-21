@@ -24,7 +24,10 @@
     if(now - last > 10 * 60 * 1000){
       sessionStorage.setItem(k, String(now));
       var who = ''; try{ who = JSON.parse(localStorage.getItem('famille-joueur') || 'null') || ''; }catch(e){}
-      var ref = ''; try{ if(document.referrer){ var rh = new URL(document.referrer).host; if(rh !== location.host) ref = rh; } }catch(e){}
+      /* 21/11 : d'où vient la visite, gardé pour tout l'onglet : un autre site (moteur de recherche, WhatsApp…), « direct » (adresse tapée, favori), « app » (appli installée) */
+      var ref = ''; try{ ref = sessionStorage.getItem('famille-origine') || ''; if(!ref){ ref = 'direct'; if(standalone) ref = 'app';
+        if(document.referrer){ var rh = new URL(document.referrer).host; if(rh !== location.host) ref = rh; }
+        sessionStorage.setItem('famille-origine', ref); } }catch(e){}
       var f = new FormData();
       f.append('action', 'visit'); f.append('page', page.slice(0, 120)); f.append('player', String(who).slice(0, 20));
       f.append('app', standalone ? '1' : '0'); f.append('screen', screen.width + 'x' + screen.height); f.append('ref', ref.slice(0, 80));

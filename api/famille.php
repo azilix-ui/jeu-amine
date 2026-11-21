@@ -93,6 +93,8 @@ function db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS resets (player TEXT NOT NULL COLLATE NOCASE, course TEXT NOT NULL, ts INTEGER NOT NULL, data TEXT, PRIMARY KEY (player, course))');
     $pdo->exec('CREATE TABLE IF NOT EXISTS writes (ip TEXT NOT NULL, ts INTEGER NOT NULL)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS visits (id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, ip TEXT NOT NULL, cc TEXT, page TEXT NOT NULL, player TEXT, ua TEXT, app INTEGER, screen TEXT, ref TEXT)');
+    // 21/11 : par où l'appareil est entré (maison, invitation de …, porte, admin), lu dans la porte du site
+    try { $pdo->exec('ALTER TABLE visits ADD COLUMN via TEXT'); } catch (Throwable $e) {}
     $pdo->exec('CREATE INDEX IF NOT EXISTS visits_ts ON visits (ts)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS temps (player TEXT NOT NULL COLLATE NOCASE, page TEXT NOT NULL, h INTEGER NOT NULL, sec INTEGER NOT NULL, PRIMARY KEY (player, page, h))');   // 16/11 : secondes passées sur chaque page, par heure
     $pdo->exec('CREATE TABLE IF NOT EXISTS geo (ip TEXT PRIMARY KEY, cc TEXT, country TEXT, region TEXT, city TEXT, isp TEXT, ts INTEGER)');
@@ -376,8 +378,16 @@ try {
         $cc = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', (string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? $_SERVER['HTTP_X_COUNTRY_CODE'] ?? '')), 0, 2));
         $screen = preg_match('/^\d{2,5}x\d{2,5}$/', (string)($_POST['screen'] ?? '')) ? (string)$_POST['screen'] : '';
         $ref = preg_replace('/[^\w\-.:]/', '', substr((string)($_POST['ref'] ?? ''), 0, 80));
-        $pdo->prepare('INSERT INTO visits (ts, ip, cc, page, player, ua, app, screen, ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-            ->execute([$t, $ip, $cc, $page, $pl, mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 300), ($_POST['app'] ?? '') === '1' ? 1 : 0, $screen, $ref]);
+        $via = '';
+        try {
+            $ap = ga_appareil();
+            if ($ap) {
+                $via = (string)$ap['via'];
+                if ($via === 'invitation' && $ap['invitation']) { $si = ga_db()->prepare('SELECT nom FROM invitations WHERE id = ?'); $si->execute([(int)$ap['invitation']]); $n = (string)$si->fetchColumn(); if ($n !== '') $via .= ':' . mb_substr($n, 0, 30); }
+            } elseif (ga_admin()) $via = 'admin';
+        } catch (Throwable $e) {}
+        $pdo->prepare('INSERT INTO visits (ts, ip, cc, page, player, ua, app, screen, ref, via) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            ->execute([$t, $ip, $cc, $page, $pl, mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 300), ($_POST['app'] ?? '') === '1' ? 1 : 0, $screen, $ref, $via]);
         if (mt_rand(1, 40) === 1) {
             $pdo->prepare('DELETE FROM visits WHERE ts < ?')->execute([$t - VISIT_DAYS * 86400]);
             $pdo->exec('DELETE FROM geo WHERE ip NOT IN (SELECT DISTINCT ip FROM visits)');
@@ -393,7 +403,7 @@ try {
         $st = $pdo->prepare('SELECT DISTINCT v.ip FROM visits v LEFT JOIN geo g ON g.ip = v.ip WHERE v.ts >= ? AND g.ip IS NULL'); $st->execute([time() - $days * 86400]);
         $missing = $st->fetchAll(PDO::FETCH_COLUMN);
         if ($missing) resolve_geo($pdo, $missing);
-        $st = $pdo->prepare('SELECT v.ts, v.ip, v.page, v.player, v.ua, v.app, v.screen, v.ref, COALESCE(NULLIF(g.cc, \'\'), v.cc) AS cc, g.country, g.region, g.city, g.isp FROM visits v LEFT JOIN geo g ON g.ip = v.ip WHERE v.ts >= ? ORDER BY v.ts DESC LIMIT 3000');
+        $st = $pdo->prepare('SELECT v.ts, v.ip, v.page, v.player, v.ua, v.app, v.screen, v.ref, v.via, COALESCE(NULLIF(g.cc, \'\'), v.cc) AS cc, g.country, g.region, g.city, g.isp FROM visits v LEFT JOIN geo g ON g.ip = v.ip WHERE v.ts >= ? ORDER BY v.ts DESC LIMIT 3000');
         $st->execute([time() - $days * 86400]);
         $rows = $st->fetchAll(PDO::FETCH_ASSOC);
         foreach ($rows as &$r) { $r['ts'] = (int)$r['ts']; $r['app'] = (int)$r['app']; } unset($r);
