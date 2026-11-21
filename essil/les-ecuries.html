@@ -176,6 +176,55 @@ body.g3 #gl{display:block}
 @media (max-width:620px){ .top h2{font-size:19px} .pill{height:44px;min-width:44px;padding:0 10px;font-size:16px} .coins{height:44px;font-size:19px;padding:0 12px 0 8px} .cb{width:70px;height:70px;font-size:30px} .cb.jump{width:88px;height:88px} .cb.sm{width:56px;height:56px} #map{width:104px;height:104px} .tool{width:74px}.tool img,.tool span.e{width:48px;height:48px} .horse{grid-template-columns:110px 1fr} .tag{font-size:17px;padding:5px 9px} }
 @media (orientation:landscape) and (max-height:480px){ .cb{width:64px;height:64px;font-size:28px}.cb.jump{width:80px;height:80px}.cb.sm{width:50px;height:50px} #map{width:96px;height:96px} #arrow{width:50px;height:50px;font-size:28px} .tool{width:70px}.tool img,.tool span.e{width:42px;height:42px} .top{min-height:46px} }
 @media (prefers-reduced-motion:reduce){ .coins.bump{animation:none} }
+
+/* 21/11 (demandes d'Essil) : les prés et Hamza, les boxes décorés, le concours entre nous */
+.tile.c7{background:#e4f3d8}.tile.c8{background:#ffe9d6}
+.hamza{display:flex;align-items:flex-end;gap:12px;margin:4px 0 12px}
+.hamza img{width:110px;height:140px;object-fit:contain;flex:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+.hamza .bulle{position:relative;background:#fff;border-radius:20px;padding:12px 16px;font-size:17px;font-weight:700;color:var(--navy2);box-shadow:var(--shadow);flex:1}
+.hamza .bulle::before{content:'';position:absolute;left:-10px;bottom:18px;border:10px solid transparent;border-right-color:#fff;border-left:0}
+.hamza .bulle.pop{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.92)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+.tableau{background:#fffdf4;border-radius:20px;padding:12px 14px;box-shadow:var(--shadow);margin-bottom:14px;border:3px solid #c99a2e}
+.tableau h3{margin:0 0 6px;font-size:20px;color:var(--navy2)}
+.tableau table{width:100%;border-collapse:collapse;font-size:16px}
+.tableau th{text-align:left;padding:6px 8px 6px 0;white-space:nowrap;color:#3f6b35}
+.tableau td{padding:6px 4px;border-top:1px dashed #e2d3a8}
+.tableau tr:first-child td{border-top:0}
+.pre{position:relative;height:clamp(220px,34vw,320px);border-radius:24px;background-size:cover;background-position:center;margin-bottom:14px;box-shadow:var(--shadow);overflow:hidden}
+.pnom{position:absolute;left:12px;top:10px;background:rgba(255,253,244,.92);border-radius:14px;padding:6px 12px;font-family:var(--display);font-size:22px;color:#2f5a2a}
+.pnom small{font-family:inherit;font-size:16px;color:var(--mist);margin-left:6px}
+.pch{position:absolute;bottom:4%;width:30%;background:none;border:0;padding:0;animation:broute var(--d) ease-in-out infinite alternate;animation-delay:calc(var(--k) * -1.3s)}
+.pch img{width:100%;display:block;filter:drop-shadow(0 6px 4px rgba(0,0,0,.3))}
+.pch:nth-of-type(2) img{transform:scaleX(-1)}
+.pch span{position:absolute;left:50%;top:-6px;transform:translateX(-50%);background:#5a3a1e;color:#ffe9a8;border-radius:10px;padding:2px 10px;font-weight:800;font-size:15px;white-space:nowrap}
+@keyframes broute{0%{transform:translateX(-6%)}100%{transform:translateX(12%)}}
+@media (prefers-reduced-motion:reduce){.pch{animation:none}}
+.pmet{position:absolute;right:12px;bottom:12px}
+.pplein{position:absolute;right:12px;bottom:12px;background:#3f6b35;color:#fff;border-radius:14px;padding:8px 14px;font-weight:800}
+.pchoix{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;max-height:52vh;overflow:auto}
+.pchoix button{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:48px}
+.pchoix img{width:100%;height:90px;object-fit:contain}
+.dcard{background:var(--cream);border-radius:22px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px}
+.dcard h3{margin:0 0 8px;font-size:21px;color:var(--navy2)}
+.dcard p{margin:0 0 10px}
+.dcard .big{width:100%;height:60px;font-size:22px;margin-top:8px}
+.dcard input{font:800 26px var(--display);text-transform:uppercase;width:150px;padding:6px 12px;border-radius:14px;border:3px solid #e2d3a8;letter-spacing:4px}
+.dcode{font-family:var(--display);font-size:44px;letter-spacing:6px;color:var(--red)}
+.gens{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:8px}
+.gens > *{background:#fff;border-radius:16px;padding:8px;display:flex;align-items:center;gap:8px;font-weight:800;min-height:58px;text-align:left;box-shadow:inset 0 0 0 3px #eee2c4}
+.gens img{width:42px;height:42px;border-radius:50%;object-fit:cover}
+.gens small{display:block;font-weight:700;color:var(--mist);font-size:12px}
+.ep.on{box-shadow:inset 0 0 0 4px var(--red)}
+.invit{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);z-index:60;background:var(--cream);border-radius:20px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);width:min(560px,94vw)}
+.invit img{width:48px;height:48px;border-radius:50%}
+.invit b{flex:1}
+#duelHud{position:fixed;left:max(10px,env(safe-area-inset-left));top:calc(max(10px,env(safe-area-inset-top)) + 64px);z-index:20;background:rgba(28,35,64,.82);color:#fff;border-radius:16px;padding:8px 12px;font-size:15px;min-width:200px;pointer-events:none}
+#duelHud > b{display:block;font-size:14px;color:#ffd23f;margin-bottom:2px}
+#duelHud div{display:flex;align-items:center;gap:6px;padding:2px 0}
+#duelHud i{width:12px;height:12px;border-radius:50%;flex:none}
+#duelHud span{margin-left:auto;padding-left:10px;font-weight:800}
+#duelPodium{z-index:70}
 </style>
 </head>
 <body>
@@ -199,6 +248,8 @@ body.g3 #gl{display:block}
     <button class="tile c4" data-go="shop"><span aria-hidden="true">🛒</span><div><b>La sellerie</b><small>Brosses, licols, filets, selles, tapis, amortisseurs, guêtres, cloches</small></div></button>
     <button class="tile c5" data-go="market"><span aria-hidden="true">🐴</span><div><b>Le marchand de chevaux</b><small id="hubMarket">Agrandis ton écurie</small></div></button>
     <button class="tile c6" data-go="galops"><span aria-hidden="true">🎓</span><div><b>Les galops</b><small id="hubGalops">Passe tes examens, du galop 1 au galop 7</small></div></button>
+    <button class="tile c7" data-go="pres"><span aria-hidden="true">🌳</span><div><b>Les prés</b><small>Hamza emmène tes chevaux brouter : 3 par pré</small></div></button>
+    <button class="tile c8" data-go="duel"><span aria-hidden="true">🤝</span><div><b>Concours entre nous</b><small>En ligne avec ta sœur ou ton frère : qui gagnera ?</small></div></button>
   </div></div>
 </section>
 
@@ -237,10 +288,24 @@ body.g3 #gl{display:block}
   </div></div>
 </section>
 
+<section id="pres" class="scr">
+  <div class="top"><button class="pill" data-go="hub" aria-label="Retour">←</button><h2>Les prés</h2><div class="coins" data-coins>🪙 0</div></div>
+  <div class="grow"><div class="center">
+    <div class="hamza"><img src="ecuries/img/hamza.webp" alt="Hamza, le palefrenier"><div class="bulle" id="pBulle"></div></div>
+    <div class="tableau" id="pTableau"></div>
+    <div id="pListe"></div>
+  </div></div>
+</section>
+
+<section id="duel" class="scr">
+  <div class="top"><button class="pill" data-go="hub" aria-label="Retour">←</button><h2>Concours entre nous</h2><div class="coins" data-coins>🪙 0</div></div>
+  <div class="grow"><div class="center" id="dBody"></div></div>
+</section>
+
 <section id="stable" class="scr clear">
   <div class="top"><button class="pill" id="sBack" aria-label="Retour">←</button><h2 id="sName" style="text-shadow:0 2px 0 #fff8">Nos écuries</h2><div class="coins" data-coins>🪙 0</div></div>
   <div class="bars" id="sBars"></div>
-  <div class="side" id="sSide"><button class="pill sun" id="sEquip">👗 Équiper</button><button class="pill" id="sFeed">🥕 Nourrir</button><button class="pill" id="sInfo">ℹ️ Fiche</button></div>
+  <div class="side" id="sSide"><button class="pill sun" id="sEquip">👗 Équiper</button><button class="pill" id="sFeed">🥕 Nourrir</button><button class="pill" id="sInfo">ℹ️ Fiche</button><button class="pill" id="sDeco">🎀 Son box</button></div>
   <div class="navs" id="sNavs"><button class="pill" id="sPrev" aria-label="Cheval précédent">◀</button><button class="pill" id="sNext" aria-label="Cheval suivant">▶</button></div>
   <div class="hint" id="sHint">Touche un cheval pour t'en occuper</div>
   <div class="tray" id="sTray"></div>
@@ -263,6 +328,6 @@ body.g3 #gl{display:block}
 <div id="toast"></div>
 
 <script src="../famille.js"></script>
-<script type="module" src="ecuries/jeu.js?v=4"></script>
+<script type="module" src="ecuries/jeu.js?v=5"></script>
 </body>
 </html>

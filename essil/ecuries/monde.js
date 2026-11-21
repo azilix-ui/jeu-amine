@@ -133,6 +133,30 @@ export function createWorld(THREE, canvas, api){
   function fence(x0, z0, x1, z1, col = '#ffffff', h = 1.1){ const len = Math.hypot(x1 - x0, z1 - z0), a = Math.atan2(x1 - x0, z1 - z0), m = L(col); [h, h * .55].forEach(y => { const r = box(group, .08, .1, len, m, (x0 + x1) / 2, y, (z0 + z1) / 2); r.rotation.y = a; }); const n = Math.ceil(len / 4); for(let i = 0; i <= n; i++) box(group, .12, h + .1, .12, m, x0 + (x1 - x0) * i / n, (h + .1) / 2, z0 + (z1 - z0) * i / n); }
   function stripeTex(c1, c2){ return blob(g => { for(let i = 0; i < 8; i++){ g.fillStyle = i % 2 ? c1 : c2; g.fillRect(0, i * 8, 64, 8); } }); }
   const POLE = [['#e8333a', '#ffffff'], ['#1f6fd8', '#ffffff'], ['#2f9e44', '#ffffff'], ['#ffc928', '#1f3c88'], ['#8a4fd8', '#ffffff'], ['#ff7a1a', '#ffffff']];
+  /* Les obstacles décorés (21/11, demandé par Essil) : chaque obstacle de CSO a son thème, comme dans les vrais concours.
+     Les décorations restent sous la barre du haut et sur les côtés : elles ne changent rien au saut. */
+  const DECO_TEX = {};
+  function decoTex(k){ if(DECO_TEX[k]) return DECO_TEX[k]; const t = blob(g => {
+      if(k === 'brique'){ g.fillStyle = '#e9e1d2'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#b5482e'; for(let r = 0; r < 8; r++) for(let c = -1; c < 4; c++) g.fillRect(c * 20 + (r % 2 ? 10 : 0) + 1, r * 8 + 1, 18, 6); }
+      else if(k === 'zellige'){ g.fillStyle = '#f7f3ea'; g.fillRect(0, 0, 64, 64); const C = ['#1f6fd8', '#2f9e44', '#e0a21b', '#c8412f']; for(let y = 0; y < 4; y++) for(let x = 0; x < 4; x++){ g.fillStyle = C[(x + y) % 4]; g.save(); g.translate(x * 16 + 8, y * 16 + 8); g.rotate(Math.PI / 4); g.fillRect(-5, -5, 10, 10); g.restore(); } g.strokeStyle = '#1c2340'; g.lineWidth = 1; for(let i = 0; i <= 64; i += 16){ g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 64); g.moveTo(0, i); g.lineTo(64, i); g.stroke(); } }
+      else if(k === 'planche'){ g.fillStyle = '#1f3c88'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#ffd23f'; for(let x = 6; x < 64; x += 16){ g.beginPath(); for(let j = 0; j < 10; j++){ const a = j * Math.PI / 5 - Math.PI / 2, r = j % 2 ? 2.5 : 6; g.lineTo(x + Math.cos(a) * r, 32 + Math.sin(a) * r * 3); } g.fill(); } g.fillStyle = '#d7263d'; g.fillRect(0, 0, 64, 6); g.fillRect(0, 58, 64, 6); }
+      else if(k === 'haie'){ g.fillStyle = '#2f6b33'; g.fillRect(0, 0, 64, 64); for(let i = 0; i < 160; i++){ g.fillStyle = ['#3f8f4a', '#4fa055', '#2a5f2d', '#5cb25f'][i % 4]; g.beginPath(); g.arc(Math.random() * 64, Math.random() * 64, 2 + Math.random() * 3, 0, 7); g.fill(); } }
+      else if(k === 'kilim'){ g.fillStyle = '#b5482e'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#1c1c1c'; for(let x = 0; x < 64; x += 16){ g.beginPath(); g.moveTo(x, 32); g.lineTo(x + 8, 16); g.lineTo(x + 16, 32); g.lineTo(x + 8, 48); g.fill(); } g.fillStyle = '#f2b632'; for(let x = 0; x < 64; x += 16){ g.beginPath(); g.moveTo(x + 4, 32); g.lineTo(x + 8, 24); g.lineTo(x + 12, 32); g.lineTo(x + 8, 40); g.fill(); } g.fillStyle = '#f7f3ea'; g.fillRect(0, 4, 64, 4); g.fillRect(0, 56, 64, 4); } });
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; return DECO_TEX[k] = t; }
+  function fleurs(g, x, z, w, cols){ box(g, w, .32, .45, L('#7a5230'), x, .16, z); const n = Math.max(3, Math.round(w / .22));
+    for(let k = 0; k < n; k++){ const f = new THREE.Mesh(new THREE.IcosahedronGeometry(.12 + Math.random() * .05, 0), L(k % 3 === 2 ? '#3f8f4a' : cols[k % cols.length])); f.position.set(x - w / 2 + .1 + k * (w - .2) / (n - 1), .38 + Math.random() * .08, z + (Math.random() - .5) * .2); g.add(f); } }
+  function jarre(g, x, z, col){ const c = cyl(g, .2, .14, .5, L(col), x, .25, z, 10); const v = new THREE.Mesh(new THREE.SphereGeometry(.26, 12, 8), L(col)); v.scale.y = .9; v.position.set(x, .38, z); g.add(v); cyl(g, .1, .14, .14, L(col), x, .66, z, 10); const f = new THREE.Mesh(new THREE.IcosahedronGeometry(.22, 0), L('#d7263d')); f.position.set(x, .82, z); g.add(f); return c; }
+  function palmier(g, x, z){ cyl(g, .22, .18, .4, L('#c96a3a'), x, .2, z, 10); cyl(g, .05, .07, 1.3, L('#8a6a40'), x, 1.05, z, 6); for(let k = 0; k < 6; k++){ const f = new THREE.Mesh(new THREE.ConeGeometry(.08, .9, 4), L('#3f8f4a')); f.position.set(x + Math.cos(k) * .32, 1.62, z + Math.sin(k) * .32); f.rotation.set(Math.sin(k) * 1.2, 0, -Math.cos(k) * 1.2); g.add(f); } }
+  function aile(g, s, w, h, dz, texK){ const m = new THREE.MeshLambertMaterial({ map:decoTex(texK) }); const p = box(g, .1, h + .5, .9, m, s * (w / 2 + .6), (h + .5) / 2, dz); p.rotation.y = Math.PI / 2; box(g, .14, .1, 1, L('#f4f4f4'), s * (w / 2 + .6), h + .55, dz).rotation.y = Math.PI / 2; }
+  function decore(g, o, i, planes){
+    const w = o.w, h = o.h, th = i % 6, dz = planes[planes.length - 1], z0 = planes[0];
+    if(th === 0){ fleurs(g, 0, z0 - .35, w * .9, ['#e8333a', '#ffd23f', '#ff7ad1']); [1, -1].forEach(s => aile(g, s, w, h, z0, 'zellige')); }
+    else if(th === 1){ const m = box(g, w * .96, Math.min(h * .45, .55), .3, new THREE.MeshLambertMaterial({ map:decoTex('brique') }), 0, Math.min(h * .45, .55) / 2, z0); m.material.map.repeat.set(3, 1); [1, -1].forEach(s => jarre(g, s * (w / 2 + .9), z0, '#c96a3a')); }
+    else if(th === 2){ const m = box(g, w * .96, .34, .06, new THREE.MeshLambertMaterial({ map:decoTex('planche') }), 0, Math.min(h * .35, .45), z0 - .08); m.material.map.repeat.set(2, 1); [1, -1].forEach(s => palmier(g, s * (w / 2 + 1), z0)); }
+    else if(th === 3){ box(g, w * .9, Math.min(h * .4, .5), .55, new THREE.MeshLambertMaterial({ map:decoTex('haie') }), 0, Math.min(h * .4, .5) / 2, (z0 + dz) / 2); fleurs(g, 0, dz + .45, w * .8, ['#ffffff', '#ffd23f']); [1, -1].forEach(s => aile(g, s, w, h, z0, 'kilim')); }
+    else if(th === 4){ [1, -1].forEach(s => { jarre(g, s * (w / 2 + .85), z0 - .3, '#1f6fd8'); jarre(g, s * (w / 2 + .85), z0 + .4, '#f7f3ea'); }); fleurs(g, 0, z0 - .35, w * .7, ['#8a4fd8', '#ff7ad1', '#ffffff']); }
+    else { const m = box(g, w * .96, .3, .06, new THREE.MeshLambertMaterial({ map:decoTex('kilim') }), 0, Math.min(h * .3, .4), z0 - .08); m.material.map.repeat.set(3, 1); [1, -1].forEach(s => { aile(g, s, w, h, z0, 'brique'); fleurs(g, s * (w / 2 + .9), z0 - .5, .9, ['#e8333a', '#ffffff']); }); }
+  }
   // un obstacle : { x, z, a (sens du passage), w, h, type }
   function buildObstacle(o, i){
     const g = new THREE.Group(); g.position.set(o.x, 0, o.z); g.rotation.y = o.a; group.add(g); o.g = g; o.bars = [];
@@ -145,6 +169,7 @@ export function createWorld(THREE, canvas, api){
       const planes = o.type === 'oxer' ? [-.45, .45] : [0];
       planes.forEach(dz => { [1, -1].forEach(s => { box(g, .16, o.h + .7, .16, L('#f4f4f4'), s * (w / 2 + .1), (o.h + .7) / 2, dz); box(g, .5, .08, .5, L(cols[0]), s * (w / 2 + .1), .04, dz); });
         const n = Math.max(1, Math.round(o.h / .32)); for(let k = 0; k < n; k++){ const y = o.h - k * (o.h / n); const b = cyl(g, .05, .05, w, new THREE.MeshLambertMaterial({ map:tex }), 0, y, dz, 8); b.rotation.z = Math.PI / 2; if(k === 0) o.bars.push(b); } });
+      if(!o.rustique) decore(g, o, i, planes);
     } else if(o.type === 'tronc'){ const b = cyl(g, o.h / 2, o.h / 2, w, L('#7a5230'), 0, o.h / 2, 0, 10); b.rotation.z = Math.PI / 2; [1, -1].forEach(s => cyl(g, o.h / 2 + .01, o.h / 2 + .01, .06, L('#d9b98a'), s * w / 2, o.h / 2, 0, 10).rotation.z = Math.PI / 2); }
     else if(o.type === 'haie'){ box(g, w, o.h * .5, .5, L('#7a5230'), 0, o.h * .25, 0); box(g, w, o.h * .55, .7, L('#3f8f4a'), 0, o.h * .75, 0); }
     else if(o.type === 'stere'){ for(let r = 0; r < 3; r++) for(let k = 0; k < Math.floor(w / .34) - r; k++) { const b = cyl(g, o.h / 6, o.h / 6, .9, L(k % 2 ? '#8a5f38' : '#a07040'), -w / 2 + .2 + r * .17 + k * .34, o.h / 6 + r * o.h / 3.4, 0, 7); b.rotation.x = Math.PI / 2; } }

@@ -215,14 +215,15 @@ details summary{cursor:pointer;font-weight:800}
       <tr><td>🌼 La Légende du Jasmin</td><td>Plateforme en Tunisie, 27 mondes en images réalistes, blocs savoir selon l'enfant. Le Jasmin 2 reste en sauvegarde, sans changement.</td></tr>
       <tr><td>🦂 Jasmin · Stage 2</td><td>23 mondes plus difficiles : échelles, objets à lancer, ennemis à attraper, 2 boss.</td></tr>
       <tr><td>🧱 Tebni</td><td>Le jeu de briques façon Tetris (zellige ou « Classique en vrai ») ; l'ombre de la pièce est une option (Non par défaut).</td></tr>
-      <tr><td>🐉 Serpent Légendes</td><td>Le serpent 3D, ses skins, ses coffres (30 pièces), la Boutique du savoir ; et la variante en ligne (voir son aide).</td></tr>
+      <tr><td>🐉 Serpent Légendes</td><td>Le serpent 3D, ses skins, ses coffres (30 pièces), la Boutique du savoir.</td></tr>
+      <tr><td>🐍 L'Arène des serpents</td><td>La variante « arène » du cahier des charges (21/11) : un serpent à tête d'animal ou à la tête d'un enfant mange les perles d'un riad ; joystick à gauche, BOOST à droite. Tranquille (14 serpents gentils, on renaît), Champion (25 serpents, une vie), et <b>en ligne</b> (salon, invitations, code à 4 lettres, 3/5/10 min, 0/8/16 machines). 7 têtes à gagner par missions. Commentaire en arabe, en français ou coupé. Bruitages ElevenLabs de Zarbia, Koora et Kassar.</td></tr>
       <tr><td>🎲 Ludo Légendes</td><td>Contre la machine ou en ligne (salon, invitations, sablier de 10 s).</td></tr>
       <tr><td>❄️ Grimpe-Glace · 🚋 Médina Express</td><td>Plateforme vers le haut · course infinie dans la médina et le TGM.</td></tr>
       <tr><td>🏺 Yajour</td><td>Puzzle physique 3D : le super-héros fait tomber les constructions (25 niveaux, 5 mondes).</td></tr>
       <tr><td>⚽ Koora · 💥 Kassar · 🧶 Khyout · 🔤 Kelma</td><td>Calcul en 3D · casse-carreaux · relier les pelotes · la tour des mots (français, anglais, arabe).</td></tr>
       <tr><td>🟩 Zarbia · 🃏 Chkobba</td><td>Territoire façon Paper.io · le jeu de cartes tunisien (contre l'ordi ou en ligne).</td></tr>
       <tr><td>🏘️ Ma Houma · 🎨 L'Atelier du Jasmin</td><td>Le quartier à faire vivre (en ligne) · coloriage 2D / 3D.</td></tr>
-      <tr><td>🐴 Les Écuries</td><td>Le club hippique (un club par joueur).</td></tr>
+      <tr><td>🐴 Les Écuries</td><td>Le club hippique (un club par joueur). Depuis le 21/11 (demandes d'Essil) : pansage une fois par jour et plus court ; obstacles décorés ; <b>les prés</b> avec Hamza le palefrenier (3 chevaux par pré, son tableau « qui est où ») ; <b>les boxes</b> à décorer, abreuvoir automatique et balle de foin ; <b>Concours entre nous</b> en ligne (même épreuve en même temps, podium et primes).</td></tr>
     </table></div>
   </section>
 

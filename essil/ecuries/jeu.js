@@ -1,6 +1,7 @@
 /* Les Écuries d'Essil — l'interface : la cour, le club-house (cours et quiz), la sellerie, le marchand, l'écurie, les concours. */
 import { FILET, SELLE, ROBES, RACES, OUTILS, ORDRE, PANSAGE_QCM, HARNAIS_QCM, CHEVAUX, STATS, COULEURS, HEX, RAYONS, NOURRITURE, EPREUVES, BROSSES, DEPART_BROSSES } from './data.js';
 import { GALOPS } from './galops.js';
+import { Duel } from './duel.js';
 
 const $ = id => document.getElementById(id);
 const IMG = new URL('img/', import.meta.url).href;   // marche depuis essil/les-ecuries.html comme depuis jeux/les-ecuries.html
@@ -18,10 +19,20 @@ const BR = Object.fromEntries([...OUTILS.map(o => [o.id, o]), ...BROSSES.filter(
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 let player = null, S = null;
 const key = () => 'ecuries:' + player;
-const newHorse = eq => ({ eq:eq || {}, dirt:.6, faim:55, moral:60, t:Date.now(), gour:[] });
+const newHorse = eq => ({ eq:eq || {}, dirt:.6, faim:55, soif:80, moral:60, t:Date.now(), gour:[], deco:{}, flots:{} });
 const fresh = () => ({ v:1, t:0, coins:100, horses:{ noisette:newHorse({ licol:'marine', filet:'havane', selle:'havane' }) }, owned:{ 'licol:marine':1, 'filet:havane':1, 'selle:havane':1 }, cur:'noisette', best:{}, ecole:{}, n:{ quiz:0, pansages:0, concours:0 }, brosses:Object.fromEntries(DEPART_BROSSES.map(b => [b, 1])), galops:{} });
 function save(){ S.t = Date.now(); store.set(key(), S); }
-function decay(){ const now = Date.now(); Object.values(S.horses).forEach(h => { const hrs = Math.max(0, (now - (h.t || now)) / 36e5); if(hrs < .02) return; h.dirt = Math.min(1, h.dirt + hrs / 9); h.faim = Math.max(0, h.faim - hrs * 11); h.moral = Math.max(20, h.moral - hrs * 2); h.t = now; }); }
+/* 21/11 (demandes d'Essil) : le pansage se fait une fois par jour (propre toute la journée, il faut le refaire le lendemain) ;
+   un abreuvoir automatique dans le box : il n'a jamais soif ; une balle de foin : il grignote, l'appétit ne descend pas sous 60 ;
+   au pré (avec Hamza) : le moral remonte tout seul. */
+const aujourdhui = () => new Date().toDateString();
+function decay(){ const now = Date.now(), jour = aujourdhui(); Object.values(S.horses).forEach(h => {
+  if(h.pj && h.pj !== jour && h.dirt < .6){ h.dirt = .6; }
+  const hrs = Math.max(0, (now - (h.t || now)) / 36e5); if(hrs < .02) return;
+  if(!h.pj) h.dirt = Math.min(1, h.dirt + hrs / 9);
+  h.faim = Math.max(h.foin ? Math.max(60, Math.min(h.faim, 60)) : 0, h.faim - hrs * 11);
+  h.soif = h.abreuvoir ? 100 : Math.max(0, (h.soif == null ? 70 : h.soif) - hrs * 14);
+  h.moral = h.pre ? Math.min(100, h.moral + hrs * 15) : Math.max(20, h.moral - hrs * 2); h.t = now; }); }
 const tracked = new Set();
 async function setPlayer(name){
   player = name; const old = store.get(key(), null); S = Object.assign(fresh(), old || {});
@@ -169,8 +180,9 @@ function endQuiz(){
 let rayon = 'brosses';
 const owns = (r, c) => !!S.owned[r + ':' + c];
 function renderShop(){
-  $('shopTabs').innerHTML = `<button class="chip ${rayon === 'brosses' ? 'on' : ''}" data-r="brosses">🧽 Brosses</button>` + RAYONS.map(r => `<button class="chip ${r.id === rayon ? 'on' : ''}" data-r="${r.id}">${r.ic} ${r.n}</button>`).join('');
+  $('shopTabs').innerHTML = `<button class="chip ${rayon === 'brosses' ? 'on' : ''}" data-r="brosses">🧽 Brosses</button><button class="chip ${rayon === 'boxes' ? 'on' : ''}" data-r="boxes">🎀 Les boxes</button>` + RAYONS.map(r => `<button class="chip ${r.id === rayon ? 'on' : ''}" data-r="${r.id}">${r.ic} ${r.n}</button>`).join('');
   if(rayon === 'brosses') return renderBrosses();
+  if(rayon === 'boxes') return renderBoxes();
   const r = RAYONS.find(x => x.id === rayon), cur = S.horses[S.cur], d = DEF[S.cur]; $('shopInfo').innerHTML = `${r.d} <b>${r.prix} 🪙</b> la couleur. Tu habilles : <b>${d.n}</b>.`;
   $('shopGrid').innerHTML = r.cols.map(c => { const col = COULEURS.find(x => x[0] === c), has = owns(r.id, c), on = cur.eq[r.id] === c;
     return `<div class="item"><div class="sw" style="background:${col[2]}">${r.ic}</div><b>${r.n} ${col[1].toLowerCase()}</b>${has ? `<button class="pill ${on ? 'go' : ''}" data-eq="${c}">${on ? '✔ Sur ' + d.n : 'Mettre à ' + d.n}</button>` : `<button class="pill sun" data-buy="${c}" ${S.coins < r.prix ? 'disabled' : ''}>${r.prix} 🪙</button>`}</div>`; }).join('');
@@ -181,8 +193,33 @@ function renderBrosses(){
   const tout = [...ORDRE.filter(id => !BROSSES.some(b => b.id === id)).map(id => ({ id, prix:0 })), ...BROSSES];
   $('shopGrid').innerHTML = tout.map(b => { const o = BR[b.id], has = S.brosses[b.id];
     return `<div class="item"><img src="${IMG}o-${b.id}.webp" alt="" style="width:92px;height:92px;border-radius:16px;object-fit:cover"><b>${o.n.replace(/^(Le |La |L')/, '')}</b><small style="color:var(--mist);font-size:13px;line-height:1.25">${esc(b.d || o.d)}</small>${has ? '<button class="pill go" disabled>✔ Dans ta trousse</button>' : `<button class="pill sun" data-buyb="${b.id}" ${S.coins < b.prix ? 'disabled' : ''}>${b.prix} 🪙</button>`}</div>`; }).join(''); }
+/* les boxes (21/11, demandé par Essil) : décorer le box de chaque cheval, un abreuvoir (jamais soif) et une balle de foin */
+const BOX = [
+  { id:'abreuvoir', n:'Abreuvoir automatique', prix:60, h:1, d:'Il boit quand il veut : il n\'a jamais soif.' },
+  { id:'foin', n:'Balle de foin', prix:40, h:1, d:'Il grignote toute la journée : son appétit ne descend jamais sous 60.' },
+  { id:'plaque', n:'Plaque dorée', prix:30, d:'Son nom sur une belle plaque en laiton.' },
+  { id:'fanions', n:'Guirlande de fanions', prix:30, d:'Des fanions de toutes les couleurs au-dessus du box.' },
+  { id:'fleurs', n:'Jardinière de géraniums', prix:35, d:'Des fleurs rouges devant la porte.' },
+  { id:'jasmin', n:'Pot de jasmin', prix:35, d:'Le jasmin de Sidi Bou Saïd, qui sent si bon.' },
+  { id:'lanterne', n:'Lanterne tunisienne', prix:45, d:'Une lanterne en cuivre aux verres de couleur.' },
+  { id:'kilim', n:'Kilim au mur', prix:50, d:'Un tapis tunisien accroché au mur du box.' },
+  { id:'fer', n:'Fer porte-bonheur', prix:25, d:'Un fer à cheval avec un ruban rouge, pour la chance.' },
+  { id:'couverture', n:'Couverture d\'écurie', prix:40, d:'Pliée sur la barre : pour les nuits fraîches.' } ];
+const aBox = (h, b) => b.h ? !!h[b.id] : !!(h.deco || {})[b.id];
+const montreBox = (h, b) => b.h ? !!h[b.id] : (h.deco || {})[b.id] === 1;
+function renderBoxes(){
+  const h = S.horses[S.cur], d = DEF[S.cur]; h.deco = h.deco || {};
+  $('shopInfo').innerHTML = `Pour le box de <b>${d.n}</b>. Change de cheval : ${ownedIds().map(id => `<button class="chip ${id === S.cur ? 'on' : ''}" data-hb="${id}">${DEF[id].n}</button>`).join(' ')}`;
+  $('shopGrid').innerHTML = BOX.map(b => { const has = aBox(h, b), on = montreBox(h, b);
+    return `<div class="item"><img src="${IMG}d-${b.id}.webp" alt="" style="width:92px;height:92px;object-fit:contain">${'<b>' + b.n + '</b>'}<small style="color:var(--mist);font-size:13px;line-height:1.25">${b.d}</small>${has ? (b.h ? '<button class="pill go" disabled>✔ Dans son box</button>' : `<button class="pill ${on ? 'go' : ''}" data-bx="${b.id}">${on ? '✔ Accroché' : 'Accrocher'}</button>`) : `<button class="pill sun" data-bb="${b.id}" ${S.coins < b.prix ? 'disabled' : ''}>${b.prix} 🪙</button>`}</div>`; }).join(''); }
+$('shopInfo').onclick = e => { const b = e.target.closest('[data-hb]'); if(!b) return; sfx('tap'); S.cur = b.dataset.hb; save(); renderShop(); };
 $('shopTabs').onclick = e => { const b = e.target.closest('[data-r]'); if(!b) return; sfx('tap'); rayon = b.dataset.r; renderShop(); };
-$('shopGrid').onclick = e => { const bb = e.target.closest('[data-buyb]'); if(bb){ const x = BROSSES.find(y => y.id === bb.dataset.buyb); if(S.coins < x.prix){ sfx('ko'); return; } S.brosses[x.id] = 1; coins(-x.prix); sfx('coin'); toast(`${BR[x.id].n} rejoint ta trousse de pansage !`); renderShop(); return; }
+$('shopGrid').onclick = e => {
+  const bx = e.target.closest('[data-bb],[data-bx]'); if(bx){ const h = S.horses[S.cur], b = BOX.find(x => x.id === (bx.dataset.bb || bx.dataset.bx)); h.deco = h.deco || {};
+    if(bx.dataset.bb){ if(S.coins < b.prix){ sfx('ko'); return; } if(b.h){ h[b.id] = true; if(b.id === 'abreuvoir') h.soif = 100; if(b.id === 'foin') h.faim = Math.max(h.faim, 60); } else h.deco[b.id] = 1; coins(-b.prix); sfx('coin'); toast(`${b.n} pour le box de ${DEF[S.cur].n} !`); }
+    else { h.deco[b.id] = h.deco[b.id] === 1 ? 2 : 1; sfx('tap'); save(); }
+    renderShop(); return; }
+  const bb = e.target.closest('[data-buyb]'); if(bb){ const x = BROSSES.find(y => y.id === bb.dataset.buyb); if(S.coins < x.prix){ sfx('ko'); return; } S.brosses[x.id] = 1; coins(-x.prix); sfx('coin'); toast(`${BR[x.id].n} rejoint ta trousse de pansage !`); renderShop(); return; }
   const b = e.target.closest('[data-buy],[data-eq]'); if(!b) return; const r = RAYONS.find(x => x.id === rayon), cur = S.horses[S.cur];
   if(b.dataset.buy){ if(S.coins < r.prix){ sfx('ko'); return; } S.owned[r.id + ':' + b.dataset.buy] = 1; cur.eq[r.id] = b.dataset.buy; coins(-r.prix); sfx('coin'); toast(`${r.n} acheté et mis à ${DEF[S.cur].n} !`); }
   else { cur.eq[r.id] = cur.eq[r.id] === b.dataset.eq && r.id !== 'filet' && r.id !== 'selle' ? null : b.dataset.eq; sfx('tap'); save(); }
@@ -210,7 +247,7 @@ function loadWorld(){
   worldP.catch(() => { worldP = null; }); return worldP;
 }
 const ownedIds = () => CHEVAUX.filter(h => S.horses[h.id]).map(h => h.id);
-const formOf = id => { const h = S.horses[id]; return .82 + .1 * (1 - h.dirt) + .08 * Math.min(1, h.faim / 70) + .05 * (h.moral / 100); };
+const formOf = id => { const h = S.horses[id]; return .8 + .1 * (1 - h.dirt) + .08 * Math.min(1, h.faim / 70) + .03 * Math.min(1, (h.soif == null ? 70 : h.soif) / 70) + .05 * (h.moral / 100); };
 
 /* ---------- l'écurie : en photos réalistes (15/11) ; le 3D ne sert plus qu'à voir le cheval harnaché ---------- */
 let care = null, tool = null, feedOn = false, ph = null, phP = null, equip3D = false;
@@ -220,14 +257,14 @@ async function openStable(sel){
   decay(); save(); $('sHint').style.display = ''; $('sHint').textContent = 'J\'ouvre les écuries…'; ['sSide', 'sNavs', 'sTray', 'sBars'].forEach(id => $(id).style.display = 'none');
   try{ await loadPhoto(); }catch(e){ toast('Les écuries ne s\'ouvrent pas sur cet appareil.'); go('hub'); return; }
   if(cur !== 'stable') return; document.body.classList.add('ph'); equip3D = false;
-  const ids = ownedIds(); ph.openStable(ids.map(id => ({ def:DEF[id], eq:S.horses[id].eq, dirt:S.horses[id].dirt, sueur:S.horses[id].sueur, id })), { at:Math.max(0, ids.indexOf(S.cur)) });
+  const ids = ownedIds(); ph.openStable(ids.map(id => ({ def:DEF[id], eq:S.horses[id].eq, dirt:S.horses[id].dirt, sueur:S.horses[id].sueur, id, h:S.horses[id] })), { at:Math.max(0, ids.indexOf(S.cur)) });
   care = null; stableUI(); if(sel) openCare(sel);
 }
 function stableUI(){
   const on = !!care; $('sName').textContent = on ? `${DEF[care].n} · ${DEF[care].race}` : 'Nos écuries'; ['sSide', 'sNavs', 'sTray', 'sBars'].forEach(id => $(id).style.display = on ? '' : 'none'); $('sNavs').style.display = on && ownedIds().length > 1 ? '' : 'none';
   $('sHint').style.display = on ? 'none' : ''; $('sHint').textContent = ownedIds().length > 1 ? 'Glisse pour te promener, touche un cheval pour t\'en occuper' : 'Touche ta ponette pour t\'en occuper'; if(on){ gauges(); tray(); }
 }
-function gauges(){ const h = S.horses[care]; $('sBars').innerHTML = [['🧼 Propreté', 100 - h.dirt * 100], ['🥕 Appétit rassasié', h.faim], ['💛 Moral', h.moral]].map(([n, v]) => `<div class="gauge">${n}<i><b style="width:${Math.round(Math.max(0, Math.min(100, v)))}%;${v < 35 ? 'background:var(--red)' : v < 65 ? 'background:var(--gold)' : ''}"></b></i></div>`).join(''); }
+function gauges(){ const h = S.horses[care]; $('sBars').innerHTML = [['🧼 Propreté', 100 - h.dirt * 100], ['🥕 Appétit rassasié', h.faim], ['💧 Eau' + (h.abreuvoir ? ' (abreuvoir)' : ''), h.abreuvoir ? 100 : (h.soif == null ? 70 : h.soif)], ['💛 Moral', h.moral]].map(([n, v]) => `<div class="gauge">${n}<i><b style="width:${Math.round(Math.max(0, Math.min(100, v)))}%;${v < 35 ? 'background:var(--red)' : v < 65 ? 'background:var(--gold)' : ''}"></b></i></div>`).join(''); }
 function tray(){
   const T = $('sTray');
   if(feedOn){ T.innerHTML = NOURRITURE.map(f => `<button class="tool" data-food="${f.id}" title="${esc(f.d)}"><span class="e">${f.ic}</span>${f.n}</button>`).join('') + `<button class="tool" data-brush="1"><span class="e">🧽</span>Les brosses</button>`; return; }
@@ -236,8 +273,8 @@ function tray(){
   T.innerHTML = TRAY().filter(id => S.brosses[id] || left[id]).map(id => { const o = BR[id], has = S.brosses[id], n = left[id] || (id === 'brossecrins' ? left.peigne : 0);
     return `<button class="tool ${tool === id ? 'on' : ''} ${has ? '' : 'lock'}" data-tool="${id}"><img src="${IMG}o-${id}.webp" alt="">${o.n.replace(/^(Le |La |L')/, '')}${n ? `<u>${n}</u>` : ''}</button>`; }).join('');
 }
-function openCare(id){ if(!id) return; sfx('tap'); care = id; S.cur = id; save(); feedOn = false; ph.select(ownedIds().indexOf(id)); $('sEquip').textContent = '👗 Équiper'; if(!tool || !S.brosses[tool]) tool = 'curepied'; ph.setTool(tool); stableUI(); if(Math.random() < .4) sfx('hennit');
-  const h = S.horses[id]; if(h.sueur) toast('Il a transpiré au concours : passe le couteau de chaleur pour racler la sueur.', 3800); else if(h.dirt > .05) toast('Choisis une brosse en bas, puis frotte les taches. On commence par le cure-pied !', 3600); else toast(`${DEF[id].n} est tout propre. Tu peux le caresser avec la brosse douce 💛`); }
+function openCare(id){ if(!id) return; sfx('tap'); if(S.horses[id].pre){ S.horses[id].pre = null; toast(`Hamza ramène ${DEF[id].n} du pré 🌳`); } care = id; S.cur = id; save(); feedOn = false; ph.select(ownedIds().indexOf(id)); $('sEquip').textContent = '👗 Équiper'; if(!tool || !S.brosses[tool]) tool = 'curepied'; ph.setTool(tool); stableUI(); if(Math.random() < .4) sfx('hennit');
+  const h = S.horses[id]; if(h.sueur) toast('Il a transpiré au concours : passe le couteau de chaleur pour racler la sueur.', 3800); else if(h.dirt > .05) toast('Choisis une brosse en bas, puis frotte les taches. On commence par le cure-pied !', 3600); else toast(`${DEF[id].n} est tout propre${h.pj === aujourdhui() ? ' : le pansage du jour est fait' : ''}. Tu peux le caresser avec la brosse douce 💛`, 3200); }
 $('sTray').onclick = e => { const b = e.target.closest('[data-tool],[data-food],[data-brush]'); if(!b) return;
   if(b.dataset.brush){ sfx('tap'); feedOn = false; tray(); return; }
   if(b.dataset.tool){ const id = b.dataset.tool, o = BR[id];
@@ -246,6 +283,7 @@ $('sTray').onclick = e => { const b = e.target.closest('[data-tool],[data-food],
   const f = NOURRITURE.find(x => x.id === b.dataset.food), h = S.horses[care], now = Date.now();
   if(f.gour){ h.gour = (h.gour || []).filter(t => now - t < 36e5); if(h.gour.length >= 3){ sfx('ko'); toast('Pas trop de friandises : c\'est très sucré ! Reviens plus tard.'); return; } h.gour.push(now); }
   else if(h.faim >= 98 && f.id !== 'eau'){ sfx('ko'); toast(`${DEF[care].n} n'a plus faim.`); return; }
+  if(f.id === 'eau'){ if(h.abreuvoir){ toast(`${DEF[care].n} a son abreuvoir : il boit quand il veut 💧`); return; } h.soif = 100; }
   h.faim = Math.min(100, h.faim + f.f); h.moral = Math.min(100, h.moral + f.m); h.t = now; save(); ph.feed(); sfx('croque'); gauges(); toast(f.d, 3400); };
 function onSpot(ev){
   if(ev.wrong){ const txt = { boue:'De la boue séchée : il faut d\'abord la décoller avec l\'étrille.', poussiere:'De la poussière : c\'est le travail du bouchon.', terne:'Pour faire briller le poil (et pour la tête), prends la brosse douce.', yeux:'Les yeux et les naseaux, c\'est avec l\'éponge humide.', noeud:'Des nœuds dans les crins : prends le peigne (ou la brosse à crins).', pied:'Les pieds se curent avec le cure-pied.', corne:'Le sabot est propre : un coup de graisse à pieds !', sueur:'De la sueur : on la racle avec le couteau de chaleur.' }[ev.wrong];
@@ -254,10 +292,11 @@ function onSpot(ev){
   if(ev.pet){ h.moral = Math.min(100, h.moral + (ev.gant ? 4 : 2)); gauges(); return; }
   if(ev.lustre){ coins(15); h.moral = Math.min(100, h.moral + 5); sfx('bravo'); gauges(); save(); toast(`${DEF[care].n} brille comme un sou neuf ! + 15 pièces ✨`, 3200); return; }
   if(ev.done){ sfx('ok'); const total = 16; h.dirt = Math.min(h.dirt, ev.left / total); tray(); gauges();
-    if(ev.left === 0){ h.dirt = 0; h.sueur = false; h.moral = Math.min(100, h.moral + 15); h.t = Date.now(); S.n.pansages++; const gain = 30; coins(gain); party(24); sfx('bravo'); gauges(); toast(`${DEF[care].n} brille ! Pansage complet : + ${gain} pièces 🪙${S.brosses.lustrant ? ' Un coup de spray lustrant pour finir ?' : ''}`, 3800); }
+    if(ev.left === 0){ h.dirt = 0; h.sueur = false; h.pj = aujourdhui(); h.moral = Math.min(100, h.moral + 15); h.t = Date.now(); S.n.pansages++; const gain = 30; coins(gain); party(24); sfx('bravo'); gauges(); toast(`${DEF[care].n} brille ! Pansage complet : + ${gain} pièces 🪙 Il est propre pour toute la journée.${S.brosses.lustrant ? ' Un coup de spray lustrant pour finir ?' : ''}`, 4200); }
     save(); }
 }
 $('sFeed').onclick = () => { sfx('tap'); feedOn = !feedOn; tray(); };
+$('sDeco').onclick = () => { sfx('tap'); if(care) S.cur = care; save(); rayon = 'boxes'; go('shop'); };
 // Équiper : on montre le cheval harnaché en 3D (les couleurs achetées), puis on revient aux photos
 $('sEquip').onclick = async () => { sfx('tap');
   try{ await loadWorld(); }catch(e){ equipPanel(); return; }
@@ -304,6 +343,7 @@ function briefing(ep){
   $('mNo').onclick = () => { sfx('tap'); closeModal(); }; $('mYes').onclick = () => { sfx('tap'); closeModal(); startRide(ep); };
 }
 async function startRide(ep){
+  if(S.horses[S.cur] && S.horses[S.cur].pre){ S.horses[S.cur].pre = null; save(); }
   rideEp = ep; go('ride'); $('count').textContent = '…';
   try{ await loadWorld(); }catch(e){ toast('La 3D ne démarre pas sur cet appareil.'); go('concours'); return; }
   if(cur !== 'ride') return; document.body.classList.add('g3'); const dres = ep.k === 'dressage', saute = ['cso', 'cross', 'hunter'].includes(ep.k);
@@ -313,6 +353,7 @@ async function startRide(ep){
 const GA = ['Arrêt', 'Pas', 'Trot', 'Galop']; let hudC = {}, msgT = null;
 const mapX = $('map').getContext('2d');
 function rideHud(o){
+  if(duel && duel.actif) duel.hud(o);
   if(o.msg){ const m = $('rmsg'); m.textContent = o.msg; m.className = 'on ' + (o.kind || ''); clearTimeout(msgT); msgT = setTimeout(() => m.classList.remove('on'), 1700); return; }
   if(o.halt != null && o.time == null){ if(o.halt > 0) $('rNext').innerHTML = `${Math.min(3, o.halt * 3).toFixed(1).replace('.', ',')} s<small>immobile</small>`; return; }
   const set = (k, v, f) => { if(hudC[k] !== v){ hudC[k] = v; f(v); } };
@@ -330,12 +371,14 @@ function rideHud(o){
   if(m.letters){ g.strokeStyle = '#9a8a60'; g.lineWidth = 3; g.strokeRect(X(10), Yf(20), (20) * sc, 40 * sc); g.fillStyle = '#7a6a40'; g.font = '800 20px Nunito'; g.textAlign = 'center'; g.textBaseline = 'middle'; Object.entries(m.letters).forEach(([k, [x, z]]) => { if(k !== 'X') g.fillText(k, X(x * 1.22), Yf(z * 1.1)); });
     if(m.path){ g.strokeStyle = '#ffb000'; g.lineWidth = 4; g.beginPath(); m.path.forEach(([x, z], i) => i ? g.lineTo(X(x), Yf(z)) : g.moveTo(X(x), Yf(z))); g.stroke(); } if(m.halt){ g.strokeStyle = '#ffb000'; g.lineWidth = 4; g.beginPath(); g.arc(X(m.halt[0]), Yf(m.halt[1]), 9, 0, 7); g.stroke(); } }
   m.obs.forEach(([x, z, a, st, w], i) => { g.save(); g.translate(X(x), Yf(z)); g.rotate(-a); g.fillStyle = st === 2 ? '#d7263d' : st === 1 ? '#9aa3ad' : '#1f3c88'; g.fillRect(-Math.max(7, w * sc / 2), -3, Math.max(14, w * sc), 6); g.restore(); if(st === 2){ g.strokeStyle = '#d7263d'; g.lineWidth = 3; g.beginPath(); g.arc(X(x), Yf(z), 13, 0, 7); g.stroke(); } });
+  if(duel && duel.actif) duel.carte(g, X, Yf);
   g.save(); g.translate(X(m.x), Yf(m.z)); g.rotate(-m.a + Math.PI); g.fillStyle = '#1c2340'; g.beginPath(); g.moveTo(0, 12); g.lineTo(8, -8); g.lineTo(0, -3); g.lineTo(-8, -8); g.closePath(); g.fill(); g.restore();
 }
 function rideEnd(res){
+  if(duel && duel.actif) duel.fin(res);
   if(rideEp.galop) return galopEnd(res);
   const ep = rideEp, h = S.horses[S.cur], d = DEF[S.cur], rank = res.rank, gain = ep.gain[rank], better = rank < rankOf(ep.id);
-  if(better) S.best[ep.id] = rank; S.n.concours++; h.sueur = true; h.dirt = Math.min(1, h.dirt + (ep.k === 'cross' ? .5 : .3)); h.faim = Math.max(0, h.faim - (ep.k === 'cross' ? 30 : 20)); h.moral = Math.min(100, h.moral + (rank < 3 ? 12 : 3)); h.t = Date.now(); coins(gain); if(rank < 3) party(); save();
+  if(better) S.best[ep.id] = rank; S.n.concours++; h.sueur = true; if(h.pj !== aujourdhui()) h.dirt = Math.min(1, h.dirt + (ep.k === 'cross' ? .5 : .3)); h.flots = h.flots || {}; if(!res.elim && rank === 0) h.flots.or = (h.flots.or || 0) + 1; else if(!res.elim && rank < 3) h.flots.bleu = (h.flots.bleu || 0) + 1; h.faim = Math.max(0, h.faim - (ep.k === 'cross' ? 30 : 20)); h.moral = Math.min(100, h.moral + (rank < 3 ? 12 : 3)); h.t = Date.now(); coins(gain); if(rank < 3) party(); save();
   const f = n => String(Math.round(n * 10) / 10).replace('.', ',');
   const lines = res.kind === 'dressage' ? `<span>Note finale</span><b>${f(res.pct)} %</b><span>Les figures</span><b>${res.notes.map(f).join(' · ')}</b>` :
     res.kind === 'course' ? `<span>Ta place</span><b>${res.place}${res.place === 1 ? 're' : 'e'} sur ${res.nb}</b><span>Temps</span><b>${f(res.time)} s</b>` :
@@ -343,7 +386,7 @@ function rideEnd(res){
     res.kind === 'western' ? `<span>Temps</span><b>${f(res.time)} s</b><span>Tonneaux touchés</span><b>${res.touches} (+ ${res.touches * 5} s)</b><span>Total</span><b>${f(res.total)} s</b>` :
     `<span>Fautes aux obstacles</span><b>${res.jumpPen} pt${res.jumpPen > 1 ? 's' : ''}</b><span>Temps (accordé : ${Math.round(res.opt)} s)</span><b>${f(res.time)} s</b><span>Temps dépassé</span><b>${f(res.timePen)} pt${res.timePen > 1 ? 's' : ''}</b><span>Total</span><b>${f(res.pen)} pt${res.pen > 1 ? 's' : ''}</b>`;
   modal(`<div class="medal">${res.elim ? '🙈' : ['🥇', '🥈', '🥉', '🎗️'][rank]}</div><h2>${res.elim ? 'Éliminée… on réessaie !' : [res.kind === 'dressage' ? 'Première ! Quelle reprise !' : res.kind === 'course' ? 'Première ! Quelle course !' : res.kind === 'hunter' ? 'Première ! Quel style !' : res.kind === 'western' ? 'Première ! Yee-haw !' : 'Première ! Sans faute !', 'Deuxième place !', 'Troisième place !', res.kind === 'dressage' ? 'Reprise terminée' : 'Parcours terminé'][rank]}</h2><p style="margin:0;text-align:center;color:var(--mist)">${ep.n} · ${d.n}</p><div class="res">${lines}<span>Gain</span><b>+ ${gain} 🪙</b></div>
-    <p style="margin:0;font-size:15px;color:var(--mist);text-align:center">${d.n} a bien travaillé : il a transpiré, il mérite un pansage (avec le couteau de chaleur) et un bon repas.</p><div class="row c"><button class="pill go" id="rAgain">🔁 Rejouer</button><button class="pill sun" id="rStable">🏠 À l'écurie</button><button class="pill" id="rList">🏆 Les concours</button></div>`);
+    <p style="margin:0;font-size:15px;color:var(--mist);text-align:center">${d.n} a bien travaillé : il a transpiré, il mérite un coup de couteau de chaleur et un bon repas.${!res.elim && rank < 3 ? ' Son flot est accroché à son box 🏵️' : ''}</p><div class="row c"><button class="pill go" id="rAgain">🔁 Rejouer</button><button class="pill sun" id="rStable">🏠 À l'écurie</button><button class="pill" id="rList">🏆 Les concours</button></div>`);
   $('rAgain').onclick = () => { sfx('tap'); closeModal(); if(h.faim < 15){ toast(`${d.n} a trop faim : direction l'écurie.`); go('stable'); } else startRide(ep); };
   $('rStable').onclick = () => { sfx('tap'); closeModal(); go('stable'); }; $('rList').onclick = () => { sfx('tap'); closeModal(); go('concours'); };
 }
@@ -388,7 +431,7 @@ function endGalopTheo(){
 function galopEnd(res){
   const ep = rideEp, g = ep.galop, h = S.horses[S.cur], P = g.prat;
   const ok = !res.elim && (P.pct != null ? res.pct >= P.pct : res.pen <= P.pen);
-  h.sueur = true; h.dirt = Math.min(1, h.dirt + .3); h.faim = Math.max(0, h.faim - 15); h.t = Date.now();
+  h.sueur = true; if(h.pj !== aujourdhui()) h.dirt = Math.min(1, h.dirt + .3); h.faim = Math.max(0, h.faim - 15); h.t = Date.now();
   const f = n => String(Math.round(n * 10) / 10).replace('.', ',');
   const detail = P.pct != null ? `Ta note : <b>${f(res.pct || 0)} %</b> (il fallait ${P.pct} %)` : `Tes points : <b>${f(res.pen || 0)}</b> (${P.pen} au plus)`;
   if(ok){ S.galops[g.n] = Object.assign(S.galops[g.n] || {}, { prat:Date.now(), date:Date.now() }); coins(g.gain); party(60); save(); }
@@ -404,6 +447,52 @@ function diplome(n){
   $('mNo').onclick = () => { sfx('tap'); closeModal(); }; sfx('bravo'); }
 
 /* =====================================================================
+   LES PRÉS (21/11, demandé par Essil) : 3 prés, 3 chevaux au plus dans chacun ; Hamza, le palefrenier, les y emmène
+   et tient le tableau « qui est où ». Au pré, le moral remonte tout seul (decay) ; un cheval qu'on soigne ou qui part
+   en concours revient à l'écurie.
+   ===================================================================== */
+const PRES = [{ id:'oliviers', n:'Le pré des oliviers' }, { id:'ruisseau', n:'Le pré du ruisseau' }, { id:'grand', n:'Le grand pré' }];
+const MAXPRE = 3;
+const auPre = p => ownedIds().filter(id => S.horses[id].pre === p);
+function hamza(t){ const b = $('pBulle'); if(b){ b.textContent = t; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } }
+function renderPres(msg){
+  decay(); save();
+  $('pTableau').innerHTML = `<h3>📋 Le tableau de Hamza</h3><table>${PRES.map(p => { const l = auPre(p.id); return `<tr><th>${p.n}</th><td>${l.length ? l.map(id => esc(DEF[id].n)).join(', ') : '<i>personne</i>'}</td><td>${l.length} / ${MAXPRE}</td></tr>`; }).join('')}<tr><th>🏠 À l'écurie</th><td colspan="2">${ownedIds().filter(id => !S.horses[id].pre).map(id => esc(DEF[id].n)).join(', ') || '<i>personne</i>'}</td></tr></table>`;
+  $('pListe').innerHTML = PRES.map(p => { const l = auPre(p.id);
+    return `<div class="pre" style="background-image:url(${IMG}pre-${p.id}.webp)"><div class="pnom">${p.n} <small>${l.length} / ${MAXPRE}</small></div>
+      ${l.map((id, k) => `<button class="pch" data-pch="${id}" style="left:${12 + k * 28}%;--d:${(k * 1.7 + 6).toFixed(1)}s;--k:${k}"><img src="${photo(id)}" alt=""><span>${esc(DEF[id].n)}</span></button>`).join('')}
+      ${l.length < MAXPRE ? `<button class="pill sun pmet" data-pmet="${p.id}">＋ Mettre un cheval</button>` : '<span class="pplein">Complet</span>'}</div>`; }).join('');
+  hamza(msg || (ownedIds().length ? 'Bonjour ! Je suis Hamza. Dis-moi quel cheval emmener au pré : 3 chevaux au plus par pré, pour qu\'ils aient de la place pour galoper.' : 'Bonjour ! Achète d\'abord un cheval chez le marchand.'));
+}
+$('pListe').onclick = e => {
+  const m = e.target.closest('[data-pmet]'), c = e.target.closest('[data-pch]');
+  if(m){ const p = PRES.find(x => x.id === m.dataset.pmet), libres = ownedIds().filter(id => !S.horses[id].pre); sfx('tap');
+    if(auPre(p.id).length >= MAXPRE){ hamza(`${p.n} est complet : 3 chevaux au plus !`); sfx('ko'); return; }
+    if(!libres.length){ hamza('Tous tes chevaux sont déjà au pré !'); return; }
+    modal(`<h2>Qui va au ${p.n.replace(/^Le /, '')} ?</h2><div class="pchoix">${libres.map(id => `<button data-pv="${id}"><img src="${photo(id)}" alt=""><b>${esc(DEF[id].n)}</b></button>`).join('')}</div><div class="row c"><button class="pill" id="mNo">Annuler</button></div>`);
+    $('mNo').onclick = () => { sfx('tap'); closeModal(); };
+    $('mBox').querySelector('.pchoix').onclick = ev => { const b = ev.target.closest('[data-pv]'); if(!b) return; $('mBox').onclick = null; closeModal(); const h = S.horses[b.dataset.pv];
+      if(auPre(p.id).length >= MAXPRE){ hamza(`${p.n} est complet : 3 chevaux au plus !`); return; }
+      decay(); h.pre = p.id; h.t = Date.now(); save(); sfx('hennit'); renderPres(`C'est parti : j'emmène ${DEF[b.dataset.pv].n} au ${p.n.replace(/^Le /, '')} ! Il va brouter et galoper, son moral va remonter 💛`); };
+    return; }
+  if(c){ const id = c.dataset.pch, h = S.horses[id], p = PRES.find(x => x.id === h.pre); sfx('tap');
+    modal(`<h2>${esc(DEF[id].n)}</h2><img src="${photo(id)}" alt="" style="width:100%;border-radius:16px;background:linear-gradient(#e9f3ff,#e4f3d8)"><p style="margin:0;text-align:center">Au ${p ? p.n.replace(/^Le /, '') : 'pré'} · moral ${Math.round(h.moral)} / 100</p>
+      <div class="row c"><button class="pill go" id="pRet">🏠 Le ramener à l'écurie</button>${PRES.filter(q => q.id !== h.pre && auPre(q.id).length < MAXPRE).map(q => `<button class="pill" data-pchg="${q.id}">➡ ${q.n}</button>`).join('')}<button class="pill" id="mNo">Fermer</button></div>`);
+    $('mNo').onclick = () => { sfx('tap'); closeModal(); };
+    $('pRet').onclick = () => { closeModal(); decay(); h.pre = null; save(); sfx('tap'); renderPres(`Je ramène ${DEF[id].n} dans son box 🏠`); };
+    $('mBox').querySelectorAll('[data-pchg]').forEach(b => b.onclick = () => { closeModal(); decay(); h.pre = b.dataset.pchg; save(); sfx('hennit'); renderPres(`${DEF[id].n} change de pré : direction ${PRES.find(q => q.id === b.dataset.pchg).n.toLowerCase()} !`); }); }
+};
+
+/* =====================================================================
+   CONCOURS ENTRE NOUS (21/11, demandé par Essil) : en ligne, voir duel.js
+   ===================================================================== */
+let duel = null;
+const duelObj = () => duel || (duel = new Duel({ joueur:() => player, avatar:n => new URL(avatarOf(n), location.href).pathname, ecran:() => cur, go, toast, sfx, coins, party, EPREUVES,
+  cheval:() => DEF[S.cur] ? DEF[S.cur].n : '', fermeModal:closeModal,
+  peutMonter:() => { const h = S.horses[S.cur]; if(!h.eq.filet || !h.eq.selle){ toast('Il faut un filet et une selle pour monter !'); return false; } if(h.faim < 15){ toast(`${DEF[S.cur].n} a trop faim : va le nourrir à l'écurie.`); return false; } return true; },
+  depart:ep => { closeModal(); if(S.horses[S.cur].pre) S.horses[S.cur].pre = null; toast(`${ep.ic} ${ep.n} : tout le monde part en même temps !`, 3000); startRide(ep); } }));
+
+/* =====================================================================
    NAVIGATION
    ===================================================================== */
 let cur = 'home';
@@ -413,6 +502,7 @@ function go(name){
   cur = name; document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === name)); coins(0);
   if(name === 'hub'){ decay(); const n = ownedIds().length, dirty = ownedIds().filter(id => S.horses[id].dirt > .5 || S.horses[id].faim < 40).length; $('hubStable').textContent = `${n} cheva${n > 1 ? 'ux' : 'l'} · ${dirty ? dirty + ' à soigner' : 'tous en pleine forme'}`; $('hubMarket').textContent = `${CHEVAUX.length - n} chevaux à adopter`; $('hubStars').textContent = COURS.map(c => starTxt(starsOf(S.ecole[c.id] || 0))).join('  '); const ng = GALOPS.filter(g => galopOk(g.n)).length; $('hubGalops').textContent = ng ? `Tu as ${ng === 1 ? 'le galop 1' : 'les galops 1 à ' + ng}${ng < 7 ? ' · prochain : galop ' + (ng + 1) : ' : tous !'}` : 'Passe tes examens, du galop 1 au galop 7'; }
   if(name === 'galops') renderGalops(); if(name === 'lecon' && !(cours && cours.galop)) $('lecon').querySelector('[data-go]').dataset.go = 'ecole';
+  if(name === 'pres') renderPres(); if(name === 'duel'){ duelObj().ouvre(); } else if(duel && !duel.actif && duel.status === 'salon' && name !== 'ride' && name !== 'concours') duel.status = 'menu';
   if(name === 'ecole') renderEcole(); if(name === 'shop') renderShop(); if(name === 'market') renderMarket(); if(name === 'concours') renderConcours(); if(name === 'stable') openStable();
 }
 document.addEventListener('click', e => { const s = e.target.closest('[data-snd]'); if(s){ setSnd(!sndOn); sfx('tap'); return; } const b = e.target.closest('[data-go]'); if(b){ audio(); sfx('tap'); go(b.dataset.go); } });
@@ -421,4 +511,4 @@ $('play').onclick = async () => { audio(); sfx('hennit'); if(!player && !(await 
 $('modal').addEventListener('click', e => { if(e.target.id === 'modal' && $('mNo')) $('mNo').click(); });
 addEventListener('pagehide', () => { if(S) save(); });
 setSnd(sndOn);
-(async () => { const p = window.Famille && Famille.player(); if(p) await setPlayer(p); else { player = null; $('who1').innerHTML = 'Qui joue ?'; } window.__ecu = { get S(){ return S; }, get world(){ return world; }, go, coins, save }; })();
+(async () => { const p = window.Famille && Famille.player(); if(p) await setPlayer(p); else { player = null; $('who1').innerHTML = 'Qui joue ?'; } window.__ecu = { get S(){ return S; }, get world(){ return world; }, get duel(){ return duel; }, go, coins, save }; })();

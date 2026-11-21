@@ -41,11 +41,11 @@ export function createPhoto(canvas, api, IMG){
     const level = it.dirt;
     if(it.sueur) ['epaule', 'flanc', 'dos', 'encolure'].forEach(a => add('sueur', a));
     if(level <= .02) return S;
-    [0, 1, 2, 3].forEach(i => add('pied', 'sabot' + i));
-    ['epaule', 'croupe', 'flanc', 'cuisse', 'dos'].slice(0, Math.max(2, Math.ceil(level * 5))).forEach(a => add('boue', a));
-    if(level > .35){ add('poussiere', 'canon'); add('poussiere', 'jarret'); }
-    add('terne', 'encolure'); add('terne', 'chanfrein'); add('yeux', 'oeil'); add('yeux', 'naseau');
-    add('noeud', 'criniere1'); add('noeud', 'criniere2'); add('noeud', 'queue');
+    // 21/11 (demande d'Essil : un pansage par jour, et plus court) : 2 pieds, 2 ou 3 taches de boue, une de chaque autre
+    [0, 2].forEach(i => add('pied', 'sabot' + i));
+    ['epaule', 'flanc', 'croupe'].slice(0, level > .5 ? 3 : 2).forEach(a => add('boue', a));
+    if(level > .35) add('poussiere', 'canon');
+    add('terne', 'encolure'); add('yeux', 'oeil'); add('noeud', 'criniere1'); add('noeud', 'queue');
     return S;
   }
   const ancre = (id, a) => ANCRES[id] && ANCRES[id].a[a];
@@ -85,11 +85,28 @@ export function createPhoto(canvas, api, IMG){
       if(ok(f)){ const h = H, w = h * f.naturalWidth / f.naturalHeight, off = ((s.camX * .7) % w + w) % w; for(let x = -off; x < W; x += w) ctx.drawImage(f, x, 0, w, h); } else { ctx.fillStyle = '#c8a36e'; ctx.fillRect(0, 0, W, H); }
       const sol = ctx.createLinearGradient(0, H * .78, 0, H); sol.addColorStop(0, 'rgba(120,90,50,0)'); sol.addColorStop(1, 'rgba(90,64,36,.45)'); ctx.fillStyle = sol; ctx.fillRect(0, H * .78, W, H * .22);
       s.list.forEach((it, i) => { const P = placeEnsemble(i); if(P.x > W + 50 || P.x + P.w < -50) return;
-        ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(P.x + P.w / 2, P.y + P.h * .985, P.w * .42, P.h * .035, 0, 0, 7); ctx.fill();
-        const resp = 1 + Math.sin(t * 1.6 + i) * .004; ctx.translate(P.x + P.w / 2, P.y + P.h); ctx.scale(1, resp); if(ok(P.im)) ctx.drawImage(P.im, -P.w / 2, -P.h, P.w, P.h); ctx.restore();
-        // la plaque avec son nom
+        const h = it.h || {}, D = h.deco || {}, k = P.h / 400, au = !!h.pre;
+        // derrière le cheval : le kilim et la couverture au mur, l'abreuvoir
+        if(D.kilim) deco('kilim', P.x + P.w * .95, P.y - 10 * k, 130 * k);
+        if(D.couverture) deco('couverture', P.x + P.w * .08, P.y + P.h * .12, 130 * k);
+        if(h.abreuvoir) deco('abreuvoir', P.x + P.w * .32, H * .86, 120 * k, 0, true);
+        if(D.lanterne) deco('lanterne', P.x + P.w * .12, H * .02, 70 * k, Math.sin(t * 1.3 + i) * .05);
+        if(D.fanions) deco('fanions', P.x + P.w / 2, H * .015, Math.min(P.w * 1.05, 320 * k));
+        if(D.fer) deco('fer', P.x + P.w * .9, P.y - 70 * k, 52 * k);
+        if(au){ ctx.save(); ctx.globalAlpha = .9; ctx.font = `800 ${Math.round(22 * k + 8)}px "Baloo 2", Nunito, sans-serif`; ctx.textAlign = 'center'; ctx.fillStyle = '#3f6b35'; ctx.fillText('🌳 au pré avec Hamza', P.x + P.w / 2, P.y + P.h * .55); ctx.restore(); }
+        else { ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(P.x + P.w / 2, P.y + P.h * .985, P.w * .42, P.h * .035, 0, 0, 7); ctx.fill();
+        const resp = 1 + Math.sin(t * 1.6 + i) * .004; ctx.translate(P.x + P.w / 2, P.y + P.h); ctx.scale(1, resp); if(ok(P.im)) ctx.drawImage(P.im, -P.w / 2, -P.h, P.w, P.h); ctx.restore(); }
+        // devant : les fleurs, le jasmin, la balle de foin
+        if(D.fleurs) deco('fleurs', P.x + P.w * .02, H * .9 - 40 * k, 130 * k, 0, true);
+        if(D.jasmin) deco('jasmin', P.x + P.w * 1.04, H * .9 - 50 * k, 95 * k, 0, true);
+        if(h.foin) deco('foin', P.x + P.w * .9, H * .97, 105 * k, 0, true);
+        // la plaque avec son nom (dorée si on l'a achetée), et les flots gagnés en concours
         const nx = P.x + P.w / 2, ny = P.y - 14; ctx.font = '800 20px "Baloo 2", Nunito, sans-serif'; const tw = ctx.measureText(it.def.n).width + 30;
-        ctx.fillStyle = '#5a3a1e'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(nx - tw / 2, ny - 18, tw, 34, 10) : ctx.rect(nx - tw / 2, ny - 18, tw, 34); ctx.fill(); ctx.fillStyle = '#ffe9a8'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(it.def.n + (it.dirt > .5 || it.sueur ? ' 🧽' : ''), nx, ny); });
+        ctx.fillStyle = D.plaque ? '#c99a2e' : '#5a3a1e'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(nx - tw / 2, ny - 18, tw, 34, 10) : ctx.rect(nx - tw / 2, ny - 18, tw, 34); ctx.fill();
+        if(D.plaque){ ctx.strokeStyle = '#fff3c4'; ctx.lineWidth = 2; ctx.stroke(); }
+        ctx.fillStyle = D.plaque ? '#3a2600' : '#ffe9a8'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(it.def.n + (!au && (it.dirt > .5 || it.sueur) ? ' 🧽' : ''), nx, ny);
+        const fl = h.flots || {}, liste = [...Array(Math.min(3, fl.or || 0)).fill('flot-or'), ...Array(Math.min(3, fl.bleu || 0)).fill('flot-bleu')].slice(0, 3);
+        liste.forEach((f, j) => deco(f, nx + tw / 2 + 18 + j * 30, ny + 4, 42, Math.sin(t * 2 + j) * .06)); });
     } else {
       cover(IM[IMG + 'fond-pansage.webp']);
       const P = placeSoin(), it = s.list[s.sel];
@@ -104,6 +121,9 @@ export function createPhoto(canvas, api, IMG){
     }
     s.fx.forEach(f => { ctx.globalAlpha = Math.max(0, 1 - f.t / f.vie); const z = f.z * (1 + f.t * .8); ctx.drawImage(spotTex(f.k), f.x - z / 2, f.y - z / 2, z, z); }); ctx.globalAlpha = 1;
   }
+  // une décoration (photo ComfyUI détourée, img/d-<nom>.webp) : x au centre, y en haut ; bas = true : y est le bas de l'objet
+  function deco(nom, x, y, w, rot = 0, bas = false){ const im = img(IMG + 'd-' + nom + '.webp'); if(!ok(im)) return; const h = w * im.naturalHeight / im.naturalWidth;
+    ctx.save(); ctx.translate(x, bas ? y - h : y); ctx.rotate(rot); ctx.drawImage(im, -w / 2, 0, w, h); ctx.restore(); }
   function fx(k, x, y, n = 5, z = 22){ for(let i = 0; i < n; i++) ST.fx.push({ k, x:x + (Math.random() - .5) * 30, y:y + (Math.random() - .5) * 30, vx:(Math.random() - .5) * 60, vy:-30 - Math.random() * 60, t:0, vie:.9, z }); }
 
   /* ---------- les gestes ---------- */
@@ -117,7 +137,7 @@ export function createPhoto(canvas, api, IMG){
     let hit = false, wrong = null;
     s.spots.forEach(p => { if(p.hp <= 0) return; const a = ancre(it.def.id, p.a); const [sx, sy] = pt(P, [a[0] + p.j[0], a[1] + p.j[1]]); if(Math.hypot(sx - px, sy - py) > reach) return;
       const bons = ALT[p.kind] || [p.need]; if(!bons.includes(s.tool)){ wrong = wrong || p; return; }
-      hit = true; p.hp -= mv / (W * .42) * (s.tool === 'brossecrins' ? 2 : 1); if(Math.random() < .25) fx(p.kind === 'boue' || p.kind === 'pied' ? 'poussiere' : 'etoile', sx, sy, 1, 18);
+      hit = true; p.hp -= mv / (W * .2) * (s.tool === 'brossecrins' ? 2 : 1); if(Math.random() < .25) fx(p.kind === 'boue' || p.kind === 'pied' ? 'poussiere' : 'etoile', sx, sy, 1, 18);
       if(p.hp <= 0){ const next = p.kind === 'boue' ? 'poussiere' : p.kind === 'pied' ? 'corne' : null; fx('etoile', sx, sy, 6, 20);
         if(next){ p.kind = next; p.need = NEED[next]; p.hp = 1; }
         api.spot({ done:p, left:s.spots.filter(q => q.hp > 0).length, horse:it }); } });
