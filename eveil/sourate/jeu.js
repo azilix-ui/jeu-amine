@@ -2,7 +2,8 @@
    l'écoute de l'enfant : ecoute.js. Récitation : cheikh Mahmoud Khalil Al-Husary (murattal), accès libre (Islamic Network,
    EveryAyah) ; les mots s'allument grâce aux moments relevés par quran.com. Conteurs : papa = voix Jon (pour Amine), maman =
    Céline (Essil, Salma) ; encouragements en arabe = Mohammad. La voix artificielle ne dit jamais un verset. */
-import { SOURATE, VERSETS, PHRASES } from './fatiha.js';
+// 21/11 : une page par sourate (<body data-sourate="fatiha" | "nas">), même code : les données sont dans sourate/<nom>.js
+const { SOURATE, VERSETS, PHRASES } = await import('./' + (document.body.dataset.sourate || 'fatiha') + '.js');
 import { aligne, score, verdict, ecouter, peutReconnaitre } from './ecoute.js';
 
 const $ = id => document.getElementById(id);
@@ -13,6 +14,7 @@ const arabe = n => String(n);   // chiffres 1, 2, 3 (demande du papa, 18/11)
 const RECIT = [k => 'https://cdn.islamic.network/quran/audio/128/ar.husary/' + (SOURATE.avant + k) + '.mp3',
                k => 'https://mirrors.quranicaudio.com/everyayah/Husary_128kbps/' + String(SOURATE.n).padStart(3, '0') + String(k).padStart(3, '0') + '.mp3'];
 const ISTIADHA = 'https://mirrors.quranicaudio.com/everyayah/Husary_128kbps/audhubillah.mp3';
+const BASMALA = 'https://cdn.islamic.network/quran/audio/128/ar.husary/1.mp3';   // avant le verset 1 d'une autre sourate que la Fâtiḥa
 const FILLES = ['Essil', 'Salma', 'Imen', 'Yasmine'];
 const voixCoupee = () => !!(window.FamilleVoix && FamilleVoix.on && !FamilleVoix.on());
 
@@ -102,7 +104,7 @@ function dessine(){
       <p class="note" style="color:#6b5a40">â, î, oû : son long · ḥ : un h qui souffle (ح) · ' : le son ع · gh : un r qui gratte (غ) · dh : le « th » de « this » (ذ)</p>`;
   } else {
     $('page').innerHTML = `<div class="coran">${VERSETS.map(x => `<span class="v${x.n === cur ? ' cur' : ''}">${x.tj.map((w, i) => motTajwid(w, x.n, i)).join(' ')} <span class="fin-v">﴿${arabe(x.n)}﴾</span></span>`).join(' ')}</div>
-      <div class="legende"><span><b style="background:#9a948a"></b>lettre muette</span><span><b style="background:#2f80ed"></b>prolonger 2 temps</span><span><b style="background:#1b45c4"></b>2, 4 ou 6 temps à l'arrêt</span><span><b style="background:#0b1f6b"></b>6 temps obligatoires</span></div>
+      <div class="legende"><span><b style="background:#9a948a"></b>lettre muette</span><span><b style="background:#2f80ed"></b>prolonger 2 temps</span><span><b style="background:#1b45c4"></b>2, 4 ou 6 temps à l'arrêt</span><span><b style="background:#0b1f6b"></b>6 temps obligatoires</span>${SOURATE.n !== 1 ? '<span><b style="background:#e8730c"></b>nasalisation (ghounna)</span><span><b style="background:#9400a8"></b>le n se cache (ikhfâ\')</span>' : ''}</div>
       <p class="expl"><b>Verset ${v.n} · </b>${esc(v.essil)}</p>
       <p class="racine"><span class="a" lang="ar">${esc(v.racine[0])}</span> ${esc(v.racine[1])}</p>`;
   }
@@ -124,7 +126,8 @@ function accueil(){
   stop(); ecran('e-accueil');
   $('qui').innerHTML = joueur ? `<img src="/jeux/avatars/reel/${esc(joueur.toLowerCase())}.webp" alt="" onerror="this.remove()"> ${esc(joueur)}` : '👤 Qui récite ?';
   $('savoir').textContent = SOURATE.savoir;
-  $('modes').innerHTML = MODES.map(([m, t, p, pour, img]) => `<button class="mode${m === mode ? ' moi' : ''}" data-ouvre="${m}"><div class="img" style="background-image:url(sourate/img/${img}.webp)"><span>${pour}</span></div><div class="t"><h2>${t}</h2><p>${p}</p></div></button>`).join('');
+  const CARTES = SOURATE.cartes || MODES.map(x => x[4]);
+  $('modes').innerHTML = MODES.map(([m, t, p, pour], i) => `<button class="mode${m === mode ? ' moi' : ''}" data-ouvre="${m}"><div class="img" style="background-image:url(sourate/img/${CARTES[i]}.webp)"><span>${pour}</span></div><div class="t"><h2>${t}</h2><p>${p}</p></div></button>`).join('');
   const s = sv ? S() : { v:[], seul:0 };
   $('prog').innerHTML = VERSETS.map(x => s.v[x.n - 1] ? '⭐' : '<i>☆</i>').join('') + (s.seul >= .6 ? ' 🌟' : ' <i>🌟</i>');
 }
@@ -135,7 +138,8 @@ function ouvre(m){ stop(); mode = m; cur = cur || 1; ecran('e-lecon'); dessine()
 let istiadha = false;
 async function lecon(k, auto = true){
   stop(); const moi = jeton; cur = k; dessine(); const v = VERSETS[k - 1];
-  if(k === 1 && !istiadha){ istiadha = true; montre('', 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ'); await joue(ISTIADHA, moi); if(jeton !== moi) return; }
+  if(k === 1 && !istiadha){ istiadha = true; montre('', 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ'); await joue(ISTIADHA, moi); if(jeton !== moi) return;
+    if(SOURATE.n !== 1){ montre('', 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'); await joue(BASMALA, moi); if(jeton !== moi) return; } }
   if(k === 1 && !S().v.some(Boolean)){ if(!await phrase('debut')) return; }
   // le sens d'abord (Amine : papa ; Essil : l'explication ; Salma : le sens)
   const sens = mode === 'amine' ? v.amine : mode === 'essil' ? v.essil : 'Le sens : ' + v.fr + '.';
@@ -174,8 +178,8 @@ let arreteEcoute = null;
 
 async function toute(){   // toute la sourate par le cheikh, le mot qui s'allume
   stop(); const moi = jeton;
-  if(mode !== 'essil'){ for(let k = 1; k <= VERSETS.length; k++){ cur = k; dessine(); montre('📖 Al-Fâtiḥa, par cheikh Al-Husary', ''); if(!await recite(k)) return; } }
-  else { montre('📖 Al-Fâtiḥa, par cheikh Al-Husary', ''); for(let k = 1; k <= VERSETS.length; k++){ cur = k; document.querySelectorAll('.v').forEach((e, i) => e.classList.toggle('cur', i === k - 1)); const vc = document.querySelector('.v.cur'); if(vc) try{ vc.scrollIntoView({ block:'nearest', behavior:'smooth' }); }catch(e){} if(!await recite(k)) return; } }
+  if(mode !== 'essil'){ for(let k = 1; k <= VERSETS.length; k++){ cur = k; dessine(); montre('📖 ' + SOURATE.nom + ', par cheikh Al-Husary', ''); if(!await recite(k)) return; } }
+  else { montre('📖 ' + SOURATE.nom + ', par cheikh Al-Husary', ''); for(let k = 1; k <= VERSETS.length; k++){ cur = k; document.querySelectorAll('.v').forEach((e, i) => e.classList.toggle('cur', i === k - 1)); const vc = document.querySelector('.v.cur'); if(vc) try{ vc.scrollIntoView({ block:'nearest', behavior:'smooth' }); }catch(e){} if(!await recite(k)) return; } }
   if(jeton === moi) montre('À toi maintenant : « 🌟 Je récite seul » !', '');
 }
 async function seul(){   // l'enfant récite toute la sourate ; les mots reconnus se soulignent

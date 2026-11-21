@@ -1,5 +1,6 @@
-# Cache les fichiers techniques : seuls les cours et les jeux sont visibles en ligne.
-<FilesMatch "(\.md|^package\.json|^build\.js|^\.gitignore)$">
+# Cache les fichiers techniques : seuls les cours et les jeux sont visibles en ligne (21/11 : aussi les scripts .py, .mjs, .sh de docs/,
+# par exemple les textes de l'Éveil encore à relire par le papa).
+<FilesMatch "(\.md|\.py|\.mjs|\.sh|^package\.json|^build\.js|^\.gitignore)$">
   Require all denied
 </FilesMatch>
 
