@@ -41,7 +41,7 @@ if (!is_file($f)) {
     $cle = (string)ga_reglage('elevenlabs_cle');
     if ($cle === '') vx_fin(404, 'pas de clé');
     // le plafond du mois
-    $mois = date('Y-m'); [$m, $n] = array_pad(explode(':', (string)ga_reglage('voix_compteur')), 2, '0');
+    $mois = ga_voix_periode(); [$m, $n] = array_pad(explode(':', (string)ga_reglage('voix_compteur')), 2, '0');
     $n = $m === $mois ? (int)$n : 0; $max = (int)(ga_reglage('voix_max') ?: 100000);   // 21/11 : 15 000 était atteint (compte Creator : 138 676 caractères par mois)
     if ($n + mb_strlen($t) > $max) vx_fin(429, 'plafond du mois');
     if (!is_dir($dir) && !@mkdir($dir, 0750, true)) vx_fin(500);

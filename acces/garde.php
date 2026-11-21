@@ -47,6 +47,10 @@ function ga_db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS demandes (id INTEGER PRIMARY KEY, hash TEXT UNIQUE NOT NULL, nom TEXT, statut TEXT NOT NULL, duree INTEGER, cree INTEGER NOT NULL, vu INTEGER NOT NULL, ip TEXT, ua TEXT, page TEXT, pages INTEGER NOT NULL DEFAULT 0)');
     return $pdo;
 }
+/* 21/11 : le compteur des voix ElevenLabs suit la période du compte ElevenLabs (renouvelée le 20 de chaque mois), pas le mois du calendrier :
+   avant, les caractères du 1er au 19 comptaient avec ceux de l'ancienne période et le site se bloquait alors que le compte avait du crédit. */
+const GA_VOIX_RENOUVELLEMENT = 20;
+function ga_voix_periode(): string { $t = time(); if ((int)date('j', $t) < GA_VOIX_RENOUVELLEMENT) $t = strtotime(date('Y-m-01', $t) . ' -1 month'); return date('Y-m', $t) . '-' . GA_VOIX_RENOUVELLEMENT; }
 function ga_reglage(string $k, ?string $v = null): ?string {
     if ($v !== null) { ga_db()->prepare('INSERT INTO reglages (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v')->execute([$k, $v]); return $v; }
     $s = ga_db()->prepare('SELECT v FROM reglages WHERE k = ?'); $s->execute([$k]); $r = $s->fetchColumn();

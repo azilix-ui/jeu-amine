@@ -34,7 +34,7 @@ function ga_etat_admin(): array {
             'demandes' => $db->query("SELECT id, nom, statut, duree, cree, vu, ip, ua, page, pages FROM demandes WHERE statut IN ('vu', 'attente', 'accepte') AND vu > " . ($t - 30 * 86400) . " ORDER BY (statut = 'attente') DESC, vu DESC LIMIT 60")->fetchAll(),
             'refus' => $db->query('SELECT ts, ip, page, ua FROM refus ORDER BY ts DESC LIMIT 80')->fetchAll(),
             'voix' => (function(){ [$m, $n] = array_pad(explode(':', (string)ga_reglage('voix_compteur')), 2, '0'); $d = ga_donnees() . '/voix-cache'; $nb = 0; if (is_dir($d)) foreach (glob($d . '/*/*.mp3') ?: [] as $x) $nb++;
-                return ['cle' => (string)ga_reglage('elevenlabs_cle') !== '', 'max' => (int)(ga_reglage('voix_max') ?: 100000), 'mois' => $m === date('Y-m') ? (int)$n : 0, 'phrases' => $nb, 'erreur' => (string)ga_reglage('voix_erreur')]; })(),
+                return ['cle' => (string)ga_reglage('elevenlabs_cle') !== '', 'max' => (int)(ga_reglage('voix_max') ?: 100000), 'mois' => $m === ga_voix_periode() ? (int)$n : 0, 'phrases' => $nb, 'erreur' => (string)ga_reglage('voix_erreur')]; })(),
         ];
 }
 function rep(int $code, array $d): void { http_response_code($code); header('Content-Type: application/json; charset=utf-8'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; }
@@ -342,7 +342,7 @@ function dessine(){
       <small>Vu le ${quand(a.vu)} · ${esc(a.ip)} · accès jusqu'au ${jour(a.expire)}</small></span>
       <button class="petit" data-ren="${a.id}" data-nom="${esc(a.nom)}">Renommer</button>${a.id === E.moi ? '' : `<button class="petit rouge" data-appdel="${a.id}">Retirer</button>`}</div>`).join('') : '<p class="vide">Aucun appareil pour l\'instant.</p>';
   $('refus').innerHTML = E.refus.length ? E.refus.map(r => `<div class="ligne"><span class="q"><b>${esc(r.ip)} <span class="badge">${nav(r.ua)}</span></b><small>${quand(r.ts)} · ${esc(r.page)}</small></span></div>`).join('') : '<p class="vide">Aucune visite refusée.</p>';
-  const vx = E.voix; $('vxEtat').innerHTML = (vx.cle ? '✅ Clé enregistrée.' : '⚠️ Pas encore de clé : les cours prennent la voix de la tablette.') + ` Ce mois-ci : <b>${vx.mois}</b> caractères sur ${vx.max} · ${vx.phrases} phrases gardées.` + (vx.erreur ? ` <br>Dernière erreur : ${esc(vx.erreur)}` : ''); if(document.activeElement !== $('vxMax')) $('vxMax').value = vx.max;
+  const vx = E.voix; $('vxEtat').innerHTML = (vx.cle ? '✅ Clé enregistrée.' : '⚠️ Pas encore de clé : les cours prennent la voix de la tablette.') + ` Depuis le 20 (renouvellement ElevenLabs) : <b>${vx.mois}</b> caractères sur ${vx.max} · ${vx.phrases} phrases gardées.` + (vx.erreur ? ` <br>Dernière erreur : ${esc(vx.erreur)}` : ''); if(document.activeElement !== $('vxMax')) $('vxMax').value = vx.max;
   $('adminId').textContent = E.admin;
   $('brut').textContent = 'REMOTE_ADDR ' + E.brut.remote + ' · X-Forwarded-For ' + (E.brut.xff || '—') + ' · CF ' + (E.brut.cf || '—') + ' · X-Real-IP ' + (E.brut.real || '—');
 }
