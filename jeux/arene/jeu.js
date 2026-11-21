@@ -62,28 +62,38 @@ const PERLE = COUL_PERLES.map(c => { const k = document.createElement('canvas');
 
 /* ---------- les sons : bruitages ElevenLabs du site (Zarbia, Koora, Kassar), sinon fabriqués par le navigateur ---------- */
 let AC = null; const ac = () => { if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state === 'suspended') AC.resume(); return AC; };
-function ton(f, d, type = 'sine', v = .1, f2 = 0, t0 = 0){ const a = ac(); if(!a) return; const t = a.currentTime + t0, o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if(f2) o.frequency.exponentialRampToValueAtTime(f2, t + d); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + d + .02); }
+function ton(f, d, type = 'sine', v = .1, f2 = 0, t0 = 0){ if(!sonOn) return; const a = ac(); if(!a) return; const t = a.currentTime + t0, o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if(f2) o.frequency.exponentialRampToValueAtTime(f2, t + d); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + d + .02); }
 const BRUIT = {};
 function chargeSons(jeu, garde){ const u = new URL('../' + jeu + '/son.php', import.meta.url).href;
   fetch(u + '?liste=1').then(r => r.json()).then(async l => { const a = ac(); if(!a) return; const par = {};
     l.forEach(n => { const k = n.slice(0, -1); if(garde[k]) (par[k] = par[k] || []).push(n); });
     for(const k in par){ const n = par[k][Math.floor(Math.random() * par[k].length)];
       try{ const b = await fetch(u + '?n=' + n).then(r => r.arrayBuffer()); BRUIT[garde[k]] = await new Promise((ok, ko) => a.decodeAudioData(b, ok, ko)); }catch(e){} } }).catch(() => {}); }
+/* 21/11 (le papa n'entendait rien) : d'abord les bruitages ElevenLabs du Jasmin (fichiers mp3 du site, toujours là),
+   puis ceux de Zarbia, Koora et Kassar en complément ; une ambiance de souk en boucle ; le son est « débloqué » à chaque toucher (iPad). */
+const SONS_MP3 = new URL('../sons/', import.meta.url).href;
+function chargeMp3(k, fichier){ const a = ac(); if(!a) return; fetch(SONS_MP3 + fichier).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => new Promise((ok, ko) => a.decodeAudioData(b, ok, ko))).then(buf => { BRUIT[k] = buf; if(k === 'amb' && G && !G.pause && !G.fini) ambiance(true); }).catch(() => {}); }
 let sonsCharges = false;
 function sons(){ if(sonsCharges) return; sonsCharges = true;
-  chargeSons('zarbia', { coupe:'tombe', perdu:'perdu', victoire:'victoire', nait:'nait', invite:'invite', tap:'tap', grande:'grand' });
-  chargeSons('koora', { plus:'miam', fusion:'gros' }); chargeSons('kassar', { bonus:'bonus', tir:'boost' }); }
-function bruit(k, v = .8, vitesse = 1, max = 3){ const a = ac(), b = BRUIT[k]; if(!a || !b) return false; const s = a.createBufferSource(), g = a.createGain(), t = a.currentTime, m = Math.min(b.duration / vitesse, max);
+  chargeMp3('miam', 'jasmin-piece.mp3'); chargeMp3('gros', 'jasmin-gemme.mp3'); chargeMp3('tombe', 'jasmin-ecrase.mp3'); chargeMp3('perdu', 'jasmin-chute.mp3');
+  chargeMp3('victoire', 'jasmin-victoire.mp3'); chargeMp3('bonus', 'jasmin-bonus.mp3'); chargeMp3('nait', 'jasmin-portail.mp3'); chargeMp3('boost', 'jasmin-saut.mp3'); chargeMp3('amb', 'houma-amb-souk.mp3');
+  chargeSons('zarbia', { invite:'invite', tap:'tap', coupe:'coupe' }); chargeSons('kassar', { tir:'tir' }); }
+let ambS = null, ambG = null, sonOn = store.get('arene-son', true);
+function ambiance(on){ const a = AC; if(ambS){ try{ ambS.stop(); }catch(e){} ambS = null; } if(!on || !sonOn || !a || !BRUIT.amb) return;
+  ambS = a.createBufferSource(); ambG = a.createGain(); ambG.gain.value = .18; ambS.buffer = BRUIT.amb; ambS.loop = true; ambS.connect(ambG); ambG.connect(a.destination); ambS.start(); }
+// iPad : le moteur du son se débloque pendant un toucher (un petit silence joué tout de suite)
+addEventListener('pointerdown', () => { const a = ac(); if(!a) return; try{ const b = a.createBuffer(1, 1, 22050), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); s.start(); }catch(e){} }, true);
+function bruit(k, v = .8, vitesse = 1, max = 3){ if(!sonOn) return true; const a = ac(), b = BRUIT[k]; if(!a || !b) return false; const s = a.createBufferSource(), g = a.createGain(), t = a.currentTime, m = Math.min(b.duration / vitesse, max);
   g.gain.setValueAtTime(v, t); g.gain.setValueAtTime(v, t + Math.max(0, m - .2)); g.gain.linearRampToValueAtTime(0, t + m); s.buffer = b; s.playbackRate.value = vitesse; s.connect(g); g.connect(a.destination); s.start(t); s.stop(t + m + .05); return true; }
 let miamT = 0, miamN = 0;
 export const SON = {
-  miam(gros){ const t = performance.now(); if(t - miamT < 110) return; miamT = t; miamN = (miamN + 1) % 6; if(bruit(gros ? 'gros' : 'miam', gros ? .4 : .22, 1 + miamN * .05, .5)) return; ton(700 + miamN * 60, .07, 'sine', .05); },
-  tombe(){ if(bruit('tombe', .9, 1, 1.2)) return; ton(1600, .1, 'square', .05, 500); },
+  miam(gros){ const t = performance.now(); if(t - miamT < 120) return; miamT = t; miamN = (miamN + 1) % 6; if(bruit(gros ? 'gros' : 'miam', gros ? .45 : .28, 1 + miamN * .06, .45)) return; ton(700 + miamN * 60, .07, 'sine', .05); },
+  tombe(){ bruit('coupe', .7, 1, .8); if(bruit('tombe', .9, 1, 1.2)) return; ton(1600, .1, 'square', .05, 500); },
   perdu(){ if(bruit('perdu', .8, 1, 2.4)) return; ton(440, .25, 'triangle', .12, 220); ton(330, .4, 'triangle', .1, 160, .2); },
   gagne(){ if(bruit('victoire', .8)) return; [523, 659, 784, 1047, 1319].forEach((f, i) => ton(f, .35, 'triangle', .12, 0, i * .11)); },
   bonus(){ if(bruit('bonus', .7, 1, 2)) return; [784, 988, 1319].forEach((f, i) => ton(f, .25, 'triangle', .1, 0, i * .09)); },
   nait(){ bruit('nait', .6, 1, 1.1); },
-  boost(){ if(bruit('boost', .35, 1.3, .6)) return; ton(220, .25, 'sawtooth', .03, 520); },
+  boost(){ if(bruit('boost', .45, 1.2, .6) || bruit('tir', .35, 1.3, .6)) return; ton(220, .25, 'sawtooth', .03, 520); },
   invite(){ if(bruit('invite', .8, 1, 2.2)) return; ton(880, .2, 'sine', .1); ton(660, .3, 'sine', .1, 0, .2); },
   tap(){ if(bruit('tap', .6, 1, .4)) return; ton(660, .06, 'sine', .08); },
 };
@@ -162,7 +172,7 @@ function teteSur(x, id, im, hx, hy, r, a){
 
 /* ---------- la partie ---------- */
 const cv = $('cv'), ctx = cv.getContext('2d'); let W = 0, H = 0, DPR = 1;
-function taille(){ DPR = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; }
+function taille(){ DPR = Math.min(1.5, window.devicePixelRatio || 1);   /* 1,5 au plus : sur iPad, 2 faisait ramer */ W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; }
 addEventListener('resize', taille); taille();
 
 let G = null;
@@ -192,11 +202,12 @@ export function demarre(){
   if(!raf) raf = requestAnimationFrame(boucle);
 }
 
-/* ---------- la boucle : simulation à pas fixe (30 par seconde), dessin interpolé ---------- */
+/* ---------- la boucle : simulation à pas fixe (60 par seconde), dessin interpolé ---------- */
 let raf = 0, last = 0, hudT = 0;
 function boucle(t){
   raf = requestAnimationFrame(boucle);
-  if(!G) return;
+  if(!G){ if(ambS) ambiance(false); return; }
+  if(G.fini || G.pause){ if(ambS) ambiance(false); } else if(!ambS && sonOn && BRUIT.amb) ambiance(true);
   const dt = Math.min(.1, (t - last) / 1000); last = t;
   if(!G.pause && !G.fini){
     commandes(); G.acc += dt;
@@ -274,6 +285,8 @@ function commandes(){
 }
 document.addEventListener('visibilitychange', () => { if(document.hidden && G && !G.fini && !G.net){ G.pause = true; pauseFenetre(); } });
 $('pause').onclick = () => togglePause();
+function boutonSon(){ $('son').textContent = sonOn ? '🔊' : '🔇'; }
+$('son').onclick = () => { sonOn = !sonOn; store.set('arene-son', sonOn); if(!sonOn) ambiance(false); boutonSon(); }; boutonSon();
 function togglePause(){ if(!G || G.fini) return; if(G.net){ G.net.demandeQuitter(); return; } G.pause = !G.pause; if(G.pause) pauseFenetre(); else $('modal').classList.remove('on'); }
 function pauseFenetre(){ modal(`<h2>⏸ Pause</h2><p>Ta longueur : <b>${Math.round(G.moi.masse)}</b></p><div class="rang"><button class="pill go" id="mRep">▶ Continuer</button><button class="pill" id="mQuit">🏠 Menu</button></div>`);
   $('mRep').onclick = () => { G.pause = false; $('modal').classList.remove('on'); last = performance.now(); }; $('mQuit').onclick = () => quitter(); }
@@ -332,7 +345,7 @@ function dessine(dt){
   // les perles
   const tt = performance.now() / 400;
   for(const p of A.perles.values()){ if(p.x < vx0 || p.x > vx1 || p.y < vy0 || p.y > vy1) continue; const [sx, sy] = ecran(p.x, p.y);
-    const r = (5 + Math.min(10, p.v * 2)) * Sc * (1 + .12 * Math.sin(tt + p.x)); ctx.drawImage(PERLE[p.c % 8], sx - r * 2.6, sy - r * 2.6, r * 5.2, r * 5.2); }
+    const r = (5 + Math.min(10, p.v * 2)) * Sc * (1 + .12 * Math.sin(tt + p.x)); ctx.drawImage(PERLE[p.c % 8], sx - r * 2, sy - r * 2, r * 4, r * 4); }
   // les serpents (les plus petits dessous)
   const vis = A.serpents.filter(s => s.vivant).sort((a, b) => a.masse - b.masse);
   for(const s of vis) dessineSerpent(s, al, vx0, vx1, vy0, vy1);
@@ -346,7 +359,7 @@ function dessineSerpent(s, al, vx0, vx1, vy0, vy1){
   const hx = s.px + (s.x - s.px) * al, hy = s.py + (s.y - s.py) * al;
   // visible ? (un point sur 8 suffit)
   let vu = false; for(let j = 0; j < ch.length; j += 8){ const q = ch[j]; if(q.x > vx0 - r && q.x < vx1 + r && q.y > vy0 - r && q.y < vy1 + r){ vu = true; break; } } if(!vu) return;
-  const d = disques(s.peau), pasJ = Math.max(1, Math.round(r * .45 / CFG.ecartChemin));
+  const d = disques(s.peau), pasJ = Math.max(1, Math.round(r * .55 / CFG.ecartChemin));
   // la lumière du boost
   if(s.boost){ ctx.save(); ctx.globalAlpha = .35 + .15 * Math.sin(performance.now() / 60); ctx.strokeStyle = '#ffd36b'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = (r * 2 + 14) * Sc;
     ctx.beginPath(); const [a0, b0] = ecran(hx, hy); ctx.moveTo(a0, b0); for(let j = 1; j < ch.length; j += 2){ const [a, b] = ecran(ch[j].x, ch[j].y); ctx.lineTo(a, b); } ctx.stroke(); ctx.restore(); }
@@ -355,7 +368,7 @@ function dessineSerpent(s, al, vx0, vx1, vy0, vy1){
   { const [a0, b0] = ecran(hx + 5, hy + 7); ctx.moveTo(a0, b0); } for(let j = 1; j < ch.length; j += 3){ const [a, b] = ecran(ch[j].x + 5, ch[j].y + 7); ctx.lineTo(a, b); } ctx.stroke(); ctx.restore();
   // les disques, de la queue vers la tête (la queue s'affine un peu)
   const n = ch.length, R = r * Sc;
-  for(let j = n - 1 - ((n - 1) % pasJ); j >= pasJ; j -= pasJ){ const q = ch[j], [sx, sy] = ecran(q.x, q.y), f = j > n - 12 ? .7 + .3 * (n - j) / 12 : 1, rr = R * f;
+  for(let j = n - 1 - ((n - 1) % pasJ); j >= pasJ; j -= pasJ){ const q = ch[j]; if(q.x < vx0 - r || q.x > vx1 + r || q.y < vy0 - r || q.y > vy1 + r) continue; const [sx, sy] = ecran(q.x, q.y), f = j > n - 12 ? .7 + .3 * (n - j) / 12 : 1, rr = R * f;
     if(d) ctx.drawImage(d[(j / pasJ | 0) % 3], sx - rr, sy - rr, rr * 2, rr * 2); else { ctx.fillStyle = '#7a8'; ctx.beginPath(); ctx.arc(sx, sy, rr, 0, 6.29); ctx.fill(); } }
   // la tête
   const [sx, sy] = ecran(hx, hy), a = s.pa + angle(s.a - s.pa) * al;
@@ -401,4 +414,4 @@ PEAUX.forEach(p => { const im = charge(srcPeau(p)); im.onload = () => { if(sv &&
 TETES.forEach(t => charge(srcTete(t.id)));
 sv = neuf(); menu();
 const p0 = window.Famille ? Famille.player() : null; if(p0) setJoueur(p0);
-window.__arene = { get G(){ return G; }, partieSolo, quitter, fin, get joueur(){ return joueur; }, get sv(){ return sv; }, TETES };
+window.__arene = { get G(){ return G; }, get sons(){ return Object.keys(BRUIT); }, partieSolo, quitter, fin, get joueur(){ return joueur; }, get sv(){ return sv; }, TETES };

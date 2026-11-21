@@ -4,11 +4,11 @@
    - Il mange les perles et grandit ; le boost va plus vite mais coûte de la masse (des perles tombent derrière lui).
    - Si sa tête touche le corps d'un autre serpent : il meurt et son corps devient une pluie de perles.
      Tête contre tête : les deux meurent. On ne meurt pas sur son propre corps. Le bord de l'arène est mortel.
-   - Simulation à pas fixe (30 par seconde), le dessin est interpolé.
+   - Simulation à pas fixe (60 par seconde depuis le 21/11 : à 30 le corps avançait par saccades), le dessin est interpolé.
    Chaque serpent est « local » (simulé ici : le joueur, et les machines sur la tablette qui les fait jouer)
    ou « distant » (en ligne : sa tablette envoie sa tête, on refait son corps avec le chemin reçu). */
 export const CFG = { taille:3000, vitesse:170, boost:270, rotation:230 * Math.PI / 180, masse0:100, masseMinBoost:50, coutBoost:8,
-  perle:2, captation:14, pas:1 / 30, ecartChemin:5, perles:700, maxPerles:2200 };
+  perle:2, captation:14, pas:1 / 60, ecartChemin:5, perles:700, maxPerles:2200 };
 
 // hasard reproductible (même graine = même arène sur toutes les tablettes)
 export function hasard(graine){ let s = graine >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -82,8 +82,12 @@ function avance(A, s, dt){
   pousseChemin(s);
 }
 export function pousseChemin(s){
-  const ch = s.chemin, t = ch[0];
-  if(!t || Math.hypot(s.x - t.x, s.y - t.y) >= CFG.ecartChemin) ch.unshift({ x:s.x, y:s.y }); else { t.x = s.x; t.y = s.y; }
+  // ch[0] suit la tête ; quand elle s'est éloignée d'un écart du point d'après, ce point est fixé et un nouveau commence
+  // (21/11 : à 60 pas par seconde la tête avance moins qu'un écart par pas : l'ancienne règle ne posait plus jamais de point)
+  const ch = s.chemin, t = ch[0], u = ch[1];
+  if(!t) ch.unshift({ x:s.x, y:s.y });
+  else if(!u || Math.hypot(s.x - u.x, s.y - u.y) >= CFG.ecartChemin){ t.x = s.x; t.y = s.y; ch.unshift({ x:s.x, y:s.y }); }
+  else { t.x = s.x; t.y = s.y; }
   // on coupe le corps à sa longueur
   let L = longueur(s.masse), acc = 0;
   for(let j = 1; j < ch.length; j++){ acc += Math.hypot(ch[j].x - ch[j - 1].x, ch[j].y - ch[j - 1].y); if(acc > L){ ch.length = j + 1; break; } }

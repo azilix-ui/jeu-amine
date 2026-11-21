@@ -95,8 +95,8 @@ setInterval(() => { if(player !== dernierJoueur){ dernierJoueur = player; HL.msg
 
 function annonce(m){
   const ouvert = !!$('hlMsgs');
-  if(m.type === 't'){ const t = `${m.nom} dit : ${m.texte}`; sfx.tap(); if(ouvert) say(t); else note(m.nom, t, 'Répondre', chat); if(!ouvert) say(t); }
-  else if(m.type === 'v'){ tone(880, .1, 'sine', .08); tone(1170, .12, 'sine', .08, .12); if(!ouvert) note(m.nom, `🎤 ${m.nom} t'envoie un message vocal`, '▶ Écouter', () => joue(m.id)); say(`${m.nom} t'envoie un message vocal`); }
+  if(m.type === 't'){ const t = `${m.nom} dit : ${m.texte}`; sfx.tap(); if(!ouvert) note(m.nom, t, 'Répondre', chat); }   /* 21/11 : les messages ne sont plus lus à voix haute (décision du papa : texte et émojis seulement) */
+  else if(m.type === 'v'){ tone(880, .1, 'sine', .08); tone(1170, .12, 'sine', .08, .12); if(!ouvert) note(m.nom, `🎤 ${m.nom} : ancien message vocal`, '▶ Écouter', () => joue(m.id)); }
   else if(m.type === 'm'){ sfx.star(); note(m.nom, `📣 ${m.nom} te montre ${lieuN(m.lieu)} !`, '🚪 J’y vais', () => { closePanel(); visite(m.nom, m.lieu); }, 15000); say(`${m.nom} te montre ${lieuN(m.lieu)}. Viens voir !`); }
 }
 
@@ -236,7 +236,7 @@ function chat(){
 }
 function listeMsgs(){ const el = $('hlMsgs'); if(!el) return; const bas = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
   el.innerHTML = HL.msgs.length ? HL.msgs.map(m => { const mien = m.nom === moi();
-    const corps = m.type === 'v' ? `<button data-son="${m.id}">▶ 🎤 ${m.duree} s</button>` : m.type === 'm' ? `📣 Viens voir ${esc(m.texte || lieuN(m.lieu))} !${mien ? '' : `<br><button data-va="${m.id}">🚪 J'y vais</button>`}` : `${esc(m.texte)}<button class="ec" data-lit="${esc(m.texte)}" aria-label="Écouter">🔊</button>`;
+    const corps = m.type === 'v' ? `<button data-son="${m.id}">▶ 🎤 ${m.duree} s</button>` : m.type === 'm' ? `📣 Viens voir ${esc(m.texte || lieuN(m.lieu))} !${mien ? '' : `<br><button data-va="${m.id}">🚪 J'y vais</button>`}` : `${esc(m.texte)}`;
     return `<div class="hlm${mien ? ' moi' : ''}"><img src="${tete(m.nom)}" alt=""><div class="b"><small>${esc(m.nom)} · ${heure(m.ts)}</small>${corps}</div></div>`; }).join('') : '<p style="text-align:center;color:#7a879a">Personne n’a encore écrit. Dis coucou ! 👋</p>';
   if(bas || !el.dataset.vu){ el.scrollTop = el.scrollHeight; el.dataset.vu = 1; }
   if(HL.dernier) store.set('houma-lu:' + moi(), HL.dernier); badges(); }
