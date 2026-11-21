@@ -376,6 +376,7 @@ function triCard(S){
     tot += st; const rate = d && d.items ? Object.values(d.items).filter(v => v < 0).length : 0;
     return '<dt>' + (i + 1) + '. ' + esc(t) + '</dt><dd>' + (d ? (e.film ? '🎬 ' : '') + (e.atelier ? '🧭 ' : '') + '⭐ ' + st + ' / 21' + ' · exos ' + ['entrainement', 'vie', 'defi'].map(k => e[k] || 0).join('-') + (rate ? ' · ' + rate + ' ratées' : '') : '—') + '</dd>'; }).join('');
   return '<div class="subject"><h3>🧭 Les triangles au compas</h3><div class="kpis">' + kpi(tot + ' / 63', 'étoiles') + '</div><dl class="units">' + rows + '</dl></div>';
+}
 /* 21/11 : Les angles, 5e (3 leçons, essil-ang<n>, 7 parties notées sur 3) */
 const ANGT = ['Les angles et les angles adjacents', 'Complémentaires, supplémentaires, opposés', 'Parallèles et sécante'];
 function angCard(S){
