@@ -17,3 +17,4 @@
 .regle{ margin-top:10px; text-align:center; } .regle label{ font-weight:800; font-size:18px; color:var(--nuit); }
 .regle input[type=range]{ width:min(100%, 520px); height:44px; accent-color:var(--rouge); display:block; margin:4px auto; }
 .somme{ text-align:center; font:800 26px 'Baloo 2', sans-serif; margin-top:8px; }
+.q .fig{ display:block; width:100%; max-width:440px; margin:6px auto; }
