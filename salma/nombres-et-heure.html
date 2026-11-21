@@ -75,6 +75,8 @@ h1{ font-family:'Baloo 2', sans-serif; font-size:clamp(30px, 6vw, 48px); line-he
 .digital .val.lit{ color:var(--or); }
 .digital .sep{ font:800 60px 'Baloo 2'; }
 .digital button{ width:56px; height:48px; border-radius:12px; border:0; background:#24435c; color:#fff; font:800 24px Nunito; cursor:pointer; }
+.voirnum{ display:block; margin:0 auto 10px; }
+.digital[hidden]{ display:none; }
 .momo{ text-align:center; font-weight:800; color:#56667e; margin-top:8px; }
 .toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--vert); color:#fff; padding:14px 20px; border-radius:16px; font-weight:800; font-size:18px; box-shadow:0 8px 24px #0004; z-index:50; }
 .toast.non{ background:var(--rouge); }
@@ -113,7 +115,8 @@ h1{ font-family:'Baloo 2', sans-serif; font-size:clamp(30px, 6vw, 48px); line-he
     <div class="horloges">
       <svg class="analog" id="analog" viewBox="0 0 300 300" aria-label="Horloge à aiguilles : fais tourner les aiguilles"></svg>
       <div>
-        <div class="digital" aria-label="Horloge numérique">
+        <button class="gros blanc voirnum" id="voir-num" aria-pressed="false">👁️ Afficher l'heure numérique</button>
+        <div class="digital" id="digital" aria-label="Horloge numérique" hidden>
           <div class="bloc"><button id="h-plus" aria-label="Une heure de plus">▲</button><div class="val" id="d-h">10</div><button id="h-moins" aria-label="Une heure de moins">▼</button></div>
           <div class="sep">:</div>
           <div class="bloc"><button id="m-plus" aria-label="Plus de minutes">▲</button><div class="val" id="d-m">10</div><button id="m-moins" aria-label="Moins de minutes">▼</button></div>
@@ -352,7 +355,7 @@ function expliqueHeure(){
   const pos = sur ? `sur le <b>${chiffre === 0 ? 12 : chiffre}</b>` : `entre le ${Math.floor(chiffre) || 12} et le ${Math.floor(chiffre) + 1}`;
   const html = [], et = [];
   html.push(`<div class="etape" data-e="0">1. <b>L'horloge numérique</b> : le nombre avant les deux points, ce sont les <b>heures</b> (${H}), le nombre après, ce sont les <b>minutes</b> (${M}).</div>`);
-  et.push({ dit:`Sur l'horloge numérique, le nombre avant les deux points, ce sont les heures : ${deux(H)}. Le nombre après, ce sont les minutes : ${deux(M)}.`, avant:() => { $('d-h').classList.add('lit'); $('d-m').classList.add('lit'); }, apres:() => { $('d-h').classList.remove('lit'); $('d-m').classList.remove('lit'); } });
+  et.push({ dit:`Sur l'horloge numérique, le nombre avant les deux points, ce sont les heures : ${deux(H)}. Le nombre après, ce sont les minutes : ${deux(M)}.`, avant:() => { if($('digital').hidden) $('voir-num').click(); $('d-h').classList.add('lit'); $('d-m').classList.add('lit'); }, apres:() => { $('d-h').classList.remove('lit'); $('d-m').classList.remove('lit'); } });
   html.push(`<div class="etape" data-e="1">2. <b>La petite aiguille</b> montre les heures. Elle est ${M === 0 ? `sur le <b>${entre}</b>` : `entre le <b>${entre}</b> et le <b>${apres}</b> : elle a passé le ${entre}`} → <b>${entre} heure${entre > 1 ? 's' : ''}</b>.</div>`);
   et.push({ dit:`La petite aiguille montre les heures. Elle est ${M === 0 ? 'sur le ' + deux(entre) : 'entre le ' + deux(entre) + ' et le ' + deux(apres) + '. Elle a passé le ' + deux(entre)} : donc ${fem(deux(entre))} heure${entre > 1 ? 's' : ''}.`, avant:() => $('a-h').classList.add('lit'), apres:() => $('a-h').classList.remove('lit') });
   html.push(`<div class="etape" data-e="2">3. <b>La grande aiguille</b> montre les minutes. Elle est ${pos}. Chaque chiffre vaut <b>5 minutes</b>${sur ? ` : ${chiffre === 0 ? '12, c\'est le tout début de l\'heure → <b>0 minute</b>' : `${chiffre} × 5 = <b>${M} minutes</b>`}` : ` : ${Math.floor(chiffre)} × 5 = ${Math.floor(chiffre) * 5}, plus ${M % 5} petit${M % 5 > 1 ? 's' : ''} trait${M % 5 > 1 ? 's' : ''} → <b>${M} minutes</b>`}.</div>`);
@@ -399,6 +402,9 @@ async function verifieH(){ const [h, m] = defiH; defiH = null; boutonsDefi();
   if(ok){ sv.h++; sauve(); montreScore(); toast('⭐ Bravo, c\'est la bonne heure !'); await dis('Bravo ! C\'est la bonne heure. Tu gagnes une étoile.'); }
   else { toast('Presque ! Regarde la bonne heure.', false); await dis('Presque ! Regarde, voici ' + heureEnLettres(h, m) + '.'); H = h; M = m; montreHeure(); }
 }
+/* 21/11 (demande du papa) : l'heure numérique est cachée au départ (on lit l'heure sur les aiguilles) ; un bouton l'affiche ou la cache */
+$('voir-num').onclick = () => { const d = $('digital'), voir = d.hidden; d.hidden = !voir; $('voir-num').setAttribute('aria-pressed', String(voir));
+  $('voir-num').textContent = voir ? '🙈 Cacher l\'heure numérique' : '👁️ Afficher l\'heure numérique'; };
 /* les onglets */
 function onglet(n){ $('o-nb').classList.toggle('on', n === 'nb'); $('o-h').classList.toggle('on', n === 'h'); $('z-nb').hidden = n !== 'nb'; $('z-h').hidden = n !== 'h'; tais(); }
 $('o-nb').onclick = () => onglet('nb'); $('o-h').onclick = () => onglet('h');
