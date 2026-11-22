@@ -59,6 +59,7 @@ footer kbd{display:inline-block;min-width:44px;padding:2px 12px;border-radius:10
 <footer><span><kbd>◀ ▲ ▼ ▶</kbd> choisir · <kbd>OK</kbd> jouer</span><span><kbd>Retour</kbd> quitter</span></footer>
 <div id="msg" role="status"></div>
 <script>
+window.__teleNav = true;
 // la salle de jeux à la télécommande : flèches = la tuile voisine, OK = ouvrir, Retour = quitter l'application
 const T = [...document.querySelectorAll('.tuile')], msg = document.getElementById('msg');
 let i = 0; try{ i = Math.min(T.length - 1, +sessionStorage.getItem('tele-tuile') || 0); }catch(e){}

@@ -777,7 +777,7 @@ function musicStop(){ MUS.on = false; clearInterval(MUS.timer); ambStop(); }
    - image calculée à la taille de l'écran (pas de 2× : le processeur d'une télé est plus faible qu'un PC). ===== */
 const TELE = (() => { let t = /Web0S|webOS|NetCast|SmartTV/i.test(navigator.userAgent) || /[?&]tele=1/.test(location.search);
   try{ if(t) sessionStorage.setItem('jasmin-tele', '1'); else t = sessionStorage.getItem('jasmin-tele') === '1'; }catch(e){} return t; })();
-if(TELE) document.documentElement.classList.add('tele');
+if(TELE){ document.documentElement.classList.add('tele'); window.__teleNav = true; }   // le Jasmin télé a son propre pilotage (explorateur.js n'y touche pas)
 // les touches de la télécommande (keyCode) → les touches du jeu (code)
 const TELE_TOUCHES = { 37:'ArrowLeft', 38:'ArrowUp', 39:'ArrowRight', 40:'ArrowDown', 403:'ShiftLeft', 404:'Space', 405:'KeyP', 406:'KeyP', 415:'KeyP', 19:'KeyP', 461:'Escape', 10009:'Escape', 8:'Escape' };
 const codeDe = e => { if(!TELE) return e.code; if(e.keyCode === 13) return state === 'play' ? 'Space' : ''; return (!e.code || e.keyCode >= 400 || e.keyCode === 19 || e.keyCode === 8) && TELE_TOUCHES[e.keyCode] ? TELE_TOUCHES[e.keyCode] : e.code; };

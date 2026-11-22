@@ -478,3 +478,44 @@
   }
   if(QUI && (!QUI.nom || QUI.passe)){} /* 20/11 : personne n'est entré : pas d'étiquette ; 21/11 : un ami invité à un seul jeu (laissez-passer) n'a ni étiquette ni salon */ else if(document.body) construit(); else document.addEventListener('DOMContentLoaded', construit);
 })();
+
+/* 22/11 : la TÉLÉ LG (webOS, application « Famille Missaoui ») : toutes les pages du site se pilotent à la télécommande.
+   Les flèches passent d'un bouton à l'autre (cadre doré), OK appuie, les chiffres tapent le code du pavé, Retour revient en arrière.
+   Les pages qui ont leur propre pilotage (tele/, le Jasmin télé) mettent window.__teleNav = true. */
+(function(){
+  var TV = /Web0S|webOS|NetCast|SmartTV/i.test(navigator.userAgent); if(!TV) return;
+  document.documentElement.classList.add('tele-tv');
+  var st = document.createElement('style');
+  st.textContent = 'html.tele-tv :focus{outline:6px solid #ffd65a !important;outline-offset:4px !important;box-shadow:0 0 0 12px #ffd65a55 !important}';
+  (document.head || document.documentElement).appendChild(st);
+  function visible(el){ if(el.disabled || el.closest('[hidden]')) return false; var r = el.getBoundingClientRect(); if(r.width < 4 || r.height < 4) return false;
+    var cs = getComputedStyle(el); if(cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity < .05) return false;
+    var x = r.left + r.width / 2, y = r.top + r.height / 2; if(x < 0 || y < 0 || x > innerWidth || y > innerHeight) return true;   // hors de l'écran : on pourra y défiler
+    var h = document.elementFromPoint(x, y); return !h || el === h || el.contains(h) || h.contains(el); }
+  function liste(){
+    // une fenêtre ouverte par-dessus (code secret, « Qui joue ? »…) : on reste dedans
+    var modal = [].slice.call(document.querySelectorAll('[role=dialog], dialog[open], #quiCode.on, .modal.on, .overlay.on')).filter(function(m){ var r = m.getBoundingClientRect(); return r.width > 50 && getComputedStyle(m).display !== 'none'; }).pop();
+    return [].slice.call((modal || document).querySelectorAll('button, a[href], input:not([type=hidden]), select, textarea, [tabindex]:not([tabindex="-1"]), [role=button]')).filter(visible); }
+  function va(dir){
+    var L = liste(); if(!L.length) return; var cur = L.indexOf(document.activeElement) >= 0 ? document.activeElement : null;
+    if(!cur){ L[0].focus(); L[0].scrollIntoView({ block:'center' }); return; }
+    var c = cur.getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2, best = null, bd = 1e9;
+    L.forEach(function(el){ if(el === cur) return; var r = el.getBoundingClientRect(), x = r.left + r.width / 2 - cx, y = r.top + r.height / 2 - cy;
+      var av = dir === 'g' ? -x : dir === 'd' ? x : dir === 'h' ? -y : y, lat = (dir === 'g' || dir === 'd') ? Math.abs(y) : Math.abs(x);
+      if(av <= 2) return; var d = av + lat * 2.2; if(d < bd){ bd = d; best = el; } });
+    if(best){ best.focus(); best.scrollIntoView({ block:'nearest', inline:'nearest' }); }
+    else if(dir === 'h' || dir === 'b') scrollBy(0, (dir === 'h' ? -1 : 1) * innerHeight * .6);
+  }
+  addEventListener('keydown', function(e){
+    if(window.__teleNav) return;
+    var k = e.keyCode, a = document.activeElement, saisie = a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) && !/^(radio|checkbox|button|submit)$/i.test(a.type || '');
+    var dir = { 37:'g', 39:'d', 38:'h', 40:'b' }[k];
+    if(dir){ if(saisie && (k === 37 || k === 39)) return; e.preventDefault(); e.stopPropagation(); va(dir); return; }
+    if(k === 13 && a && a !== document.body && !saisie && !/^(BUTTON|A)$/.test(a.tagName)){ e.preventDefault(); a.click(); return; }
+    if(k >= 48 && k <= 57 && !saisie){   // les chiffres de la télécommande : le pavé du code secret
+      var t = String(k - 48), b = liste().filter(function(x){ return x.tagName === 'BUTTON' && x.textContent.trim() === t; })[0]; if(b){ e.preventDefault(); b.click(); } return; }
+    if(k === 461 || k === 10009){ e.preventDefault(); if(history.length > 1) history.back(); else location.href = '/tele/'; }
+  }, true);
+  // au chargement, on se place sur le premier bouton (sinon la première flèche le fait)
+  addEventListener('load', function(){ setTimeout(function(){ if(!window.__teleNav && (!document.activeElement || document.activeElement === document.body)){ var L = liste(); if(L[0]) L[0].focus(); } }, 400); });
+})();
