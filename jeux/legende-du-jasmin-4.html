@@ -811,6 +811,31 @@ let jumpPressed = false, firePressed = false;
    en avançant. Sur la télé, ◀ et ▶ s'« accrochent » : un appui = le héros avance tout seul dans ce sens ; OK ou ▲ = il saute en avançant ;
    ▶ encore (après l'avoir lâché), ◀ pour repartir dans l'autre sens, ou ▼ = il s'arrête. */
 const tvLache = { l:true, r:true };
+/* 23/11 : la MANETTE (Bluetooth ou USB : Xbox, PlayStation, 8BitDo…), lue par l'API Gamepad du navigateur à chaque image.
+   Disposition « standard » : croix ou joystick gauche = avancer / s'accroupir ; bouton du BAS = sauter ; bouton de GAUCHE ou de DROITE = lancer ;
+   Start = pause. Dans les menus : la croix choisit un bouton (cadre doré), bouton du bas = valider, bouton de droite = retour. */
+const GP = { avant:{}, rep:0 };
+function manette(dt){
+  const L = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : []; if(!L.length) return;
+  const b = i => L.some(g => g.buttons[i] && g.buttons[i].pressed), ax = i => L.reduce((m, g) => Math.abs(g.axes[i] || 0) > Math.abs(m) ? g.axes[i] : m, 0);
+  const now = { g:b(14) || ax(0) < -.5, d:b(15) || ax(0) > .5, h:b(12) || ax(1) < -.5, b:b(13) || ax(1) > .5, saut:b(0), lance:b(2) || b(1) && state === 'play', retour:b(1), start:b(9) || b(8) };
+  const appui = k => now[k] && !GP.avant[k], lache = k => !now[k] && GP.avant[k];
+  if(state === 'play'){
+    if(appui('g') || lache('g')) keys.l = now.g; if(appui('d') || lache('d')) keys.r = now.d; if(appui('b') || lache('b')) keys.d = now.b;
+    if(appui('saut') || appui('h')){ keys.a = true; jumpPressed = true; } if(lache('saut') || lache('h')) keys.a = now.saut || now.h;
+    if(appui('lance')){ keys.b = true; firePressed = true; } if(lache('lance')) keys.b = false;
+    if(appui('start')) pauseGame();
+  } else {
+    // les menus : un pas par appui, puis répétition si on garde la croix
+    const dir = now.g ? 'g' : now.d ? 'd' : now.h ? 'h' : now.b ? 'b' : null;
+    if(dir && (dir !== GP.dir || (GP.rep -= dt) <= 0)){ teleFocus(dir); GP.rep = dir !== GP.dir ? .45 : .16; }
+    GP.dir = dir;
+    if(appui('saut')){ const a = document.activeElement; if(a && a !== document.body) a.click(); else teleFocus('b'); }
+    if(appui('retour') || appui('start') && state === 'pause'){ if(state === 'pause') resume(); else teleRetour(); }
+  }
+  GP.avant = now;
+}
+addEventListener('gamepadconnected', e => { const el = $('infoVol'); if(!el) return; el.classList.remove('on'); void el.offsetWidth; el.innerHTML = '<b>🎮</b><span>Manette branchée ! Croix pour avancer, bouton du bas pour sauter, Start pour la pause.</span>'; el.classList.add('on'); });
 addEventListener('keydown', e => { const code = codeDe(e);
   if(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(code) && (state === 'play' || !TELE)) e.preventDefault();
   if(TELE && state === 'play' && (code === 'ArrowLeft' || code === 'ArrowRight')){ if(e.repeat) return; const d = code === 'ArrowLeft' ? 'l' : 'r', o = d === 'l' ? 'r' : 'l';
@@ -1629,7 +1654,7 @@ function entre(g, a){ const vu = [];
   m(g, 'camX', '_cx'); for(const o of bougeurs(g)) if(o){ m(o, 'x', '_px'); m(o, 'y', '_py'); }
   return () => { for(const [o, k, v] of vu) o[k] = v; }; }
 function frame(now){
-  const dt = Math.min(.1, (now - last) / 1000); last = now; const t = now / 1000; netVeille(dt);
+  const dt = Math.min(.1, (now - last) / 1000); last = now; const t = now / 1000; netVeille(dt); manette(dt);
   if(state === 'play' && G0){ acc += dt; while(acc >= STEP){ avant(G0); step(STEP); acc -= STEP; } updateFx(dt); }
   // Jasmin 3 (13/11) : le jeu avance par pas de 1/120 s. Sur un écran de PC (60, 75, 144 Hz…), une image recevait tantôt 1 pas, tantôt 2 ou 0 :
   // le héros et le décor avançaient par à-coups (l'iPad à 120 Hz tombait juste). On dessine donc chaque image entre le pas d'avant et le suivant.
