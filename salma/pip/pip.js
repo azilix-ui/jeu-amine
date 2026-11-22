@@ -49,7 +49,11 @@
     { id:'bilan', name:'Final test', sub:'le bilan de la leçon', icon:'🏆', edge:'#1f3c88', make:() => shuffle([...shuffle(M).slice(0, 3).map(ecoute), ...shuffle(L.gram).slice(0, 3).map(trou), ...shuffle(M).slice(0, 2).map(lis), ...shuffle(L.dialogue).slice(0, 2).map(dialogue)]),
       rule:'Dix questions de toute la leçon. Trois étoiles si tout est juste du premier coup !' },
   ];
-  window.COURS = { enfant:'Salma', prof:PIP, voix:'ollie', key:'salma-pip' + L.n, track:'salma-pip' + L.n, retour:'Mon chemin', titre:`${L.icon} ${L.titre}`, sous:`Salma & Pip · leçon ${L.n} / 10 · ${L.sous}`, controle:true, reflexion:1200,
+  // 22/11 : les mots anglais de la leçon (cours.js s'en sert pour faire lire en anglais ceux qui sont écrits sans balise de langue)
+  const enTexte = h => String(h).replace(/<(\w+)[^>]*\blang="?(?!en)\w+"?[^>]*>[\s\S]*?<\/\1>/g, ' ');   // dans les textes : seulement ce qui est marqué en anglais
+  const motsEN = [...new Set([...M.map(m => m[0]), ...L.gram.flatMap(g => [g[0], g[1], ...g[2]]), ...L.phrases.map(p => p[0].join(' ')), ...L.dialogue.flatMap(d => [d[0], d[1], ...d[2]]), L.regle, ...L.scenes.map(x => x.txt)].map(h => /lang="?en/.test(String(h)) ? [...String(h).matchAll(/<(\w+)[^>]*\blang="?en"?[^>]*>([\s\S]*?)<\/\1>/g)].map(x => x[2]).join(' ') : String(h))
+    .join(' ').replace(/<[^>]+>/g, ' ').toLowerCase().match(/[a-z][a-z']*/g) || [])].map(w => w.replace(/'s$/, ''));
+  window.COURS = { motsEN, enfant:'Salma', prof:PIP, voix:'ollie', key:'salma-pip' + L.n, track:'salma-pip' + L.n, retour:'Mon chemin', titre:`${L.icon} ${L.titre}`, sous:`Salma & Pip · leçon ${L.n} / 10 · ${L.sous}`, controle:true, reflexion:1200,
     bandeau:`<div class="pipband"><span>🇬🇧 Salma & Pip · Lesson ${L.n}</span><a href="english-pip.html">Les leçons</a></div>`,
     histoire:{ titre:L.histoire, scenes:L.scenes.map((s, k) => ({ img:`pip/img/p${L.n}_${k}.webp`, vid:`pip/img/p${L.n}_${k}.mp4`, txt:s.txt })) },
     bonjour:`${E('Hello, Salma!')} C'est moi, Pip ! Aujourd'hui : <b>${L.sous}</b>. On regarde d'abord le dessin animé, puis 8 étapes. Chaque bonne réponse te donne un ticket 🎟️ pour Serpent Légendes.`,

@@ -45,7 +45,11 @@
     { id:'phrases', name:'My sentences', sub:'mes petites phrases', icon:'💬', edge:'#7a4fe0', make:() => L.phrases.map(phrase), rule:'Écoute Kiko dire une petite phrase, et répète-la avec lui !' },
     { id:'fete', name:'Party!', sub:'la grande fête', icon:'🎉', edge:'#c8473a', make:() => shuffle([...shuffle(M).slice(0, 2).map(ecoute), ...oui6().slice(0, 2), ...shuffle(L.dit).slice(0, 2).map(dit)]), rule:'Un peu de tout ! Trois étoiles si tout est juste du premier coup.' },
   ];
-  window.COURS = { enfant:'Amine', prof:KIKO, voix:'ollie', lulu:true, indulgent:true, key:'amine-kiko' + L.n, track:'amine-kiko' + L.n, retour:'Mon chemin', titre:`${L.icon} ${L.titre}`, sous:`Amine & Kiko · leçon ${L.n} / 10`, controle:true, reflexion:1800,
+  // 22/11 : les mots anglais de la leçon (cours.js s'en sert pour faire lire en anglais ceux qui sont écrits sans balise de langue)
+  const enTexte = h => String(h).replace(/<(\w+)[^>]*\blang="?(?!en)\w+"?[^>]*>[\s\S]*?<\/\1>/g, ' ');   // dans les textes : seulement ce qui est marqué en anglais
+  const motsEN = [...new Set([...M.map(m => m[0]), ...L.phrases.map(p => p[0]), ...L.dit.map(d => d[0]), L.oui, ...Object.values(L.ouiTpl || {}), ...L.scenes.map(x => x.txt), 'yes', 'no'].map(h => /lang="?en/.test(String(h)) ? [...String(h).matchAll(/<(\w+)[^>]*\blang="?en"?[^>]*>([\s\S]*?)<\/\1>/g)].map(x => x[2]).join(' ') : String(h))
+    .join(' ').replace(/<[^>]+>/g, ' ').toLowerCase().match(/[a-z][a-z']*/g) || [])].map(w => w.replace(/'s$/, ''));
+  window.COURS = { motsEN, enfant:'Amine', prof:KIKO, voix:'ollie', lulu:true, indulgent:true, key:'amine-kiko' + L.n, track:'amine-kiko' + L.n, retour:'Mon chemin', titre:`${L.icon} ${L.titre}`, sous:`Amine & Kiko · leçon ${L.n} / 10`, controle:true, reflexion:1800,
     bandeau:`<div class="kikoband"><span>🐫 Amine & Kiko · ${L.n}</span><a href="english-kiko.html">Les leçons</a></div>`,
     histoire:{ titre:L.histoire, scenes:L.scenes.map((s, k) => ({ img:`kiko/img/k${L.n}_${k}.webp`, vid:`kiko/img/k${L.n}_${k}.mp4`, txt:s.txt })) },
     bonjour:`${E('Hello, Amine!')} C'est moi, Kiko ! Aujourd'hui : ${L.sous}. On regarde le dessin animé, et après on joue !`,

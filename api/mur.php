@@ -12,7 +12,7 @@
  *   POST action=reagit id emoji jeton            -> met ou enlève une réaction
  *   POST action=supprime id (jeton de l'auteur | pass = mot de passe parent | Anis administrateur, sans mot de passe : 21/11)
  *   POST action=video auteur texte musique jeton + fichier « video » (mp4 ou webm, 30 s, fabriqué par le studio de la page) + poster (JPEG)
- *                                                -> (21/11) une petite vidéo ; 3 vidéos par personne et par jour
+ *                                                -> (21/11) une petite vidéo ; 10 vidéos par personne et par jour (22/11) ; brut=1 volv volm : l'original, musique posée à la lecture
  *   GET  ?vid=ID                                 -> la vidéo (avec les requêtes « Range » qu'exige Safari)
  * Le « jeton » est un nombre au hasard gardé dans le navigateur : il dit « c'est moi qui ai écrit ça » (pour pouvoir effacer son message).
  * Données : famille-data/mur.sqlite et famille-data/mur/<id>.webp (hors du site public).
@@ -23,8 +23,8 @@ require __DIR__ . '/../acces/garde.php'; ga_garde_api();
 const MUR_EMOJIS = ['❤️', '👏', '😂', '😮'];
 const MUR_TEXTE = 500;
 const MUR_IMAGE_MAX = 2500000;   // la photo arrive déjà réduite par la page (1280 px), en JPEG
-const MUR_VIDEO_MAX = 16000000;  // 30 s fabriquées par la tablette (540 × 960, environ 2 Mbit/s) : 8 Mo en moyenne
-const MUR_VIDEOS_JOUR = 3;
+const MUR_VIDEO_MAX = 48000000;  // 22/11 : 30 s en bonne qualité (720 × 1280 à 6 Mbit/s, ou l'original filmé) : environ 25 Mo au plus
+const MUR_VIDEOS_JOUR = 10;   // 22/11 : demande des enfants (avant : 3)
 
 header('X-Content-Type-Options: nosniff');
 function out(int $c, array $d): void { http_response_code($c); header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; }
@@ -142,9 +142,11 @@ try {
         if (!$j) fail(400, 'Recharge la page.');
         $qui = auteur($_POST['auteur'] ?? ''); $txt = trim(mb_substr((string)($_POST['texte'] ?? ''), 0, 200));
         $mus = preg_match('/^[a-z0-9-]{1,30}$/', (string)($_POST['musique'] ?? '')) ? (string)$_POST['musique'] : '';
+        // 22/11 : « brut » = la vidéo d'origine (pas refabriquée) : la musique est jouée par-dessus à la lecture, avec les deux volumes choisis
+        $brut = ($_POST['brut'] ?? '') === '1'; $vv = max(0, min(1, (float)($_POST['volv'] ?? 1))); $vm = max(0, min(1, (float)($_POST['volm'] ?? .7)));
         $v = $_FILES['video'] ?? null;
         if (!$v || ($v['error'] ?? 1) !== UPLOAD_ERR_OK) fail(400, ($v['error'] ?? 0) === UPLOAD_ERR_INI_SIZE ? 'Vidéo trop lourde pour le serveur.' : "La vidéo n'est pas arrivée : réessaie.");
-        if ($v['size'] > MUR_VIDEO_MAX) fail(400, 'Vidéo trop lourde (16 Mo au plus).');
+        if ($v['size'] > MUR_VIDEO_MAX) fail(400, 'Vidéo trop lourde (' . round(MUR_VIDEO_MAX / 1e6) . ' Mo au plus).');
         $tete = (string)file_get_contents($v['tmp_name'], false, null, 0, 12);
         $ext = substr($tete, 0, 4) === "\x1A\x45\xDF\xA3" ? 'webm' : (substr($tete, 4, 4) === 'ftyp' ? 'mp4' : '');
         if ($ext === '') fail(400, "Ce fichier n'est pas une vidéo lisible.");
@@ -153,7 +155,7 @@ try {
         if (preg_match('#^data:image/(jpeg|png|webp);base64,#', $pd)) { $bin = base64_decode(substr($pd, strpos($pd, ',') + 1), true); if ($bin !== false && strlen($bin) < MUR_IMAGE_MAX) $img = @imagecreatefromstring($bin) ?: null; }
         $db = mur(); $t = time(); $ip = hash('sha256', ga_ip());
         $db->prepare('INSERT INTO photos_jour (auteur, jour, n) VALUES (?, ?, 1) ON CONFLICT(auteur, jour) DO UPDATE SET n = n + 1')->execute([mb_strtolower('🎬' . $qui), jour()]);
-        $db->prepare('INSERT INTO messages (auteur, texte, img, jeton, cree, ip, genre, deco, media) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$qui, $txt, $img ? 1 : 0, $j, $t, $ip, 'video', '', $ext . '|' . $mus]);
+        $db->prepare('INSERT INTO messages (auteur, texte, img, jeton, cree, ip, genre, deco, media) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$qui, $txt, $img ? 1 : 0, $j, $t, $ip, 'video', '', $ext . '|' . $mus . ($brut ? '|o|' . round($vv, 2) . '|' . round($vm, 2) : '')]);
         $id = (int)$db->lastInsertId();
         if (!move_uploaded_file($v['tmp_name'], dossier() . "/$id.$ext")) { $db->prepare('DELETE FROM messages WHERE id = ?')->execute([$id]); fail(500, "La vidéo n'a pas pu être rangée."); }
         if ($img) { imagepalettetotruecolor($img); imagewebp($img, dossier() . '/' . $id . '.webp', 80); imagedestroy($img); }

@@ -6,7 +6,21 @@
    Studio.ouvre({ qui, jeton, api, reste, envoiMax, fini }) ; window.__studio pour les tests. */
 (function(){
 'use strict';
-const W = 540, H = 960, MAXS = 30, FPS = 30;
+const W = 720, H = 1280, MAXS = 30, FPS = 30, DEBIT = 6000000;   // 22/11 : 720 × 1280 et 6 Mbit/s (avant 540 × 960 et 2 Mbit/s : l'iPad descendait à 0,15 Mbit/s, image « cassée »)
+/* 22/11 (demande du papa : « meilleure qualité, lecture fluide, sans l'effet vidéo coupée ») : une vidéo FILMÉE, ou une vidéo de la tablette
+   de 30 s au plus, n'est plus refabriquée (chaque nouvel encodage de l'iPad abîmait l'image) : on envoie l'original. La musique et le petit mot
+   sont alors posés par-dessus à la lecture, dans le fil (comme TikTok). Seules les photos animées, ou une vidéo qu'on coupe, passent encore
+   par la fabrication. Pour une vidéo de la tablette, on efface d'abord ses infos cachées (position GPS, appareil) : nettoie(). */
+// les boîtes « udta » et « meta » d'un MP4/MOV (où l'iPhone et l'iPad rangent le lieu et l'appareil) deviennent des boîtes « free » :
+// même taille, rien ne bouge dans le fichier, et plus aucun lecteur ne les lit.
+function nettoie(buf){ const u = new Uint8Array(buf), dv = new DataView(buf); let n = 0;
+  const typ = p => String.fromCharCode(u[p], u[p + 1], u[p + 2], u[p + 3]);
+  const parcourt = (de, a, prof) => { let p = de; while(p + 8 <= a){ let t = dv.getUint32(p), h = 8; if(t === 1 && p + 16 <= a){ t = Number(dv.getBigUint64(p + 8)); h = 16; } else if(t === 0) t = a - p;
+      if(t < 8 || p + t > a) break; const k = typ(p + 4);
+      if(k === 'udta' || k === 'meta'){ u.set([102, 114, 101, 101], p + 4); n++; }
+      else if(prof < 4 && ['moov', 'trak', 'mdia', 'minf'].includes(k)) parcourt(p + h, p + t, prof + 1);
+      p += t; } };
+  parcourt(0, u.length, 0); return n; }
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const MUS = () => window.MUR_MUSIQUES || [];
 const typeRec = () => { if(!window.MediaRecorder) return '';
@@ -20,11 +34,11 @@ async function musique(id){ const m = MUS().find(x => x.id === id); if(!m) retur
 function ouvre(o){
   const back = document.createElement('div'); back.className = 'cabine studio'; document.body.appendChild(back);
   // l'état du montage : la source (vidéo ou photos), la musique, les volumes, le petit mot
-  const S = { type:'', blobUrl:'', debut:0, duree:0, photos:[], musique:'', volV:1, volM:.7, mot:'', flux:null, rec:null, face:'user' };
+  const S = { type:'', blobUrl:'', debut:0, duree:0, photos:[], musique:'', volV:1, volM:.7, mot:'', flux:null, rec:null, face:'user', brut:null };
   window.__studio = { S, back };
   let anim = 0, lecteur = null, srcNode = null, gV = null, gM = null, mSrc = null, vid = null, dest = null, fin = null;
   const coupeFlux = () => { if(S.flux){ S.flux.getTracks().forEach(t => t.stop()); S.flux = null; } };
-  const stopTout = () => { cancelAnimationFrame(anim); try{ mSrc && mSrc.stop(); }catch(e){} mSrc = null; if(vid){ vid.pause(); } };
+  const stopTout = () => { cancelAnimationFrame(anim); try{ coupeMusA(); }catch(e){} try{ mSrc && mSrc.stop(); }catch(e){} mSrc = null; if(vid){ vid.pause(); } };
   const ferme = () => { stopTout(); coupeFlux(); if(S.blobUrl) URL.revokeObjectURL(S.blobUrl); back.remove(); delete window.__studio; };
 
   /* ---------- 1 · choisir ---------- */
@@ -40,9 +54,11 @@ function ouvre(o){
       <div class="cab-btns"><button class="t" id="stFerme">✕ Fermer</button></div>`;
     back.querySelector('#stFerme').onclick = ferme;
     back.querySelector('[data-c=filme]').onclick = filme;
-    back.querySelector('#stVid').onchange = e => { const f = e.target.files[0]; if(!f) return; S.type = 'video'; S.blobUrl = URL.createObjectURL(f); S.debut = 0; monte(); };
+    back.querySelector('#stVid').onchange = async e => { const f = e.target.files[0]; if(!f) return; S.type = 'video'; S.blobUrl = URL.createObjectURL(f); S.debut = 0; S.miroir = false; S.brut = null;
+      if(f.size <= o.envoiMax && /mp4|quicktime|webm/.test(f.type || 'video/mp4')){ try{ const buf = await f.arrayBuffer(); if(!/webm/.test(f.type)) nettoie(buf); S.brut = new Blob([buf], { type:/webm/.test(f.type) ? 'video/webm' : 'video/mp4' }); }catch(err){ S.brut = null; } }
+      monte(); };
     back.querySelector('#stPh').onchange = async e => { const fs = [...e.target.files].slice(0, 6); if(!fs.length) return;
-      S.type = 'photos'; S.photos = await Promise.all(fs.map(f => new Promise(ok => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = URL.createObjectURL(f); })));
+      S.type = 'photos'; S.brut = null; S.photos = await Promise.all(fs.map(f => new Promise(ok => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = URL.createObjectURL(f); })));
       S.photos = S.photos.filter(Boolean); if(!S.musique && MUS()[0]) S.musique = MUS()[0].id; monte(); };
   }
 
@@ -52,7 +68,7 @@ function ouvre(o){
       <div class="cab-btns"><button class="t" id="stRet">← Retour</button><button class="declencheur" id="stRec" aria-label="Filmer"></button><button class="t" id="stTour" hidden>🔄 Retourner</button></div><p class="msgerr" id="stErr"></p>`;
     back.querySelector('#stRet').onclick = choix;
     const v = back.querySelector('video');
-    try{ coupeFlux(); S.flux = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:S.face, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:{ echoCancellation:true, noiseSuppression:true } });
+    try{ coupeFlux(); S.flux = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:S.face, width:{ ideal:1280 }, height:{ ideal:720 }, frameRate:{ ideal:30 } }, audio:{ echoCancellation:true, noiseSuppression:true } });
       v.srcObject = S.flux; await v.play().catch(() => {});
       const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
       if(cams.length > 1){ const t = back.querySelector('#stTour'); t.hidden = false; t.onclick = () => { S.face = S.face === 'user' ? 'environment' : 'user'; filme(); }; }
@@ -62,10 +78,10 @@ function ouvre(o){
       if(S.rec){ S.rec.stop(); return; }
       bouton.disabled = true; const cdn = back.querySelector('#stCdn');
       for(const n of [3, 2, 1]){ cdn.textContent = n; await new Promise(r => setTimeout(r, 700)); } cdn.textContent = '';
-      const morceaux = [], t = typeRec(); S.rec = new MediaRecorder(S.flux, t ? { mimeType:t, videoBitsPerSecond:3000000 } : undefined);
+      const morceaux = [], t = typeRec(); S.rec = new MediaRecorder(S.flux, t ? { mimeType:t, videoBitsPerSecond:DEBIT, audioBitsPerSecond:128000 } : undefined);
       S.rec.ondataavailable = e => { if(e.data.size) morceaux.push(e.data); };
       S.rec.onstop = () => { clearInterval(S.chrono); const b = new Blob(morceaux, { type:S.rec.mimeType || t || 'video/webm' }); S.rec = null; coupeFlux();
-        S.type = 'video'; S.blobUrl = URL.createObjectURL(b); S.debut = 0; S.miroir = S.face === 'user'; monte(); };
+        S.type = 'video'; S.blobUrl = URL.createObjectURL(b); S.debut = 0; S.miroir = false; S.brut = b; monte(); };   // l'original part tel quel (pas de miroir : on se voit comme les autres nous voient)
       S.rec.start(500); bouton.disabled = false; bouton.classList.add('enreg'); tps.hidden = false; const t0 = Date.now();
       S.chrono = setInterval(() => { const s = (Date.now() - t0) / 1000; tps.textContent = '● ' + Math.floor(s) + ' / ' + MAXS + ' s'; if(s >= MAXS && S.rec) S.rec.stop(); }, 200);
     };
@@ -75,7 +91,7 @@ function ouvre(o){
   function couvre(g, src, sw, sh, k = 1, dx = 0, dy = 0){ const s = Math.max(W / sw, H / sh) * k, w = sw * s, h = sh * s; g.drawImage(src, (W - w) / 2 + dx, (H - h) / 2 + dy, w, h); }
   function contient(g, src, sw, sh, k = 1, dx = 0, dy = 0){ const s = Math.min(W / sw, H / sh) * k, w = sw * s, h = sh * s; g.drawImage(src, (W - w) / 2 + dx, (H - h) / 2 + dy, w, h); }
   function fond(g, src, sw, sh){ g.save(); if(peutFiltrer) g.filter = 'blur(22px) brightness(.7)'; couvre(g, src, sw, sh, 1.15); g.restore(); if(!peutFiltrer){ g.fillStyle = '#000a'; g.fillRect(0, 0, W, H); } }
-  function dessine(g, t){
+  function dessine(g, t, sansMot){
     g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
     if(S.type === 'video' && vid && vid.videoWidth){ const vw = vid.videoWidth, vh = vid.videoHeight;
       g.save(); if(S.miroir){ g.translate(W, 0); g.scale(-1, 1); }
@@ -87,8 +103,8 @@ function ouvre(o){
       une(S.photos[i], u, 1);
       const fondu = .45 / per; if(u > 1 - fondu && i < S.photos.length - 1) une(S.photos[i + 1], 0, (u - (1 - fondu)) / fondu);
       if(t < .4) { g.fillStyle = `rgba(0,0,0,${1 - t / .4})`; g.fillRect(0, 0, W, H); } }
-    if(S.mot){ g.font = '700 34px Nunito, sans-serif'; g.textAlign = 'center'; const l = S.mot.slice(0, 60);
-      g.fillStyle = '#0008'; const lw = Math.min(W - 40, g.measureText(l).width + 36); g.fillRect((W - lw) / 2, H - 150, lw, 56); g.fillStyle = '#fff'; g.fillText(l, W / 2, H - 110); }
+    if(S.mot && !sansMot){ g.font = '700 44px Nunito, sans-serif'; g.textAlign = 'center'; const l = S.mot.slice(0, 60);
+      g.fillStyle = '#0008'; const lw = Math.min(W - 40, g.measureText(l).width + 36); g.fillRect((W - lw) / 2, H - 200, lw, 72); g.fillStyle = '#fff'; g.fillText(l, W / 2, H - 150); }
   }
 
   /* ---------- le son : la vidéo et la musique passent par Web Audio (on règle les deux volumes) ---------- */
@@ -129,11 +145,13 @@ function ouvre(o){
       if(total > MAXS + .5){ const r = back.querySelector('#stDebut'); back.querySelector('#stDebutL').hidden = false; r.max = Math.floor(total - MAXS); r.value = S.debut;
         r.oninput = () => { S.debut = +r.value; back.querySelector('#stDebutV').textContent = S.debut + ' s'; S.duree = Math.min(MAXS, total - S.debut); rejoue(); }; }
       S.duree = Math.min(MAXS, total - S.debut);
+      if(total > MAXS + .5) S.brut = null;   // plus de 30 s : il faut couper, donc refabriquer
       try{ srcNode = ac().createMediaElementSource(vid); srcNode.connect(gV); }catch(e){}
       gV.gain.value = S.volV;
     } else { back.querySelector('#stVolV').hidden = back.querySelector('#stVolVL').hidden = true; S.duree = Math.min(MAXS, Math.max(6, S.photos.length * 3.2)); }
     lecteur = { cv, g }; rejoue();
-    back.querySelector('#stFab').onclick = fabrique;
+    back.querySelector('#stFab').onclick = () => S.brut ? direct() : fabrique();
+    if(S.brut) back.querySelector('#stFab').textContent = '✅ C\'est prêt !';
   }
   // l'aperçu tourne en boucle, avec le son
   async function rejoue(){ if(!lecteur) return; stopTout(); const { g } = lecteur; const btn = back.querySelector('#stPlay');
@@ -143,12 +161,23 @@ function ouvre(o){
       if(t >= S.duree || (S.type === 'video' && vid.ended)){ rejoue(); return; } dessine(g, t); anim = requestAnimationFrame(boucle); };
     boucle(); }
 
+  // l'aperçu d'un original : la musique jouée à côté de la vidéo (Web Audio : sur iPad, le volume d'un lecteur ne se règle pas)
+  let musA = null; const coupeMusA = () => { if(musA){ try{ musA.src.stop(); }catch(e){} musA = null; } };
+  async function lecteurMus(v){ const b = await musique(S.musique).catch(() => null); if(!b) return; const a = ac(), gn = a.createGain(); gn.gain.value = S.volM; gn.connect(a.destination);
+    const go = () => { coupeMusA(); if(v.paused || !document.body.contains(v)) return; const src = a.createBufferSource(); src.buffer = b; src.loop = true; src.connect(gn); src.start(0, v.currentTime % b.duration); musA = { src }; };
+    v.addEventListener('play', go); v.addEventListener('playing', go); v.addEventListener('pause', coupeMusA); v.addEventListener('seeked', go); go(); }
+  /* ---------- 3a · l'original, sans refabriquer : juste une image d'affiche ---------- */
+  async function direct(){
+    stopTout(); const { cv, g } = lecteur;
+    vid.currentTime = Math.min(.8, Math.max(0, S.duree - .1)); await new Promise(ok => { vid.onseeked = ok; setTimeout(ok, 1500); });
+    dessine(g, .8, true); resultat(S.brut, cv.toDataURL('image/jpeg', .82), true);
+  }
   /* ---------- 3 · la fabrication : on rejoue une fois en enregistrant le canvas et le son ---------- */
-  async function fabrique(debit = 2000000){
+  async function fabrique(debit = DEBIT){
     stopTout(); const t = typeRec(); if(!t){ back.querySelector('#stErr').textContent = 'Cette tablette ne sait pas fabriquer de vidéo 😕'; return; }
     const { cv, g } = lecteur; ac(); back.querySelector('#stFab').disabled = true; back.querySelector('#stRet').disabled = true;
     const barre = document.createElement('div'); barre.className = 'st-barre'; barre.innerHTML = '<i></i><span>Je fabrique ta vidéo… regarde !</span>'; back.querySelector('.st-ecran').appendChild(barre);
-    const flux = cv.captureStream(FPS); dest.stream.getAudioTracks().forEach(tr => flux.addTrack(tr));
+    const flux = cv.captureStream(FPS), piste = flux.getVideoTracks()[0]; dest.stream.getAudioTracks().forEach(tr => flux.addTrack(tr));
     const morceaux = [], rec = new MediaRecorder(flux, { mimeType:t, videoBitsPerSecond:debit, audioBitsPerSecond:128000 }); let poster = '';
     rec.ondataavailable = e => { if(e.data.size) morceaux.push(e.data); };
     const fini = new Promise(ok => { rec.onstop = ok; });
@@ -157,28 +186,31 @@ function ouvre(o){
     if(S.type === 'video') await vid.play().catch(() => {});
     const t0 = performance.now(); await lanceMusique(0);
     await new Promise(ok => { const boucle = () => { const tt = S.type === 'video' ? vid.currentTime - S.debut : (performance.now() - t0) / 1000;
-        dessine(g, Math.min(tt, S.duree - .01)); barre.querySelector('i').style.width = Math.min(100, tt / S.duree * 100) + '%';
+        dessine(g, Math.min(tt, S.duree - .01)); if(piste && piste.requestFrame) piste.requestFrame(); barre.querySelector('i').style.width = Math.min(100, tt / S.duree * 100) + '%';
         if(!poster && tt > .8) poster = cv.toDataURL('image/jpeg', .8);
         if(tt >= S.duree || (S.type === 'video' && vid.ended)){ ok(); return; } anim = requestAnimationFrame(boucle); }; boucle(); });
     stopTout(); rec.stop(); await fini;
     const blob = new Blob(morceaux, { type:t.split(';')[0] });
     if(!poster) poster = cv.toDataURL('image/jpeg', .8);
-    if(blob.size > o.envoiMax && debit > 900000){ barre.remove(); return fabrique(Math.round(debit * .55)); }   // trop lourde : on refait plus légère
+    if(blob.size > o.envoiMax && debit > 1500000){ barre.remove(); return fabrique(Math.round(debit * .6)); }   // trop lourde : on refait plus légère
     resultat(blob, poster);
   }
 
   /* ---------- 4 · on regarde, puis on publie ---------- */
-  function resultat(blob, poster){
+  function resultat(blob, poster, brut){
     const u = URL.createObjectURL(blob);
     back.innerHTML = `<h2>🎉 Ta vidéo est prête !</h2><div class="st-ecran"><video src="${u}" controls playsinline autoplay loop poster="${poster}"></video></div>
       <p class="reste">${(blob.size / 1e6).toFixed(1).replace('.', ',')} Mo · ${Math.round(S.duree)} s${S.musique ? ' · ' + esc((MUS().find(m => m.id === S.musique) || {}).titre || '') : ''}</p>
       <div class="cab-btns"><button class="t" id="stRe">↺ Refaire le montage</button><button class="t" id="stAnn">✕ Annuler</button><button class="t go" id="stPub">📌 Publier sur le mur</button></div><div class="st-barre envoi" hidden><i></i><span>J'envoie…</span></div><p class="msgerr" id="stErr"></p>`;
     window.__studio.blob = blob;
     back.querySelector('#stRe').onclick = () => { URL.revokeObjectURL(u); monte(); };
+    if(brut){ const ap = back.querySelector('.st-ecran video'); ap.volume = S.volV; ap.muted = S.volV === 0;
+      if(S.musique) musique(S.musique).then(() => { lecteurMus(ap); }).catch(() => {});
+      if(S.mot) back.querySelector('.st-ecran').insertAdjacentHTML('beforeend', `<div class="st-mot">${esc(S.mot)}</div>`); }
     back.querySelector('#stAnn').onclick = ferme;
     back.querySelector('#stPub').onclick = () => {
       if(blob.size > o.envoiMax){ back.querySelector('#stErr').textContent = 'Ta vidéo est trop lourde pour le site : raccourcis-la un peu.'; return; }
-      const fd = new FormData(); fd.append('action', 'video'); fd.append('auteur', o.qui); fd.append('jeton', o.jeton); fd.append('texte', S.mot.trim()); fd.append('musique', S.musique); fd.append('poster', poster);
+      const fd = new FormData(); fd.append('action', 'video'); fd.append('auteur', o.qui); fd.append('jeton', o.jeton); fd.append('texte', S.mot.trim()); fd.append('musique', S.musique); fd.append('poster', poster); fd.append('brut', brut ? '1' : ''); fd.append('volv', S.volV); fd.append('volm', S.volM);
       fd.append('video', blob, 'video.' + (blob.type.includes('mp4') ? 'mp4' : 'webm'));
       const x = new XMLHttpRequest(), barre = back.querySelector('.st-barre.envoi'); barre.hidden = false; back.querySelector('#stPub').disabled = true;
       x.upload.onprogress = e => { if(e.lengthComputable) barre.querySelector('i').style.width = (e.loaded / e.total * 100) + '%'; };

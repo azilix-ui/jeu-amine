@@ -138,7 +138,28 @@ function lecVa(f){
 function joueBuffer(b, off){ return new Promise(res => { const a = actx(), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); joueur = s;
   off = Math.max(0, Math.min(off || 0, b.duration - .05)); LEC.dur = b.duration; LEC.debut = a.currentTime - off;
   let fini = false; LEC.fin = () => { if(!fini){ fini = true; clearTimeout(LEC.garde); LEC.fin = null; res(); } }; s.onended = LEC.fin; lecArme(b.duration - off); s.start(0, off); }); }
-function speak(html){
+/* 22/11 (remarque du papa) : dans les cours d'anglais de Salma et d'Amine, des mots anglais écrits sans balise de langue (« Avec <b>I</b>,
+   toujours <b>am</b> », « Hello, ça veut dire bonjour », « Les couleurs : red, blue… ») étaient lus par la voix française.
+   Si le cours donne C.motsEN (les mots anglais de la leçon), on les repère avant de lire : un <b> qui n'a que des mots anglais,
+   et dans le texte, une suite de mots anglais (sauf ceux qui existent aussi en français : a, on, son, six…). Seulement pour la voix. */
+const MOTS_EN = C.motsEN ? new Set(C.motsEN.map(w => String(w).toLowerCase())) : null;
+const FR_AUSSI = new Set(['a', 'an', 'on', 'in', 'son', 'me', 'but', 'six', 'sofa', 'orange', 'pain', 'car', 'nous', 'est', 'il', 'elle', 'de', 'la', 'le', 'les', 'du', 'des', 'un', 'une', 'et', 'ou', 'en', 'ma', 'ta', 'sa', 'mon', 'ton', 'pas', 'plus', 'si', 'ne', 'je', 'tu', 'pour', 'dans', 'sur', 'avec', 'par', 'chat', 'nos', 'vos', 'bus', 'taxi', 'piano', 'radio', 'zoo', 'pizza', 'super', 'bravo', 'oui', 'non', 'sous', 'salma', 'pip', 'amine', 'kiko', 'essil', 'anis', 'imen', 'papa', 'maman']);
+const AMBIGU = new Set(['a', 'an', 'on', 'in', 'me', 'but', 'six', 'sofa', 'orange', 'pain', 'car']);   // en gras, ces mots-là sont de l'anglais
+const toutEN = t => { const w = t.replace(/<[^>]+>/g, ' ').match(/[A-Za-z][A-Za-z']*/g); return !!w && w.every(x => { const lw = x.toLowerCase().replace(/'s$/, ''); return MOTS_EN.has(lw) && (AMBIGU.has(lw) || !FR_AUSSI.has(lw)); }) && !/[À-ÿ]/.test(t); };
+function marqueEN(html){ if(!MOTS_EN) return html;
+  const estEN = w => { const lw = w.toLowerCase().replace(/'s$/, ''); return w !== 'i' && /^[a-z']+$/.test(lw) && MOTS_EN.has(lw) && !FR_AUSSI.has(lw); };
+  const texte = t => { const p = t.split(/(\p{L}[\p{L}']*)/u); let out = '', run = [], sep = '';   // p : séparateur, mot, séparateur, mot…
+    const vide = () => { if(run.length){ out += `<span lang="en">${run.join('')}</span>`; run = []; } };
+    for(let i = 0; i < p.length; i++){ const x = p[i];
+      if(i % 2){ if(estEN(x)){ if(run.length) run.push(sep); else out += sep; run.push(x); } else { vide(); out += sep + x; } sep = ''; }
+      else { if(run.length && !/^[ ,]*$/.test(x)){ vide(); } sep = x; if(i === p.length - 1){ vide(); out += x; sep = ''; } } }
+    return out; };
+  return String(html).split(/(<(\w+)[^>]*\blang="?\w+"?[^>]*>[\s\S]*?<\/\2>)/).map((p, i) => {
+    if(i % 3 === 2) return ''; if(i % 3 === 1 || !p) return p || '';
+    p = p.replace(/<b>([^<]*)<\/b>/g, (m, t) => toutEN(t) ? `<b lang="en">${t}</b>` : m);
+    return p.split(/(<b lang="en">[^<]*<\/b>|<[^>]+>)/).map((q, k) => k % 2 ? q : texte(q)).join(''); }).join(''); }
+window.__marqueEN = marqueEN;
+function speak(html){ html = marqueEN(html);
   talk(); hush(); if(muted || (window.FamilleVoix && !FamilleVoix.on())) return new Promise(r => setTimeout(r, Math.min(9000, 1200 + clean(html).length * 55)));   // touche V : consignes orales coupées (on laisse le temps de lire)
   const j = jeton, segs = [];
   for(const [t, l] of segments(html)) for(const m of (l === 'en' && fichier(t) ? [t] : morceaux(t))) segs.push([m, l, (l === 'en' && fichier(m)) || enLigne(m, l)]);

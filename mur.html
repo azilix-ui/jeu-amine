@@ -127,22 +127,43 @@
 .carte.video .vignette img{width:100%;height:100%;object-fit:cover;display:block}
 .carte.video .vignette span{position:absolute;inset:0;margin:auto;width:74px;height:74px;border-radius:50%;background:#fffd;display:grid;place-items:center;font-size:32px;box-shadow:0 6px 20px #0006}
 .carte .mus{font-size:14px;color:var(--soft);font-weight:700}
-.reels{position:fixed;inset:0;z-index:1000;background:#000;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain}
-.reel{height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:grid;place-items:center;overflow:hidden}
-.reel video,.reel img.ph{max-width:100%;max-height:100dvh;width:auto;height:100dvh;object-fit:contain;display:block}
+.st-mot{position:absolute;left:8%;right:8%;bottom:16%;text-align:center;color:#fff;font-weight:900;font-size:clamp(18px,3.4vw,26px);text-shadow:0 2px 6px #000,0 0 2px #000;pointer-events:none}
+/* 22/11 : le fil façon TikTok : une vidéo par écran, on glisse, double-toucher = ❤️, la musique posée par-dessus l'original */
+.reels{position:fixed;inset:0;z-index:1000;background:#000;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none}
+.reels::-webkit-scrollbar{display:none}
+.reel{height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:grid;place-items:center;overflow:hidden;background:#000}
+.reel .flou{position:absolute;inset:-40px;background:center/cover no-repeat;filter:blur(28px) brightness(.55);transform:scale(1.1)}
+.reel video,.reel img.ph{position:relative;max-width:100%;max-height:100dvh;width:100%;height:100dvh;object-fit:contain;display:block}
+.reel video.plein{object-fit:cover}
 .reel img.ph{animation:kb 9s ease-in-out infinite alternate}
 @keyframes kb{to{transform:scale(1.08)}}
-.reel .info{position:absolute;left:14px;right:90px;bottom:max(84px,env(safe-area-inset-bottom));color:#fff;text-shadow:0 1px 4px #000;display:flex;flex-direction:column;gap:6px}
+.reel .ombre{position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(transparent,#000a);pointer-events:none}
+.reel .mot{position:absolute;left:8%;right:96px;top:58%;text-align:center;color:#fff;font-weight:900;font-size:clamp(20px,3.6vw,30px);text-shadow:0 2px 8px #000,0 0 2px #000;pointer-events:none}
+.reel .info{position:absolute;left:14px;right:96px;bottom:max(84px,calc(env(safe-area-inset-bottom) + 76px));color:#fff;text-shadow:0 1px 4px #000;display:flex;flex-direction:column;gap:6px}
 .reel .info .qui{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;background:none;padding:0;min-height:0;color:#fff}
 .reel .info .qui img{width:44px;height:44px;border-radius:50%;border:2px solid #fff;object-fit:cover}
 .reel .info p{margin:0;font-size:17px}.reel .info small{opacity:.85}
-.reel .cote{position:absolute;right:10px;bottom:max(90px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.reel .info .musl{display:block;overflow:hidden;white-space:nowrap;max-width:260px;font-weight:700;font-size:15px}
+.reel .info .musl span{display:inline-block;padding-left:100%;animation:defile 9s linear infinite}
+@keyframes defile{to{transform:translateX(-100%)}}
+.reel .cote{position:absolute;right:10px;bottom:max(40px,calc(env(safe-area-inset-bottom) + 30px));display:flex;flex-direction:column;align-items:center;gap:12px}
 .reel .cote button{width:60px;min-height:60px;border-radius:50%;border:0;background:#ffffff26;color:#fff;font-size:26px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
-.reel .cote button small{font-size:13px;font-weight:800}.reel .cote button.on{background:#ffc93ccc}
+.reel .cote button small{font-size:13px;font-weight:800}.reel .cote button.on{background:#ff3b5ccc}
+.reel .cote .av{width:56px;height:56px;border-radius:50%;border:3px solid #fff;object-fit:cover;background:#333}
+.reel .disque{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle,#333 0 22%,#111 23% 100%);border:8px solid #222;display:grid;place-items:center;font-size:20px;animation:tourne 4s linear infinite}
+.reel.pause .disque{animation-play-state:paused}
+@keyframes tourne{to{transform:rotate(360deg)}}
+.reel .prog{position:absolute;left:0;right:0;bottom:0;height:4px;background:#ffffff33}
+.reel .prog i{display:block;height:100%;width:0;background:#fff}
+.reel .coeur{position:absolute;font-size:110px;pointer-events:none;animation:coeur .9s ease-out forwards;transform:translate(-50%,-50%)}
+@keyframes coeur{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-15deg)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.2) rotate(-8deg)}60%{opacity:1;transform:translate(-50%,-60%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-120%) scale(1.3)}}
 .reels-haut{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;z-index:1001;display:flex;justify-content:space-between;pointer-events:none}
 .reels-haut button{pointer-events:auto;min-height:48px;padding:0 16px;border-radius:999px;border:0;background:#0008;color:#fff;font:inherit;font-weight:800;font-size:17px;cursor:pointer}
 .reel .tap{position:absolute;inset:0;margin:auto;width:96px;height:96px;border-radius:50%;background:#0007;color:#fff;font-size:44px;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .2s}
 .reel.pause .tap{opacity:1}
+.reels .glisse{position:fixed;left:50%;bottom:22%;transform:translateX(-50%);z-index:1001;color:#fff;font-weight:800;background:#0009;border-radius:999px;padding:10px 18px;pointer-events:none;animation:glisse 2.6s ease forwards}
+@keyframes glisse{0%{opacity:0;transform:translate(-50%,20px)}15%,70%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-40px)}}
+@media (prefers-reduced-motion:reduce){.reel .disque,.reel .info .musl span,.reel img.ph{animation:none}}
 </style>
 </head>
 <body>
@@ -150,7 +171,7 @@
   <a class="back" href="./">← Famille Missaoui</a>
   <header class="mur-tete">
     <h1>Le mur de la famille<span>.</span></h1>
-    <p>Un mot, un dessin, ta <b>photo du jour</b> (3 photos ou images par jour chacun), ou une <b>petite vidéo</b> en musique : filmée, prise dans la tablette, ou des photos qui s'animent (3 vidéos de 30 s par jour). Tout le monde le voit, la famille et les proches invités. Regarde tout en grand dans <b>📱 Le fil</b> !</p>
+    <p>Un mot, un dessin, ta <b>photo du jour</b> (3 photos ou images par jour chacun), ou une <b>petite vidéo</b> en musique : filmée, prise dans la tablette, ou des photos qui s'animent (10 vidéos de 30 s par jour). Tout le monde le voit, la famille et les proches invités. Regarde tout en grand dans <b>📱 Le fil</b> !</p>
   </header>
 
   <section class="ecrire" aria-label="Écrire sur le mur">
@@ -342,34 +363,72 @@ $('fil').addEventListener('click', async e => {
 /* ---------- 🎬 le studio vidéo et 📱 le fil (21/11) ---------- */
 $('studio').onclick = async () => {
   $('err').textContent = ''; if(!qui){ $('qui').click(); return; }
-  let q = { videos:3, envoi_max:16e6 }; try{ const r = await fetch(API + '?action=quota&auteur=' + encodeURIComponent(qui), { cache:'no-store', credentials:'same-origin' }); if(r.ok) q = await r.json(); }catch(e){}
-  if(q.videos <= 0){ $('err').textContent = 'Tu as déjà posté tes 3 vidéos aujourd\'hui : à demain ! 🎬'; return; }
-  Studio.ouvre({ qui, jeton:JETON, api:API, reste:q.videos, envoiMax:Math.min(16e6, q.envoi_max || 16e6), fini:async id => { await charge(); fil(id); } });
+  let q = { videos:10, envoi_max:16e6 }; try{ const r = await fetch(API + '?action=quota&auteur=' + encodeURIComponent(qui), { cache:'no-store', credentials:'same-origin' }); if(r.ok) q = await r.json(); }catch(e){}
+  if(q.videos <= 0){ $('err').textContent = 'Tu as déjà posté tes ' + (q.videos_max || 10) + ' vidéos aujourd\'hui : à demain ! 🎬'; return; }
+  Studio.ouvre({ qui, jeton:JETON, api:API, reste:q.videos, envoiMax:Math.min(48e6, q.envoi_max || 16e6), fini:async id => { await charge(); fil(id); } });
 };
-// le fil : une photo ou une vidéo par écran, on glisse vers le haut ; la vidéo visible joue, les autres se taisent
+// le fil (22/11, façon TikTok) : une photo ou une vidéo par écran, on glisse vers le haut ; la vidéo visible joue, les autres se taisent et
+// se déchargent (lecture fluide) ; double-toucher = ❤️ ; barre de progression ; disque qui tourne ; pour une vidéo « originale »
+// (media « ext|musique|o|volV|volM »), la musique choisie est jouée par-dessus (Web Audio : sur iPad le volume d'un lecteur ne se règle pas).
+let FAC = null; const facx = () => { FAC = FAC || new (window.AudioContext || window.webkitAudioContext)(); if(FAC.state === 'suspended') FAC.resume(); return FAC; };
+const musBuf = {};
+function bufMus(id){ const x = (window.MUR_MUSIQUES || []).find(y => y.id === id); if(!x) return Promise.resolve(null);
+  return musBuf[id] = musBuf[id] || fetch(x.src).then(r => r.arrayBuffer()).then(b => new Promise((ok, ko) => { const p = facx().decodeAudioData(b, ok, ko); if(p && p.then) p.then(ok, ko); })).catch(() => null); }
 function fil(depuis){
   const items = tous.filter(m => m.genre === 'video' || m.img);
   if(!items.length){ $('err').textContent = 'Pas encore de photo ni de vidéo sur le mur : poste la première ! 🎬'; return; }
-  const box = document.createElement('div'); box.className = 'reels'; let son = true;
+  try{ facx(); }catch(e){}
+  const box = document.createElement('div'); box.className = 'reels'; let son = true, actif = null, raf = 0, mus = null;
+  const reglage = m => { const p = (m.media || '').split('|'); return { mus:p[1] || '', brut:p[2] === 'o', vv:p[3] !== undefined ? +p[3] : 1, vm:p[4] !== undefined ? +p[4] : .7 }; };
   const reac = m => EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + '<small>' + ((m.reac || {})[e] || '') + '</small></button>').join('');
-  box.innerHTML = items.map(m => '<section class="reel" data-id="' + m.id + '">' + (m.genre === 'video' ? '<video playsinline loop preload="none"' + (m.img ? ' poster="' + API + '?img=' + m.id + '"' : '') + ' src="' + API + '?vid=' + m.id + '"></video><div class="tap">▶</div>' : '<img class="ph" loading="lazy" src="' + API + '?img=' + m.id + '" alt="">') +
-    '<div class="info"><span class="qui">' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="">' : '') + esc(m.auteur) + ' <small>· ' + quand(m.cree) + '</small></span>' + (m.texte ? '<p>' + esc(m.texte) + '</p>' : '') + (titreMus(m) ? '<small>🎵 ' + esc(titreMus(m)) + '</small>' : '') + '</div>' +
-    '<div class="cote">' + reac(m) + (m.mien || ADMIN ? '<button type="button" data-del="' + m.id + '" aria-label="Effacer">🗑️</button>' : '') + '</div></section>').join('');
+  box.innerHTML = items.map(m => { const r = reglage(m), affiche = m.img ? API + '?img=' + m.id : '';
+    return '<section class="reel" data-id="' + m.id + '">' + (affiche ? '<div class="flou" style="background-image:url(\'' + affiche + '\')"></div>' : '') +
+    (m.genre === 'video' ? '<video playsinline loop preload="none"' + (affiche ? ' poster="' + affiche + '"' : '') + ' data-src="' + API + '?vid=' + m.id + '"></video><div class="tap">▶</div><div class="prog"><i></i></div>' : '<img class="ph" loading="lazy" src="' + affiche + '" alt="">') +
+    '<div class="ombre"></div>' + (r.brut && m.texte ? '<div class="mot">' + esc(m.texte) + '</div>' : '') +
+    '<div class="info"><span class="qui">' + esc(m.auteur) + ' <small>· ' + quand(m.cree) + '</small></span>' + (m.texte && !r.brut ? '<p>' + esc(m.texte) + '</p>' : '') + (titreMus(m) ? '<span class="musl"><span>🎵 ' + esc(titreMus(m)) + ' · ' + esc(titreMus(m)) + '</span></span>' : '') + '</div>' +
+    '<div class="cote">' + (tete(m.auteur) ? '<img class="av" src="' + tete(m.auteur) + '" alt="">' : '') + reac(m) + (m.mien || ADMIN ? '<button type="button" data-del="' + m.id + '" aria-label="Effacer">🗑️</button>' : '') + (titreMus(m) ? '<div class="disque" aria-hidden="true">🎵</div>' : '') + '</div></section>'; }).join('');
   const haut = document.createElement('div'); haut.className = 'reels-haut'; haut.innerHTML = '<button type="button" id="fFerme">✕ Fermer</button><button type="button" id="fSon">🔊 Son</button>';
   document.body.append(box, haut); document.body.style.overflow = 'hidden';
-  const ferme = () => { box.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); }); box.remove(); haut.remove(); document.body.style.overflow = ''; charge(); };
+  if(items.length > 1){ const g = document.createElement('div'); g.className = 'glisse'; g.textContent = '☝️ Glisse vers le haut'; box.appendChild(g); setTimeout(() => g.remove(), 2700); }
+  const coupeMus = () => { if(mus){ try{ mus.src.stop(); }catch(e){} mus = null; } };
+  // la musique par-dessus l'original, calée sur le temps de la vidéo
+  async function musique(r, v, m){ coupeMus(); const st = reglage(m); if(!st.brut || !st.mus || v.paused) return; const b = await bufMus(st.mus); if(!b || actif !== r || v.paused) return;
+    coupeMus(); const a = facx(), g = a.createGain(), src = a.createBufferSource(); g.gain.value = son ? st.vm : 0; src.buffer = b; src.loop = true; src.connect(g); g.connect(a.destination);
+    src.start(0, v.currentTime % b.duration); mus = { src, g, vm:st.vm }; }
+  const volume = (v, m) => { const st = reglage(m); v.muted = !son || st.vv === 0; try{ v.volume = st.vv; }catch(e){} };
+  const charge1 = r => { const v = r && r.querySelector('video'); if(v && !v.getAttribute('src')){ v.src = v.dataset.src; v.preload = 'auto';
+      v.addEventListener('loadedmetadata', () => { if(v.videoHeight / v.videoWidth > 1.45) v.classList.add('plein'); }, { once:true }); } };
+  const decharge = r => { const v = r && r.querySelector('video'); if(v && v.getAttribute('src')){ v.pause(); v.removeAttribute('src'); v.load(); } };
+  function active(r){ if(actif === r) return; const av = actif && actif.querySelector('video'); if(av) av.pause(); coupeMus(); actif = r;
+    const liste = [...box.querySelectorAll('.reel')], k = liste.indexOf(r);
+    liste.forEach((x, i) => { if(Math.abs(i - k) <= 1) charge1(x); else if(Math.abs(i - k) > 2) decharge(x); });
+    const v = r.querySelector('video'), m = items.find(x => x.id === +r.dataset.id); if(!v) return;
+    volume(v, m); v.currentTime = 0;
+    v.play().then(() => { r.classList.remove('pause'); musique(r, v, m); }).catch(() => { son = false; haut.querySelector('#fSon').textContent = '🔇 Muet'; v.muted = true; v.play().then(() => r.classList.remove('pause')).catch(() => r.classList.add('pause')); }); }
+  // la barre de progression de la vidéo visible
+  const avance = () => { if(actif){ const v = actif.querySelector('video'), i = actif.querySelector('.prog i'); if(v && i && v.duration) i.style.width = (v.currentTime / v.duration * 100) + '%'; } raf = requestAnimationFrame(avance); }; avance();
+  const ferme = () => { cancelAnimationFrame(raf); coupeMus(); box.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); }); box.remove(); haut.remove(); document.body.style.overflow = ''; charge(); };
   haut.querySelector('#fFerme').onclick = ferme;
-  haut.querySelector('#fSon').onclick = () => { son = !son; haut.querySelector('#fSon').textContent = son ? '🔊 Son' : '🔇 Muet'; box.querySelectorAll('video').forEach(v => v.muted = !son); };
+  haut.querySelector('#fSon').onclick = () => { son = !son; facx(); haut.querySelector('#fSon').textContent = son ? '🔊 Son' : '🔇 Muet';
+    if(actif){ const v = actif.querySelector('video'), m = items.find(x => x.id === +actif.dataset.id); if(v){ volume(v, m); if(mus) mus.g.gain.value = son ? mus.vm : 0; else musique(actif, v, m); } } };
   document.addEventListener('keydown', function esc(e){ if(e.key === 'Escape' && document.body.contains(box)){ ferme(); document.removeEventListener('keydown', esc); } });
-  const io = new IntersectionObserver(es => es.forEach(en => { const v = en.target.querySelector('video'); if(!v) return;
-    if(en.isIntersecting && en.intersectionRatio > .6){ v.muted = !son; v.preload = 'auto'; v.play().then(() => en.target.classList.remove('pause')).catch(() => { v.muted = true; son = false; haut.querySelector('#fSon').textContent = '🔇 Muet'; v.play().catch(() => en.target.classList.add('pause')); });
-      const n = en.target.nextElementSibling && en.target.nextElementSibling.querySelector('video'); if(n) n.preload = 'auto'; }
-    else { v.pause(); } }), { root:box, threshold:[0, .6] });
+  const io = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting && en.intersectionRatio > .6) active(en.target); }), { root:box, threshold:[0, .6] });
   box.querySelectorAll('.reel').forEach(r => io.observe(r));
+  // la musique suit la vidéo (boucle, pause, reprise)
+  box.addEventListener('play', e => { const r = e.target.closest('.reel'); if(r === actif) musique(r, e.target, items.find(x => x.id === +r.dataset.id)); }, true);
+  box.addEventListener('pause', e => { if(e.target.closest('.reel') === actif) coupeMus(); }, true);
+  box.addEventListener('seeked', e => { const r = e.target.closest('.reel'); if(r === actif && !e.target.paused) musique(r, e.target, items.find(x => x.id === +r.dataset.id)); }, true);
+  // toucher = pause / lecture ; double-toucher = ❤️ (avec un gros cœur)
+  async function aime(r, m, x, y){ const c = document.createElement('div'); c.className = 'coeur'; c.textContent = '❤️'; c.style.left = x + 'px'; c.style.top = y + 'px'; r.appendChild(c); setTimeout(() => c.remove(), 950);
+    const b = r.querySelector('[data-e="❤️"]'); if(b && !b.classList.contains('on')){ try{ await api({ action:'reagit', id:m.id, emoji:'❤️' }); b.classList.add('on'); const sm = b.querySelector('small'); sm.textContent = (+sm.textContent || 0) + 1; }catch(err){} } }
+  let dernierTap = 0, tapT = 0;
   box.addEventListener('click', async e => { const b = e.target.closest('button'), r = e.target.closest('.reel'); if(!r) return; const id = +r.dataset.id, m = items.find(x => x.id === id);
     if(b && b.dataset.e){ try{ await api({ action:'reagit', id, emoji:b.dataset.e }); const on = b.classList.toggle('on'); const sm = b.querySelector('small'); const n = (+sm.textContent || 0) + (on ? 1 : -1); sm.textContent = n > 0 ? n : ''; }catch(err){} return; }
     if(b && b.dataset.del){ if(!confirm('Effacer définitivement ' + (m.genre === 'video' ? 'cette vidéo' : 'cette photo') + ' ?')) return; try{ await api({ action:'supprime', id }); r.remove(); if(!box.querySelector('.reel')) ferme(); }catch(err){ alert(err.message); } return; }
-    const v = r.querySelector('video'); if(v){ if(v.paused){ v.play(); r.classList.remove('pause'); } else { v.pause(); r.classList.add('pause'); } } });
+    if(b) return;
+    const now = Date.now(), rc = r.getBoundingClientRect();
+    if(now - dernierTap < 320){ clearTimeout(tapT); dernierTap = 0; aime(r, m, e.clientX - rc.left, e.clientY - rc.top); return; }
+    dernierTap = now; tapT = setTimeout(() => { const v = r.querySelector('video'); if(v){ facx(); if(v.paused){ v.play(); r.classList.remove('pause'); } else { v.pause(); r.classList.add('pause'); } } }, 320); });
   const cible = box.querySelector('.reel[data-id="' + depuis + '"]'); if(cible) box.scrollTop = cible.offsetTop;
 }
 $('ouvreFil').onclick = () => fil();
