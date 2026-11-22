@@ -266,6 +266,20 @@ D'après le cahier des charges du papa (`grande section\yajour\Script_Gameplay_L
 - Sauvegarde `yajour:<Prénom>` (`niv[i] = { e, sc }`, `pieces`, `pouv`, `reg`), record de la famille « étoiles », carte dans Progression, temps d'écran (`JEUX` de famille.js). Pour tester : `window.__yajour` ({P, partie(i), tire(), aim = [az, él]}).
 - **Pas encore fait** (cahier) : les 6 planètes × 20 niveaux, la chambre du héros et la boutique de capes, les plateformes mobiles et charnières, la manette.
 
+### Yajour sur Roblox (22/11, nuit) : le jeu refait dans Roblox Studio pour Essil
+
+Demande du papa : Essil crée des jeux avec Roblox Studio ; Claude est relié à Roblox Studio sur l'ordinateur du papa (connecteur officiel « Roblox_Studio » de Studio, ajouté à la main dans `%APPDATA%\Claude\claude_desktop_config.json` : `cmd.exe /c %LOCALAPPDATA%\Roblox\mcp.bat`), et cette session le pilote à distance. Le jeu est dans **la place Roblox « Yajour »** (compte Roblox d'Essil, placeId 80970544840860, enregistrée sur Roblox, **pas publiée**).
+
+- **Ce qui est fait** : les **8 mondes et les 40 niveaux du site**, recopiés à l'identique (`docs/roblox/Niveaux.lua`, vérifié bloc par bloc contre `monde.js` : 0 différence ; seul changement : « Les deux tours » demande 6 blocs au lieu de 7). Même échelle (1 m = 4 studs, gravité 39,24), mêmes matières (densité, frottement, rebond), mêmes missions (tomber, jarres d'or, chaton), même calcul du score, des étoiles et des pièces. Physique de Roblox côté serveur, une arène par joueur (on peut jouer à plusieurs sur un serveur).
+- **Le héros** : la boule de physique est habillée côté client d'une **copie de l'avatar Roblox du joueur**, couchée en super-héros (tête en avant), avec une cape (Trail) ; la caméra suit un peu le vol. Pas de portraits de la famille (Roblox est public).
+- **Commandes** : glisser puis lâcher (souris ou doigt), arc de visée en points jaunes ; clavier : flèches, Espace, 1/2/3 pouvoirs (Triple, Lourd, Boum), M menu, R recommencer. Bouton « 🚀 Vole ! ».
+- **Écran** : monde (français + arabe), niveau, mission en direct, héros restants, pièces ; bulle de conseil ; menu des 8 mondes (5 niveaux chacun, étoiles, cadenas) ; écran de fin (Bravo / Presque !, étoiles, score, Suivant / Rejouer / Mondes). Classement Roblox : Étoiles et Pièces.
+- **Décors** (pièces Roblox, aucune image) : Sidi Bou Saïd (maisons blanches et bleues, mer, minaret), El Jem (amphithéâtre en arcades), Sahara (dunes, oasis, chameaux), Djerba (menzels, jarres), Tabarka (fort sur son rocher, pins, mer), Kairouan (remparts, minaret carré, tapis, bassin), Tozeur (palmeraie, briques, chott), Carthage (colonnes, port circulaire, bateaux). Lumière (heure, atmosphère) par monde.
+- **Sauvegarde** : DataStore `YajourProgression_v1` (étoiles, pièces) ; marche dans le jeu publié, ou dans Studio après « Activer l'accès de Studio aux services API ».
+- **Le robot** : `game.ServerStorage.YajourTest:Invoke({liste}, {stratégies})` pendant une partie d'essai joue les niveaux en parallèle (stratégies centre, haut, bas, cloche, feux, pouvoirs) : **les 40 niveaux réussis** le 22/11. Les niveaux du chaton sont les plus durs (le chaton est un peu plus lourd que sur le site : `CHAT_DENSITE`).
+- **Scripts** : `ReplicatedStorage.Yajour.Niveaux` et `.Config`, `ServerScriptService.YajourServeur`, `.YajourDecor`, `.A_LIRE_Essil` (le guide pour Essil : créer un niveau, régler, publier), `StarterPlayerScripts.YajourClient`. Copie des niveaux : `docs/roblox/Niveaux.lua`.
+- **Reste à faire** : publier (avec l'accord du papa, privé au début) ; des sons Roblox à choisir ; un vrai essai sur iPad.
+
 ## Khyout (خيوط, « les fils ») — `jeux/khyout.html` (relier les pelotes, casse-tête) (17/11)
 
 D'après le cahier des charges du papa (« Color Flow Puzzle », façon Flow Free), adapté au site et aux enfants : pas de TypeScript, de Vite ni de Phaser (JavaScript en modules, Canvas 2D, rien à compiler), nom, couleurs, dessins et sons à nous (des **pelotes de laine** à relier par des fils).

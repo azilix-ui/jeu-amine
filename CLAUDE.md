@@ -6,7 +6,7 @@
 |---|---|
 | `CLAUDE.md` | cette fiche : la famille, l'arborescence, la publication, les règles |
 | `docs/contenus.md` | chaque cours et jeu, enfant par enfant : ce qu'il fait, ses fichiers, ses sources |
-| `docs/jeux-3d.md` | Serpent Légendes, L'Arène des serpents (en ligne), Ludo Légendes (en ligne), Grimpe-Glace, La Légende du Jasmin (et le Jasmin 2), L'Atelier du Jasmin (coloriage), Les Écuries d'Essil (club hippique), Zarbia (territoire, en ligne), Chkobba (cartes, en ligne), Kassar (casse-carreaux), Khyout (relier les pelotes), Yajour (puzzle physique 3D), Koora (calcul en 3D), Médina Express (course infinie), Ma Houma (monde libre tunisien), collections, tickets du savoir |
+| `docs/jeux-3d.md` | Serpent Légendes, L'Arène des serpents (en ligne), Ludo Légendes (en ligne), Grimpe-Glace, La Légende du Jasmin (et le Jasmin 2), L'Atelier du Jasmin (coloriage), Les Écuries d'Essil (club hippique), Zarbia (territoire, en ligne), Chkobba (cartes, en ligne), Kassar (casse-carreaux), Khyout (relier les pelotes), Yajour (puzzle physique 3D, et sa version Roblox), Koora (calcul en 3D), Médina Express (course infinie), Ma Houma (monde libre tunisien), collections, tickets du savoir |
 | `docs/serveur.md` | PHP + SQLite, API, clés de sauvegarde, synchronisation, Progression (suivi, retour en arrière, remise à zéro), limites |
 | `docs/higgsfield.md` | images et vidéos générées, crédits dépensés, identifiants à réutiliser, règles |
 | `docs/journal.md` | l'historique daté de tout ce qui a été fait |
@@ -57,7 +57,7 @@ lib/    three-addons/ (GLTFLoader de three 0.170.0, MIT), scrollcraft/ (moteur d
 api/    famille.php (joueurs, records, progrès), ludo.php (parties de Ludo en ligne), zarbia.php (Zarbia en ligne), chkobba.php et chkobba_regles.php (Chkobba en ligne : l'arbitre), chkobba_voix.php (les voix enregistrées de la Chkobba), houma.php (Ma Houma en ligne : présence, discussion et messages vocaux, « Viens voir ! », troc), mur.php (le mur de la famille), reponse.php (répondre depuis la notification ntfy à « 🙋 je demande plus de temps » : hors de la porte, jeton à usage unique)
 acces/  la porte du site (accès réservé) : garde.php, porte.php (toutes les pages passent par là), index.php (page « accès réservé »), invitation.php, admin.php (Anis), session.php (20/11 : les sessions par personne, avec api/qui.php), partie.php (21/11 : le laissez-passer d'un ami invité à UN jeu, 3 h, avec api/passe.php), mentions.php (mentions légales) ; voir docs/serveur.md
 photos/ photos de famille de l'ancienne accueil (maison, salon, canapé)
-docs/   la documentation (voir le tableau ci-dessus)
+docs/   la documentation (voir le tableau ci-dessus) ; docs/roblox/ : les niveaux de Yajour pour Roblox (le jeu Roblox est dans la place « Yajour » d'Essil, voir docs/jeux-3d.md)
 .htaccess  cache les .md et fichiers techniques, redirige les anciens liens, en-têtes anti-cache
 package.json, build.js  copie le site dans dist/ si Hostinger lance un « build »
 ```
