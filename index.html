@@ -696,7 +696,7 @@ const NOUVEAUTES = [
   // 17/11 (demande du papa) : qui est connecté (pastilles vertes ou rouges sur les avatars) et, pour chaque enfant, la page
   // où il est et si son temps de jeu est en train de décompter (une page de jeu, pas la nuit, pas de temps fini).
   let ETATS = {}, PRES = null;
-  const JEUX_SITE = /^\/(jeux\/(serpent-legendes|ludo-legendes|grimpe-glace|legende-du-jasmin(-2|-3)?|jasmin-stage2|medina-express|ma-houma|zarbia|koora|chkobba|kassar|khyout|yajour|kelma|tebni|serpent-arene|les-ecuries|atelier-du-jasmin)|essil\/les-ecuries|essil\/concours-(vrai|epreuves)|amine\/(serpentin|la-nuit-d-amine(-2)?))\.html$/;   // les pages qui comptent dans le temps de jeu : copie de JEUX dans famille.js (à garder pareil)
+  const JEUX_SITE = /^\/(jeux\/(serpent-legendes|ludo-legendes|grimpe-glace|legende-du-jasmin(-2|-3|-4)?|jasmin-stage2|medina-express|ma-houma|zarbia|koora|chkobba|kassar|khyout|yajour|kelma|tebni|serpent-arene|les-ecuries|atelier-du-jasmin)|essil\/les-ecuries|essil\/concours-(vrai|epreuves)|amine\/(serpentin|la-nuit-d-amine(-2)?))\.html$/;   // les pages qui comptent dans le temps de jeu : copie de JEUX dans famille.js (à garder pareil)
   const sansAccent = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   function decompte(e){ if(!e) return false; if(e.libre) return false; const n = new Date(), m = n.getHours() * 60 + n.getMinutes(), nuit = hm(e.nuit), matin = hm(e.matin);
     const dort = nuit > matin ? (m >= nuit || m < matin) : (m >= nuit && m < matin), d = e.demande, t = e.now || Date.now() / 1000, grace = d && d.statut === 'oui' ? (d.maj + d.min * 60) - t : 0;

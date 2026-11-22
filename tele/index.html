@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<script src="/site.js" defer></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex">
+<title>Salle de jeux télé</title>
+<!-- 22/11 (demande du papa) : la salle de jeux de la télé LG (webOS 24, OLED77C35LA), ouverte par l'application « Famille Missaoui »
+     (docs/webos/). Tout se fait à la télécommande : les flèches choisissent une tuile (cadre doré), OK l'ouvre, Retour = quitter.
+     Pour l'instant, seul le Jasmin (version télé : jeux/legende-du-jasmin-4.html) a le mode télécommande ; les autres jeux viendront. -->
+<style>
+:root{--or:#ffd65a;--nuit:#0b1838}
+*{box-sizing:border-box}
+html{background:var(--nuit)}
+html,body{margin:0;height:100%;color:#fff;font-family:Nunito,"Segoe UI",system-ui,sans-serif;overflow:hidden}
+body::before{content:'';position:fixed;inset:-40px;background:url(/jeux/avatars/qui/affiche-famille.webp) center/cover;filter:blur(18px) brightness(.35);z-index:-1}
+header{display:flex;align-items:center;gap:28px;padding:44px 80px 10px}
+header img{height:110px;border-radius:24px;box-shadow:0 8px 30px #0008}
+h1{margin:0;font-size:64px;font-weight:900;letter-spacing:.5px;color:var(--or);text-shadow:0 4px 0 #0006}
+header p{margin:6px 0 0;font-size:28px;opacity:.85}
+.famille{margin-left:auto;display:flex;gap:10px}
+.famille img{width:78px;height:78px;border-radius:50%;border:4px solid #fff;object-fit:cover;background:#fff2}
+main{display:grid;grid-template-columns:repeat(3,1fr);gap:34px;padding:30px 80px}
+.tuile{position:relative;display:block;height:300px;border-radius:30px;overflow:hidden;border:0;padding:0;background:#1d2c5a center/cover no-repeat;color:#fff;text-decoration:none;
+  box-shadow:0 10px 30px #0009;outline:none;transition:transform .15s,box-shadow .15s;font:inherit;text-align:left;cursor:pointer}
+.tuile::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 35%,#000c)}
+.tuile span{position:absolute;left:28px;right:28px;bottom:22px;z-index:1;font-size:40px;font-weight:900;text-shadow:0 3px 8px #000}
+.tuile small{display:block;font-size:24px;font-weight:700;opacity:.9}
+.tuile b{position:absolute;top:18px;right:18px;z-index:1;background:var(--or);color:#3a2600;font-size:22px;padding:6px 16px;border-radius:999px}
+.tuile.bientot{filter:grayscale(.75) brightness(.7)}
+.tuile.bientot b{background:#fff;color:#0b1838}
+.tuile:focus,.tuile:hover{transform:scale(1.07);box-shadow:0 0 0 8px var(--or),0 18px 50px #000c;z-index:2}
+.tuile.bientot:focus,.tuile.bientot:hover{filter:none}
+footer{position:fixed;left:80px;right:80px;bottom:34px;display:flex;justify-content:space-between;font-size:26px;opacity:.85}
+footer kbd{display:inline-block;min-width:44px;padding:2px 12px;border-radius:10px;background:#fff2;border:2px solid #fff6;font:inherit;font-weight:800;text-align:center}
+#msg{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);background:#0b1838ee;border:4px solid var(--or);border-radius:28px;padding:30px 44px;font-size:34px;font-weight:800;text-align:center;display:none;max-width:70vw}
+@media (max-width:1100px){main{grid-template-columns:repeat(2,1fr);padding:20px 30px}header{padding:24px 30px}h1{font-size:40px}.tuile{height:220px}.famille{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <img src="/icons/apple-touch-icon.png" alt="">
+  <div><h1>La salle de jeux</h1><p>Famille Missaoui · sur la télé</p></div>
+  <div class="famille"><img src="/jeux/avatars/anis.webp" alt=""><img src="/jeux/avatars/imen.webp" alt=""><img src="/jeux/avatars/essil.webp" alt=""><img src="/jeux/avatars/salma.webp" alt=""><img src="/jeux/avatars/amine.webp" alt=""></div>
+</header>
+<main id="tuiles">
+  <a class="tuile" href="/jeux/legende-du-jasmin-4.html?tele=1" style="background-image:url(/jeux/jasmin/titre.webp)"><b>📺 Télécommande</b><span>🌼 La Légende du Jasmin<small>27 mondes de Tunisie · même partie que sur la tablette</small></span></a>
+  <button class="tuile bientot" type="button" style="background-image:url(/jeux/jasmin/monde20.webp)"><b>Bientôt</b><span>🏰 Jasmin · Stage 2</span></button>
+  <button class="tuile bientot" type="button" style="background-image:url(/jeux/tebni/img/fond-cl-l.webp)"><b>Bientôt</b><span>🧱 Tebni</span></button>
+  <button class="tuile bientot" type="button" style="background-image:url(/jeux/kassar/img/fond-medina.webp)"><b>Bientôt</b><span>🧱 Kassar</span></button>
+  <button class="tuile bientot" type="button" style="background-image:url(/jeux/koora/img/fond.webp)"><b>Bientôt</b><span>⚽ Koora</span></button>
+  <button class="tuile bientot" type="button" style="background-image:url(/jeux/khyout/img/fond-paysage.webp)"><b>Bientôt</b><span>🧶 Khyout</span></button>
+</main>
+<footer><span><kbd>◀ ▲ ▼ ▶</kbd> choisir · <kbd>OK</kbd> jouer</span><span><kbd>Retour</kbd> quitter</span></footer>
+<div id="msg" role="status"></div>
+<script>
+// la salle de jeux à la télécommande : flèches = la tuile voisine, OK = ouvrir, Retour = quitter l'application
+const T = [...document.querySelectorAll('.tuile')], msg = document.getElementById('msg');
+let i = 0; try{ i = Math.min(T.length - 1, +sessionStorage.getItem('tele-tuile') || 0); }catch(e){}
+const va = k => { i = (k + T.length) % T.length; T[i].focus(); try{ sessionStorage.setItem('tele-tuile', i); }catch(e){} };
+const cols = () => getComputedStyle(document.getElementById('tuiles')).gridTemplateColumns.split(' ').length;
+const dit = t => { msg.textContent = t; msg.style.display = 'block'; clearTimeout(dit.t); dit.t = setTimeout(() => msg.style.display = 'none', 2600); };
+T.forEach((t, k) => { t.addEventListener('focus', () => i = k); if(t.classList.contains('bientot')) t.addEventListener('click', () => dit('Ce jeu arrive bientôt sur la télé. Pour l\'instant : le Jasmin ! 🌼')); });
+addEventListener('keydown', e => {
+  const k = e.keyCode, c = cols();
+  if(k === 37){ e.preventDefault(); va(i - 1); } else if(k === 39){ e.preventDefault(); va(i + 1); }
+  else if(k === 38){ e.preventDefault(); if(i - c >= 0) va(i - c); } else if(k === 40){ e.preventDefault(); if(i + c < T.length) va(i + c); }
+  else if(k === 461 || k === 10009 || k === 8 || k === 27){ e.preventDefault(); if(msg.style.display === 'block'){ msg.style.display = 'none'; return; } try{ window.close(); }catch(err){} }
+});
+va(i);
+</script>
+</body>

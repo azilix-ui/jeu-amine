@@ -1,0 +1,16 @@
+{
+  "id": "com.missaoui.famille",
+  "version": "1.0.0",
+  "vendor": "Anis Missaoui",
+  "type": "web",
+  "main": "index.html",
+  "title": "Famille Missaoui",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "splashBackground": "splash.png",
+  "bgColor": "#0b1838",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true,
+  "iconColor": "#0b1838",
+  "requiredACG": []
+}

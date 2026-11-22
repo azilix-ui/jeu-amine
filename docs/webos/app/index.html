@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Famille Missaoui</title>
+<style>html,body{margin:0;height:100%;background:#0b1838;color:#fff;font:700 34px/1.4 sans-serif;display:grid;place-items:center;text-align:center}p{max-width:1200px}small{font-size:26px;opacity:.8}</style></head>
+<body><p id="m">Ouverture de la salle de jeux…</p>
+<script>
+// L'application « Famille Missaoui » pour la télé LG (webOS) : elle ouvre la salle de jeux télé du site.
+// Le site est privé : la télé passe la porte parce qu'elle est sur le Wi-Fi de la maison.
+var URL_SALLE = 'https://www.missaoui-family.com/tele/';
+function va(){ if(navigator.onLine === false){ document.getElementById('m').innerHTML = 'La télé n\'est pas connectée à Internet.<br><small>Vérifie le Wi-Fi, puis rouvre l\'application.</small>'; return; } location.replace(URL_SALLE); }
+addEventListener('keydown', function(e){ if(e.keyCode === 461 || e.keyCode === 10009) window.close(); });
+setTimeout(va, 300);
+</script></body></html>
