@@ -40,6 +40,11 @@ body.touch.playing #pad{display:flex}
 body.playing #hudbtns{display:flex}
 .round{width:52px;height:52px;border-radius:50%;background:var(--panel);border:2px solid var(--line);font-size:22px;display:grid;place-items:center}
 /* écrans */
+#infoVol{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 138px);transform:translateX(-50%);max-width:min(92vw,720px);z-index:9;pointer-events:none;background:rgba(18,42,92,.86);color:#fff;border:3px solid #f4c131;border-radius:18px;padding:12px 18px 12px 16px;font-weight:700;font-size:clamp(15px,2.2vw,20px);line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;display:flex;gap:10px;align-items:flex-start}
+#infoVol.on{animation:infoVol 9s ease forwards}
+#infoVol b{color:#ffd65a;font-size:1.3em;line-height:1}
+@keyframes infoVol{0%{opacity:0;transform:translate(-50%,24px)}6%{opacity:1;transform:translate(-50%,0)}85%{opacity:1;transform:translate(-50%,-6px)}100%{opacity:0;transform:translate(-50%,-40px)}}
+@media (prefers-reduced-motion:reduce){@keyframes infoVol{0%,100%{opacity:0}5%,88%{opacity:1}}}
 .screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));z-index:10;background:rgba(6,16,40,.5)}
 .screen.on{display:flex}
 .box{background:var(--panel);border:2px solid var(--line);border-radius:28px;padding:16px 18px;width:min(720px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;box-shadow:0 20px 60px #0009}
@@ -135,6 +140,7 @@ body.menu .back{display:inline-flex}
 </div></div>
 
 <div class="screen" id="intro"><div class="box" id="introBox"></div></div>
+<div id="infoVol" role="status" aria-live="polite"></div>
 <div class="screen" id="quest"><div class="box" id="questBox"></div></div>
 <div class="screen" id="pause"><div class="box">
   <h2>Pause</h2>
@@ -146,6 +152,7 @@ body.menu .back{display:inline-flex}
   <div class="opt"><span>🔊 Bruitages <small>(saut, pièces, chute…)</small></span><button id="jSound"></button></div>
   <div class="opt"><span>🎵 Musique</span><button id="jMusic"></button></div>
   <div class="opt"><span>🌿 Ambiance du monde <small>(vagues, vent, souk…)</small></span><button id="jAmb"></button></div>
+  <div class="opt"><span>🧠 Blocs savoir des adultes et invités <small>(Quiz : on répond ; Info : une info s'envole, le jeu continue)</small></span><span style="display:flex;gap:6px"><button data-sv="quiz">Quiz</button><button data-sv="info">Info</button></span></div>
   <button class="big ghost" id="jEach">🎚️ Régler chaque bruitage</button>
   <button class="big" id="jResume">▶ Reprendre</button>
 </div></div>
@@ -170,6 +177,7 @@ body.menu .back{display:inline-flex}
   <div class="opt"><span>🌿 Ambiance des mondes</span><button id="oAmb"></button></div>
   <button class="big ghost" id="oEach">🎚️ Régler chaque bruitage</button>
   <div class="opt"><span>❓ Blocs savoir (questions)</span><button id="oQuiz"></button></div>
+  <div class="opt"><span>🧠 Blocs savoir des adultes et invités <small>(Quiz : on répond ; Info : une info s'envole, le jeu continue)</small></span><span style="display:flex;gap:6px"><button data-sv="quiz">Quiz</button><button data-sv="info">Info</button></span></div>
   <div class="opt"><span>🎮 Taille des boutons tactiles</span><span style="display:flex;gap:6px"><button data-bs="0.85">Petits</button><button data-bs="1">Moyens</button><button data-bs="1.2">Grands</button></span></div>
   <div class="opt"><span>⛶ Plein écran</span><button id="oFull">Activer</button></div>
   <button class="big ghost" id="optBack">Retour</button>
@@ -181,7 +189,7 @@ body.menu .back{display:inline-flex}
   🅱️ <b>Lancer un piment</b> quand tu as la harissa 🌶️ (sinon B fait courir plus vite).<br>
   🦂 Saute sur les ennemis pour les assommer. ⚠️ Pas sur les cactus : ils piquent !<br>
   🦔 Le hérisson se met en boule quand tu sautes dessus : touche-le pour le faire rouler. Chaque saut lui enlève un piquant (+100) : il en a 7.<br>
-  📚 <b>Bloc savoir</b> (avec un livre) : tape-le par en dessous et réponds à la question pour gagner des 🎟️ tickets.<br>
+  📚 <b>Bloc savoir</b> (avec un livre) : tape-le par en dessous et réponds à la question pour gagner des 🎟️ tickets ; 3 bonnes réponses dans un monde = ❤️ une vie en plus. Papa, maman et les invités ont des questions de culture générale, ou, dans ⚙️ Réglages, le mode « Info » : une info s’envole et le jeu continue.<br>
   🪔 <b>Bloc mosaïque</b> : il cache un bonus. 🎩 Chéchia = tu peux encaisser un coup. 🌶️ Harissa = tu lances des piments. 🍵 Thé à la menthe = super vitesse.<br>
   🪙 Ramasse les dinars et les <b>3 jasmins dorés</b> 🌼 de chaque niveau (un est caché derrière un faux mur !).<br>
   🏮 La lanterne est un point de sauvegarde. 🚪 La porte bleue est la sortie.<br>
@@ -192,6 +200,7 @@ body.menu .back{display:inline-flex}
 <script src="../famille.js"></script>
 <script src="sons/sons.js"></script>
 <script src="jasmin3/reel.js"></script>
+<script src="jasmin3/savoir.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -664,14 +673,21 @@ const QUIZ_TN = [
 ];
 let tnDeck = [];
 function questionTN(){ if(!tnDeck.length) tnDeck = shuffle(QUIZ_TN.map((_, i) => i)); const [q, a, o] = QUIZ_TN[tnDeck.pop()]; return { q, a, o:shuffle(o) }; }
-function question(){ const k = (player || '').toLowerCase(); if(!Q[k] && k !== 'anis' && k !== 'imen') return questionTN(); const q = pick(Q[k] || Q.autre)(); if(!q.o.includes(q.a)) q.o[0] = q.a; q.o = [...new Set(q.o)]; return q; }   // la famille : ses propres questions ; les invités : la culture tunisienne
+// les adultes (papa, maman) et les invités : culture générale + Tunisie, niveau adulte (22/11 : papa avait les additions des enfants)
+const adulte = () => { const k = (player || '').toLowerCase(); return k === 'anis' || k === 'imen' || !Q[k]; };
+const QUIZ_ADULTE = () => QUIZ_TN.concat((window.SAVOIR && SAVOIR.quiz) || []);
+let adDeck = [], infoDeck = [];
+function questionAdulte(){ const L = QUIZ_ADULTE(); if(!adDeck.length) adDeck = shuffle(L.map((_, i) => i)); const [q, a, o] = L[adDeck.pop()]; return { q, a, o:shuffle(o.slice()) }; }
+function infoVolante(){ const L = (window.SAVOIR && SAVOIR.infos) || []; if(!L.length) return false; if(!infoDeck.length) infoDeck = shuffle(L.map((_, i) => i)); const s = L[infoDeck.pop()], el = $('infoVol');
+  el.classList.remove('on'); void el.offsetWidth; el.innerHTML = '<b>💡</b><span></span>'; el.lastChild.textContent = s; el.classList.add('on'); speakQ(s); return true; }
+function question(){ const k = (player || '').toLowerCase(); if(adulte()) return questionAdulte(); const q = pick(Q[k] || Q.autre)(); if(!q.o.includes(q.a)) q.o[0] = q.a; q.o = [...new Set(q.o)]; return q; }   // la famille : ses propres questions ; les invités : la culture tunisienne
 
 /* =====================================================================
    Sauvegarde, joueur, sons
    ===================================================================== */
 const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
-const prefs = Object.assign({ sound:true, music:true, amb:true, quiz:true, bs:1, snd:{} }, store.get('jasmin-prefs', {}));
+const prefs = Object.assign({ sound:true, music:true, amb:true, quiz:true, savoir:'quiz', bs:1, snd:{} }, store.get('jasmin-prefs', {}));
 const fresh = () => ({ unlocked:1, best:{}, gems:{}, tickets:0, answers:{ ok:0, ko:0 }, games:0, t:0 });
 let player = null, save = fresh(), avatarImg = null, avatarProf = null, avatarSigh = null;   // avatarSigh : la tête qui soupire   // avatarProf : la tête de profil, quand le héros marche
 const skey = () => 'jasmin:' + player;
@@ -910,7 +926,7 @@ function bumpTile(cx, cy){
   if(c === 'b'){ g.lv.G[cy][cx] = ' '; sfx.brick(); for(let k = 0; k < 8; k++) g.parts.push({ x:cx * T + 16, y:cy * T + 16, vx:(Math.random() - .5) * 300, vy:-200 - Math.random() * 200, life:1, c:g.W.ground2, r:4, grav:true }); g.score += 20; killAbove(cx, cy); return; }
   if(c === 'c'){ g.lv.G[cy][cx] = 'U'; sfx.coin(); g.dinars++; g.score += 50; g.parts.push({ x:cx * T + 16, y:cy * T, vx:0, vy:-420, life:.5, coin:true, grav:true }); g.bumps = g.bumps || []; g.bumps.push({ cx, cy, t:.2 }); killAbove(cx, cy); return; }
   if(c === 'p'){ g.lv.G[cy][cx] = 'U'; sfx.power(); const kind = ['chechia', 'harissa', 'tea'][(g.lv.n + cx) % 3]; g.ents.push({ t:'power', kind, x:cx * T + 16, y:cy * T, vx:60, vy:-260, alive:true, w:24, h:24, rise:.4 }); g.bumps = g.bumps || []; g.bumps.push({ cx, cy, t:.2 }); return; }
-  if(c === 'S'){ g.lv.G[cy][cx] = 'U'; g.bumps = g.bumps || []; g.bumps.push({ cx, cy, t:.2 }); if(prefs.quiz) askQuestion(cx, cy); else { g.dinars += 3; g.score += 150; sfx.coin(); } return; }
+  if(c === 'S'){ g.lv.G[cy][cx] = 'U'; g.bumps = g.bumps || []; g.bumps.push({ cx, cy, t:.2 }); if(prefs.quiz && adulte() && prefs.savoir === 'info'){ infoVolante(); g.dinars += 3; g.score += 150; sfx.coin(); } else if(prefs.quiz) askQuestion(cx, cy); else { g.dinars += 3; g.score += 150; sfx.coin(); } return; }
   if(SOLID.has(c)) sfx.bump();
 }
 function killAbove(cx, cy){ G0.ents.forEach(e => { if(e.alive && ['scorp', 'hog'].includes(e.t) && Math.abs(e.x - (cx * T + 16)) < 24 && Math.abs(e.y - cy * T) < 6){ e.alive = false; e.dying = 1; e.vy = -300; G0.kills++; G0.score += 100; sfx.stomp(); } }); }
@@ -1652,9 +1668,9 @@ function askQuestion(cx, cy){
   document.querySelectorAll('#questBox .ans').forEach(b => b.onclick = () => {
     const ok = b.dataset.v === q.a;
     document.querySelectorAll('#questBox .ans').forEach(x => { x.disabled = true; if(x.dataset.v === q.a) x.classList.add('good'); });
-    if(ok){ sfx.ok(); g.okQ++; g.tickets++; g.dinars += 5; g.score += 300; save.answers.ok++; speakQ('Bravo !'); }
+    let vie = false; if(ok){ sfx.ok(); g.okQ++; g.tickets++; g.dinars += 5; g.score += 300; save.answers.ok++; if(g.okQ % 3 === 0 && g.lives < 9){ g.lives++; vie = true; } speakQ(vie ? 'Bravo ! Une vie en plus !' : 'Bravo !'); }
     else { b.classList.add('bad'); sfx.no(); g.koQ++; g.dinars += 1; save.answers.ko++; speakQ('La bonne réponse était : ' + q.a); }
-    $('questBox').insertAdjacentHTML('beforeend', `<p class="sub">${ok ? 'Bravo ! +1 🎟️ et 5 🪙' : 'Ce n\'est pas grave : la bonne réponse est en vert. +1 🪙'}</p><button class="big" id="qOk">Continuer ▶</button>`);
+    $('questBox').insertAdjacentHTML('beforeend', `<p class="sub">${ok ? (vie ? 'Bravo ! +1 🎟️, 5 🪙 et ❤️ une vie en plus (3 bonnes réponses) !' : `Bravo ! +1 🎟️ et 5 🪙 · encore ${3 - g.okQ % 3} bonne${3 - g.okQ % 3 > 1 ? 's' : ''} réponse${3 - g.okQ % 3 > 1 ? 's' : ''} pour une vie ❤️`) : 'Ce n\'est pas grave : la bonne réponse est en vert. +1 🪙'}</p><button class="big" id="qOk">Continuer ▶</button>`);
     $('qOk').onclick = () => { sfx.tap(); try{ speechSynthesis.cancel(); }catch(e){} state = 'play'; show(null); last = performance.now();
       for(let k = 0; k < (ok ? 5 : 1); k++) g.parts.push({ x:cx * T + 16, y:cy * T, vx:(k - 2) * 40, vy:-400 - k * 30, life:.6, coin:true, grav:true }); sfx.coin(); };
   });
@@ -1702,7 +1718,8 @@ document.querySelectorAll('#recTabs button').forEach(b => b.onclick = () => { sf
 $('openRecs').onclick = () => { audio(); sfx.tap(); show('recs'); loadRecs(1); };
 $('recBack').onclick = () => { sfx.tap(); show('menu'); };
 // réglages
-function renderOpts(){ [['oSound', 'sound'], ['oMusic', 'music'], ['oQuiz', 'quiz'], ['jSound', 'sound'], ['jMusic', 'music'], ['jAmb', 'amb'], ['oAmb', 'amb']].filter(([id]) => $(id)).forEach(([id, k]) => { $(id).textContent = prefs[k] ? 'Oui' : 'Non'; $(id).setAttribute('aria-pressed', prefs[k]); }); document.querySelectorAll('[data-bs]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.bs === prefs.bs)); resize(); }
+function renderOpts(){ document.querySelectorAll('[data-sv]').forEach(b => b.setAttribute('aria-pressed', b.dataset.sv === prefs.savoir)); [['oSound', 'sound'], ['oMusic', 'music'], ['oQuiz', 'quiz'], ['jSound', 'sound'], ['jMusic', 'music'], ['jAmb', 'amb'], ['oAmb', 'amb']].filter(([id]) => $(id)).forEach(([id, k]) => { $(id).textContent = prefs[k] ? 'Oui' : 'Non'; $(id).setAttribute('aria-pressed', prefs[k]); }); document.querySelectorAll('[data-bs]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.bs === prefs.bs)); resize(); }
+document.querySelectorAll('[data-sv]').forEach(b => b.onclick = () => { prefs.savoir = b.dataset.sv; if(prefs.savoir === 'info') prefs.quiz = true; store.set('jasmin-prefs', prefs); renderOpts(); sfx.tap(); });
 [['oSound', 'sound'], ['oMusic', 'music'], ['oQuiz', 'quiz'], ['jSound', 'sound'], ['jMusic', 'music'], ['jAmb', 'amb'], ['oAmb', 'amb']].forEach(([id, k]) => $(id).onclick = () => { prefs[k] = !prefs[k]; store.set('jasmin-prefs', prefs); renderOpts(); audio(); sfx.tap(); if(k === 'music' && !prefs.music){ MUS.on = false; clearInterval(MUS.timer); } if(k === 'amb' && !prefs.amb) ambStop(); });
 document.querySelectorAll('[data-bs]').forEach(b => b.onclick = () => { prefs.bs = +b.dataset.bs; store.set('jasmin-prefs', prefs); renderOpts(); sfx.tap(); });
 $('oFull').onclick = () => { const d = document.documentElement; try{ if(document.fullscreenElement) document.exitFullscreen(); else (d.requestFullscreen || d.webkitRequestFullscreen).call(d); }catch(e){} };
