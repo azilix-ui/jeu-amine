@@ -77,7 +77,7 @@
       detail:[['Les dangers', 'Trous, eau, pics, ennemis (saute-leur dessus). Les lanternes 🏮 gardent ta place.'],
         ['Les secrets', 'Un bloc invisible ❤️ (une vie), une jarre magique vers une salle secrète, une maison au faux mur. Les dinars achètent des tenues.'],
         ['Les mondes', '27 mondes en images réalistes, du village de Sidi Bou Saïd au palais du Scorpion d\'Or.']] },
-    'legende-du-jasmin-4': { titre:'La Légende du Jasmin · télé', bref:['🎯 Le Jasmin sur la télé : même aventure et même sauvegarde que le Jasmin.', '📺 Télécommande : ◀ ▶ avancer, ▲ ou OK sauter, ▼ s\'accroupir, bouton rouge = lancer, Retour = pause.', '🧭 Dans les menus : les flèches choisissent un bouton (cadre doré), OK valide.'],
+    'legende-du-jasmin-4': { titre:'La Légende du Jasmin · télé', bref:['🎯 Le Jasmin sur la télé : même aventure et même sauvegarde que le Jasmin.', '📺 Télécommande : ▶ (ou ◀) une fois = le héros avance tout seul, ▲ ou OK = sauter en avançant, ▼ = s\'arrêter et s\'accroupir, bouton rouge = lancer, Retour = pause.', '🧭 Dans les menus : les flèches choisissent un bouton (cadre doré), OK valide.'],
       detail:[['Sur ordinateur', 'Ça marche aussi au clavier : flèches, Espace pour sauter, Maj pour lancer, P pour la pause.'],
         ['La salle de jeux télé', 'Le bouton Retour, dans un menu, ramène à la salle de jeux télé.']] },
     'legende-du-jasmin-2': { titre:'La Légende du Jasmin 2', bref:['🎯 La même aventure que le Jasmin, avec les héros dessinés « en vrai ».', '🎮 Croix à gauche, A pour sauter, B pour courir.', '💡 Mêmes sauvegardes que le Jasmin 3.'], detail:[['À savoir', 'Le Jasmin 2 est gardé tel quel ; les nouveaux mondes sont dans le Jasmin (version 3) et le Stage 2.']] },

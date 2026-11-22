@@ -807,8 +807,15 @@ if(TELE) addEventListener('keydown', e => {
 const keys = { l:false, r:false, a:false, b:false };
 const touch = { l:new Set(), r:new Set(), a:new Set(), b:new Set() };
 let jumpPressed = false, firePressed = false;
+/* 23/11 (remarque du papa) : la télécommande n'envoie qu'une touche à la fois : impossible de tenir ▶ et d'appuyer sur OK pour sauter
+   en avançant. Sur la télé, ◀ et ▶ s'« accrochent » : un appui = le héros avance tout seul dans ce sens ; OK ou ▲ = il saute en avançant ;
+   ▶ encore (après l'avoir lâché), ◀ pour repartir dans l'autre sens, ou ▼ = il s'arrête. */
+const tvLache = { l:true, r:true };
 addEventListener('keydown', e => { const code = codeDe(e);
   if(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(code) && (state === 'play' || !TELE)) e.preventDefault();
+  if(TELE && state === 'play' && (code === 'ArrowLeft' || code === 'ArrowRight')){ if(e.repeat) return; const d = code === 'ArrowLeft' ? 'l' : 'r', o = d === 'l' ? 'r' : 'l';
+    if(keys[d] && tvLache[d]) keys[d] = false; else { keys[d] = true; keys[o] = false; } tvLache[d] = false; return; }
+  if(TELE && code === 'ArrowDown'){ keys.l = keys.r = false; }
   if(e.repeat) return;
   if(code === 'ArrowLeft' || code === 'KeyA' || code === 'KeyQ') keys.l = true;
   if(code === 'ArrowRight' || code === 'KeyD') keys.r = true;
@@ -818,6 +825,7 @@ addEventListener('keydown', e => { const code = codeDe(e);
   if(code === 'Escape' || code === 'KeyP'){ if(state === 'play') pauseGame(); else if(state === 'pause') resume(); }
 });
 addEventListener('keyup', e => { const code = codeDe(e);
+  if(TELE && (code === 'ArrowLeft' || code === 'ArrowRight')){ tvLache[code === 'ArrowLeft' ? 'l' : 'r'] = true; return; }   // sur la télé, lâcher ◀ ▶ ne l'arrête pas
   if(code === 'ArrowLeft' || code === 'KeyA' || code === 'KeyQ') keys.l = false;
   if(code === 'ArrowRight' || code === 'KeyD') keys.r = false;
   if(code === 'ArrowDown' || code === 'KeyS') keys.d = false;
@@ -1695,7 +1703,12 @@ function intro(n){
     <h2>Monde ${posOf(n)} · ${w.name}</h2><p class="sub">${STORY[n - 1]}</p><button class="big" id="go">▶ C'est parti !</button>`;
   show('intro'); $('go').onclick = () => { sfx.tap(); startLevel(n); };
 }
-function startLevel(n){ audio(); newLevel(n); state = 'play'; show(null); last = performance.now(); acc = 0; musicStart(); }
+function startLevel(n){ audio(); newLevel(n); state = 'play'; show(null); last = performance.now(); acc = 0; musicStart(); if(TELE) teleAide(); }
+// sur la télé, au premier monde de la visite : comment avancer et sauter avec la télécommande
+function teleAide(){ keys.l = keys.r = false; let vu = false; try{ vu = sessionStorage.getItem('jasmin-tele-aide') === '1'; sessionStorage.setItem('jasmin-tele-aide', '1'); }catch(e){} if(vu) return;
+  const el = $('infoVol'); if(!el) return; el.classList.remove('on'); void el.offsetWidth;
+  el.innerHTML = '<b>📺</b><span>Appuie une fois sur ▶ : ton héros avance tout seul. OK ou ▲ : il saute en avançant. ▼ : il s\'arrête.</span>'; el.classList.add('on');
+  speakQ('Appuie une fois sur la flèche de droite : ton héros avance tout seul. OK pour sauter en avançant. Flèche du bas pour t\'arrêter.'); }
 function pauseGame(){ if(state !== 'play') return; state = 'pause'; show('pause'); musicStop(); }
 function resume(){ if(state !== 'pause') return; state = 'play'; show(null); last = performance.now(); musicStart(); }
 document.addEventListener('visibilitychange', () => { if(document.hidden) pauseGame(); });
