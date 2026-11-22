@@ -26,6 +26,7 @@
 </script>
 <meta name="theme-color" content="#1f3c88">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;600;700;800&family=Amiri:wght@400;700&display=swap">
@@ -183,6 +184,7 @@ html.choisir main.wrap{display:none}
 #qui .invites .n{font-size:15px;color:var(--soft)}
 #qui .inv{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 #qui .inv button{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:999px;padding:8px 22px 8px 8px;border:2px solid var(--line);font:inherit;font-size:21px;font-weight:800;color:var(--c);cursor:pointer;min-height:56px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #qui .inv button,:root:not([data-theme="light"]) #qui .p b{color:color-mix(in srgb,var(--c) 50%,#fff)}}
 #qui .inv img{width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--cs)}
 #qui .perso{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
 #qui .perso .q2{margin:0;font-size:17px;font-weight:800;color:var(--soft)}
