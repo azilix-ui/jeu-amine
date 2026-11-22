@@ -52,7 +52,7 @@ $dir = ga_donnees() . '/voix-cache/' . $voix;
 // et ne suit pas language_code. Pour un texte français très court, on prend le modèle Turbo v2.5, qui suit language_code.
 // 21/11 : Lulu (voix d'Amine, faite par Voice Design) lisait le français avec l'accent anglais dans le cours d'anglais :
 // le modèle multilingue « devine » la langue d'après la voix. Pour Lulu, toujours Turbo v2.5, qui obéit à language_code=fr.
-$modele = ($l === 'fr' && ($lulu || mb_strlen($t) <= 12)) ? 'eleven_turbo_v2_5' : VX_MODELE;
+$modele = (($l === 'fr' && ($lulu || mb_strlen($t) <= 12)) || ($l === 'en' && mb_strlen($t) <= 12)) ? 'eleven_turbo_v2_5' : VX_MODELE;   // 22/11 : aussi les mots anglais très courts (« she, grow ») des règles d'Essil
 $f = $dir . '/' . sha1($modele . '|' . (in_array($l, ['fr', 'en'], true) ? '' : ($l === 'la' ? 'la-lent|' : $l . '|')) . $t) . '.mp3';   // fr/en : les clés d'avant restent valables
 
 if (!is_file($f)) {
