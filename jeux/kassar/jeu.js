@@ -153,15 +153,18 @@ function fin(gagne){ const s = P.s, i = P.i; P.fini = true;
   }, gagne ? 700 : 900); }
 
 /* ---------- la boucle ---------- */
+// 22/11 : la position des balles avant chaque pas, pour les dessiner entre deux pas (écrans à plus de 60 Hz : plus d'à-coups)
+function garde(s){ for(const b of s.bs){ b.ox = b.x; b.oy = b.y; } }
+function bxy(b){ const al = Math.min(1, reste_ / DT); if(b.ox === undefined || Math.abs(b.x - b.ox) + Math.abs(b.y - b.oy) > 40) return [b.x, b.y]; return [b.ox + (b.x - b.ox) * al, b.oy + (b.y - b.oy) * al]; }
 let avant = performance.now(), reste_ = 0;
 function boucle(t){
   const dt = Math.min(.1, (t - avant) / 1000); avant = t;
   if(P && !P.pause && P.s.mode === 'raquette'){ const s = P.s;
     const dx = (touches.ArrowRight || touches.KeyD ? 1 : 0) - (touches.ArrowLeft || touches.KeyA ? 1 : 0); if(dx) bougeR(s, s.px + dx * 420 * dt);
-    if(s.phase === 'jeu'){ reste_ += dt; let n = 0; while(reste_ >= DT && n++ < 60){ pasR(s); reste_ -= DT; } } else reste_ = 0;
+    if(s.phase === 'jeu'){ reste_ += dt; let n = 0; while(reste_ >= DT && n++ < 60){ garde(s); pasR(s); reste_ -= DT; } } else reste_ = 0;
     evenements(); $('vite').style.display = 'none'; $('rappel').style.display = 'none'; }
   else if(P && !P.pause){ const s = P.s;
-    if(s.phase === 'vol'){ P.vol += dt; reste_ += dt * vitesse; let n = 0; while(reste_ >= DT && n++ < 60){ pas(s); reste_ -= DT; } if(P.vol > 40) rappelle(s); }
+    if(s.phase === 'vol'){ P.vol += dt; reste_ += dt * vitesse; let n = 0; while(reste_ >= DT && n++ < 60){ garde(s); pas(s); reste_ -= DT; } if(P.vol > 40) rappelle(s); }
     else { reste_ = 0; P.vol = 0; if(vitesse !== 1){ vitesse = 1; $('vite').textContent = '⏩'; } }
     evenements();
     $('vite').style.display = s.phase === 'vol' && P.vol > 4 ? 'block' : 'none'; $('rappel').style.display = s.phase === 'vol' && P.vol > 12 ? 'block' : 'none';
@@ -209,7 +212,7 @@ function dessine(t){
   if(vise !== null && s.phase === 'vise'){ const g = guide(s, vise); ctx.fillStyle = 'rgba(255,255,255,.9)'; g.pts.forEach(([x, y], i) => { if(i % 2 === 0){ ctx.beginPath(); ctx.arc(x, y, 2.4, 0, 7); ctx.fill(); } });
     if(g.fin){ ctx.strokeStyle = '#ffd34d'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(g.fin[0], g.fin[1], 6, 0, 7); ctx.stroke(); } }
   // les balles
-  for(const b of s.bs){ if(!b.ok) continue; if(ok(IM.balle)) ctx.drawImage(IM.balle, b.x - R - 1, b.y - R - 1, R * 2 + 2, R * 2 + 2); else { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, R, 0, 7); ctx.fill(); } }
+  for(const b of s.bs){ if(!b.ok) continue; const [x, y] = bxy(b); if(ok(IM.balle)) ctx.drawImage(IM.balle, x - R - 1, y - R - 1, R * 2 + 2, R * 2 + 2); else { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, R, 0, 7); ctx.fill(); } }
   if(s.mode === 'raquette') dessineRaquette(s); else {
   // le lanceur : l'avatar, et ses balles
   const lx = s.phase === 'vol' && s.premier !== null ? s.premier : s.lx;

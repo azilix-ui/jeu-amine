@@ -252,6 +252,12 @@ function pas(){
 }
 function dessine(dt){
   if(!G) return;
+  // 22/11 : le ballon et la caméra sont dessinés entre deux pas (écrans à plus de 60 Hz : plus d'à-coups) ; on remet les vraies valeurs à la fin
+  const vx = G.x, vz = G.z, al = Math.min(1, acc / DT);
+  if(G.ox !== undefined && Math.abs(G.z - G.oz) < 3 && Math.abs(G.x - G.ox) < 3){ G.x = G.ox + (vx - G.ox) * al; G.z = G.oz + (vz - G.oz) * al; }
+  try { dessine0(dt); } finally { G.x = vx; G.z = vz; }
+}
+function dessine0(dt){
   const r = rayon(G.v), y = G.etat === 'chute' ? r - G.chute * G.chute * 6 : r;
   balle.position.set(G.x, y, -G.z); balle.rotation.set(-G.rot, 0, 0); balle.scale.setScalar(r * (1 + G.choc * .25));
   anneau.position.set(G.x, .03, -G.z); anneau.visible = G.etat !== 'chute';
@@ -263,7 +269,7 @@ function dessine(dt){
 }
 let last = performance.now(), acc = 0;
 function boucle(t){ requestAnimationFrame(boucle); const dt = Math.min(.1, (t - last) / 1000); last = t;
-  if(G && !G.pause){ acc += dt; while(acc >= DT){ acc -= DT; if(G && (G.etat === 'course' || G.etat === 'chute')) pas(); } }
+  if(G && !G.pause){ acc += dt; while(acc >= DT){ acc -= DT; if(G && (G.etat === 'course' || G.etat === 'chute')){ G.ox = G.x; G.oz = G.z; pas(); } } }
   dessine(dt); }
 requestAnimationFrame(boucle);
 

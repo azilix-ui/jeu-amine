@@ -172,7 +172,7 @@ function teteSur(x, id, im, hx, hy, r, a){
 
 /* ---------- la partie ---------- */
 const cv = $('cv'), ctx = cv.getContext('2d'); let W = 0, H = 0, DPR = 1;
-function taille(){ DPR = Math.min(1.5, window.devicePixelRatio || 1);   /* 1,5 au plus : sur iPad, 2 faisait ramer */ W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; }
+function taille(){ DPR = Math.min(matchMedia('(pointer: coarse)').matches ? 1.5 : 2, window.devicePixelRatio || 1);   /* 1,5 au plus sur tablette (2 faisait ramer l'iPad) ; 2 sur ordinateur, sinon l'image est floue avec la mise à l'échelle de Windows (22/11) */ W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; }
 addEventListener('resize', taille); taille();
 
 let G = null;
@@ -367,10 +367,20 @@ function dessineSerpent(s, al, vx0, vx1, vy0, vy1){
   // l'ombre
   ctx.save(); ctx.globalAlpha = .22; ctx.strokeStyle = '#000'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = r * 2 * Sc; ctx.beginPath();
   { const [a0, b0] = ecran(hx + 5, hy + 7); ctx.moveTo(a0, b0); } for(let j = 1; j < ch.length; j += 3){ const [a, b] = ecran(ch[j].x + 5, ch[j].y + 7); ctx.lineTo(a, b); } ctx.stroke(); ctx.restore();
-  // les disques, de la queue vers la tête (la queue s'affine un peu)
-  const n = ch.length, R = r * Sc;
-  for(let j = n - 1 - ((n - 1) % pasJ); j >= pasJ; j -= pasJ){ const q = ch[j]; if(q.x < vx0 - r || q.x > vx1 + r || q.y < vy0 - r || q.y > vy1 + r) continue; const [sx, sy] = ecran(q.x, q.y), f = j > n - 12 ? .7 + .3 * (n - j) / 12 : 1, rr = R * f;
-    if(d) ctx.drawImage(d[(j / pasJ | 0) % 3], sx - rr, sy - rr, rr * 2, rr * 2); else { ctx.fillStyle = '#7a8'; ctx.beginPath(); ctx.arc(sx, sy, rr, 0, 6.29); ctx.fill(); } }
+  // les disques, de la queue vers la tête (la queue s'affine un peu).
+  // 22/11 : ils sont posés le long du corps à partir de la tête interpolée, tous les « esp » (et non plus sur les points du chemin,
+  // qui avancent par sauts de 5) : le corps glisse sans à-coups, à la fréquence de l'écran (60, 120 ou 144 Hz).
+  const R = r * Sc, esp = Math.max(1, pasJ * CFG.ecartChemin), P = [];
+  let px = hx, py = hy, reste = esp;
+  for(let j = 1; j < ch.length; j++){
+    const q = ch[j]; let dx = q.x - px, dy = q.y - py, d = Math.hypot(dx, dy);
+    while(d >= reste){ px += dx / d * reste; py += dy / d * reste; P.push(px, py); dx = q.x - px; dy = q.y - py; d = Math.hypot(dx, dy); reste = esp; }
+    reste -= d; px = q.x; py = q.y;
+  }
+  const n = P.length / 2;
+  for(let k = n - 1; k >= 0; k--){ const x = P[k * 2], y = P[k * 2 + 1]; if(x < vx0 - r || x > vx1 + r || y < vy0 - r || y > vy1 + r) continue;
+    const [sx, sy] = ecran(x, y), f = k > n - 6 ? .7 + .3 * (n - k) / 6 : 1, rr = R * f;
+    if(d) ctx.drawImage(d[(k + 1) % 3], sx - rr, sy - rr, rr * 2, rr * 2); else { ctx.fillStyle = '#7a8'; ctx.beginPath(); ctx.arc(sx, sy, rr, 0, 6.29); ctx.fill(); } }
   // la tête
   const [sx, sy] = ecran(hx, hy), a = s.pa + angle(s.a - s.pa) * al;
   if(d) ctx.drawImage(d[0], sx - R, sy - R, R * 2, R * 2);

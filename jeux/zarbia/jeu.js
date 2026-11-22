@@ -163,6 +163,7 @@ function boucle(t){
     G.acc += dt;
     while(G.acc >= DT){ G.acc -= DT;
       const M = G.M;
+      for(const p of M.joueurs) if(p){ p.ox = p.x; p.oy = p.y; }   // 22/11 : la position d'avant, pour dessiner entre deux pas (écrans 120/144 Hz)
       for(const p of M.joueurs){ if(p && (p.bot || (window.__pilote && p === G.moi)) && p.vivant && p.local !== false) pense(M, p, DT); }
       if(G.net) G.net.avant(DT);
       pas(M, DT);
@@ -278,11 +279,13 @@ function refaitMorceau(i){
     g.save(); g.shadowColor = 'rgba(60,30,10,.45)'; g.shadowBlur = 4; g.shadowOffsetY = 2; g.drawImage(lay, -CP, -CP); g.restore();
   }
 }
+// 22/11 : la position dessinée est interpolée entre les deux derniers pas : plus d'à-coups sur les écrans à plus de 60 Hz
+function ip(p){ const al = Math.min(1, G.acc / DT); if(p.ox === undefined || Math.abs(p.x - p.ox) + Math.abs(p.y - p.oy) > 20) return [p.x, p.y]; return [p.ox + (p.x - p.ox) * al, p.oy + (p.y - p.oy) * al]; }
 function dessine(dt){
   const M = G.M, moi = G.moi;
   // la caméra suit le joueur, et recule un peu quand la zarbia grandit
   const chef = !moi.vivant && G.net ? classement(M)[0] : null;
-  const cible = moi.vivant ? [moi.x, moi.y] : chef ? [chef.x, chef.y] : [G.cam.x, G.cam.y];
+  const cible = moi.vivant ? ip(moi) : chef ? ip(chef) : [G.cam.x, G.cam.y];
   G.cam.x += (cible[0] - G.cam.x) * Math.min(1, dt * 6); G.cam.y += (cible[1] - G.cam.y) * Math.min(1, dt * 6);
   const vue = (W < H ? 74 : 92) + Math.min(40, moi.score * 1.2); S += (Math.max(W, H) / vue - S) * Math.min(1, dt * 2);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -305,13 +308,13 @@ function dessine(dt){
   for(const p of M.joueurs){ if(!p || !p.vivant || !p.trace.length) continue;
     ctx.beginPath(); let prem = true;
     for(let i = 0; i < p.trace.length; i++){ const c = p.trace[i]; const [sx, sy] = ecran(c % N + .5, ((c / N) | 0) + .5); if(prem){ ctx.moveTo(sx, sy); prem = false; } else ctx.lineTo(sx, sy); }
-    const [hx, hy] = ecran(p.x, p.y); ctx.lineTo(hx, hy);
+    const [hx, hy] = ecran(...ip(p)); ctx.lineTo(hx, hy);
     ctx.strokeStyle = 'rgba(40,20,10,.35)'; ctx.lineWidth = S * .95; ctx.stroke();
     ctx.strokeStyle = p.couleur; ctx.lineWidth = S * .7; ctx.stroke();
     ctx.setLineDash([S * .35, S * .45]); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = S * .22; ctx.stroke(); ctx.setLineDash([]);
   }
   // les joueurs : une pelote à leur couleur, et leur tête
-  for(const p of M.joueurs){ if(!p || !p.vivant) continue; const [sx, sy] = ecran(p.x, p.y); if(sx < -60 || sy < -60 || sx > W + 60 || sy > H + 60) continue;
+  for(const p of M.joueurs){ if(!p || !p.vivant) continue; const [sx, sy] = ecran(...ip(p)); if(sx < -60 || sy < -60 || sx > W + 60 || sy > H + 60) continue;
     const r = S * 1.5;
     ctx.save(); ctx.translate(sx, sy);
     ctx.fillStyle = 'rgba(40,20,10,.3)'; ctx.beginPath(); ctx.ellipse(0, r * .9, r * .9, r * .35, 0, 0, 6.29); ctx.fill();

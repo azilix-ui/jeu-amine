@@ -651,14 +651,17 @@ function render(t){
   const bg = drawBackground(g, t);
   if(!g) return;
   let sx = 0, sy = 0; if(g.shake > 0){ sx = (Math.random() - .5) * g.shake; sy = (Math.random() - .5) * g.shake; }
+  // 22/11 : héros et caméra dessinés entre deux pas (écrans à plus de 60 Hz : plus d'à-coups)
+  const al = state === 'play' ? Math.min(1, acc / STEP) : 1, lisse = (a, b) => (a === undefined || Math.abs(b - a) > 60) ? b : a + (b - a) * al;
+  const hx = lisse(g.ox, g.hero.x), hy = lisse(g.oy, g.hero.y), cam = lisse(g.oc, g.camY);
   ctx.setTransform(SC * DPR, 0, 0, SC * DPR, (OX + sx) * DPR, sy * DPR);
-  ctx.translate(0, -g.camY);
+  ctx.translate(0, -cam);
   // fond de la tour (un peu plus sombre)
-  ctx.fillStyle = '#00000026'; ctx.fillRect(L, g.camY, PW, VH);
+  ctx.fillStyle = '#00000026'; ctx.fillRect(L, cam, PW, VH);
   drawTower(g, t);
   // particules
   g.parts.forEach(p => { ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 2)); if(p.star) drawStar(p.x, p.y, p.r * 1.6, p.c, t); else { ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); } }); ctx.globalAlpha = 1;
-  ctx.save(); ctx.translate(g.hero.x, g.hero.y); ctx.scale(1.18, 1.18); drawHero(ctx, g.hero, 0, 0, t); ctx.restore();
+  ctx.save(); ctx.translate(hx, hy); ctx.scale(1.18, 1.18); drawHero(ctx, g.hero, 0, 0, t); ctx.restore();
   // textes dans le monde
   g.texts.forEach(x => { if(x.screen) return; ctx.globalAlpha = Math.min(1, x.life * 1.5); ctx.font = `800 ${x.size}px "Baloo 2", sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 5; ctx.strokeStyle = '#1b2a5e'; ctx.strokeText(x.s, x.x, x.y); ctx.fillStyle = x.c; ctx.fillText(x.s, x.x, x.y); });
   ctx.globalAlpha = 1;
@@ -684,7 +687,7 @@ function updateFx(dt){
 let last = performance.now(), acc = 0;
 function frame(now){
   const dt = Math.min(.1, (now - last) / 1000); last = now; const t = now / 1000;
-  if(state === 'play' && G0){ acc += dt; while(acc >= STEP){ step(STEP); acc -= STEP; } updateFx(dt); }
+  if(state === 'play' && G0){ acc += dt; while(acc >= STEP){ const h = G0.hero; G0.ox = h.x; G0.oy = h.y; G0.oc = G0.camY; step(STEP); acc -= STEP; } updateFx(dt); }
   else if(state === 'menu' || state === 'over') { if(G0) updateFx(dt); }
   render(t);
   requestAnimationFrame(frame);

@@ -231,20 +231,29 @@ function evenements(){ const S = P.S;
 let W = 1, H = 1, avant = performance.now(), acc = 0;
 function taille(){ W = innerWidth; H = innerHeight; renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix(); }
 addEventListener('resize', taille);
+// 22/11 : la position d'avant chaque pas de physique (60 par seconde), pour dessiner entre deux pas : plus d'à-coups sur les écrans à 120/144 Hz
+const Q0 = new THREE.Quaternion(), Q1 = new THREE.Quaternion();
+function photo(S){ for(const c of S.corps){ if(c.parti) continue; const p = c.rb.translation(), r = c.rb.rotation(); c._p = [p.x, p.y, p.z]; c._q = [r.x, r.y, r.z, r.w]; }
+  for(const h of S.heros){ const p = h.rb.translation(); h._p = [p.x, p.y, p.z]; } }
+const mel = (a, b, al) => a + (b - a) * al;
 function boucle(now){ requestAnimationFrame(boucle); const dt = Math.min(.05, (now - avant) / 1000); avant = now;
   if(!P || !jeuVisible()) return;
   if(!P.pause){
     if(P.etat === ETATS.INTRO){ P.tIntro += dt; if(P.tIntro > 2.6){ P.etat = ETATS.VISE; montreArc(); hud(); } }
     if(P.etat === ETATS.VOL || P.etat === ETATS.REPOS){
       if(P.passe){ let n = 0; while(!auRepos(P.S) && n++ < 60 * 10) pas(P.S); P.passe = false; evenements(); }
-      acc += dt * P.vite; let n = 0; while(acc >= REGLAGES.pas && n++ < 8){ pas(P.S); acc -= REGLAGES.pas; } if(acc > REGLAGES.pas) acc = 0;
+      acc += dt * P.vite; let n = 0; while(acc >= REGLAGES.pas && n++ < 8){ photo(P.S); pas(P.S); acc -= REGLAGES.pas; } if(acc > REGLAGES.pas) acc = 0;
       evenements(); P.tVol += dt; if(P.etat === ETATS.VOL && P.tVol > 1.6) P.etat = ETATS.REPOS;
       if(P.tVol > .3 && auRepos(P.S)) evalue();
       hud();
     }
     // les corps
-    P.S.corps.forEach((c, q) => { const m = P.meshes[q]; if(c.parti){ m.visible = false; return; } const p = c.rb.translation(), r = c.rb.rotation(); m.position.set(p.x, p.y, p.z); if(m.isMesh) m.quaternion.set(r.x, r.y, r.z, r.w); });
-    P.S.heros.forEach(h => { if(!h.sprite) return; const p = h.rb.translation(); h.sprite.position.set(p.x, p.y + .2, p.z); h.sprite.visible = p.y > -3.6; });
+    const al = (P.etat === ETATS.VOL || P.etat === ETATS.REPOS) ? Math.min(1, acc / REGLAGES.pas) : 1;
+    P.S.corps.forEach((c, q) => { const m = P.meshes[q]; if(c.parti){ m.visible = false; return; } const p = c.rb.translation(), r = c.rb.rotation();
+      if(c._p && al < 1){ m.position.set(mel(c._p[0], p.x, al), mel(c._p[1], p.y, al), mel(c._p[2], p.z, al)); if(m.isMesh){ Q0.set(c._q[0], c._q[1], c._q[2], c._q[3]); Q1.set(r.x, r.y, r.z, r.w); m.quaternion.slerpQuaternions(Q0, Q1, al); } }
+      else { m.position.set(p.x, p.y, p.z); if(m.isMesh) m.quaternion.set(r.x, r.y, r.z, r.w); } });
+    P.S.heros.forEach(h => { if(!h.sprite) return; const p = h.rb.translation(); const x = h._p && al < 1 ? mel(h._p[0], p.x, al) : p.x, y = h._p && al < 1 ? mel(h._p[1], p.y, al) : p.y, z = h._p && al < 1 ? mel(h._p[2], p.z, al) : p.z;
+      h.sprite.position.set(x, y + .2, z); h.sprite.visible = p.y > -3.6; });
     P.eclats.forEach(e => { e.t += dt; e.v.y -= 9.8 * dt; e.m.position.addScaledVector(e.v, dt); e.m.rotation.x += dt * 5; e.m.material.opacity = Math.max(0, 1 - e.t / e.vie); if(e.t > e.vie){ blocs.remove(e.m); e.m.material.dispose(); } });
     P.eclats = P.eclats.filter(e => e.t <= e.vie); P.secousse = Math.max(0, P.secousse - dt * 1.5);
     if(viseur.visible) viseur.rotation.z += dt * 2;
