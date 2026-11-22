@@ -170,7 +170,7 @@ function nouvelEnnemi(t, E, x, y){
 let etat = 'menu', dernier = 0, reste = 0;
 function boucle(now){
   requestAnimationFrame(boucle);
-  let dt = Math.min(.1, (now - dernier) / 1000); dernier = now;
+  let dt = Math.min(.1, (now - dernier) / 1000); dernier = now; netVeille(dt);
   if(etat === 'jeu' && G){ reste += dt; while(reste >= STEP){ pas(STEP); reste -= STEP; } }
   dessine(now / 1000);
 }
@@ -681,7 +681,11 @@ function dessineHeros(t){
 
 /* ---------- le dessin ---------- */
 let DPR = 1, CW = 0, CH = 0, SC = 1;
-function taille(){ DPR = Math.min(2, devicePixelRatio || 1); CW = innerWidth; CH = innerHeight; cv.width = Math.round(CW * DPR); cv.height = Math.round(CH * DPR); SC = Math.min(CH / (VH_CASES * T), CW / (18 * T)); }   // en portrait : au moins 18 cases de large
+// netteté (22/11) : sur ordinateur (souris), image calculée en 2× puis réduite par le navigateur (comme l'écran Retina de l'iPad) ; redescend seule (1,5×, puis 1×) si l'ordinateur rame
+const PC_NET = matchMedia('(pointer: fine)').matches && !matchMedia('(pointer: coarse)').matches; let NET_MAX = 2, netT = 0, netN = 0, netAttente = 3;
+function netVeille(dt){ if(!PC_NET || NET_MAX <= (devicePixelRatio || 1) || etat !== 'jeu') return; if(netAttente > 0){ netAttente -= dt; return; }
+  netT += dt; netN++; if(netT >= 2){ if(netT / netN > .024){ NET_MAX = NET_MAX > 1.5 ? 1.5 : 1; netAttente = 3; taille(); } netT = 0; netN = 0; } }
+function taille(){ DPR = PC_NET ? Math.max(Math.min(2, devicePixelRatio || 1), NET_MAX) : Math.min(2, devicePixelRatio || 1); CW = innerWidth; CH = innerHeight; cv.width = Math.round(CW * DPR); cv.height = Math.round(CH * DPR); SC = Math.min(CH / (VH_CASES * T), CW / (18 * T)); }   // en portrait : au moins 18 cases de large
 addEventListener('resize', taille); taille();
 function tuileImg(im, cx, cy, x, y, n = 6){ const s = im.naturalWidth / n; ctx.drawImage(im, (((cx % n) + n) % n) * s, (((cy % n) + n) % n) * s, s, s, x, y, T + .5, T + .5); }
 const nuit = document.createElement('canvas'), nctx = nuit.getContext('2d');
