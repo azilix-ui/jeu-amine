@@ -151,7 +151,7 @@ function film(){ chut(); F = { k:0, tok:0, pause:false }; ecran('film'); scene(0
 async function scene(k){
   if(k >= SCENES.length){ finFilm(); return; } F.k = Math.max(0, k); const sc = SCENES[F.k], t = ++F.tok, v = $('fVid'), im = $('fImg');
   $('fQ').hidden = true; $('fBtns').hidden = false;
-  im.src = IMG(sc.img); v.classList.remove('joue'); v.onplaying = () => v.classList.add('joue'); v.onerror = () => v.classList.remove('joue'); v.src = VID(sc.img); v.play().catch(() => {});
+  im.src = IMG(sc.img); v.classList.remove('joue'); v.onplaying = () => v.classList.add('joue'); v.onerror = () => v.classList.remove('joue'); v.loop = sc.img !== 'c5'; v.src = VID(sc.img); v.play().catch(() => {});
   $('fTexte').innerHTML = sc.txt; $('fNum').textContent = (F.k + 1) + ' / ' + SCENES.length;
   await parle([sc.txt.replace(/<[^>]+>/g, '')]); if(t !== F.tok || F.pause) return;
   if(sc.q){ question(sc.q, t); return; }
