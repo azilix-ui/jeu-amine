@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Missaoui">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/site.js" defer></script>
+<meta name="theme-color" content="#0b1e46">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="color-scheme" content="dark">
+<title>La Légende du Jasmin · Stage 3</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%9A%8B%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* La Légende du Jasmin · Stage 3 (23/11/2026, demande du papa) : la course du TGM dans les rues de Sidi Bou Saïd, seul ou en ligne avec la famille.
+   Les règles : stage3/course.js (testées par docs/stage3/test-course.mjs) ; le dessin, les commandes, les sons et la course en ligne : stage3/jeu.js. */
+:root{--gold:#ffc93c;--red:#d7263d;--blue:#1f5fbf;--panel:rgba(14,30,70,.93);--line:rgba(255,255,255,.25);--mist:#c9d6f2;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;--body:"Nunito","Trebuchet MS",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#0b1e46;color:#fff;font-family:var(--body);overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));z-index:10;background:rgba(6,16,40,.55)}
+.screen.on{display:flex}
+#menu{background:#0b1e46 url(stage3/img/menu.webp) center/cover}
+.box{background:var(--panel);border:2px solid var(--line);border-radius:28px;padding:18px 20px;width:min(820px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;box-shadow:0 20px 60px #0009}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);line-height:1;margin:0}
+h1 small{display:block;font-size:.5em;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+h2{font-family:var(--display);margin:0;font-size:28px}
+p{margin:0;line-height:1.35}
+.btn{min-height:56px;padding:0 26px;border-radius:18px;background:var(--gold);color:#3a2600;font-family:var(--display);font-weight:800;font-size:22px;box-shadow:0 5px 0 #b38600}
+.btn.bleu{background:#2b6fd6;color:#fff;box-shadow:0 5px 0 #17468f}.btn.gris{background:rgba(255,255,255,.14);color:#fff;box-shadow:none;font-size:18px;min-height:48px}
+.btn:active{transform:translateY(3px);box-shadow:none}
+.rang{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#who{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);border-radius:999px;padding:5px 18px 5px 5px;min-height:56px;font-weight:800;font-size:18px}
+#who img{width:46px;height:46px;border-radius:50%;object-fit:cover;background:#fff}
+#who small{display:block;font-weight:600;font-size:12px;color:var(--mist)}
+.lab{font-weight:800;color:var(--mist);font-size:14px;margin:0;align-self:flex-start}
+.choix{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.choix button{min-height:52px;min-width:96px;border-radius:16px;background:rgba(255,255,255,.1);font-weight:800;font-size:15px;border:3px solid transparent;padding:4px 10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.choix button.on{border-color:var(--gold);background:rgba(255,201,60,.18)}
+.choix img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.choix small{font-weight:600;color:var(--mist);font-size:11px}
+.etoiles{color:var(--gold);font-size:22px;letter-spacing:2px}
+.touches{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;font-size:15px;color:var(--mist)}
+.touches kbd{font-family:var(--display);background:rgba(255,255,255,.14);border-radius:6px;padding:0 6px;color:#fff}
+/* le haut de l'écran pendant la course */
+#hud{position:fixed;left:0;right:0;top:0;display:none;pointer-events:none;z-index:3;padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left))}
+body.joue #hud{display:block}
+#hud .l{position:absolute;left:max(10px,env(safe-area-inset-left));top:max(8px,env(safe-area-inset-top));background:rgba(11,30,70,.72);border-radius:16px;padding:6px 12px;font-weight:800;font-size:17px;display:flex;flex-direction:column;gap:4px}
+#vie{display:flex;gap:3px}#vie i{width:14px;height:16px;border-radius:4px;background:#ff5d73;box-shadow:0 0 0 2px rgba(255,255,255,.3) inset}#vie i.vide{background:rgba(255,255,255,.15)}
+#vie.bas i:not(.vide){animation:clig .5s infinite alternate}@keyframes clig{to{opacity:.35}}
+#hud .c{position:absolute;left:50%;transform:translateX(-50%);top:max(8px,env(safe-area-inset-top));background:rgba(11,30,70,.78);border-radius:16px;padding:6px 14px;text-align:center;min-width:min(440px,60vw)}
+#chrono{font-family:var(--display);font-weight:800;font-size:22px;line-height:1.1}#chrono.vite{color:#ff8a8a;animation:clig .4s infinite alternate}
+#piste{position:relative;height:16px;margin-top:4px;background:rgba(255,255,255,.15);border-radius:999px}
+#piste span{position:absolute;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#fff center/cover;box-shadow:0 0 0 2px #fff}
+#piste span.moi{box-shadow:0 0 0 3px var(--gold);z-index:2}
+#piste b{position:absolute;right:-6px;top:50%;transform:translateY(-50%);font-size:20px}
+#pauseB{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));width:52px;height:52px;border-radius:50%;background:rgba(11,30,70,.75);font-size:22px;z-index:5;display:none}
+body.joue #pauseB{display:block}
+/* les commandes tactiles */
+#tactile{position:fixed;inset:0;display:none;z-index:4;pointer-events:none}
+body.touch.joue #tactile{display:block}
+.tb{position:absolute;bottom:max(16px,env(safe-area-inset-bottom));width:calc(var(--bs,1) * 88px);height:calc(var(--bs,1) * 88px);border-radius:50%;background:rgba(255,255,255,.16);border:3px solid rgba(255,255,255,.5);font-size:calc(var(--bs,1) * 32px);font-weight:800;display:grid;place-items:center;pointer-events:auto;touch-action:none;color:#fff}
+.tb small{display:block;font-size:11px;margin-top:-8px}
+.tb.on{background:rgba(255,201,60,.45)}
+#bLent{left:max(16px,env(safe-area-inset-left))}#bVite{left:calc(max(16px,env(safe-area-inset-left)) + var(--bs,1) * 104px)}
+#bSaut{right:max(16px,env(safe-area-inset-right));width:calc(var(--bs,1) * 108px);height:calc(var(--bs,1) * 108px)}#bBas{right:calc(max(16px,env(safe-area-inset-right)) + var(--bs,1) * 124px)}
+#compte{position:fixed;inset:0;display:none;place-items:center;z-index:8;pointer-events:none;font-family:var(--display);font-weight:800;font-size:clamp(70px,16vw,170px);color:var(--gold);text-shadow:0 6px 0 #7a4a00,0 0 40px #000}
+#compte.on{display:grid}
+#bulle{position:fixed;left:50%;top:22%;transform:translateX(-50%);background:rgba(11,30,70,.85);border-radius:16px;padding:8px 16px;font-weight:800;font-size:18px;z-index:6;display:none;max-width:90vw;text-align:center}
+#bulle.on{display:block}
+.res{display:grid;grid-template-columns:1fr auto;gap:4px 18px;text-align:left;font-size:18px;min-width:min(420px,90%)}
+.res span{display:flex;align-items:center;gap:8px}.res img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+.gens{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;width:100%}
+.gens button{background:rgba(255,255,255,.1);border-radius:16px;padding:8px;display:flex;align-items:center;gap:8px;font-weight:800;min-height:60px;text-align:left}
+.gens button:disabled{cursor:default;opacity:1}
+.gens img{width:42px;height:42px;border-radius:50%;object-fit:cover}
+.gens small{display:block;font-weight:600;color:var(--mist);font-size:12px}
+.code{font-family:var(--display);font-size:46px;letter-spacing:8px;color:var(--gold);line-height:1}
+#invit{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);z-index:20;display:none;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:10px 14px}
+#invit.on{display:block}
+.opt{display:flex;justify-content:space-between;align-items:center;width:100%;background:#ffffff10;border-radius:16px;padding:10px 14px;font-weight:800;gap:10px;text-align:left}
+.opt button{min-width:96px;min-height:48px;border-radius:14px;background:#ffffff1c;font-weight:800}
+.opt button[aria-pressed="true"]{background:#7be0b4;color:#063a2a}
+.back{position:fixed;left:max(10px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));z-index:11;background:rgba(11,30,70,.75);border-radius:999px;padding:10px 16px;color:#fff;text-decoration:none;font-weight:800;display:none}
+body.menu .back{display:block}
+#rotate{position:fixed;inset:0;z-index:30;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0b1e46;font-family:var(--display);font-weight:800;font-size:26px;text-align:center;padding:20px}
+@media (orientation:portrait){body.touch.joue #rotate{display:flex}}
+@media (max-height:520px){.box{gap:7px;padding:10px 14px}h1{font-size:26px}.tb{width:calc(var(--bs,1) * 72px);height:calc(var(--bs,1) * 72px)}#bSaut{width:calc(var(--bs,1) * 88px);height:calc(var(--bs,1) * 88px)}}
+@media (prefers-reduced-motion:reduce){#vie.bas i,#chrono.vite{animation:none}}
+</style>
+</head>
+<body class="menu">
+<canvas id="cv" aria-label="La course du TGM"></canvas>
+<a class="back" href="legende-du-jasmin-3.html">← Le Jasmin</a>
+<div id="hud"><div class="l"><div id="vie"></div><div><span id="hVies">❤️ 3</span> · <span id="hDin">🪙 0</span> · <span id="hJas">🌼 0/3</span></div></div>
+  <div class="c"><div id="chrono">🚋 Le TGM part dans 1:00</div><div id="piste"><b>🚋</b></div></div></div>
+<button id="pauseB" aria-label="Pause">⏸</button>
+<div id="tactile"><button class="tb" id="bLent" aria-label="Ralentir">◀</button><button class="tb" id="bVite" aria-label="Courir plus vite">▶</button>
+  <button class="tb" id="bBas" aria-label="Glisser">⤓<small>glisse</small></button><button class="tb" id="bSaut" aria-label="Sauter">⤒<small>saute</small></button></div>
+<div id="rotate"><div style="font-size:64px">📱↻</div>Tourne la tablette pour courir !</div>
+<div id="compte"></div><div id="bulle"></div><div id="invit"></div>
+
+<section class="screen on" id="menu"><div class="box">
+  <h1>Le TGM n'attend pas ! <small>Jasmin · Stage 3 · Monde 1 : Sidi Bou Saïd</small></h1>
+  <p>Cours dans les rues de Sidi Bou Saïd pour attraper le TGM avant qu'il parte ! Saute par-dessus les poubelles, glisse sous le linge, attention aux peaux de banane et à l'huile…</p>
+  <button id="who"></button>
+  <p class="lab">Ton héros (ton score reste à toi)</p><div class="choix" id="heros"></div>
+  <p class="lab">La course</p><div class="choix" id="modes"><button data-m="tranquille">🐢 Tranquille<small>plus de temps, plus de vie</small></button><button data-m="champion">🐆 Champion<small>plus long, plus vite</small></button></div>
+  <div class="rang"><button class="btn" id="solo">▶ Courir</button><button class="btn bleu" id="ligne">🌍 Courir ensemble en ligne</button></div>
+  <div class="rang"><button class="btn gris" id="oRecs">🏆 Records</button><button class="btn gris" id="oOpts">⚙️ Réglages</button><button class="btn gris" id="oHelp">❓ Comment jouer</button></div>
+  <p id="mRec" style="color:var(--mist);font-size:14px"></p>
+</div></section>
+
+<section class="screen" id="aide"><div class="box">
+  <h2>❓ Comment jouer</h2>
+  <div class="touches">
+    <kbd>⤒ ↑ Espace</kbd><span>Sauter (tiens appuyé pour sauter plus haut)</span>
+    <kbd>⤓ ↓</kbd><span>Glisser (sous le linge, sous les mouettes) ; en l'air : redescendre vite</span>
+    <kbd>▶ →</kbd><span>Courir plus vite (pour les grands sauts et les jasmins)</span>
+    <kbd>◀ ←</kbd><span>Ralentir</span>
+    <kbd>P Échap</kbd><span>Pause</span>
+  </div>
+  <p>Ton héros court tout seul. Heurter une poubelle, des sacs, une caisse, une barrière ou un animal enlève un morceau de vie ; glisser sur une peau de banane ou de l'huile aussi ; tomber dans un trou en enlève deux. Saute sur le chat, le chien ou le scooter pour les étourdir !</p>
+  <p>🍵 Le thé fait courir plus vite, 🎩 la chéchia protège d'un coup, 🏮 la lanterne garde ta place. Ramasse les dinars et les 3 jasmins dorés (tout en haut : prends de l'élan !). Arrive à la gare avant que le TGM parte : ⭐ attrapé, ⭐⭐ avec 60 % des dinars, ⭐⭐⭐ avec les 3 jasmins.</p>
+  <button class="btn" id="aideOk">C'est parti</button>
+</div></section>
+
+<section class="screen" id="opts"><div class="box">
+  <h2>⚙️ Réglages</h2>
+  <div class="opt"><span>🔊 Bruitages</span><button id="oSon"></button></div>
+  <div class="opt"><span>🌊 Ambiance (la mer, les mouettes)</span><button id="oAmb"></button></div>
+  <div class="opt"><span>🗣️ Commentaire</span><span style="display:flex;gap:6px"><button data-com="ar">العربية</button><button data-com="fr">Français</button><button data-com="non">Silence</button></span></div>
+  <div class="opt"><span>🎮 Taille des boutons tactiles</span><span style="display:flex;gap:6px"><button data-bs="0.85">Petits</button><button data-bs="1">Moyens</button><button data-bs="1.2">Grands</button></span></div>
+  <div class="rang"><button class="btn" id="optOk">C'est bon</button></div>
+</div></section>
+
+<section class="screen" id="pause"><div class="box">
+  <h2>⏸ Pause</h2>
+  <p id="pauseTxt">Le TGM attend que tu reviennes… mais pas longtemps !</p>
+  <div class="rang"><button class="btn" id="pReprend">▶ Reprendre</button><button class="btn gris" id="pRecommence">↻ Recommencer</button><button class="btn gris" id="pMenu">🏠 Menu</button></div>
+</div></section>
+
+<section class="screen" id="recs"><div class="box">
+  <h2>🏆 Records de la famille</h2>
+  <div class="choix" id="recTabs"><button data-r="tranquille" class="on">🐢 Tranquille</button><button data-r="champion">🐆 Champion</button></div>
+  <div class="res" id="recList"></div>
+  <button class="btn gris" id="recOk">Retour</button>
+</div></section>
+
+<section class="screen" id="fin"><div class="box" id="finBox"></div></section>
+<section class="screen" id="salon"><div class="box"><div style="display:flex;align-items:center;gap:10px;align-self:stretch"><button class="btn gris" id="salonRetour">←</button><h2 style="flex:1">🌍 Courir ensemble</h2></div><div id="salonCorps" style="width:100%;display:flex;flex-direction:column;gap:10px;align-items:center"></div></div></section>
+
+<script src="../famille.js"></script>
+<script src="sons/sons.js"></script>
+<script src="stage2/heros/heros.js?v=11"></script>
+<script type="module" src="stage3/jeu.js?v=1"></script>
+</body></html>
