@@ -2,7 +2,8 @@
 /*
  * Chkobba : les voix enregistrées par la famille pour commenter la partie (à la place, ou en plus, des bulles écrites).
  * Chaque voix appartient à un personnage (garde = Si Hamadi, marchand = Am Lamine, voleur = Fethi, controleur = Si Mokhtar,
- * commentateur = la voix qui commente toute la partie) et à une situation (chk, haya, boude, pose, gagne, perd, debut, manche).
+ * commentateur = la voix qui commente toute la partie) et à une situation (chk, haya, boude, pose, gagne, perd, debut, manche ;
+ * pour le Bilot, depuis le 23/11 : prend, coinche, belote, capot, chute). Les mêmes personnages jouent aux deux jeux.
  *   GET  ?liste=1                                   -> {voix:{perso:{situation:[{id, de, ts}]}}}
  *   GET  ?son=<perso>-<situation>-<id>              -> le son
  *   POST action=ajoute perso situation de audio     -> {id}       (8 s au plus, 400 Ko)
@@ -13,7 +14,7 @@ declare(strict_types=1);
 require __DIR__ . '/../acces/garde.php'; ga_garde_api();
 
 const CV_PERSOS = ['garde', 'marchand', 'voleur', 'controleur', 'commentateur'];
-const CV_SITU = ['chk', 'haya', 'boude', 'pose', 'gagne', 'perd', 'debut', 'manche'];
+const CV_SITU = ['chk', 'haya', 'boude', 'pose', 'gagne', 'perd', 'debut', 'manche', 'prend', 'coinche', 'belote', 'capot', 'chute'];   // les 5 dernières : le Bilot (23/11)
 const CV_MAX = 400000; const CV_PAR_SITU = 12;
 const CV_MIME = ['webm' => 'audio/webm', 'mp4' => 'audio/mp4', 'ogg' => 'audio/ogg', 'wav' => 'audio/wav'];
 

@@ -202,6 +202,7 @@ const GA_COOKIE_PASSE = 'mf_partie';
 const GA_PASSE_DUREE = 3 * 3600;
 const GA_PASSE_JEUX = [   // clé => [nom, page, API en plus de voix.php et des lectures de famille.php]
     'chkobba' => ['La Chkobba', '/jeux/chkobba.html', ['chkobba.php', 'chkobba_voix.php']],
+    'bilot'   => ['Le Bilot (belote coinchée)', '/jeux/bilot.html', ['bilot.php', 'chkobba_voix.php']],
     'jasmin'  => ['La Légende du Jasmin', '/jeux/legende-du-jasmin-3.html', []],
     'stage2'  => ['Jasmin · Stage 2', '/jeux/jasmin-stage2.html', []],
     'tebni'   => ['Tebni (les briques)', '/jeux/tebni.html', []],

@@ -25,7 +25,10 @@ const SITU_COMM = [
   ['gagne', 'Quand tu gagnes la partie', '« Bravo, champion ! »'],
   ['perd', 'Quand tu perds la partie', '« Ce sera pour la prochaine ! »'],
 ];
-export const situations = p => p === 'commentateur' ? SITU_COMM : SITU_PERSO;
+let SP = SITU_PERSO, SC = SITU_COMM, JEU = 'la chkobba';
+/* 23/11 : le Bilot se sert du même studio et des mêmes personnages, avec ses propres situations */
+export function regle(o){ if(o.perso) SP = o.perso; if(o.comm) SC = o.comm; if(o.jeu) JEU = o.jeu; }
+export const situations = p => p === 'commentateur' ? SC : SP;
 
 let liste = {}, getAC = () => null, joue = null, finJoue = 0;
 const BUF = {};
@@ -51,7 +54,7 @@ export function dit(p, s){
 let choix = 'garde', rec = null;
 export function studio(el, qui, retour){
   const on = ON(), Q = QUI.find(q => q.id === choix), l = liste[choix] || {};
-  el.innerHTML = `<p style="margin:0 0 10px">Prête ta voix aux joueurs de la chkobba ! Choisis qui parle, puis enregistre une petite phrase (8 secondes au plus) pour chaque moment du jeu. Tu peux en mettre plusieurs : le jeu en choisit une au hasard.</p>
+  el.innerHTML = `<p style="margin:0 0 10px">Prête ta voix aux joueurs de ${JEU} ! Choisis qui parle, puis enregistre une petite phrase (8 secondes au plus) pour chaque moment du jeu. Tu peux en mettre plusieurs : le jeu en choisit une au hasard.</p>
     <div class="choix" id="vOn"><button data-v="oui" class="${on ? 'on' : ''}">🔊 Entendre les voix en jouant</button><button data-v="non" class="${on ? '' : 'on'}">🔇 Seulement les bulles</button></div>
     <h2 style="margin-top:12px">Qui parle ?</h2>
     <div class="qui">${QUI.map(q => `<button data-q="${q.id}" class="${q.id === choix ? 'on' : ''}">${q.emoji ? `<span class="emo">${q.emoji}</span>` : `<img src="${IMG}${q.id}-malin.webp" alt="">`}<b>${q.nom}</b><small>${Object.values(liste[q.id] || {}).reduce((n, v) => n + v.length, 0)} voix</small></button>`).join('')}</div>
