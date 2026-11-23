@@ -105,7 +105,7 @@
 .st-choix>*{display:flex;flex-direction:column;align-items:center;gap:4px;padding:22px 12px;border-radius:24px;border:2px solid #ffffff33;background:#ffffff12;color:#fff;font:inherit;cursor:pointer;text-align:center}
 .st-choix span{font-size:54px}.st-choix b{font-size:21px}.st-choix small{opacity:.8}
 .st-ecran{position:relative;width:min(56vh,360px);aspect-ratio:9/16;border-radius:20px;overflow:hidden;background:#000;box-shadow:0 14px 40px #0009;flex:none}
-.st-ecran video,.st-ecran canvas{width:100%;height:100%;object-fit:cover;display:block}
+.st-ecran video,.st-ecran canvas{width:100%;height:100%;object-fit:contain;display:block}   /* 23/11 : la vidéo entière, jamais rognée */
 .st-ecran video.miroir{transform:scaleX(-1)}
 .st-temps{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#d7263d;color:#fff;font-weight:800;padding:4px 12px;border-radius:999px}
 .declencheur.enreg{border-radius:18px;background:#d7263d;animation:pulse 1s infinite alternate}
@@ -123,8 +123,9 @@
 .st-barre i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#5fe0a8,#ffc93c);transition:width .2s}
 .st-barre span{position:relative;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
 /* les vidéos sur le mur, et le fil façon Instagram (21/11) */
-.carte.video .vignette{position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:9/16;max-height:460px;cursor:pointer;border:0;padding:0;width:100%}
-.carte.video .vignette img{width:100%;height:100%;object-fit:cover;display:block}
+.carte.video .vignette{position:relative;display:block;margin:0 auto;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:9/16;width:min(100%,260px);cursor:pointer;border:0;padding:0}   /* 23/11 : au format 9:16, sans être étirée */
+.carte.video .vignette .vf{position:absolute;inset:-20px;background:center/cover;filter:blur(16px) brightness(.6)}
+.carte.video .vignette img{position:relative;width:100%;height:100%;object-fit:contain;display:block}
 .carte.video .vignette span{position:absolute;inset:0;margin:auto;width:74px;height:74px;border-radius:50%;background:#fffd;display:grid;place-items:center;font-size:32px;box-shadow:0 6px 20px #0006}
 .carte .mus{font-size:14px;color:var(--soft);font-weight:700}
 .st-mot{position:absolute;left:8%;right:8%;bottom:16%;text-align:center;color:#fff;font-weight:900;font-size:clamp(18px,3.4vw,26px);text-shadow:0 2px 6px #000,0 0 2px #000;pointer-events:none}
@@ -134,7 +135,7 @@
 .reel{height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:grid;place-items:center;overflow:hidden;background:#000}
 .reel .flou{position:absolute;inset:-40px;background:center/cover no-repeat;filter:blur(28px) brightness(.55);transform:scale(1.1)}
 .reel video,.reel img.ph{position:relative;max-width:100%;max-height:100dvh;width:100%;height:100dvh;object-fit:contain;display:block}
-.reel video.plein{object-fit:cover}
+/* 23/11 : la vidéo est toujours montrée entière (plus de « zoom »), le fond flou remplit les bords */
 .reel img.ph{animation:kb 9s ease-in-out infinite alternate}
 @keyframes kb{to{transform:scale(1.08)}}
 .reel .ombre{position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(transparent,#000a);pointer-events:none}
@@ -171,7 +172,7 @@
   <a class="back" href="./">← Famille Missaoui</a>
   <header class="mur-tete">
     <h1>Le mur de la famille<span>.</span></h1>
-    <p>Un mot, un dessin, ta <b>photo du jour</b> (3 photos ou images par jour chacun), ou une <b>petite vidéo</b> en musique : filmée, prise dans la tablette, ou des photos qui s'animent (10 vidéos de 30 s par jour). Tout le monde le voit, la famille et les proches invités. Regarde tout en grand dans <b>📱 Le fil</b> !</p>
+    <p>Un mot, un dessin, ta <b>photo du jour</b> (10 photos ou images par jour chacun), ou une <b>petite vidéo</b> en musique : filmée, prise dans la tablette, ou des photos qui s'animent (10 vidéos de 30 s par jour). Tout le monde le voit, la famille et les proches invités. Regarde tout en grand dans <b>📱 Le fil</b> !</p>
   </header>
 
   <section class="ecrire" aria-label="Écrire sur le mur">
@@ -250,12 +251,12 @@ $('publier').onclick = async () => {
 /* ---------- 📸 la photo du jour : la caméra de la tablette ou de l'ordinateur, 3 photos par personne et par jour (17/11) ---------- */
 const DECOS = [['polaroid', '🤍 Polaroid', ''], ['jasmin', '🌼 Jasmin', '🌼|🌿'], ['zellige', '🔷 Zellige', ''], ['etoiles', '⭐ Étoiles', '⭐|✨'], ['mer', '🐚 La mer', '🐚|🌊']];
 const stickers = d => { const s = (DECOS.find(x => x[0] === d) || [])[2]; return s ? s.split('|').map((e, i) => '<span class="sticker s' + (i + 1) + '">' + e + '</span>').join('') : ''; };
-async function quota(){ try{ const r = await fetch(API + '?action=quota&auteur=' + encodeURIComponent(qui), { cache:'no-store', credentials:'same-origin' }); const j = await r.json(); return r.ok ? j.restant : 3; }catch(e){ return 3; } }
+async function quota(){ try{ const r = await fetch(API + '?action=quota&auteur=' + encodeURIComponent(qui), { cache:'no-store', credentials:'same-origin' }); const j = await r.json(); if(r.ok) quota.j = j; return r.ok ? j.restant : 10; }catch(e){ return 10; } }
 $('cabine').onclick = async () => {
   $('err').textContent = '';
   if(!qui){ $('qui').click(); return; }
   const reste = await quota();
-  if(reste <= 0){ $('err').textContent = 'Tu as déjà accroché tes 3 photos aujourd\'hui : à demain ! 📸'; return; }
+  if(reste <= 0){ $('err').textContent = 'Tu as déjà accroché tes 10 photos aujourd\'hui : à demain ! 📸'; return; }
   const back = document.createElement('div'); back.className = 'cabine'; document.body.appendChild(back);
   let flux = null, face = 'user', deco = 'polaroid', photo = null;
   const coupe = () => { if(flux){ flux.getTracks().forEach(t => t.stop()); flux = null; } };
@@ -313,8 +314,8 @@ $('cabine').onclick = async () => {
 
 // le compteur du jour sur les deux boutons d'image (17/11, 19 h : les deux comptent dans les 3 du jour)
 let resteJour = 3;
-async function majReste(){ if(!qui) return; resteJour = await quota(); $('cabine').textContent = '📸 Photo du jour (' + resteJour + ')'; }
-$('photo').addEventListener('click', e => { if(qui && resteJour <= 0){ e.preventDefault(); $('err').textContent = 'Tu as déjà accroché tes 3 photos aujourd\'hui : à demain ! 📸 Tu peux encore écrire un petit mot.'; } });
+async function majReste(){ if(!qui) return; resteJour = await quota(); $('cabine').textContent = '📸 Photo du jour (' + resteJour + ')'; if(quota.j) $('studio').textContent = '🎬 Vidéo (' + quota.j.videos + ')'; }
+$('photo').addEventListener('click', e => { if(qui && resteJour <= 0){ e.preventDefault(); $('err').textContent = 'Tu as déjà accroché tes 10 photos aujourd\'hui : à demain ! 📸 Tu peux encore écrire un petit mot.'; } });
 majReste(); setInterval(majReste, 60000);
 
 let ADMIN = false;
@@ -324,7 +325,7 @@ function carte(m){
   const r = m.reac || {};
   if(m.genre === 'video'){
     return '<article class="carte video" data-id="' + m.id + '"><div class="de">' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="">' : '') + '<span><b>' + esc(m.auteur) + '</b><small>' + quand(m.cree) + '</small></span></div>' +
-      '<button type="button" class="vignette" data-voir="' + m.id + '" aria-label="Regarder la vidéo de ' + esc(m.auteur) + '">' + (m.img ? '<img loading="lazy" src="' + API + '?img=' + m.id + '" alt="">' : '') + '<span>▶</span></button>' +
+      '<button type="button" class="vignette" data-voir="' + m.id + '" aria-label="Regarder la vidéo de ' + esc(m.auteur) + '">' + (m.img ? '<i class="vf" style="background-image:url(\'' + API + '?img=' + m.id + '\')"></i><img loading="lazy" src="' + API + '?img=' + m.id + '" alt="">' : '') + '<span>▶</span></button>' +
       (m.texte ? '<p>' + esc(m.texte) + '</p>' : '') + (titreMus(m) ? '<span class="mus">🎵 ' + esc(titreMus(m)) + '</span>' : '') +
       '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') + supprBtn(m) + '</div></article>';
   }
@@ -365,7 +366,7 @@ $('studio').onclick = async () => {
   $('err').textContent = ''; if(!qui){ $('qui').click(); return; }
   let q = { videos:10, envoi_max:16e6 }; try{ const r = await fetch(API + '?action=quota&auteur=' + encodeURIComponent(qui), { cache:'no-store', credentials:'same-origin' }); if(r.ok) q = await r.json(); }catch(e){}
   if(q.videos <= 0){ $('err').textContent = 'Tu as déjà posté tes ' + (q.videos_max || 10) + ' vidéos aujourd\'hui : à demain ! 🎬'; return; }
-  Studio.ouvre({ qui, jeton:JETON, api:API, reste:q.videos, envoiMax:Math.min(48e6, q.envoi_max || 16e6), fini:async id => { await charge(); fil(id); } });
+  Studio.ouvre({ qui, jeton:JETON, api:API, reste:q.videos, envoiMax:Math.min(60e6, q.envoi_max || 16e6), fini:async id => { await charge(); fil(id); } });
 };
 // le fil (22/11, façon TikTok) : une photo ou une vidéo par écran, on glisse vers le haut ; la vidéo visible joue, les autres se taisent et
 // se déchargent (lecture fluide) ; double-toucher = ❤️ ; barre de progression ; disque qui tourne ; pour une vidéo « originale »

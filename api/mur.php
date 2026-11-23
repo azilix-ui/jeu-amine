@@ -23,7 +23,7 @@ require __DIR__ . '/../acces/garde.php'; ga_garde_api();
 const MUR_EMOJIS = ['❤️', '👏', '😂', '😮'];
 const MUR_TEXTE = 500;
 const MUR_IMAGE_MAX = 2500000;   // la photo arrive déjà réduite par la page (1280 px), en JPEG
-const MUR_VIDEO_MAX = 48000000;  // 22/11 : 30 s en bonne qualité (720 × 1280 à 6 Mbit/s, ou l'original filmé) : environ 25 Mo au plus
+const MUR_VIDEO_MAX = 60000000;  // 22/11 : 30 s en bonne qualité (720 × 1280 à 6 Mbit/s, ou l'original filmé) : environ 25 Mo au plus
 const MUR_VIDEOS_JOUR = 10;   // 22/11 : demande des enfants (avant : 3)
 
 header('X-Content-Type-Options: nosniff');
@@ -50,7 +50,7 @@ function auteur($a): string {
     if ($a === '' || mb_strlen($a) > 20 || !preg_match("/^[\p{L}][\p{L}\p{M} '\-]*$/u", $a)) fail(400, 'Choisis qui écrit.');
     return mb_strtoupper(mb_substr($a, 0, 1)) . mb_substr($a, 1);
 }
-const MUR_PHOTOS_JOUR = 3;
+const MUR_PHOTOS_JOUR = 10;   // 23/11 : comme les vidéos (avant 3)
 const MUR_DECOS = ['polaroid', 'jasmin', 'zellige', 'etoiles', 'mer'];
 function jour(): string { return (new DateTime('now', new DateTimeZone('Europe/Paris')))->format('Y-m-d'); }
 function photos_prises(string $qui): int { $s = mur()->prepare('SELECT n FROM photos_jour WHERE auteur = ? AND jour = ?'); $s->execute([mb_strtolower($qui), jour()]); return (int)$s->fetchColumn(); }

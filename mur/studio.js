@@ -6,7 +6,7 @@
    Studio.ouvre({ qui, jeton, api, reste, envoiMax, fini }) ; window.__studio pour les tests. */
 (function(){
 'use strict';
-const W = 720, H = 1280, MAXS = 30, FPS = 30, DEBIT = 6000000;   // 22/11 : 720 × 1280 et 6 Mbit/s (avant 540 × 960 et 2 Mbit/s : l'iPad descendait à 0,15 Mbit/s, image « cassée »)
+const W = 1080, H = 1920, MAXS = 30, FPS = 30, DEBIT = 8000000;   // 23/11 : le format des réseaux (Instagram, TikTok) : 1080 × 1920, 8 Mbit/s   // 22/11 : 720 × 1280 et 6 Mbit/s (avant 540 × 960 et 2 Mbit/s : l'iPad descendait à 0,15 Mbit/s, image « cassée »)
 /* 22/11 (demande du papa : « meilleure qualité, lecture fluide, sans l'effet vidéo coupée ») : une vidéo FILMÉE, ou une vidéo de la tablette
    de 30 s au plus, n'est plus refabriquée (chaque nouvel encodage de l'iPad abîmait l'image) : on envoie l'original. La musique et le petit mot
    sont alors posés par-dessus à la lecture, dans le fil (comme TikTok). Seules les photos animées, ou une vidéo qu'on coupe, passent encore
@@ -68,7 +68,7 @@ function ouvre(o){
       <div class="cab-btns"><button class="t" id="stRet">← Retour</button><button class="declencheur" id="stRec" aria-label="Filmer"></button><button class="t" id="stTour" hidden>🔄 Retourner</button></div><p class="msgerr" id="stErr"></p>`;
     back.querySelector('#stRet').onclick = choix;
     const v = back.querySelector('video');
-    try{ coupeFlux(); S.flux = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:S.face, width:{ ideal:1280 }, height:{ ideal:720 }, frameRate:{ ideal:30 } }, audio:{ echoCancellation:true, noiseSuppression:true } });
+    try{ coupeFlux(); S.flux = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:S.face, width:{ ideal:1080 }, height:{ ideal:1920 }, frameRate:{ ideal:30 } }, audio:{ echoCancellation:true, noiseSuppression:true } });
       v.srcObject = S.flux; await v.play().catch(() => {});
       const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
       if(cams.length > 1){ const t = back.querySelector('#stTour'); t.hidden = false; t.onclick = () => { S.face = S.face === 'user' ? 'environment' : 'user'; filme(); }; }
@@ -103,8 +103,8 @@ function ouvre(o){
       une(S.photos[i], u, 1);
       const fondu = .45 / per; if(u > 1 - fondu && i < S.photos.length - 1) une(S.photos[i + 1], 0, (u - (1 - fondu)) / fondu);
       if(t < .4) { g.fillStyle = `rgba(0,0,0,${1 - t / .4})`; g.fillRect(0, 0, W, H); } }
-    if(S.mot && !sansMot){ g.font = '700 44px Nunito, sans-serif'; g.textAlign = 'center'; const l = S.mot.slice(0, 60);
-      g.fillStyle = '#0008'; const lw = Math.min(W - 40, g.measureText(l).width + 36); g.fillRect((W - lw) / 2, H - 200, lw, 72); g.fillStyle = '#fff'; g.fillText(l, W / 2, H - 150); }
+    if(S.mot && !sansMot){ g.font = '700 66px Nunito, sans-serif'; g.textAlign = 'center'; const l = S.mot.slice(0, 60);
+      g.fillStyle = '#0008'; const lw = Math.min(W - 40, g.measureText(l).width + 36); g.fillRect((W - lw) / 2, H - 300, lw, 108); g.fillStyle = '#fff'; g.fillText(l, W / 2, H - 225); }
   }
 
   /* ---------- le son : la vidéo et la musique passent par Web Audio (on règle les deux volumes) ---------- */
