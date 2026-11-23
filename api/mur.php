@@ -14,6 +14,8 @@
  *   POST action=video auteur texte musique jeton + fichier « video » (mp4 ou webm, 30 s, fabriqué par le studio de la page) + poster (JPEG)
  *                                                -> (21/11) une petite vidéo ; 10 vidéos par personne et par jour (22/11) ; brut=1 volv volm : l'original, musique posée à la lecture
  *   GET  ?vid=ID                                 -> la vidéo (avec les requêtes « Range » qu'exige Safari)
+ *   POST action=commente id auteur texte jeton   -> (23/11) un commentaire sous une photo ou une vidéo (200 caractères) ; « coms » dans la liste
+ *   POST action=decommente cid jeton             -> efface son commentaire (ou Anis administrateur)
  * Le « jeton » est un nombre au hasard gardé dans le navigateur : il dit « c'est moi qui ai écrit ça » (pour pouvoir effacer son message).
  * Données : famille-data/mur.sqlite et famille-data/mur/<id>.webp (hors du site public).
  */
@@ -42,6 +44,7 @@ function mur(): PDO {
     if (!in_array('genre', $cols, true)) $p->exec("ALTER TABLE messages ADD COLUMN genre TEXT NOT NULL DEFAULT ''");
     if (!in_array('deco', $cols, true)) $p->exec("ALTER TABLE messages ADD COLUMN deco TEXT NOT NULL DEFAULT ''");
     $p->exec('CREATE TABLE IF NOT EXISTS photos_jour (auteur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (auteur, jour))');
+    $p->exec('CREATE TABLE IF NOT EXISTS commentaires (id INTEGER PRIMARY KEY, message INTEGER NOT NULL, auteur TEXT NOT NULL, texte TEXT NOT NULL, jeton TEXT NOT NULL, cree INTEGER NOT NULL)');   // 23/11
     if (!in_array('media', $cols, true)) $p->exec("ALTER TABLE messages ADD COLUMN media TEXT NOT NULL DEFAULT ''");   // 21/11 : « mp4|joyeux » pour une vidéo
     return $p;
 }
@@ -92,14 +95,16 @@ try {
     if ($m === 'GET' && $a === 'liste') {
         $avant = (int)($_GET['avant'] ?? 0); $j = jeton();
         $s = mur()->prepare('SELECT id, auteur, texte, img, cree, jeton, genre, deco, media FROM messages' . ($avant ? ' WHERE id < ?' : '') . ' ORDER BY id DESC LIMIT 30'); $s->execute($avant ? [$avant] : []);
-        $l = $s->fetchAll(); $ids = array_column($l, 'id'); $reac = []; $moi = [];
+        $l = $s->fetchAll(); $ids = array_column($l, 'id'); $reac = []; $moi = []; $coms = [];
         if ($ids) {
             $in = implode(',', array_map('intval', $ids));
             foreach (mur()->query("SELECT message, emoji, COUNT(*) n FROM reactions WHERE message IN ($in) GROUP BY message, emoji") as $r) $reac[$r['message']][$r['emoji']] = (int)$r['n'];
             if ($j) { $q = mur()->prepare("SELECT message, emoji FROM reactions WHERE message IN ($in) AND jeton = ?"); $q->execute([$j]); foreach ($q as $r) $moi[$r['message']][] = $r['emoji']; }
+            foreach (mur()->query("SELECT id, message, auteur, texte, jeton, cree FROM commentaires WHERE message IN ($in) ORDER BY id") as $r)
+                $coms[$r['message']][] = ['id' => (int)$r['id'], 'auteur' => $r['auteur'], 'texte' => $r['texte'], 'cree' => (int)$r['cree'], 'mien' => $j !== '' && hash_equals($r['jeton'], $j)];
         }
         out(200, ['messages' => array_map(fn($x) => ['id' => (int)$x['id'], 'auteur' => $x['auteur'], 'texte' => $x['texte'], 'img' => (bool)$x['img'], 'cree' => (int)$x['cree'],
-            'genre' => $x['genre'], 'deco' => $x['deco'], 'media' => $x['media'], 'reac' => $reac[$x['id']] ?? (object)[], 'moi' => $moi[$x['id']] ?? [], 'mien' => $j !== '' && hash_equals($x['jeton'], $j)], $l), 'emojis' => MUR_EMOJIS, 'admin' => ga_passe_autorise()]);
+            'genre' => $x['genre'], 'deco' => $x['deco'], 'media' => $x['media'], 'reac' => $reac[$x['id']] ?? (object)[], 'moi' => $moi[$x['id']] ?? [], 'coms' => $coms[$x['id']] ?? [], 'mien' => $j !== '' && hash_equals($x['jeton'], $j)], $l), 'emojis' => MUR_EMOJIS, 'admin' => ga_passe_autorise()]);
     }
     if ($m !== 'POST') fail(405, 'Action inconnue.');
     $j = jeton();
@@ -168,6 +173,24 @@ try {
         if ($d->rowCount() === 0) mur()->prepare('INSERT OR IGNORE INTO reactions (message, jeton, emoji) SELECT id, ?, ? FROM messages WHERE id = ?')->execute([$j, $e, $id]);
         out(200, ['ok' => true]);
     }
+    if ($a === 'commente') {   // 23/11 : commenter une photo ou une vidéo
+        if (!$j) fail(400, 'Recharge la page.');
+        $id = (int)($_POST['id'] ?? 0); $qui = auteur($_POST['auteur'] ?? ''); $txt = trim(preg_replace('/\s+/u', ' ', mb_substr((string)($_POST['texte'] ?? ''), 0, 200)));
+        if ($txt === '') fail(400, 'Écris ton commentaire.');
+        $ip = hash('sha256', ga_ip()); $t = time(); $db = mur();
+        $db->prepare('DELETE FROM envois WHERE ts < ?')->execute([$t - 3600]);
+        $c = $db->prepare('SELECT COUNT(*) FROM envois WHERE ip = ?'); $c->execute([$ip]); if ((int)$c->fetchColumn() >= 60) fail(429, 'Beaucoup de messages en peu de temps : réessaie dans un moment.');
+        $e = $db->prepare('SELECT 1 FROM messages WHERE id = ?'); $e->execute([$id]); if (!$e->fetchColumn()) fail(404, 'Ce message a été effacé.');
+        $db->prepare('INSERT INTO envois (ip, ts) VALUES (?, ?)')->execute([$ip, $t]);
+        $db->prepare('INSERT INTO commentaires (message, auteur, texte, jeton, cree) VALUES (?, ?, ?, ?, ?)')->execute([$id, $qui, $txt, $j, $t]);
+        out(200, ['ok' => true, 'id' => (int)$db->lastInsertId()]);
+    }
+    if ($a === 'decommente') {
+        $cid = (int)($_POST['cid'] ?? 0); $s = mur()->prepare('SELECT jeton FROM commentaires WHERE id = ?'); $s->execute([$cid]); $jt = $s->fetchColumn();
+        if ($jt === false) out(200, ['ok' => true]);
+        if (!($j && hash_equals((string)$jt, $j)) && !ga_passe_autorise()) fail(403, 'Seul celui qui a écrit ce commentaire peut l\'effacer.');
+        mur()->prepare('DELETE FROM commentaires WHERE id = ?')->execute([$cid]); out(200, ['ok' => true]);
+    }
     if ($a === 'supprime') {
         $id = (int)($_POST['id'] ?? 0);
         $s = mur()->prepare('SELECT jeton FROM messages WHERE id = ?'); $s->execute([$id]); $jt = $s->fetchColumn();
@@ -178,7 +201,7 @@ try {
             if (ga_trop_essais()) fail(429, "Trop d'essais. Réessaie dans 15 minutes.");
             if (empty($auth['hash']) || !password_verify((string)($_POST['pass'] ?? ''), (string)$auth['hash'])) { ga_note_echec(); fail(403, 'Mot de passe parent incorrect.'); }
         }
-        mur()->prepare('DELETE FROM messages WHERE id = ?')->execute([$id]); mur()->prepare('DELETE FROM reactions WHERE message = ?')->execute([$id]);
+        mur()->prepare('DELETE FROM messages WHERE id = ?')->execute([$id]); mur()->prepare('DELETE FROM reactions WHERE message = ?')->execute([$id]); mur()->prepare('DELETE FROM commentaires WHERE message = ?')->execute([$id]);
         foreach (['webp', 'mp4', 'webm'] as $x) @unlink(dossier() . '/' . $id . '.' . $x);
         out(200, ['ok' => true]);
     }

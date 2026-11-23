@@ -123,11 +123,18 @@
 .st-barre i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#5fe0a8,#ffc93c);transition:width .2s}
 .st-barre span{position:relative;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
 /* les vidéos sur le mur, et le fil façon Instagram (21/11) */
-.carte.video .vignette{position:relative;display:block;margin:0 auto;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:9/16;width:min(100%,260px);cursor:pointer;border:0;padding:0}   /* 23/11 : au format 9:16, sans être étirée */
-.carte.video .vignette .vf{position:absolute;inset:-20px;background:center/cover;filter:blur(16px) brightness(.6)}
-.carte.video .vignette img{position:relative;width:100%;height:100%;object-fit:contain;display:block}
+.carte.video .vignette{position:relative;display:block;width:100%;border-radius:14px;overflow:hidden;background:#000;cursor:pointer;border:0;padding:0}   /* 23/11 : la vignette prend la forme de la vidéo (plus de bandes « hachées ») */
+.carte.video .vignette img{display:block;width:100%;height:auto;max-height:520px;object-fit:contain;margin:0 auto}
 .carte.video .vignette span{position:absolute;inset:0;margin:auto;width:74px;height:74px;border-radius:50%;background:#fffd;display:grid;place-items:center;font-size:32px;box-shadow:0 6px 20px #0006}
 .carte .mus{font-size:14px;color:var(--soft);font-weight:700}
+.coms{display:flex;flex-direction:column;gap:6px;margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+.com{display:flex;gap:8px;align-items:flex-start}
+.com img,.com .ini{flex:none;width:28px;height:28px;border-radius:50%;object-fit:cover;background:var(--line);display:grid;place-items:center;font-weight:800;font-size:14px}
+.com p{margin:0;font-size:15px;line-height:1.35;flex:1;overflow-wrap:anywhere}.com p small{color:var(--soft);font-size:12px;white-space:nowrap}
+.com-x{flex:none;border:0;background:none;color:var(--soft);font-size:14px;cursor:pointer;min-width:32px;min-height:32px}
+.coms-tout{border:0;background:none;color:var(--soft);font:inherit;font-weight:700;font-size:14px;text-align:left;cursor:pointer;padding:2px 0}
+.com-f{display:flex;gap:6px}.com-f input{flex:1;min-width:0;font:inherit;font-size:15px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg,#fff);color:inherit}
+.com-f button{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:#ffc93c;color:#3a2600;font-size:18px;cursor:pointer}
 .st-mot{position:absolute;left:8%;right:8%;bottom:16%;text-align:center;color:#fff;font-weight:900;font-size:clamp(18px,3.4vw,26px);text-shadow:0 2px 6px #000,0 0 2px #000;pointer-events:none}
 /* 22/11 : le fil façon TikTok : une vidéo par écran, on glisse, double-toucher = ❤️, la musique posée par-dessus l'original */
 .reels{position:fixed;inset:0;z-index:1000;background:#000;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none}
@@ -158,6 +165,15 @@
 .reel .prog i{display:block;height:100%;width:0;background:#fff}
 .reel .coeur{position:absolute;font-size:110px;pointer-events:none;animation:coeur .9s ease-out forwards;transform:translate(-50%,-50%)}
 @keyframes coeur{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-15deg)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.2) rotate(-8deg)}60%{opacity:1;transform:translate(-50%,-60%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-120%) scale(1.3)}}
+.reel .feuille{position:absolute;left:0;right:0;bottom:0;max-height:62%;z-index:20;background:#fff;color:#1a1f2e;border-radius:22px 22px 0 0;padding:14px 16px max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;box-shadow:0 -10px 40px #0008;animation:monte .25s ease}
+@keyframes monte{from{transform:translateY(100%)}}
+.reel .feuille .f-haut{display:flex;justify-content:space-between;align-items:center;font-size:18px}
+.reel .feuille .f-x{width:44px;height:44px;border-radius:50%;border:0;background:#0000000f;font-size:18px;cursor:pointer}
+.reel .feuille .f-liste{overflow-y:auto;display:flex;flex-direction:column;gap:8px;min-height:60px}
+.reel .feuille .f-vide{margin:0;color:#667;font-weight:700}
+.reel .feuille .com p small,.reel .feuille .com-x{color:#778}
+.reel .feuille .com img,.reel .feuille .com .ini{background:#e6e9f0}
+.reel .feuille .com-f input{border:1px solid #d5d9e2;background:#fff;color:#1a1f2e}
 .reels-haut{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;z-index:1001;display:flex;justify-content:space-between;pointer-events:none}
 .reels-haut button{pointer-events:auto;min-height:48px;padding:0 16px;border-radius:999px;border:0;background:#0008;color:#fff;font:inherit;font-weight:800;font-size:17px;cursor:pointer}
 .reel .tap{position:absolute;inset:0;margin:auto;width:96px;height:96px;border-radius:50%;background:#0007;color:#fff;font-size:44px;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .2s}
@@ -321,13 +337,24 @@ majReste(); setInterval(majReste, 60000);
 let ADMIN = false;
 const supprBtn = m => '<button type="button" class="suppr" data-suppr="' + (m.mien ? 'moi' : ADMIN ? 'admin' : 'parent') + '">' + (m.mien ? 'Effacer' : ADMIN ? '🗑️ Effacer (admin)' : '🔒 Retirer') + '</button>';
 const titreMus = m => { const id = (m.media || '').split('|')[1]; const x = (window.MUR_MUSIQUES || []).find(y => y.id === id); return x ? x.emoji + ' ' + x.titre : ''; };
+// 23/11 (demande du papa) : les commentaires sous les photos et les vidéos ; les 3 derniers, « voir tout » pour les autres
+const ouvertsComs = new Set();
+function lignesComs(m, tout){ const L = m.coms || [], v = tout || L.length <= 3 ? L : L.slice(-3);
+  return (L.length > v.length ? '<button type="button" class="coms-tout" data-tous="' + m.id + '">💬 Voir les ' + L.length + ' commentaires</button>' : '') +
+    v.map(c => '<div class="com">' + (tete(c.auteur) ? '<img src="' + tete(c.auteur) + '" alt="">' : '<span class="ini">' + esc(c.auteur[0] || '?') + '</span>') + '<p><b>' + esc(c.auteur) + '</b> ' + esc(c.texte) + ' <small>' + quand(c.cree) + '</small></p>' +
+      (c.mien || ADMIN ? '<button type="button" class="com-x" data-dc="' + c.id + '" aria-label="Effacer ce commentaire">✕</button>' : '') + '</div>').join(''); }
+const coms = m => '<div class="coms" data-coms="' + m.id + '">' + lignesComs(m, ouvertsComs.has(m.id)) +
+  '<form class="com-f" data-cf="' + m.id + '"><input type="text" maxlength="200" placeholder="Écrire un commentaire…" aria-label="Écrire un commentaire" enterkeyhint="send"><button type="submit" aria-label="Envoyer">➤</button></form></div>';
+async function commente(id, input){ const t = input.value.trim(); if(!t) return;
+  if(!qui){ $('err').textContent = 'Choisis d\'abord qui écrit (en haut) 🙂'; return; }
+  input.disabled = true; try{ await api({ action:'commente', id, auteur:qui, texte:t }); input.value = ''; await charge(); }catch(err){ alert(err.message); } finally{ input.disabled = false; } }
 function carte(m){
   const r = m.reac || {};
   if(m.genre === 'video'){
     return '<article class="carte video" data-id="' + m.id + '"><div class="de">' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="">' : '') + '<span><b>' + esc(m.auteur) + '</b><small>' + quand(m.cree) + '</small></span></div>' +
-      '<button type="button" class="vignette" data-voir="' + m.id + '" aria-label="Regarder la vidéo de ' + esc(m.auteur) + '">' + (m.img ? '<i class="vf" style="background-image:url(\'' + API + '?img=' + m.id + '\')"></i><img loading="lazy" src="' + API + '?img=' + m.id + '" alt="">' : '') + '<span>▶</span></button>' +
+      '<button type="button" class="vignette" data-voir="' + m.id + '" aria-label="Regarder la vidéo de ' + esc(m.auteur) + '">' + (m.img ? '<img loading="lazy" src="' + API + '?img=' + m.id + '" alt="">' : '') + '<span>▶</span></button>' +
       (m.texte ? '<p>' + esc(m.texte) + '</p>' : '') + (titreMus(m) ? '<span class="mus">🎵 ' + esc(titreMus(m)) + '</span>' : '') +
-      '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') + supprBtn(m) + '</div></article>';
+      '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') + supprBtn(m) + '</div>' + coms(m) + '</article>';
   }
   if(m.genre === 'polaroid'){
     const rot = ((m.id * 37) % 7 - 3) * 1.1;
@@ -335,12 +362,12 @@ function carte(m){
       (m.texte ? '<p class="mot">' + esc(m.texte) + '</p>' : '') + stickers(m.deco) +
       '<div class="de"><span style="text-align:right"><b style="font-size:15px">' + esc(m.auteur) + '</b><small>' + quand(m.cree) + '</small></span>' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="" style="width:34px;height:34px">' : '') + '</div>' +
       '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') +
-      supprBtn(m) + '</div></article>';
+      supprBtn(m) + '</div>' + coms(m) + '</article>';
   }
   return '<article class="carte" data-id="' + m.id + '"><div class="de">' + (tete(m.auteur) ? '<img src="' + tete(m.auteur) + '" alt="">' : '') + '<span><b>' + esc(m.auteur) + '</b><small>' + quand(m.cree) + '</small></span></div>' +
     (m.texte ? '<p>' + esc(m.texte) + '</p>' : '') + (m.img ? '<img class="photo" loading="lazy" src="' + API + '?img=' + m.id + '" alt="Image de ' + esc(m.auteur) + '">' : '') +
     '<div class="reac">' + EMO.map(e => '<button type="button" data-e="' + e + '" class="' + (m.moi.includes(e) ? 'on' : '') + '">' + e + (r[e] ? ' ' + r[e] : '') + '</button>').join('') +
-    supprBtn(m) + '</div></article>';
+    supprBtn(m) + '</div>' + (m.img ? coms(m) : '') + '</article>';
 }
 let tous = [];
 async function charge(plus){
@@ -353,8 +380,11 @@ async function charge(plus){
   }catch(e){ $('fil').innerHTML = '<p class="vide-mur">Le mur ne se charge pas pour l\'instant.</p>'; }
 }
 $('plus').onclick = () => charge(true);
+$('fil').addEventListener('submit', e => { const f = e.target.closest('.com-f'); if(!f) return; e.preventDefault(); commente(+f.dataset.cf, f.querySelector('input')); });
 $('fil').addEventListener('click', async e => {
-  const b = e.target.closest('button'); if(!b) return; const id = +b.closest('.carte').dataset.id;
+  const b = e.target.closest('button'); if(!b || b.type === 'submit') return; const id = +b.closest('.carte').dataset.id;
+  if(b.dataset.tous){ ouvertsComs.add(id); const m = tous.find(x => x.id === id); b.closest('.coms').outerHTML = coms(m); return; }
+  if(b.dataset.dc){ if(!confirm('Effacer ce commentaire ?')) return; try{ await api({ action:'decommente', cid:b.dataset.dc }); await charge(); }catch(err){ alert(err.message); } return; }
   if(b.dataset.voir){ fil(id); return; }
   if(b.dataset.suppr === 'admin' && confirm('Effacer définitivement ce message (et sa photo ou sa vidéo) ?')){ try{ await api({ action:'supprime', id }); await charge(); }catch(err){ alert(err.message); } }
   if(b.dataset.e){ try{ await api({ action:'reagit', id, emoji:b.dataset.e }); await charge(); }catch(err){} }
@@ -387,7 +417,7 @@ function fil(depuis){
     (m.genre === 'video' ? '<video playsinline loop preload="none"' + (affiche ? ' poster="' + affiche + '"' : '') + ' data-src="' + API + '?vid=' + m.id + '"></video><div class="tap">▶</div><div class="prog"><i></i></div>' : '<img class="ph" loading="lazy" src="' + affiche + '" alt="">') +
     '<div class="ombre"></div>' + (r.brut && m.texte ? '<div class="mot">' + esc(m.texte) + '</div>' : '') +
     '<div class="info"><span class="qui">' + esc(m.auteur) + ' <small>· ' + quand(m.cree) + '</small></span>' + (m.texte && !r.brut ? '<p>' + esc(m.texte) + '</p>' : '') + (titreMus(m) ? '<span class="musl"><span>🎵 ' + esc(titreMus(m)) + ' · ' + esc(titreMus(m)) + '</span></span>' : '') + '</div>' +
-    '<div class="cote">' + (tete(m.auteur) ? '<img class="av" src="' + tete(m.auteur) + '" alt="">' : '') + reac(m) + (m.mien || ADMIN ? '<button type="button" data-del="' + m.id + '" aria-label="Effacer">🗑️</button>' : '') + (titreMus(m) ? '<div class="disque" aria-hidden="true">🎵</div>' : '') + '</div></section>'; }).join('');
+    '<div class="cote">' + (tete(m.auteur) ? '<img class="av" src="' + tete(m.auteur) + '" alt="">' : '') + reac(m) + '<button type="button" data-com="1" aria-label="Commentaires">💬<small>' + ((m.coms || []).length || '') + '</small></button>' + (m.mien || ADMIN ? '<button type="button" data-del="' + m.id + '" aria-label="Effacer">🗑️</button>' : '') + (titreMus(m) ? '<div class="disque" aria-hidden="true">🎵</div>' : '') + '</div></section>'; }).join('');
   const haut = document.createElement('div'); haut.className = 'reels-haut'; haut.innerHTML = '<button type="button" id="fFerme">✕ Fermer</button><button type="button" id="fSon">🔊 Son</button>';
   document.body.append(box, haut); document.body.style.overflow = 'hidden';
   if(items.length > 1){ const g = document.createElement('div'); g.className = 'glisse'; g.textContent = '☝️ Glisse vers le haut'; box.appendChild(g); setTimeout(() => g.remove(), 2700); }
@@ -422,9 +452,24 @@ function fil(depuis){
   // toucher = pause / lecture ; double-toucher = ❤️ (avec un gros cœur)
   async function aime(r, m, x, y){ const c = document.createElement('div'); c.className = 'coeur'; c.textContent = '❤️'; c.style.left = x + 'px'; c.style.top = y + 'px'; r.appendChild(c); setTimeout(() => c.remove(), 950);
     const b = r.querySelector('[data-e="❤️"]'); if(b && !b.classList.contains('on')){ try{ await api({ action:'reagit', id:m.id, emoji:'❤️' }); b.classList.add('on'); const sm = b.querySelector('small'); sm.textContent = (+sm.textContent || 0) + 1; }catch(err){} } }
+  // 23/11 : les commentaires dans le fil, sur une feuille qui monte du bas (la vidéo continue derrière)
+  function feuille(r, m){ box.querySelector('.feuille')?.remove(); const f = document.createElement('div'); f.className = 'feuille';
+    const remplit = () => { f.innerHTML = '<div class="f-haut"><b>💬 Commentaires</b><button type="button" class="f-x" aria-label="Fermer">✕</button></div><div class="f-liste">' + (lignesComs(m, true) || '<p class="f-vide">Sois le premier à commenter ! ✨</p>') + '</div>' +
+      '<form class="com-f"><input type="text" maxlength="200" placeholder="Écrire un commentaire…" aria-label="Écrire un commentaire" enterkeyhint="send"><button type="submit" aria-label="Envoyer">➤</button></form>';
+      const sm = r.querySelector('[data-com] small'); if(sm) sm.textContent = (m.coms || []).length || ''; };
+    remplit(); r.appendChild(f);
+    f.addEventListener('click', async e => { e.stopPropagation(); const b = e.target.closest('button'); if(!b) return;
+      if(b.classList.contains('f-x')) f.remove();
+      else if(b.dataset.dc && confirm('Effacer ce commentaire ?')){ try{ await api({ action:'decommente', cid:b.dataset.dc }); m.coms = (m.coms || []).filter(c => c.id !== +b.dataset.dc); remplit(); }catch(err){ alert(err.message); } } });
+    f.addEventListener('submit', async e => { e.preventDefault(); const inp = f.querySelector('input'), t = inp.value.trim(); if(!t) return;
+      if(!qui){ alert('Choisis d\'abord qui écrit, sur la page du mur 🙂'); return; }
+      inp.disabled = true; try{ const j = await api({ action:'commente', id:m.id, auteur:qui, texte:t }); (m.coms = m.coms || []).push({ id:j.id, auteur:qui, texte:t, cree:Math.floor(Date.now() / 1000), mien:true }); remplit(); f.querySelector('input').focus(); }
+      catch(err){ alert(err.message); inp.disabled = false; } });
+    f.addEventListener('keydown', e => e.stopPropagation()); setTimeout(() => f.querySelector('input').focus(), 50); }
   let dernierTap = 0, tapT = 0;
   box.addEventListener('click', async e => { const b = e.target.closest('button'), r = e.target.closest('.reel'); if(!r) return; const id = +r.dataset.id, m = items.find(x => x.id === id);
     if(b && b.dataset.e){ try{ await api({ action:'reagit', id, emoji:b.dataset.e }); const on = b.classList.toggle('on'); const sm = b.querySelector('small'); const n = (+sm.textContent || 0) + (on ? 1 : -1); sm.textContent = n > 0 ? n : ''; }catch(err){} return; }
+    if(b && b.dataset.com){ feuille(r, m); return; }
     if(b && b.dataset.del){ if(!confirm('Effacer définitivement ' + (m.genre === 'video' ? 'cette vidéo' : 'cette photo') + ' ?')) return; try{ await api({ action:'supprime', id }); r.remove(); if(!box.querySelector('.reel')) ferme(); }catch(err){ alert(err.message); } return; }
     if(b) return;
     const now = Date.now(), rc = r.getBoundingClientRect();

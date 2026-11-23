@@ -170,7 +170,10 @@ function ouvre(o){
   async function direct(){
     stopTout(); const { cv, g } = lecteur;
     vid.currentTime = Math.min(.8, Math.max(0, S.duree - .1)); await new Promise(ok => { vid.onseeked = ok; setTimeout(ok, 1500); });
-    dessine(g, .8, true); resultat(S.brut, cv.toDataURL('image/jpeg', .82), true);
+    // 23/11 : l'affiche garde la forme de la vidéo (avant : 9:16 avec des bandes floues, la vignette du mur paraissait « hachée »)
+    const vw = vid.videoWidth || W, vh = vid.videoHeight || H, k = Math.min(1, 1080 / Math.max(vw, vh)), c2 = document.createElement('canvas');
+    c2.width = Math.round(vw * k); c2.height = Math.round(vh * k); try{ c2.getContext('2d').drawImage(vid, 0, 0, c2.width, c2.height); }catch(e){ dessine(g, .8, true); }
+    resultat(S.brut, (c2.width > 2 ? c2 : cv).toDataURL('image/jpeg', .85), true);
   }
   /* ---------- 3 · la fabrication : on rejoue une fois en enregistrant le canvas et le son ---------- */
   async function fabrique(debit = DEBIT){
