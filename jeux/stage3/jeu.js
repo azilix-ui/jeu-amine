@@ -161,7 +161,7 @@ function evenements(){ for(const e of G.ev){
   else if(e.k === 'ecrase'){ son('ecrase', () => bip(300, .15, 'square', .06, 600)); }
   else if(e.k === 'bouclier'){ bulle('🎩 La chéchia t\'a protégé !'); }
   else if(e.k === 'lanterne'){ son('lampe'); bulle(e.soin ? '🏮 La lanterne te redonne de la force ❤️' : '🏮 Une lanterne', 1300); }
-  else if(e.k === 'arrive'){ son('victoire'); klaxon(); parle('arrive'); G.danse = performance.now() / 1000; { const g0 = G; setTimeout(() => G === g0 && fin(), 3200); }; if(L) L.arrive(G); }
+  else if(e.k === 'arrive'){ son('victoire'); klaxon(); parle('arrive'); G.danse = performance.now() / 1000; { const g0 = G; setTimeout(() => G === g0 && fin(), 4600); }; if(L) L.arrive(G); }
   else if(e.k === 'rate'){ klaxon(); parle('rate'); { const g0 = G; setTimeout(() => G === g0 && fin(), 2600); }; if(L) L.rate(G, 'rate'); }
   else if(e.k === 'ko'){ son('chute'); parle('ko'); { const g0 = G; setTimeout(() => G === g0 && fin(), 2600); }; if(L) L.rate(G, 'ko'); }
 } G.ev.length = 0; }
@@ -174,7 +174,7 @@ function frame(now){
   if(G && (etat === 'course' || (etat === 'compte' && now >= depart) || etat === 'fin-attente')){
     lisCommandes(); acc += dt; while(acc >= PAS){ pas(G, G.etat === 'course' ? C : {}, PAS); acc -= PAS; } evenements();
     if(G.etat === 'course' && !presse && G.limite - G.t < 15){ presse = true; parle('presse'); klaxon(); } }
-  if(G){ const cible = G.h.x - VW * .3; camX += (cible - camX) * Math.min(1, dt * 8); if(G.h.chute > 0) camX = Math.min(camX, G.h.x - VW * .3); dessine(now / 1000); rendHud(); }
+  if(G){ const cible = (G.etat === 'arrive' && G.vuX ? G.vuX : G.h.x) - VW * .3; camX += (cible - camX) * Math.min(1, dt * 8); if(G.h.chute > 0) camX = Math.min(camX, G.h.x - VW * .3); dessine(now / 1000); rendHud(); }
   if(L && G) L.avance(dt);
   requestAnimationFrame(frame);
 }
@@ -199,8 +199,9 @@ function dessine(t){
   // la gare et le TGM
   const gx = P.gare, ig = IMo('gare'); if(ok(ig)){ const w = 330, h = Math.min(w * ig.naturalHeight / ig.naturalWidth, 260), w2 = h * ig.naturalWidth / ig.naturalHeight; ctx.drawImage(ig, gx + 30 - w2, -h + 6, w2, h); }
   ctx.fillStyle = '#8a8a8a'; ctx.fillRect(gx - 40, -4, 900, 4);
-  let tx = gx + 60; if(G.etat === 'rate' || (G.etat === 'arrive' && G.danse && t - G.danse > 1.6)){ G.trainT = G.trainT || t; tx += Math.pow(t - G.trainT, 2) * 160; }
-  const it = IMo('tgm'); if(ok(it)){ const w = 640, h = Math.min(w * it.naturalHeight / it.naturalWidth, 230), w2 = h * it.naturalWidth / it.naturalHeight; if(W.v.f){ ctx.fillStyle = motif('t_mer', 80) || '#2a7fc0'; ctx.fillRect(gx + 40, 0, 1400, BAS + 10); } ctx.drawImage(it, tx, -h + (W.v.f ? h * .18 : -2), w2, h); }
+  let tx = gx + 60; if(G.etat === 'rate' || (G.etat === 'arrive' && G.danse && t - G.danse > MONTE)){ G.trainT = G.trainT || t; tx += Math.pow(t - G.trainT, 2) * 160; }
+  G.tx = tx;
+  const it = IMo('tgm'); if(ok(it)){ const w = 640, h = Math.min(w * it.naturalHeight / it.naturalWidth, 230), w2 = h * it.naturalWidth / it.naturalHeight; if(W.v.f){ ctx.fillStyle = motif('t_mer', 80) || '#2a7fc0'; ctx.fillRect(gx + 40, 0, 1400, BAS + 10); } ctx.drawImage(it, tx, -h + (W.v.f ? h * .18 : -2), w2, h); G.porte = [w2 * (W.v.f ? .35 : .22), -h * (W.v.f ? .42 : .14)]; }
   if(G.etat === 'course' && G.limite - G.t < 6 && Math.sin(t * 10) > 0){ ctx.fillStyle = '#ffdd33'; ctx.font = '800 22px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🔔', tx + 40, -150); }
   // les lanternes
   for(const lx of P.lanternes) if(lx > x0 && lx < x1 && ok(IM.lanterne)){ ctx.globalAlpha = G.lanterne >= lx ? 1 : .75; ctx.drawImage(IM.lanterne, lx - 10, -92, 22, 90); ctx.globalAlpha = 1; }
@@ -234,7 +235,12 @@ function dessine(t){
   // les autres coureurs (en ligne), en transparence, puis soi
   if(L) for(const o of L.fantomes()){ if(o.x < x0 - 60 || o.x > x1) continue; heros(o.C, { x:o.x, y:o.y, vx:o.vx, vy:o.vy, sol:o.a === 0, glisse:o.a === 2, sonne:o.a >= 3 ? (o.a === 4 ? .3 : 2) : 0, sonneMax:o.a === 5 ? 99 : 3, chute:0, inv:0 }, t, .5, o.danse ? o.danse : 0, o.nom); }
   dessinePoussiere(1 / 60);
-  heros(G.moiC, G.h, t, 1, G.danse || 0);
+  if(G.etat === 'arrive' && G.danse){   // 24/11 : il danse, saute dans le train, puis part avec lui en saluant
+    const a = t - G.danse, p = G.porte || [140, -20], xd = gx + 60 + p[0], h = G.h;
+    if(a < 1) heros(G.moiC, h, t, 1, G.danse);
+    else if(a < MONTE){ const u = (a - 1) / (MONTE - 1), x = h.x + (xd - h.x) * u, y = p[1] * u - Math.sin(u * Math.PI) * 70; G.vuX = x; heros(G.moiC, { x, y, vx:200, vy:u < .5 ? -300 : 300, sol:false, inv:0 }, t, 1, 0); }
+    else { const x = G.tx + p[0]; G.vuX = x; heros(G.moiC, { x, y:p[1], vx:0, vy:0, sol:true, inv:0 }, t, 1, 0, null, true); } }
+  else heros(G.moiC, G.h, t, 1, G.danse || 0);
   ctx.restore();
 }
 // la poussière de la glissade (dessinée par le code)
@@ -244,7 +250,8 @@ function etoilesSonne(x, y, t, r = 1){ for(let k = 0; k < 3; k++){ const a = t *
 // une pose du Stage 3 (glisse, tombe, releve), posée au sol, centrée sur le héros ; renvoie sa boîte (pour les étoiles)
 function pose(Cp, nom, k, dx = 0){ const P = Cp && Cp.p, q = P && P.poses && P.poses[nom]; if(!q) return null; const s = 76 * k / P.ref, w = q[2] * s, h = q[3] * s;
   ctx.drawImage(P.im, q[0], q[1], q[2], q[3], -w / 2 + dx, -h, w, h); return { w, h }; }
-function heros(Cp, h, t, alpha, danse, nom){
+const MONTE = 1.55;   // le moment où il est monté dans le train
+function heros(Cp, h, t, alpha, danse, nom, salue){
   const B = Cp && Cp.im; if(h.inv > 0 && !(h.sonne > 0) && Math.sin(t * 40) > 0 && alpha === 1) return;
   ctx.save(); ctx.translate(h.x, h.y); ctx.globalAlpha = alpha;
   if(!B){ ctx.fillStyle = '#1f5fbf'; ctx.fillRect(-10, -66, 20, 66); ctx.restore(); return; }
@@ -263,7 +270,8 @@ function heros(Cp, h, t, alpha, danse, nom){
   else if(h.glisse || h.glissade > 0){ const bx = pose(Cp, 'glisse', k, 6); if(bx){ fait = true; if(alpha === 1 && Math.random() < .5) poussiere.push({ x:h.x - 22 + Math.random() * 8, y:-3 - Math.random() * 4, t:0 }); } else fait = geste(1, Math.floor(t * 14)); }
   if(!fait){ let f; const air = !h.sol;
     if(h.chute > 0 || h.trebuche > 0) f = 15; else if(air) f = h.vy < -260 ? 13 : h.vy < -90 ? 14 : h.vy < 90 ? 15 : h.vy < 300 ? 16 : 17; else if(Math.abs(h.vx) > 20) f = Math.floor(t * Math.max(8, Math.abs(h.vx) / 22)) % 12; else f = 20;
-    if(h.vx < -20) ctx.scale(-1, 1); debout(f); }
+    if(salue) f = 21;   // dans le train : de face, il salue
+    if(h.vx < -20) ctx.scale(-1, 1); debout(f); if(salue){ ctx.font = '22px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(Math.sin(t * 8) > 0 ? '👋' : '✋', 26 * k, -70 * k); } }
   ctx.globalAlpha = 1;
   if(nom){ ctx.font = '800 12px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(11,30,70,.75)'; const w = ctx.measureText(nom).width + 12; ctx.fillRect(-w / 2, -96, w, 16); ctx.fillStyle = '#fff'; ctx.fillText(nom, 0, -84); }
   if(alpha === 1 && G.h.chechia){ ctx.font = '18px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🎩', 0, -84); }
@@ -288,15 +296,16 @@ function fin(){ if(!G || etat === 'fin') return; const r = resultat(G), mode = G
       if(mo < NMONDES && sv.ouvert <= mo){ sv.ouvert = mo + 1; ouvre = true; }
       if(window.Famille) Famille.score('stage3', cle, r.score, joueur).catch(() => {}); } sauve(); }
   if(L){ L.fin(r); return; }
+  const suite = r.gagne && mo < NMONDES;   // le monde suivant est toujours proposé après une victoire (24/11 : déjà ouvert, le bouton manquait)
   const titre = r.gagne ? `🎉 Tu as attrapé ${V.le} !` : G.etat === 'ko' ? '💔 Plus de force…' : `😢 ${V.Le} est parti…`;
   $('finBox').innerHTML = `<h2>${titre}</h2>${r.gagne ? `<div class="etoiles">${'⭐'.repeat(r.etoiles)}${'☆'.repeat(3 - r.etoiles)}</div>` : ''}
     <div class="res"><span>⏱️ Temps</span><b>${r.temps} s</b>${r.gagne ? `<span>🚋 Avance sur le départ</span><b>${r.reste} s</b>` : ''}<span>🪙 Dinars</span><b>${r.dinars} / ${r.total}</b><span>🌼 Jasmins</span><b>${r.jasmins} / 3</b>${r.gagne ? `<span>🏆 Score</span><b>${r.score}</b>` : ''}</div>
     ${ouvre ? `<p style="font-weight:800;color:var(--gold)">🔓 Nouveau monde ouvert : ${MONDES[mo + 1].nom} !</p>` : ''}
     <p>${r.gagne ? (r.etoiles < 3 ? 'Pour plus d\'étoiles : ramasse plus de dinars, et prends de l\'élan (▶) pour les jasmins tout en haut.' : `Parfait ! Tu es le roi de ${MONDES[mo].nom} !`) : G.etat === 'ko' ? 'Chaque choc te fait tomber : saute plus tôt, glisse sous ce qui pend, et ralentis (◀) quand ça se complique.' : 'Saute plus tôt, glisse dessous, et cours plus vite (▶) quand la rue est libre.'}</p>
-    <div class="rang">${ouvre ? '<button class="btn" id="fSuite">▶ Monde suivant</button>' : ''}<button class="btn${ouvre ? ' gris' : ''}" id="fRe">↻ Recommencer</button><button class="btn gris" id="fMenu">🏠 Menu</button></div>`;
+    <div class="rang">${suite ? '<button class="btn" id="fSuite">▶ Monde suivant</button>' : ''}<button class="btn${suite ? ' gris' : ''}" id="fRe">↻ Recommencer</button><button class="btn gris" id="fMenu">🏠 Menu</button></div>`;
   montre('fin'); document.body.classList.remove('joue');
   $('fRe').onclick = () => partie((Math.random() * 2 ** 31) | 0, mode, mo); $('fMenu').onclick = () => quitter();
-  if(ouvre) $('fSuite').onclick = () => { prefs.monde = mo + 1; sauvePrefs(); partie((Math.random() * 2 ** 31) | 0, mode, mo + 1); }; }
+  if(suite) $('fSuite').onclick = () => { prefs.monde = mo + 1; sauvePrefs(); partie((Math.random() * 2 ** 31) | 0, mode, mo + 1); }; }
 
 /* ---------- le menu ---------- */
 function menu(){ etat = 'menu'; montre('menu'); document.body.classList.remove('joue');
