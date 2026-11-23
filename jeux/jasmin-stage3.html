@@ -46,6 +46,8 @@ p{margin:0;line-height:1.35}
 .choix button.on{border-color:var(--gold);background:rgba(255,201,60,.18)}
 .choix img{width:36px;height:36px;border-radius:50%;object-fit:cover}
 .choix small{font-weight:600;color:var(--mist);font-size:11px}
+.mondes button{width:118px;padding:0 0 6px;overflow:hidden;gap:4px}.mondes button .im{width:100%;height:54px;background:#123 center/cover;display:grid;place-items:center;font-size:24px}
+.mondes button.ferme{opacity:.55}.mondes button.ferme .im{filter:grayscale(1) brightness(.6)}
 .etoiles{color:var(--gold);font-size:22px;letter-spacing:2px}
 .touches{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;font-size:15px;color:var(--mist)}
 .touches kbd{font-family:var(--display);background:rgba(255,255,255,.14);border-radius:6px;padding:0 6px;color:#fff}
@@ -99,7 +101,7 @@ body.menu .back{display:block}
 <body class="menu">
 <canvas id="cv" aria-label="La course du TGM"></canvas>
 <a class="back" href="legende-du-jasmin-3.html">← Le Jasmin</a>
-<div id="hud"><div class="l"><div id="vie"></div><div><span id="hVies">❤️ 3</span> · <span id="hDin">🪙 0</span> · <span id="hJas">🌼 0/3</span></div></div>
+<div id="hud"><div class="l"><div id="vie"></div><div><span id="hVies">Monde 1</span> · <span id="hDin">🪙 0</span> · <span id="hJas">🌼 0/3</span></div></div>
   <div class="c"><div id="chrono">🚋 Le TGM part dans 1:00</div><div id="piste"><b>🚋</b></div></div></div>
 <button id="pauseB" aria-label="Pause">⏸</button>
 <div id="tactile"><button class="tb" id="bLent" aria-label="Ralentir">◀</button><button class="tb" id="bVite" aria-label="Courir plus vite">▶</button>
@@ -108,11 +110,12 @@ body.menu .back{display:block}
 <div id="compte"></div><div id="bulle"></div><div id="invit"></div>
 
 <section class="screen on" id="menu"><div class="box">
-  <h1>Le TGM n'attend pas ! <small>Jasmin · Stage 3 · Monde 1 : Sidi Bou Saïd</small></h1>
-  <p>Cours dans les rues de Sidi Bou Saïd pour attraper le TGM avant qu'il parte ! Saute par-dessus les poubelles, glisse sous le linge, attention aux peaux de banane et à l'huile…</p>
+  <h1 id="mTitre">Le TGM n'attend pas ! <small>Jasmin · Stage 3 · Monde 1 : Sidi Bou Saïd</small></h1>
+  <p id="mIntro">Cours dans les rues de Sidi Bou Saïd pour attraper le TGM avant qu'il parte !</p>
   <button id="who"></button>
+  <p class="lab">Le monde</p><div class="choix mondes" id="mondes"></div>
   <p class="lab">Ton héros (ton score reste à toi)</p><div class="choix" id="heros"></div>
-  <p class="lab">La course</p><div class="choix" id="modes"><button data-m="tranquille">🐢 Tranquille<small>plus de temps, plus de vie</small></button><button data-m="champion">🐆 Champion<small>plus long, plus vite</small></button></div>
+  <p class="lab">La course</p><div class="choix" id="modes"><button data-m="tranquille">🐢 Tranquille<small>plus lent, plus de vie</small></button><button data-m="champion">🐆 Champion<small>plus long, plus vite</small></button></div>
   <div class="rang"><button class="btn" id="solo">▶ Courir</button><button class="btn bleu" id="ligne">🌍 Courir ensemble en ligne</button></div>
   <div class="rang"><button class="btn gris" id="oRecs">🏆 Records</button><button class="btn gris" id="oOpts">⚙️ Réglages</button><button class="btn gris" id="oHelp">❓ Comment jouer</button></div>
   <p id="mRec" style="color:var(--mist);font-size:14px"></p>
@@ -127,8 +130,8 @@ body.menu .back{display:block}
     <kbd>◀ ←</kbd><span>Ralentir</span>
     <kbd>P Échap</kbd><span>Pause</span>
   </div>
-  <p>Ton héros court tout seul. Heurter une poubelle, des sacs, une caisse, une barrière ou un animal enlève un morceau de vie ; glisser sur une peau de banane ou de l'huile aussi ; tomber dans un trou en enlève deux. Saute sur le chat, le chien ou le scooter pour les étourdir !</p>
-  <p>🍵 Le thé fait courir plus vite, 🎩 la chéchia protège d'un coup, 🏮 la lanterne garde ta place. Ramasse les dinars et les 3 jasmins dorés (tout en haut : prends de l'élan !). Arrive à la gare avant que le TGM parte : ⭐ attrapé, ⭐⭐ avec 60 % des dinars, ⭐⭐⭐ avec les 3 jasmins.</p>
+  <p>Ton héros court tout seul et n'a <b>qu'une vie</b> : la barre rouge en haut. Chaque choc contre un obstacle ou un animal, chaque glissade sur une peau de banane ou une flaque en enlève un morceau, et le héros tombe, sonné 💫, quelques secondes avant de se relever (le temps passe !). Un trou en enlève deux. Barre vide : c'est fini, on recommence. Saute sur les animaux pour les étourdir !</p>
+  <p>🍵 Le thé fait courir plus vite, 🎩 la chéchia protège d'un coup, 🏮 la lanterne redonne un morceau de vie. Ramasse les dinars et les 3 jasmins dorés (tout en haut : prends de l'élan !). Arrive avant le départ : ⭐ attrapé, ⭐⭐ avec 60 % des dinars, ⭐⭐⭐ avec les 3 jasmins. Réussir un monde ouvre le suivant.</p>
   <button class="btn" id="aideOk">C'est parti</button>
 </div></section>
 
@@ -143,12 +146,13 @@ body.menu .back{display:block}
 
 <section class="screen" id="pause"><div class="box">
   <h2>⏸ Pause</h2>
-  <p id="pauseTxt">Le TGM attend que tu reviennes… mais pas longtemps !</p>
+  <p id="pauseTxt">On t'attend… mais pas longtemps !</p>
   <div class="rang"><button class="btn" id="pReprend">▶ Reprendre</button><button class="btn gris" id="pRecommence">↻ Recommencer</button><button class="btn gris" id="pMenu">🏠 Menu</button></div>
 </div></section>
 
 <section class="screen" id="recs"><div class="box">
   <h2>🏆 Records de la famille</h2>
+  <div class="choix" id="recMondes"></div>
   <div class="choix" id="recTabs"><button data-r="tranquille" class="on">🐢 Tranquille</button><button data-r="champion">🐆 Champion</button></div>
   <div class="res" id="recList"></div>
   <button class="btn gris" id="recOk">Retour</button>
@@ -160,5 +164,6 @@ body.menu .back{display:block}
 <script src="../famille.js"></script>
 <script src="sons/sons.js"></script>
 <script src="stage2/heros/heros.js?v=11"></script>
-<script type="module" src="stage3/jeu.js?v=1"></script>
+<script src="stage3/heros/poses.js?v=1"></script>
+<script type="module" src="stage3/jeu.js?v=2"></script>
 </body></html>

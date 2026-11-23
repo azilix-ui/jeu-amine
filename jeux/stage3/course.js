@@ -1,12 +1,22 @@
 /* Jasmin · Stage 3 — la course du TGM : les règles, sans dessin (importable en Node : docs/stage3/test-course.mjs).
    Le héros court tout seul dans les rues de Sidi Bou Saïd pour attraper le TGM avant qu'il parte.
    Repère : x vers la droite, y vers le bas ; le sol est à y = 0 (le dessus des choses est négatif). Le héros est posé par ses pieds.
-   Même graine = même parcours sur toutes les tablettes (la course en ligne). Pas fixe de 1/120 s. */
+   Même graine = même parcours sur toutes les tablettes (la course en ligne). Pas fixe de 1/120 s.
+   24/11 (demande du papa) : une seule vie (la barre se vide à chaque choc ; vide = c'est fini, comme au Stage 2) ; un choc fait tomber
+   le héros, sonné, quelques secondes avant de se relever ; le temps accordé = le double du temps du robot (LIMITE) ; 6 mondes (DIFF). */
 
 export const PAS = 1 / 120;
 export const MODES = {
-  tranquille:{ L:11000, v:250, temps:1.85, morceaux:8, vies:3, trouMax:100, ecart:[300, 470], doubles:false },
-  champion:{ L:15000, v:320, temps:1.3, morceaux:6, vies:3, trouMax:150, ecart:[230, 380], doubles:true },
+  tranquille:{ L:11000, v:250, morceaux:10, vies:1, sonne:1.5, trouMax:100, ecart:[300, 470], doubles:false },
+  champion:{ L:15000, v:320, morceaux:8, vies:1, sonne:1.9, trouMax:150, ecart:[230, 380], doubles:true },
+};
+// la difficulté de chaque monde (1 à 6) : un peu plus long, un peu plus vite, plus de trous et d'ennemis
+export const NMONDES = 6;
+const DIFF = m => ({ L:1 + (m - 1) * .05, v:1 + (m - 1) * .025, p:(m - 1) * .12 });
+// le temps accordé (en secondes) = le double du temps du robot de docs/stage3/test-course.mjs (moyenne arrondie à 5 s), par monde
+export const LIMITE = {
+  tranquille:[0, 70, 70, 75, 75, 80, 80],
+  champion:[0, 80, 85, 85, 90, 95, 95],
 };
 const G_ = 2300, SAUT = 790, MAINTIEN = .22, H_DEBOUT = 70, H_GLISSE = 34, DEMI = 14;
 
@@ -17,11 +27,11 @@ export function alea(graine){ let s = (graine >>> 0) || 1; return () => { s ^= s
 // obstacles : { t, x, w, h } posés au sol (pleins : poubelle, sacs, cageot, barriere) ; glissants : banane, huile (h = 0) ;
 // au-dessus : linge (de y = -haut à y = -bas : il faut glisser dessous) ; trous : { x, w } ; ennemis : chat, chien, scooter, mouette
 const PLEINS = { poubelle:{ w:40, h:58 }, sacs:{ w:56, h:32 }, cageot:{ w:46, h:40 }, barriere:{ w:62, h:46 } };
-export function parcours(graine, mode = 'champion'){
-  const M = MODES[mode], r = alea(graine), entre = (a, b) => a + r() * (b - a), un = a => a[Math.floor(r() * a.length)];
-  const P = { graine, mode, L:M.L, obstacles:[], trous:[], linges:[], ennemis:[], pieces:[], jasmins:[], bonus:[], lanternes:[], gare:M.L };
+export function parcours(graine, mode = 'champion', monde = 1){
+  const D = DIFF(monde), M = Object.assign({}, MODES[mode], { L:Math.round(MODES[mode].L * D.L / 100) * 100 }), r = alea(graine), entre = (a, b) => a + r() * (b - a), un = a => a[Math.floor(r() * a.length)];
+  const P = { graine, mode, monde, L:M.L, obstacles:[], trous:[], linges:[], ennemis:[], pieces:[], jasmins:[], bonus:[], lanternes:[], gare:M.L };
   const types = ['poubelle', 'sacs', 'cageot', 'barriere', 'banane', 'huile', 'linge', 'trou', 'chat', 'chien', 'scooter', 'mouette'];
-  const poids = p => ({ poubelle:3, sacs:2, cageot:2, barriere:2, banane:1.5, huile:1.2, linge:1.5 + p, trou:1 + p * 2, chat:1.2, chien:.6 + p, scooter:.4 + p * 1.6, mouette:.8 + p }) ;
+  const poids = q => { const p = q + D.p; return { poubelle:3, sacs:2, cageot:2, barriere:2, banane:1.5, huile:1.2, linge:1.5 + p, trou:1 + p * 2, chat:1.2, chien:.6 + p, scooter:.4 + p * 1.6, mouette:.8 + p }; };
   let x = 700, n = 0, dernier = '';
   while(x < M.L - 600){
     const p = x / M.L, w = poids(p); let tot = 0; for(const k of types) if(k !== dernier) tot += w[k]; let q = r() * tot, t = types[0];
@@ -48,7 +58,7 @@ export function parcours(graine, mode = 'champion'){
   // bonus : thé (vitesse), chéchia (bouclier)
   [.18, .6].forEach(f => P.bonus.push({ t:'the', x:M.L * f, y:-40 })); P.bonus.push({ t:'chechia', x:M.L * .4, y:-40 });
   P.bonus.forEach(b => { while(dansTrou(P, b.x) || P.obstacles.some(o => b.x > o.x - 30 && b.x < o.x + o.w + 30)) b.x += 25; });
-  // les lanternes (on repart de là après une vie perdue)
+  // les lanternes (elles redonnent un morceau de vie)
   for(let k = 1; k <= 3; k++){ let lx = M.L * k / 4; while(dansTrou(P, lx) || P.obstacles.some(o => lx > o.x - 60 && lx < o.x + o.w + 60)) lx += 30; P.lanternes.push(lx); }
   // une pièce posée dans un trou ou dans un obstacle remonte au-dessus
   P.pieces = P.pieces.filter(p => p.x > 400 && p.x < M.L - 200);
@@ -57,10 +67,10 @@ export function parcours(graine, mode = 'champion'){
 export const dansTrou = (P, x) => P.trous.some(t => x > t.x && x < t.x + t.w);
 
 /* ---------- une partie ---------- */
-export function nouvellePartie(graine, mode = 'champion'){
-  const M = MODES[mode], P = parcours(graine, mode);
-  return { M, P, t:0, limite:Math.round(P.L / M.v * M.temps), etat:'course',
-    h:{ x:120, y:0, vx:0, vy:0, sol:true, glisse:false, maintien:0, chute:0, glissade:0, trebuche:0, inv:0, the:0, chechia:false, morceaux:M.morceaux, coyote:0, tampon:0, mort:0, repartX:120, fin:0 },
+export function nouvellePartie(graine, mode = 'champion', monde = 1){
+  const D = DIFF(monde), M = Object.assign({}, MODES[mode], { v:MODES[mode].v * D.v }), P = parcours(graine, mode, monde);
+  return { M, P, monde, t:0, limite:(LIMITE[mode] || [])[monde] || Math.round(P.L / M.v * 2.4), etat:'course',
+    h:{ sonne:0, sonneMax:0, x:120, y:0, vx:0, vy:0, sol:true, glisse:false, maintien:0, chute:0, glissade:0, trebuche:0, inv:0, the:0, chechia:false, morceaux:M.morceaux, coyote:0, tampon:0, mort:0, repartX:120, fin:0 },
     vies:M.vies, dinars:0, jasmins:0, ecrases:0, pris:new Set(), ennemis:P.ennemis.map(e => ({ ...e, x:e.x0, y:e.y0, actif:false, etourdi:0, parti:false })), tombes:new Set(), glisses:new Set(),
     lanterne:120, ev:[] };
 }
@@ -68,20 +78,37 @@ const ev = (g, k, o) => g.ev.push(Object.assign({ k }, o || {}));
 
 function blesse(g, n, x){ const h = g.h; if(h.inv > 0 || g.etat !== 'course') return false;
   if(h.chechia){ h.chechia = false; h.inv = 1; ev(g, 'bouclier'); return true; }
-  h.morceaux -= n; h.inv = 1.3; h.trebuche = .45; h.vx = -90; ev(g, 'aie', { n, x });
-  if(h.morceaux <= 0) perdVie(g); return true; }
-function perdVie(g){ const h = g.h; g.vies--; ev(g, 'vie', { vies:g.vies });
-  if(g.vies <= 0){ g.etat = 'ko'; ev(g, 'ko'); return; }
-  h.morceaux = g.M.morceaux; h.x = g.lanterne; h.y = 0; h.vx = 0; h.vy = 0; h.inv = 2; h.trebuche = .3; h.glissade = 0; h.chute = 0; h.sol = true; }
+  h.morceaux -= n; ev(g, 'aie', { n, x });
+  if(h.morceaux <= 0){ meurt(g); return true; }
+  // il tombe, sonné : il reste par terre quelques secondes, puis se relève
+  h.sonne = h.sonneMax = g.M.sonne; h.inv = g.M.sonne + 1.1; h.vx = 0; h.glissade = 0; h.trebuche = 0; ev(g, 'sonne'); return true; }
+function meurt(g){ const h = g.h; h.morceaux = 0; g.vies = 0; g.etat = 'ko'; h.sonne = h.sonneMax = 99; h.vx = 0; ev(g, 'vie', { vies:0 }); ev(g, 'ko'); }
+
+// les ennemis : ils se mettent en route quand le héros approche ; sauter dessus les étourdit
+function ennemis(g, dt, seul, py = 0, haut = H_DEBOUT){ const h = g.h;
+  for(const e of g.ennemis){
+    if(!e.actif && e.x - h.x < 820) e.actif = true;
+    if(!e.actif || e.parti) continue;
+    if(e.etourdi > 0){ e.etourdi -= dt; if(e.etourdi <= 0) e.parti = true; continue; }
+    e.x += e.vx * dt; if(e.t === 'mouette') e.y = e.y0 + Math.sin(g.t * 4 + e.x0) * 10;
+    if(e.x < h.x - 900) { e.parti = true; continue; }
+    if(seul) continue;
+    const ex0 = e.x - e.w / 2, ex1 = e.x + e.w / 2, ey1 = e.y, ey0 = e.y - e.h;
+    if(h.x + DEMI > ex0 && h.x - DEMI < ex1 && h.y > ey0 && h.y - haut < ey1){
+      if(h.vy > 0 && py <= ey0 + 10){ e.etourdi = .7; h.vy = -560; h.maintien = 0; g.ecrases++; ev(g, 'ecrase', { e }); }
+      else if(blesse(g, 1, e.x)) e.etourdi = .7; }
+  } }
 
 /* un pas de jeu. C = { saut, bas, vite, lent } (touches tenues) */
 export function pas(g, C, dt = PAS){
-  if(g.etat === 'arrive' || g.etat === 'ko' || g.etat === 'rate'){ g.t += dt; return; }
+  if(g.etat === 'arrive' || g.etat === 'ko' || g.etat === 'rate'){ g.t += dt; if(g.h.sonne > 0) g.h.sonne -= dt; return; }
   g.t += dt; const h = g.h, M = g.M, P = g.P;
   if(g.t >= g.limite && g.etat === 'course'){ g.etat = 'rate'; ev(g, 'rate'); return; }   // le TGM est parti sans nous
   h.inv = Math.max(0, h.inv - dt); h.the = Math.max(0, h.the - dt); h.trebuche = Math.max(0, h.trebuche - dt);
   // tombé dans un trou : on attend un peu, puis on repart avant le trou
   if(h.chute > 0){ h.chute -= dt; h.vy += G_ * dt; h.y += h.vy * dt; if(h.chute <= 0){ if(g.etat === 'course'){ h.x = h.repartX; h.y = 0; h.vy = 0; h.vx = 0; h.sol = true; h.inv = 1.3; } } return; }
+  // sonné : il ne bouge plus jusqu'à ce qu'il soit relevé (les ennemis, eux, continuent)
+  if(h.sonne > 0){ h.sonne -= dt; h.vx = 0; h.glisse = false; h.vy += G_ * dt; h.y = Math.min(0, h.y + h.vy * dt); if(h.y >= 0){ h.vy = 0; h.sol = true; } if(h.sonne <= 0) ev(g, 'releve'); ennemis(g, dt, true); return; }
   // la vitesse
   let cible = M.v * (C.vite ? 1.35 : C.lent ? .55 : 1) * (h.the > 0 ? 1.3 : 1);
   if(h.trebuche > 0) cible = M.v * .25;
@@ -106,29 +133,18 @@ export function pas(g, C, dt = PAS){
       else if(h.inv <= 0 && px + DEMI <= o.x + 2) h.x = o.x - DEMI; } }
   if(h.y > 30 && h.chute <= 0){   // tombé dans un trou
     const t = P.trous.find(t => h.x + 60 > t.x && h.x - 60 < t.x + t.w); h.repartX = t ? t.x - 70 : h.x - 120; h.chute = .9; h.vx = 0; ev(g, 'trou');
-    h.morceaux -= 2; ev(g, 'aie', { n:2 }); if(h.morceaux <= 0) perdVie(g); return; }
+    h.morceaux -= 2; ev(g, 'aie', { n:2 }); if(h.morceaux <= 0) meurt(g); return; }
   // glisser sur une peau de banane ou une flaque d'huile
   if(h.sol && h.y === 0 && h.glissade <= 0) for(const o of P.obstacles){ if(!o.glisse || g.glisses.has(o)) continue; if(h.x > o.x && h.x < o.x + o.w){ g.glisses.add(o); h.glissade = .75; ev(g, 'glisse', { o }); } }
   // le linge : il faut glisser dessous
   for(const l of P.linges){ if(h.x + DEMI > l.x && h.x - DEMI < l.x + l.w && h.y - haut < l.bas && h.y > l.haut && !l.touche){ if(blesse(g, 1, l.x)){ l.touche = true; ev(g, 'linge', { l }); } } }
-  // les ennemis : ils se mettent en route quand le héros approche ; sauter dessus les étourdit
-  for(const e of g.ennemis){
-    if(!e.actif && e.x - h.x < 820) e.actif = true;
-    if(!e.actif || e.parti) continue;
-    if(e.etourdi > 0){ e.etourdi -= dt; if(e.etourdi <= 0) e.parti = true; continue; }
-    e.x += e.vx * dt; if(e.t === 'mouette') e.y = e.y0 + Math.sin(g.t * 4 + e.x0) * 10;
-    if(e.x < h.x - 900) { e.parti = true; continue; }
-    const ex0 = e.x - e.w / 2, ex1 = e.x + e.w / 2, ey1 = e.y, ey0 = e.y - e.h;
-    if(h.x + DEMI > ex0 && h.x - DEMI < ex1 && h.y > ey0 && h.y - haut < ey1){
-      if(h.vy > 0 && py <= ey0 + 10){ e.etourdi = .7; h.vy = -560; h.maintien = 0; g.ecrases++; ev(g, 'ecrase', { e }); }
-      else if(blesse(g, 1, e.x)) e.etourdi = .7; }
-  }
+  ennemis(g, dt, false, py, haut);
   // ramasser
   const cx = h.x, cy = h.y - haut / 2;
   P.pieces.forEach((p, i) => { if(g.pris.has('p' + i)) return; if(Math.abs(p.x - cx) < 26 && Math.abs(p.y - cy) < haut / 2 + 16){ g.pris.add('p' + i); g.dinars++; ev(g, 'piece', { i }); } });
   P.jasmins.forEach((p, i) => { if(g.pris.has('j' + i)) return; if(Math.abs(p.x - cx) < 30 && Math.abs(p.y - cy) < haut / 2 + 20){ g.pris.add('j' + i); g.jasmins++; ev(g, 'jasmin', { i }); } });
   P.bonus.forEach((b, i) => { if(g.pris.has('b' + i)) return; if(Math.abs(b.x - cx) < 28 && Math.abs(b.y - cy) < haut / 2 + 16){ g.pris.add('b' + i); if(b.t === 'the') h.the = 5; else h.chechia = true; ev(g, 'bonus', { t:b.t }); } });
-  for(const lx of P.lanternes) if(h.x > lx && g.lanterne < lx){ g.lanterne = lx; ev(g, 'lanterne', { x:lx }); }
+  for(const lx of P.lanternes) if(h.x > lx && g.lanterne < lx){ g.lanterne = lx; const s = h.morceaux < M.morceaux; if(s) h.morceaux++; ev(g, 'lanterne', { x:lx, soin:s }); }   // la lanterne redonne un morceau de vie
   // la gare : on saute dans le TGM
   if(h.x >= P.gare + 120 && h.sol){ g.etat = 'arrive'; g.h.fin = g.t; ev(g, 'arrive', { t:g.t }); }
   if(h.x < 0) h.x = 0;

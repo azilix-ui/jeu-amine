@@ -498,8 +498,8 @@ function yajourCard(S, player){
 }
 function stage3Card(S, player){
   const p = prog(S, player, 'stage3'), d = p && p.data ? p.data['stage3:' + player] || Object.values(p.data)[0] : null;
-  if(!d) return ''; const b = d.best || {}, t = b.tranquille || {}, c = b.champion || {};
-  return '<div class="subject"><h3>🚋 Jasmin · Stage 3 (la course du TGM)</h3><div class="kpis">' + kpi(d.gagnees || 0, 'TGM attrapés') + kpi(d.parties || 0, 'courses') + kpi((t.etoiles || 0) + ' ⭐', 'Tranquille') + kpi((c.etoiles || 0) + ' ⭐', 'Champion') + '</div></div>';
+  if(!d) return ''; const b = d.best || {}; let et = 0; for(const k in b) et += (b[k] && b[k].etoiles) || 0;
+  return '<div class="subject"><h3>🚋 Jasmin · Stage 3 (les courses)</h3><div class="kpis">' + kpi(d.gagnees || 0, 'courses gagnées') + kpi(d.parties || 0, 'courses') + kpi(Math.max(1, d.ouvert || 1) + ' / 6', 'mondes ouverts') + kpi(et + ' ⭐', 'étoiles (tous mondes)') + '</div></div>';
 }
 function bilotCard(S, player){
   const p = prog(S, player, 'bilot'), d = p && p.data ? p.data['bilot:' + player] || Object.values(p.data)[0] : null;
