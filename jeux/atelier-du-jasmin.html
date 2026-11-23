@@ -954,10 +954,30 @@ $('done').onclick = () => {
   persist(art, true); S.done[art.id] = Date.now(); save();
   celebrate(); say(Math.random() < .5 ? 'bravo' : 'galerie'); if(T) T.cheer();
   $('bTitle').textContent = ['Bravo !', 'Magnifique !', 'Quel artiste !', 'Superbe !'][Math.floor(Math.random() * 4)]; $('bImg').src = ART.items[art.id].th; $('bImg').hidden = false;
-  $('bRow').innerHTML = `<button class="pill go" data-b="pick">🎨 Un autre</button><button class="pill sun" data-b="card">🖨️ Imprimer / envoyer</button><button class="pill sun" data-b="show">🎭 Spectacle</button><button class="pill" data-b="stay">✏️ Continuer</button>`;
+  $('bRow').innerHTML = `<button class="pill go" data-b="mur">📌 Sur le mur de la famille</button><button class="pill go" data-b="pick">🎨 Un autre</button><button class="pill sun" data-b="card">🖨️ Imprimer / envoyer</button><button class="pill sun" data-b="show">🎭 Spectacle</button><button class="pill" data-b="stay">✏️ Continuer</button>`;
   $('bravo').classList.add('on');
 };
-$('bravo').onclick = e => { const b = e.target.closest('[data-b]'); if(!b) return; sfx.tap(); $('bravo').classList.remove('on'); const k = b.dataset.b; if(k === 'pzAgain') pzStart(PZ.n); else if(k === 'pzUp') pzStart(PZ.n === 8 ? 16 : 32); else if(k === 'pzEnd') pzClose(); else if(k === 'pick') go('pick:' + pickKind); else if(k === 'show') go('show'); else if(k === 'card') openCard(); else if(k === 'menu') go('menu'); else if(k === 'serpent') location.href = 'serpent-legendes.html'; };
+/* 23/11 (demande du papa) : un coloriage fini se partage sur le mur de la famille (api/mur.php, action poste, même jeton que le mur :
+   l'enfant peut l'effacer depuis le mur ; compte dans les 10 images du jour). */
+async function versMur(b){
+  if(!art || !player){ toast('Dis d\'abord qui colorie 🙂'); return; }
+  b.disabled = true; b.textContent = '⏳ J\'accroche…';
+  try{
+    const o = art.out, k = Math.min(1, 1280 / Math.max(o.width, o.height)), c = document.createElement('canvas');
+    c.width = Math.round(o.width * k); c.height = Math.round(o.height * k); const x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.imageSmoothingQuality = 'high'; x.drawImage(o, 0, 0, c.width, c.height);
+    let jeton = ''; try{ jeton = localStorage.getItem('mur-jeton') || ''; }catch(e){}
+    if(!/^[0-9a-f]{32,64}$/.test(jeton)){ jeton = [...crypto.getRandomValues(new Uint8Array(20))].map(v => v.toString(16).padStart(2, '0')).join(''); try{ localStorage.setItem('mur-jeton', jeton); }catch(e){} }
+    const fd = new FormData(); fd.append('action', 'poste'); fd.append('jeton', jeton); fd.append('auteur', player);
+    fd.append('texte', `🎨 J'ai colorié « ${NAME[art.id] || 'mon dessin'} » dans l'Atelier du Jasmin !`); fd.append('image', c.toDataURL('image/jpeg', .88));
+    const r = await fetch('/api/mur.php', { method:'POST', body:fd, credentials:'same-origin' }), j = await r.json().catch(() => ({}));
+    if(!r.ok) throw new Error(j.error || 'Le mur ne répond pas.');
+    S.mur = S.mur || {}; S.mur[art.id] = Date.now(); save(); sfx.tap();
+    b.textContent = '✅ Accroché au mur !'; toast('📌 Ton dessin est sur le mur de la famille !');
+    const v = document.createElement('a'); v.className = 'pill sun'; v.href = '/mur.html'; v.textContent = '🧱 Voir le mur'; b.after(v);
+  }catch(e){ b.disabled = false; b.textContent = '📌 Sur le mur de la famille'; toast(e.message); sfx.nope(); }
+}
+$('bravo').onclick = e => { const b = e.target.closest('[data-b]'); if(!b) return; if(b.dataset.b === 'mur'){ versMur(b); return; } sfx.tap(); $('bravo').classList.remove('on'); const k = b.dataset.b; if(k === 'pzAgain') pzStart(PZ.n); else if(k === 'pzUp') pzStart(PZ.n === 8 ? 16 : 32); else if(k === 'pzEnd') pzClose(); else if(k === 'pick') go('pick:' + pickKind); else if(k === 'show') go('show'); else if(k === 'card') openCard(); else if(k === 'menu') go('menu'); else if(k === 'serpent') location.href = 'serpent-legendes.html'; };
 function celebrate(n = 46){
   sfx.win(); const P = $('party'), E = ['🌼', '🤍', '✨', '🌸', '⭐', '🎨'];
   for(let i = 0; i < n; i++){ const s = document.createElement('i'); s.textContent = E[i % E.length]; s.style.left = Math.random() * 100 + 'vw'; s.style.fontSize = 18 + Math.random() * 26 + 'px'; s.style.animationDuration = 2.2 + Math.random() * 2.4 + 's'; s.style.animationDelay = Math.random() * .9 + 's'; P.appendChild(s); setTimeout(() => s.remove(), 6000); }
