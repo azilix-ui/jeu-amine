@@ -1,6 +1,6 @@
 // Stage 3 (la course du TGM) : un robot court chaque parcours et doit attraper le train, dans les deux modes.
 // node docs/stage3/test-course.mjs [graines]
-import { nouvellePartie, pas, resultat, parcours, PAS, dansTrou, NMONDES, LIMITE } from '../../jeux/stage3/course.js';
+import { nouvellePartie, pas, resultat, parcours, PAS, dansTrou, NMONDES, LIMITE, CHAMPION_DES } from '../../jeux/stage3/course.js';
 const N = +(process.argv[2] || 60); let ok = 0, ko = 0; const stats = {};
 function robot(g){
   const h = g.h, P = g.P, v = Math.max(120, h.vx), C = { saut:false, bas:false, vite:false, lent:false };
@@ -21,7 +21,7 @@ function robot(g){
   return C;
 }
 const temps = { tranquille:[], champion:[] };
-for(const mode of ['tranquille', 'champion']) for(let m = 1; m <= NMONDES; m++){
+for(const mode of ["tranquille", "champion"]) for(let m = 1; m <= NMONDES; m++){ if(mode === "tranquille" && m >= CHAMPION_DES) continue;
   const s = stats[mode + ' m' + m] = { gagne:0, etoiles:[0, 0, 0, 0], degats:0, reste:0, n:0, t:0, chocs:0 };
   for(let k = 1; k <= N; k++){
     const g = nouvellePartie(k * 7919, mode, m); g.limite = 1e9; let morceaux = 0;

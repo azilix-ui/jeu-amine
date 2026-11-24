@@ -11,12 +11,12 @@ export const MODES = {
   champion:{ L:15000, v:320, morceaux:8, vies:1, sonne:1.9, trouMax:150, ecart:[230, 380], doubles:true },
 };
 // la difficulté de chaque monde (1 à 6) : un peu plus long, un peu plus vite, plus de trous et d'ennemis
-export const NMONDES = 6;
-const DIFF = m => ({ L:1 + (m - 1) * .05, v:1 + (m - 1) * .025, p:(m - 1) * .12 });
+export const NMONDES = 21, CHAMPION_DES = 6;   // à partir du monde 6 : seulement le mode Champion (24/11)
+const DIFF = m => ({ L:1 + Math.min(m - 1, 8) * .05, v:1 + Math.min(m - 1, 8) * .025 + Math.max(0, m - 9) * .008, p:Math.min(m - 1, 12) * .12 });
 // le temps accordé (en secondes) = le double du temps du robot de docs/stage3/test-course.mjs (moyenne arrondie à 5 s), par monde
 export const LIMITE = {
-  tranquille:[0, 70, 70, 75, 75, 80, 80],
-  champion:[0, 80, 85, 85, 90, 95, 95],
+  tranquille:[0, 70, 70, 75, 75, 80],   // le Tranquille s'arrête au monde 5
+  champion:[0, 80, 85, 85, 90, 95, 95, 100, 100, 105, 105, 105, 105, 105, 105, 105, 105, 105, 105, 105, 105, 105],
 };
 const G_ = 2300, SAUT = 790, MAINTIEN = .22, H_DEBOUT = 70, H_GLISSE = 34, DEMI = 14;
 

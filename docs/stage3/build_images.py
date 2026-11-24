@@ -20,12 +20,16 @@ if os.path.isdir(os.path.join(SRC, 's3')):   # le monde 1
 # 24/11 : les mondes 2 à 6 (préfixe s3m/<m2…m6>/<nom>, graines 8401 et suivantes ; fond bleu pour le tram vert et la pastèque).
 # Pour ce qui pend (tapis, filets, fanions, tissus, tronc) on affiche « lb » : la hauteur (fraction depuis le haut) du bas de ce qui pend, à recopier dans MONDES de jeu.js.
 import numpy as np
-BLEU = { 'm2/metro', 'm5/pasteque' }
-GRAND = { 'metro':1000, 'bac':1000, 'sahel':1000, 'lezard':1000, 'gare':700, 'quai':700, 'tapispendus':700, 'filets':700, 'fanions':700, 'tissus':700, 'tronc':700 }
-PEND = { 'tapispendus', 'filets', 'fanions', 'tissus', 'tronc' }
-for f in sorted(glob.glob(os.path.join(SRC, 's3m', 'm*', '*_0*.png'))):
-    m = os.path.basename(os.path.dirname(f)); n = os.path.basename(f).rsplit('_', 2)[0]; k = m + '/' + n
-    if f != sorted(glob.glob(os.path.join(SRC, 's3m', m, n + '_0*.png')))[-1]: continue   # la dernière version
+BLEU = { 'm2/metro', 'm5/pasteque', 'm7/vigne', 'm11/palmes', 'm13/cactus', 'm16/branche' }   # (verglas refait sur fond vert)
+GRAND = { 'metro':1000, 'bac':1000, 'sahel':1000, 'lezard':1000, 'petittrain':1000, 'louage':1000, 'train':1000, 'caleche':1000, 'bus':1000, 'caravane':1000, 'bateau':1000,
+          'gare':700, 'quai':700, 'station':700, 'arret':700, 'puits':700, 'ponton':700, 'chalet':700 }
+# 24/11 (nuit) : les mondes 7 à 21 (préfixe s3n/, graines 8501 et suivantes)
+PENDUS = { 'tapispendus', 'filets', 'fanions', 'tissus', 'tronc', 'vigne', 'serviettes', 'lanternes', 'banderoles', 'palmes', 'toile', 'tente', 'voiles', 'branche', 'drapeaux', 'piments', 'guirlande' }
+for n in PENDUS: GRAND[n] = 700
+PEND = PENDUS
+for f in sorted(glob.glob(os.path.join(SRC, 's3[mn]', 'm*', '*_0*.png'))):
+    pre = os.path.basename(os.path.dirname(os.path.dirname(f))); m = os.path.basename(os.path.dirname(f)); n = os.path.basename(f).rsplit('_', 2)[0]; k = m + '/' + n
+    if f != sorted(glob.glob(os.path.join(SRC, pre, m, n + '_0*.png')))[-1]: continue   # la dernière version
     im = cut(f, 'blue' if k in BLEU else 'green'); im = im.crop(im.getbbox()); larg = GRAND.get(n, 300)
     if im.width > larg: im = im.resize((larg, round(im.height * larg / im.width)), Image.LANCZOS)
     os.makedirs(os.path.join(OUT, m), exist_ok=True); im.save(os.path.join(OUT, m, n + '.webp'), quality=88)
