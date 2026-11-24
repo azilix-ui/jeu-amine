@@ -384,7 +384,8 @@ const plus = (enf, liste) => liste.forEach(([course, name, href]) => STUDY[enf].
 plus('salma', [['salma-phrases2', 'La Fabrique des Phrases 2', '../salma/fabrique-des-phrases-2.html'], ['salma-doubles', "Les Doubles d'Ollie", '../salma/les-doubles.html'],
   ['salma-futur', 'La Machine du Futur', '../salma/machine-du-futur.html'], ['salma-tables', 'Les Tables du Souk', '../salma/tables-du-souk.html'],
   ...[1, 2, 3, 4, 5].map(n => ['salma-en' + n, 'My First English ' + n, '../salma/first-english-' + n + '.html']),
-  ...Array.from({ length:10 }, (_, i) => ['salma-pip' + (i + 1), 'Salma & Pip ' + (i + 1), '../salma/english-pip-' + (i + 1) + '.html'])]);
+  ...Array.from({ length:10 }, (_, i) => ['salma-pip' + (i + 1), 'Salma & Pip ' + (i + 1), '../salma/english-pip-' + (i + 1) + '.html']),
+  ...Array.from({ length:5 }, (_, i) => ['salma-fr' + (i + 1), 'Salma & Filou ' + (i + 1), '../salma/francais-filou-' + (i + 1) + '.html'])]);
 plus('amine', [['amine-epicerie', "L'Épicerie de Lulu", '../amine/epicerie-de-lulu.html'],
   ...Array.from({ length:10 }, (_, i) => ['amine-kiko' + (i + 1), 'Amine & Kiko ' + (i + 1), '../amine/english-kiko-' + (i + 1) + '.html'])]);
 plus('essil', [...Array.from({ length:10 }, (_, i) => ['essil-en' + (i + 1), 'English B2 ' + (i + 1), '../essil/english-b2-' + (i + 1) + '.html']),
