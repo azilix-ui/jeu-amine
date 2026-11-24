@@ -3,7 +3,7 @@
  * Famille Missaoui — l'administration de l'accès au site (Anis seulement).
  * GET : la page. POST (fetch, en-tête X-Garde) : les actions, réponses en JSON.
  *   etat · activer(on) · ip_ajoute(ip?, nom) · ip_supprime(id) · appareil_renomme(id, nom) · appareil_revoque(id)
- *   invitation_cree(nom, lien, duree, usages) · invitation_supprime(id) · mdp(ancien, nouveau) · sortir
+ *   invitation_cree(nom, lien, duree, usages, coins_choix, coins[]) · invitation_coins(id, coins_choix, coins[]) · invitation_supprime(id) · mdp(ancien, nouveau) · sortir
  *   sauvegarde (en faire une maintenant) · alertes(email, email_on, ntfy_on) · alerte_essai · ntfy_nouveau
  *   GET ?telecharger=sauvegarde-AAAA-MM-JJ.zip : télécharge une sauvegarde
  *   voix(cle?, max?) : la clé API ElevenLabs des voix des cours (jamais renvoyée) et le plafond de caractères par mois
@@ -21,7 +21,7 @@ function ga_etat_admin(): array {
         $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ? 'https' : 'http';
         $base = $schema . '://' . ($_SERVER['HTTP_HOST'] ?? 'www.missaoui-family.com');
         $invs = $db->query('SELECT i.*, (SELECT COUNT(*) FROM appareils a WHERE a.invitation = i.id AND a.revoque = 0 AND a.expire > ' . $t . ') AS actifs FROM invitations i WHERE i.revoque = 0 ORDER BY i.cree DESC LIMIT 60')->fetchAll();
-        foreach ($invs as &$v) { $v['lien'] = $base . '/acces/invitation.php?c=' . $v['code']; unset($v['code']); } unset($v);
+        foreach ($invs as &$v) { $v['lien'] = $base . '/acces/invitation.php?c=' . $v['code']; unset($v['code']); $c = json_decode((string)($v['coins'] ?? ''), true); $v['coins'] = is_array($c) ? $c : []; } unset($v);
         return [
             'actif' => ga_reglage('actif') === '1', 'secours' => is_file(ga_donnees() . '/acces-ouvert'), 'admin' => $admin['id'],
             'ip' => $ip, 'ip_maison' => ga_ip_maison($ip), 'moi' => $moi ? (int)$moi['id'] : 0,
@@ -31,6 +31,7 @@ function ga_etat_admin(): array {
             'invitations' => $invs,
             'passes' => (function() use ($db, $t, $base){ $l = $db->query('SELECT id, code, nom, jeu, tab, cree, expire, utilise FROM passes WHERE revoque = 0 AND expire > ' . $t . ' ORDER BY cree DESC LIMIT 40')->fetchAll();
                 foreach ($l as &$x) { $x['lien'] = $base . '/acces/partie.php?c=' . $x['code']; $x['nomjeu'] = GA_PASSE_JEUX[$x['jeu']][0] ?? $x['jeu']; unset($x['code']); } unset($x); return $l; })(),
+            'coins' => array_map(fn($k, $v) => [$k, $v[0], $v[1], strpos($k, 'jeu-') === 0 ? 'jeux' : 'espaces'], array_keys(ga_coins_liste()), ga_coins_liste()),
             'jeux_passe' => array_map(fn($k, $v) => [$k, $v[0]], array_keys(GA_PASSE_JEUX), GA_PASSE_JEUX),
             'sauvegardes' => ga_liste_sauvegardes(), 'zip' => class_exists('ZipArchive'),
             'alertes' => ['email' => (string)ga_reglage('alerte_email'), 'email_on' => ga_reglage('alerte_email_on') !== '0', 'ntfy' => ga_canal_ntfy(), 'ntfy_on' => ga_reglage('alerte_ntfy_on') !== '0'],
@@ -40,6 +41,8 @@ function ga_etat_admin(): array {
                 return ['cle' => (string)ga_reglage('elevenlabs_cle') !== '', 'max' => (int)(ga_reglage('voix_max') ?: 100000), 'mois' => $m === ga_voix_periode() ? (int)$n : 0, 'phrases' => $nb, 'erreur' => (string)ga_reglage('voix_erreur')]; })(),
         ];
 }
+// 24/11 : les coins cochés pour une invitation (vide = tout le site)
+function coins_propres($c): ?string { if (!is_array($c)) return null; $l = ga_coins_liste(); $c = array_values(array_unique(array_filter($c, fn($k) => is_string($k) && isset($l[$k])))); return $c ? json_encode($c) : null; }
 function rep(int $code, array $d): void { http_response_code($code); header('Content-Type: application/json; charset=utf-8'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; }
 $admin = ga_admin_fiche();
 if (empty($admin['hash'])) { header('Location: /acces/', true, 303); exit; }
@@ -98,7 +101,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $duree = max(3600, min(GA_ANNEE, (int)($in['duree'] ?? 7 * 86400)));
             $usages = max(0, min(50, (int)($in['usages'] ?? 1)));
             $code = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
-            $db->prepare('INSERT INTO invitations (code, nom, cree, lien_expire, duree, usages_max) VALUES (?, ?, ?, ?, ?, ?)')->execute([$code, $nom, $t, $t + $lien, $duree, $usages]);
+            if (!empty($in['coins_choix']) && coins_propres($in['coins'] ?? []) === null) rep(400, ['error' => "Coche au moins un coin du site, ou choisis « Tout le site »."]);
+            $db->prepare('INSERT INTO invitations (code, nom, cree, lien_expire, duree, usages_max, coins) VALUES (?, ?, ?, ?, ?, ?, ?)')->execute([$code, $nom, $t, $t + $lien, $duree, $usages, !empty($in['coins_choix']) ? coins_propres($in['coins'] ?? []) : null]);
+        } elseif ($a === 'invitation_coins') {   // changer les coins d'une invitation : vaut tout de suite pour les appareils déjà entrés
+            if (!empty($in['coins_choix']) && coins_propres($in['coins'] ?? []) === null) rep(400, ['error' => "Coche au moins un coin du site, ou choisis « Tout le site »."]);
+            $db->prepare('UPDATE invitations SET coins = ? WHERE id = ?')->execute([!empty($in['coins_choix']) ? coins_propres($in['coins'] ?? []) : null, $id]);
         } elseif ($a === 'passe_cree') {   // 21/11 : inviter un ami à UN jeu, 3 heures
             try { ga_passe_cree((string)($in['jeu'] ?? ''), $nom); } catch (RuntimeException $e) { rep(400, ['error' => $e->getMessage()]); }
         } elseif ($a === 'passe_supprime') {
@@ -163,6 +170,37 @@ select{font:inherit;font-size:17px;padding:12px;border-radius:14px;border:2px so
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#18202e;color:#fff;padding:12px 18px;border-radius:14px;font-weight:700;box-shadow:0 10px 30px #0006;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100% - 32px)}
 .toast.vu{opacity:1}
 details summary{cursor:pointer;font-weight:800;color:var(--soft)}
+.tbfam{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;align-items:start}
+.mb{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:18px;background:#f5f7fb;border:2px solid transparent}
+.mb.en{border-color:#2e9e6e}
+.mb .h{display:flex;align-items:center;gap:12px}
+.mb .h img{width:56px;height:56px;border-radius:50%;object-fit:cover;background:#dfe5ef;flex:none}
+.mb .h b{font-size:20px;display:block}
+.mb .h small{color:var(--soft);display:block;overflow-wrap:anywhere}
+.pt{display:inline-block;width:12px;height:12px;border-radius:50%;background:#c9ced8;margin-right:6px;vertical-align:middle}
+.mb.en .pt{background:#2e9e6e;box-shadow:0 0 0 4px #2e9e6e33}
+.jauge{height:14px;border-radius:99px;background:#e3e8f0;overflow:hidden}
+.jauge i{display:block;height:100%;background:linear-gradient(90deg,#2e9e6e,#e0a100 80%,#d7263d);border-radius:99px}
+.reste{font-size:17px}.reste b{font-size:24px}
+.etats{display:flex;gap:6px;flex-wrap:wrap}
+.et{font-size:13px;font-weight:800;padding:4px 9px;border-radius:999px;background:#e6ecfa;color:#1f3c88}
+.et.r{background:#fde8eb;color:#8a1426}.et.v{background:#e2f6ec;color:#0d5a36}.et.j{background:#fff1bf;color:#7a5200}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.btns .petit{min-height:44px;padding:0 12px}
+.mb select{min-height:44px;padding:6px 10px;font-size:15px}
+.mb details .grille{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));margin-top:8px}
+.mb details input{min-height:44px;font-size:15px;padding:6px 8px}
+.coinsbox{display:flex;flex-direction:column;gap:8px;background:#f5f7fb;border-radius:16px;padding:12px}
+.coinsbox .choix{display:flex;gap:8px;flex-wrap:wrap}
+.coinsbox label.c{flex-direction:row;align-items:center;gap:8px;font-weight:700;background:#fff;border:2px solid var(--line);border-radius:12px;padding:6px 10px;min-height:44px;cursor:pointer}
+.coinsbox label.c input{min-height:0;width:22px;height:22px;margin:0}
+.coinsbox label.c:has(input:checked){border-color:#2e9e6e;background:#e7f7ef}
+.coinsbox h3{margin:6px 0 0;font-size:15px;color:var(--soft)}
+.coinsbox[data-tout="1"] .liste-coins{display:none}
+dialog{border:0;border-radius:22px;padding:0;max-width:min(720px,calc(100% - 24px));width:100%;box-shadow:0 20px 60px #0007}
+dialog::backdrop{background:#0008}
+dialog .petit{background:#eef1f6;color:var(--ink)}dialog .petit.vert{background:var(--mint);color:#0d2a1d}
+.dlg{display:flex;flex-direction:column;gap:12px;padding:18px;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -171,6 +209,13 @@ details summary{cursor:pointer;font-weight:800;color:var(--soft)}
     <h1>🔑 L'accès au site</h1>
     <div class="boutons"><a class="petit" href="/acces/aide.php">📖 Aide</a><a class="petit" href="/">← Le site</a><button class="petit" id="sortir" type="button">Se déconnecter</button></div>
   </div>
+
+  <section class="carte" id="tb">
+    <h2>📊 Le tableau de bord</h2>
+    <p style="color:var(--soft);margin:0">Qui est là, et le temps de jeu d'aujourd'hui. Mis à jour toutes les 10 secondes. Les cours restent toujours ouverts : seuls les jeux comptent.</p>
+    <div class="tbfam" id="tbFam"><p class="vide">Chargement…</p></div>
+    <div id="tbInv"></div>
+  </section>
 
   <section class="carte">
     <div class="etat" id="etat"><span class="rond"></span><span style="flex:1 1 240px"><b id="etatTxt">…</b><br><span id="etatSous" style="color:var(--soft)"></span></span><button class="petit vert" id="bascule" type="button"></button></div>
@@ -213,6 +258,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--soft)}
       <label>L'accès dure<select id="invDuree"><option value="86400">1 jour</option><option value="604800" selected>7 jours</option><option value="2592000">30 jours</option><option value="7776000">3 mois</option><option value="31536000">1 an</option></select></label>
       <label>Nombre d'appareils<select id="invUsages"><option value="1" selected>1 seul</option><option value="3">3</option><option value="5">5</option><option value="0">sans limite</option></select></label>
     </div>
+    <div class="coinsbox" id="invCoins"></div>
     <button type="button" id="invCree">Créer le lien d'invitation</button>
     <div class="liste" id="invs"></div>
   </section>
@@ -281,6 +327,8 @@ details summary{cursor:pointer;font-weight:800;color:var(--soft)}
   </section>
   <p class="pied">© 2026 Anis Missaoui · Famille Missaoui</p>
 </main>
+<dialog id="coinsDlg"><form method="dialog" class="dlg"><h2 id="coinsDlgT">Les coins ouverts</h2><div class="coinsbox" id="coinsDlgBox"></div>
+  <div class="lienbox"><button class="petit vert" value="ok" type="submit">Enregistrer</button><button class="petit" value="non" type="submit">Annuler</button></div></form></dialog>
 <div class="toast" id="toast" role="status"></div>
 <script>
 const $ = id => document.getElementById(id);
@@ -301,6 +349,71 @@ async function api(action, data = {}){
   return j;
 }
 async function charge(action = 'etat', data){ E = await api(action, data); dessine(); }
+/* 24/11 : le tableau de bord (api/famille.php action tb / tb_ecran, réservé à Anis ; présence : api/houma.php action presents) */
+const FAM = [['Anis', 'anis', 'papa'], ['Imen', 'imen', 'maman'], ['Essil', 'essil', '12 ans'], ['Salma', 'salma', '8 ans'], ['Amine', 'amine', '5 ans']];
+let TB = null, PR = [], tbOuverts = new Set();
+const mn = s => { const m = Math.max(0, Math.round(s / 60)); return m >= 60 ? Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') : m + ' min'; };
+const ilya = ts => { if(!ts) return 'jamais vu'; const d = Math.round(Date.now() / 1000 - ts); return d < 90 ? 'à l\'instant' : d < 3600 ? 'il y a ' + Math.round(d / 60) + ' min' : d < 86400 ? 'il y a ' + Math.round(d / 3600) + ' h' : 'le ' + quand(ts); };
+async function chargeTB(){
+  try {
+    const [a, b] = await Promise.all([fetch('/api/famille.php?action=tb', { credentials:'same-origin', cache:'no-store' }), fetch('/api/houma.php', { method:'POST', body:(() => { const f = new FormData(); f.append('action', 'presents'); return f; })(), credentials:'same-origin', cache:'no-store' }).catch(() => null)]);
+    if(!a.ok) throw 0; TB = await a.json(); PR = b && b.ok ? ((await b.json()).en_ligne || []) : [];
+  } catch(e){ $('tbFam').innerHTML = '<p class="vide">Le tableau de bord ne répond pas pour l\'instant.</p>'; return; }
+  const f = document.activeElement; if(f && $('tb').contains(f) && /INPUT|SELECT/.test(f.tagName)) return;   // ne pas effacer ce qu'on est en train de régler
+  dessineTB();
+}
+function dessineTB(){
+  const enfants = TB.enfants || {}, R = TB.regles || {};
+  $('tbFam').innerHTML = FAM.map(([n, id, age]) => {
+    const p = PR.find(x => x.nom === n), en = !!p, e = enfants[n];
+    const ligne = en ? 'En ligne · ' + esc(p.page || '') : 'Vu ' + ilya(Math.max(TB.vu[n] || 0)) + (TB.page[n] ? ' · ' + esc(TB.page[n]) : '');
+    let corps = '';
+    if(e){
+      const reste = e.limite - e.utilise, pct = Math.min(100, e.limite ? e.utilise / e.limite * 100 : 0), r = R[n] || {};
+      const now = new Date(), hm = s => { const [h, m] = String(s || '0:0').split(':'); return +h * 60 + +m; }, m = now.getHours() * 60 + now.getMinutes(), nuit = hm(e.nuit) > hm(e.matin) ? (m >= hm(e.nuit) || m < hm(e.matin)) : (m >= hm(e.nuit) && m < hm(e.matin));
+      const et = [];
+      if(e.libre) et.push('<span class="et v">♾️ Sans limite</span>');
+      if(e.coupe) et.push('<span class="et r">⛔ Jeux coupés</span>');
+      if(e.ouvert_reste > 0) et.push('<span class="et v">🎁 Ouvert encore ' + mn(e.ouvert_reste) + '</span>');
+      if(nuit && !e.libre) et.push('<span class="et">🌙 Pause de nuit (' + esc(e.nuit) + ' → ' + esc(e.matin) + ')</span>');
+      if(!e.libre && !e.coupe && reste <= 0 && !(e.ouvert_reste > 0)) et.push('<span class="et j">⏳ Temps fini</span>');
+      if(e.limite_jour) et.push('<span class="et j">Limite du jour : ' + mn(e.limite - e.bonus) + ' (d\'habitude ' + mn(e.limite_base) + ')</span>');
+      if(e.bonus) et.push('<span class="et v">⭐ +10 min (défi réussi)</span>');
+      const d = e.demande; if(d && d.statut === 'attente') et.push('<span class="et j">🙋 Demande plus de temps</span>');
+      const limSel = [0, 15, 30, 45, 60, 90, 120, 180].map(v => `<option value="${v}"${(e.limite_jour ? (e.limite - e.bonus) / 60 : 0) === v ? ' selected' : ''}>${v ? v + ' min' : 'comme d\'habitude (' + mn(e.limite_base) + ')'}</option>`).join('');
+      corps = `<div class="reste">${e.libre ? 'Pas de limite de temps' : `Reste <b>${reste > 0 ? mn(reste) : '0 min'}</b> sur ${mn(e.limite)}`}</div>
+        ${e.libre ? '' : `<div class="jauge" title="${mn(e.utilise)} joué"><i style="width:${pct.toFixed(0)}%"></i></div><small style="color:var(--soft)">Joué aujourd'hui : ${mn(e.utilise)}</small>`}
+        ${et.length ? `<div class="etats">${et.join('')}</div>` : ''}
+        ${d && d.statut === 'attente' ? `<div class="btns"><b style="align-self:center">Sa demande :</b><button class="petit vert" data-tbd="${n}" data-id="${d.id}" data-m="15">+15 min</button><button class="petit vert" data-tbd="${n}" data-id="${d.id}" data-m="30">+30 min</button><button class="petit" data-tbd="${n}" data-id="${d.id}" data-m="0">Non</button></div>` : ''}
+        <div class="btns">${e.coupe ? `<button class="petit vert" data-tb="rend" data-p="${n}">▶️ Rendre les jeux</button>` : `<button class="petit rouge" data-tb="coupe" data-p="${n}">⛔ Couper les jeux</button>`}
+          <button class="petit" data-tb="moins" data-m="15" data-p="${n}">−15 min</button><button class="petit vert" data-tb="plus" data-m="15" data-p="${n}">+15</button><button class="petit vert" data-tb="plus" data-m="30" data-p="${n}">+30</button><button class="petit vert" data-tb="plus" data-m="60" data-p="${n}">+1 h</button></div>
+        <label style="font-size:14px">Limite d'aujourd'hui seulement<select data-tblim="${n}">${limSel}</select></label>
+        <details data-tbdet="${n}"${tbOuverts.has(n) ? ' open' : ''}><summary>Réglages de tous les jours</summary>
+          <div class="grille"><label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" data-r="on" ${r.on ? 'checked' : ''} style="width:22px;height:22px;min-height:0"> Limiter</label>
+          <label>Semaine (min)<input type="number" data-r="semaine" min="5" max="600" step="5" value="${r.semaine || 45}"></label><label>Week-end (min)<input type="number" data-r="weekend" min="5" max="600" step="5" value="${r.weekend || 90}"></label>
+          <label>Pause de nuit<input type="time" data-r="nuit" value="${esc(r.nuit || '20:30')}"></label><label>Reprise le matin<input type="time" data-r="matin" value="${esc(r.matin || '07:00')}"></label></div>
+          <button class="petit vert" data-tbreg="${n}" style="margin-top:8px">Enregistrer</button></details>`;
+    }
+    return `<div class="mb${en ? ' en' : ''}"><div class="h"><img src="/jeux/avatars/${id}.webp" alt=""><span><b><span class="pt"></span>${n} <small style="display:inline;font-size:13px">${age}</small></b><small>${ligne}</small></span></div>${corps}</div>`;
+  }).join('');
+  const inv = PR.filter(x => !FAM.some(f => f[0] === x.nom));
+  $('tbInv').innerHTML = inv.length ? '<h3 style="margin:14px 0 6px">Aussi sur le site en ce moment</h3><div class="liste">' + inv.map(x => `<div class="ligne"><span class="q"><b><span class="pt" style="background:#2e9e6e"></span>${esc(x.nom)}</b><small>${esc(x.page || '')}</small></span></div>`).join('') + '</div>' : '';
+}
+async function tbFaire(data){
+  const f = new FormData(); f.append('action', 'tb_ecran'); Object.entries(data).forEach(([k, v]) => f.append(k, v));
+  const r = await fetch('/api/famille.php', { method:'POST', headers:{ 'X-Garde':'1' }, credentials:'same-origin', body:f });
+  const j = await r.json().catch(() => ({})); if(!r.ok || j.error){ toast(j.error || 'Le serveur n\'a pas pu enregistrer.'); return false; }
+  TB = j; dessineTB(); return true; }
+$('tb').addEventListener('click', async e => { const b = e.target.closest('button'); if(!b) return; const d = b.dataset;
+  if(d.tb){ if(d.tb === 'coupe' && !confirm('Couper les jeux de ' + d.p + ' maintenant ? Sa tablette passera en pause en moins de 20 secondes (les cours restent ouverts).')) return;
+    if(await tbFaire({ player:d.p, faire:d.tb, min:d.m || 0 })) toast(d.tb === 'coupe' ? '⛔ Jeux coupés pour ' + d.p : d.tb === 'rend' ? '▶️ ' + d.p + ' peut rejouer' : d.tb === 'plus' ? '🎁 +' + d.m + ' min pour ' + d.p : '−' + d.m + ' min pour ' + d.p); }
+  if(d.tbd){ if(await tbFaire({ player:d.tbd, faire:'demande', id:d.id, min:d.m })) toast(+d.m ? '🎁 +' + d.m + ' min pour ' + d.tbd : 'Réponse envoyée : non'); }
+  if(d.tbreg){ const box = b.closest('details'), v = k => box.querySelector(`[data-r="${k}"]`);
+    if(await tbFaire({ player:d.tbreg, faire:'regles', on:v('on').checked ? '1' : '', semaine:v('semaine').value, weekend:v('weekend').value, nuit:v('nuit').value, matin:v('matin').value })) toast('Réglages de ' + d.tbreg + ' enregistrés'); } });
+$('tb').addEventListener('change', async e => { const s = e.target.closest('[data-tblim]'); if(!s) return; s.blur(); if(await tbFaire({ player:s.dataset.tblim, faire:'limite', min:s.value })) toast(+s.value ? 'Aujourd\'hui : ' + s.value + ' min pour ' + s.dataset.tblim : 'Limite habituelle pour ' + s.dataset.tblim); });
+$('tb').addEventListener('toggle', e => { const d = e.target; if(d.dataset && d.dataset.tbdet) d.open ? tbOuverts.add(d.dataset.tbdet) : tbOuverts.delete(d.dataset.tbdet); }, true);
+chargeTB(); setInterval(() => { if(!document.hidden) chargeTB(); }, 10000);
+
 /* 20/11 : les sessions par personne (api/qui.php) */
 let S = null;
 async function qui(action, data = {}){
@@ -348,7 +461,9 @@ function dessine(){
   $('invs').innerHTML = E.invitations.map(v => { const fini = v.lien_expire * 1000 < Date.now() || (v.usages_max && v.usages >= v.usages_max);
     return `<div class="ligne"><span class="q"><b>${esc(v.nom || 'Invitation')}</b><small>${fini ? 'Lien terminé' : 'Lien valable jusqu\'au ' + quand(v.lien_expire)} · accès ${duree(v.duree)} · ${v.usages}/${v.usages_max || '∞'} appareil(s) · ${v.actifs} entré(s)</small>
       ${fini ? '' : `<span class="lienbox"><input readonly value="${esc(v.lien)}"><button class="petit" data-copie="${esc(v.lien)}">Copier</button>${navigator.share ? `<button class="petit" data-partage="${esc(v.lien)}" data-nom="${esc(v.nom)}">Envoyer</button>` : ''}</span>`}</span>
-      <button class="petit rouge" data-invdel="${v.id}">Supprimer</button></div>`; }).join('');
+      <small>${v.coins && v.coins.length ? '🔐 Seulement : ' + v.coins.map(k => esc(nomCoin(k))).join(', ') : '🌍 Tout le site'}</small></span>
+      <button class="petit" data-invcoins="${v.id}">✏️ Les coins</button><button class="petit rouge" data-invdel="${v.id}">Supprimer</button></div>`; }).join('');
+  if(!$('invCoins').dataset.fait){ $('invCoins').dataset.fait = '1'; coinsUI($('invCoins'), null); }
   if(!$('paJeu').options.length) $('paJeu').innerHTML = (E.jeux_passe || []).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('');
   $('passes').innerHTML = (E.passes || []).length ? E.passes.map(v => `<div class="ligne"><span class="q"><b>${esc(v.nom)} · ${esc(v.nomjeu)}${v.tab ? ' · table ' + esc(v.tab) : ''}</b><small>${v.utilise ? 'Entré le ' + quand(v.utilise) : 'Lien pas encore ouvert'} · jusqu'à ${quand(v.expire)}</small>
       ${v.utilise ? '' : `<span class="lienbox"><input readonly value="${esc(v.lien)}"><button class="petit" data-copie="${esc(v.lien)}">Copier</button>${navigator.share ? `<button class="petit" data-partage="${esc(v.lien)}" data-nom="${esc(v.nom)}" data-jeu="${esc(v.nomjeu)}">Envoyer</button>` : ''}</span>`}</span>
@@ -374,9 +489,18 @@ $('bascule').onclick = async () => {
   await charge('activer', { on:!E.actif }); toast(E.actif ? 'Protection activée 🔒' : 'Protection en pause');
 };
 $('ipAjout').onclick = async () => { await charge('ip_ajoute', { nom:$('ipNom').value }); $('ipNom').value = ''; toast('Adresse ajoutée 🏠'); };
+/* 24/11 : les coins d'une invitation (ce que l'invité pourra ouvrir) */
+function coinsUI(box, coins){ const tout = !coins || !coins.length; box.dataset.tout = tout ? '1' : '';
+  const grp = g => (E.coins || []).filter(c => c[3] === g).map(([k, n, e]) => `<label class="c"><input type="checkbox" value="${k}"${coins && coins.includes(k) ? ' checked' : ''}> ${e} ${esc(n)}</label>`).join('');
+  box.innerHTML = `<b>Ce qu'il pourra ouvrir</b><div class="choix"><label class="c"><input type="radio" name="${box.id}-r" value="tout"${tout ? ' checked' : ''}> 🌍 Tout le site</label><label class="c"><input type="radio" name="${box.id}-r" value="choix"${tout ? '' : ' checked'}> ✅ Seulement ce que je coche</label></div>
+    <div class="liste-coins"><h3>Les espaces</h3><div class="choix">${grp('espaces')}</div><h3>Les jeux</h3><div class="choix">${grp('jeux')}</div></div>`;
+  box.querySelectorAll('input[type=radio]').forEach(r => r.onchange = () => { box.dataset.tout = r.value === 'tout' && r.checked ? '1' : ''; }); }
+function coinsLus(box){ const choix = box.querySelector('input[type=radio][value=choix]').checked; return { coins_choix:choix, coins:choix ? [...box.querySelectorAll('.liste-coins input:checked')].map(i => i.value) : [] }; }
+const nomCoin = k => { const c = (E.coins || []).find(x => x[0] === k); return c ? c[2] + ' ' + c[1] : k; };
 $('invCree').onclick = async () => {
   if(!$('invNom').value.trim()){ toast('Écris d\'abord le prénom de la personne invitée'); $('invNom').focus(); return; }
-  await charge('invitation_cree', { nom:$('invNom').value, lien:+$('invLien').value, duree:+$('invDuree').value, usages:+$('invUsages').value });
+  const co = coinsLus($('invCoins')); if(co.coins_choix && !co.coins.length){ toast('Coche au moins un coin, ou choisis « Tout le site »'); return; }
+  await charge('invitation_cree', { nom:$('invNom').value, lien:+$('invLien').value, duree:+$('invDuree').value, usages:+$('invUsages').value, ...co }); coinsUI($('invCoins'), null);
   $('invNom').value = ''; const l = E.invitations[0]; if(l) { try { await navigator.clipboard.writeText(l.lien); toast('Lien créé et copié 💌'); } catch(e){ toast('Lien créé 💌'); } }
 };
 $('paCree').onclick = async () => {
@@ -399,6 +523,9 @@ document.addEventListener('click', async e => {
   if(d.ok){ const sel = document.querySelector(`[data-dur="${d.ok}"]`); await charge('demande_accepte', { id:+d.ok, duree:+(sel ? sel.value : 31536000) }); toast('Accepté : la porte s\'ouvrira pour lui 🔓'); }
   if(d.non) await charge('demande_ignore', { id:+d.non });
   if(d.ipdel && confirm('Retirer cette adresse ?')) await charge('ip_supprime', { id:+d.ipdel });
+  if(d.invcoins){ const v = E.invitations.find(x => x.id == d.invcoins); if(!v) return; $('coinsDlgT').textContent = 'Les coins ouverts à ' + (v.nom || 'cet invité'); coinsUI($('coinsDlgBox'), v.coins);
+    const dl = $('coinsDlg'); dl.returnValue = ''; dl.showModal(); dl.onclose = async () => { if(dl.returnValue !== 'ok') return; const co = coinsLus($('coinsDlgBox')); if(co.coins_choix && !co.coins.length){ toast('Rien de coché : rien n\'a changé'); return; }
+      await charge('invitation_coins', { id:+d.invcoins, ...co }); toast('Coins enregistrés : ça vaut tout de suite 🔐'); }; }
   if(d.invdel && confirm('Supprimer cette invitation ? Les appareils entrés avec ce lien perdront aussi l\'accès.')) await charge('invitation_supprime', { id:+d.invdel });
   if(d.passedel && confirm('Retirer cette invitation à jouer ? Ton ami ne pourra plus jouer.')) await charge('passe_supprime', { id:+d.passedel });
   if(d.appdel && confirm('Retirer cet appareil ? Il ne pourra plus entrer.')) await charge('appareil_revoque', { id:+d.appdel });

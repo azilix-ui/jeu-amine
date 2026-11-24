@@ -31,6 +31,14 @@ if (!ga_peut_entrer() && !$passe) {
     if ($ext === 'html') { header('Location: /acces/?suite=' . rawurlencode((string)($_SERVER['REQUEST_URI'] ?? '/')), true, 302); exit; }
     http_response_code(403); exit;
 }
+// 24/11 : un invité dont le lien n'ouvre que certains coins du site
+$coins = $passe ? null : ga_coins();
+if ($coins !== null) {
+    if ($ext !== 'html') { http_response_code(403); exit; }   // les photos de famille : non
+    $accueil = $chemin === '/index.html';
+    $entrer = false; try { $entrer = $accueil && ga_qui_actif() && !ga_qui(); } catch (Throwable $e) {}   // les sessions : il choisit d'abord son prénom sur l'accueil
+    if (!$entrer && !ga_coin_page($coins, $chemin)) { require __DIR__ . '/coins.php'; ga_page_coins($coins, !$accueil); exit; }
+}
 header('Content-Type: ' . $TYPES[$ext]);
 header('X-Content-Type-Options: nosniff');
 header($ext === 'html' ? 'Cache-Control: private, no-cache, must-revalidate' : 'Cache-Control: private, max-age=86400');   // private : le CDN de Hostinger ne garde jamais une page pour tout le monde

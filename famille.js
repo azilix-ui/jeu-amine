@@ -255,11 +255,14 @@
   function hm(s){ var p = String(s || '').split(':'); return (+p[0] || 0) * 60 + (+p[1] || 0); }
   function ecranWatch(){
     if(!online || !JEUX.test(location.pathname)) return;
-    var etat = null, vu = 0, cache = null, prev = Date.now(), averti = false;
+    var etat = null, vu = 0, cache = null, prev = Date.now(), averti = false, relire = 0;
     function moi(){ var p = get('famille-joueur', null); return ESPACE[p] ? p : null; }
     function debloque(){ var d = get('famille-ecran-deblocage', null); return d && d.p === moi() && d.jusqua > Date.now(); }
     function bloque(){
-      if(!etat || etat.libre || debloque()) return null;
+      if(!etat) return null;
+      if(etat.coupe) return 'coupe';                 // 24/11 : papa a coupé les jeux depuis l'administration (passe avant tout déblocage)
+      if(etat.libre || debloque()) return null;
+      if(etat.ouvert_reste > 0) return null;        // 24/11 : papa a donné du temps depuis l'administration (même la nuit)
       var n = new Date(), m = n.getHours() * 60 + n.getMinutes(), nuit = hm(etat.nuit), matin = hm(etat.matin);
       if(nuit > matin ? (m >= nuit || m < matin) : (m >= nuit && m < matin)) return 'nuit';
       if(etat.utilise >= etat.limite) return 'fini';
@@ -268,12 +271,12 @@
     function toast(t){ css(); var d = document.createElement('div'); d.className = 'fm-toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 6000); }
     function stopTouches(e){ if(cache && !cache.contains(e.target)){ e.stopImmediatePropagation(); e.preventDefault(); } }
     function montre(pourquoi){
-      if(cache) return; css();
+      if(cache && cache.dataset.pq === pourquoi) return; if(cache) enleve(); css();
       var p = moi(), k = KIDS.filter(function(x){ return x.name === p; })[0] || {};
-      cache = document.createElement('div'); cache.className = 'fm-back fm-pause';
-      cache.innerHTML = '<div class="fm-box" role="dialog" aria-modal="true" aria-label="Pause"><div style="font-size:64px;text-align:center">' + (pourquoi === 'nuit' ? '🌙' : '⏳') + '</div>' +
+      cache = document.createElement('div'); cache.className = 'fm-back fm-pause'; cache.dataset.pq = pourquoi;
+      cache.innerHTML = '<div class="fm-box" role="dialog" aria-modal="true" aria-label="Pause"><div style="font-size:64px;text-align:center">' + (pourquoi === 'nuit' ? '🌙' : pourquoi === 'coupe' ? '✋' : '⏳') + '</div>' +
         '<h2>' + (pourquoi === 'nuit' ? 'Bonne nuit, ' + esc(p) + ' !' : 'C\'est l\'heure de faire une pause, ' + esc(p) + ' !') + '</h2>' +
-        '<p class="fm-p">' + (pourquoi === 'nuit' ? 'Les jeux dorment jusqu\'à demain matin. Les cours restent ouverts si tu veux encore apprendre.' : 'Tu as bien joué aujourd\'hui ! Les jeux reviennent demain. Les cours, eux, restent ouverts.' + (etat && !etat.bonus ? ' Astuce : réussis ton défi du jour pour gagner 10 minutes de jeu.' : '')) + '</p>' +
+        '<p class="fm-p">' + (pourquoi === 'coupe' ? 'Papa ou maman a mis les jeux en pause pour l\'instant. Les cours restent ouverts si tu veux apprendre.' : pourquoi === 'nuit' ? 'Les jeux dorment jusqu\'à demain matin. Les cours restent ouverts si tu veux encore apprendre.' : 'Tu as bien joué aujourd\'hui ! Les jeux reviennent demain. Les cours, eux, restent ouverts.' + (etat && !etat.bonus ? ' Astuce : réussis ton défi du jour pour gagner 10 minutes de jeu.' : '')) + '</p>' +
         '<a class="fm-btn" href="' + (ESPACE[p] || '/') + '">📚 Aller à mes cours</a>' +
         '<button class="fm-btn fm-dem" type="button">🙋 Demander plus de temps</button><p class="fm-dmsg" aria-live="polite"></p>' +
         '<details class="fm-parent"><summary>Un parent débloque 15 minutes</summary><form class="fm-other"><input type="password" placeholder="Mot de passe parent" autocomplete="current-password"><button type="submit">OK</button></form><div class="fm-msg"></div></details></div>';
@@ -319,7 +322,8 @@
       var t = Date.now(), dt = Math.min(5, (t - prev) / 1000); prev = t;
       if(!document.hidden && !cache && moi()) vu += dt;
       if(cache && etat && etat.demande && etat.demande.statut === 'attente' && !document.hidden){ lit(); return; }   // on attend la réponse : on relit toutes les 5 s
-      if(vu >= 60 && moi()){ var s = Math.round(vu); vu = 0; post({action:'ecran', player:moi(), sec:String(Math.min(60, s))}).then(function(j){ if(j){ etat = j; verifie(); } }).catch(function(){}); }
+      relire += 5; if(relire >= 20 && vu < 60 && moi() && !document.hidden){ relire = 0; lit(); return; }   // 24/11 : l'administration (couper, donner du temps) arrive en moins de 20 s
+      if(vu >= 60 && moi()){ var s = Math.round(vu); vu = 0; relire = 0; post({action:'ecran', player:moi(), sec:String(Math.min(60, s))}).then(function(j){ if(j){ etat = j; verifie(); } }).catch(function(){}); }
       else verifie();
     }, 5000);
     addEventListener('storage', function(e){ if(e.key === 'famille-joueur') lit(); }); document.addEventListener('famille-joueur', lit);   // le joueur a changé dans « Qui joue ? »

@@ -41,6 +41,7 @@ function ga_db(): PDO {
     $pdo->exec('CREATE TABLE IF NOT EXISTS appareils (id INTEGER PRIMARY KEY, hash TEXT UNIQUE NOT NULL, nom TEXT, via TEXT, invitation INTEGER, cree INTEGER NOT NULL, expire INTEGER NOT NULL, vu INTEGER, ip TEXT, ua TEXT, revoque INTEGER NOT NULL DEFAULT 0)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS invitations (id INTEGER PRIMARY KEY, code TEXT UNIQUE NOT NULL, nom TEXT, cree INTEGER NOT NULL, lien_expire INTEGER NOT NULL, duree INTEGER NOT NULL, usages_max INTEGER NOT NULL, usages INTEGER NOT NULL DEFAULT 0, revoque INTEGER NOT NULL DEFAULT 0)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS sessions (hash TEXT PRIMARY KEY, expire INTEGER NOT NULL)');
+    try { $pdo->exec('ALTER TABLE invitations ADD COLUMN coins TEXT'); } catch (Throwable $e) {}   // 24/11 : les coins du site ouverts à l'invité (JSON ; vide = tout le site)
     // 21/11 : les laissez-passer de partie (un ami invité à UN jeu, 3 heures, un seul appareil)
     $pdo->exec('CREATE TABLE IF NOT EXISTS passes (id INTEGER PRIMARY KEY, code TEXT UNIQUE NOT NULL, hash TEXT, nom TEXT NOT NULL, jeu TEXT NOT NULL, tab TEXT, cree INTEGER NOT NULL, expire INTEGER NOT NULL, utilise INTEGER, revoque INTEGER NOT NULL DEFAULT 0, ip TEXT, ua TEXT)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS refus (id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, ip TEXT, page TEXT, ua TEXT)');
@@ -254,8 +255,41 @@ function ga_passe_api(array $p): bool {
     return in_array($f, GA_PASSE_JEUX[$p['jeu']][2], true);
 }
 
+/* ---------- Les coins d'une invitation (24/11, demandé par le papa) ----------
+   En créant un lien d'invitation, Anis coche ce que l'invité pourra ouvrir : des espaces (Essil, Salma, Amine, Éveil, le mur) et des jeux.
+   Rien de coché = tout le site, comme avant. La liste est relue à chaque page (changer les coins d'une invitation vaut tout de suite
+   pour les appareils déjà entrés avec ce lien). Une page fermée → la page « tes coins » (acces/coins.php) ; l'accueil aussi. */
+function ga_coins_liste(): array {
+    $l = ['essil' => ["L'espace d'Essil", '🎒', ['/essil/'], []], 'salma' => ["L'espace de Salma", '📚', ['/salma/'], []], 'amine' => ["L'espace d'Amine", '⭐', ['/amine/'], []],
+          'eveil' => ['Éveil religieux', '🌙', ['/eveil/'], []], 'mur' => ['Le mur de la famille', '📌', ['/mur.html'], ['mur.php']]];
+    foreach (GA_PASSE_JEUX as $k => $j) $l['jeu-' . $k] = [$j[0], '🎮', [$j[1]], $j[2]];
+    return $l;
+}
+// les coins ouverts à cet appareil (null = tout le site)
+function ga_coins(): ?array {
+    static $c = false; if ($c !== false) return $c; $c = null;
+    try {
+        if (!ga_active() || ga_admin()) return $c;
+        $a = ga_appareil(); if (!$a || empty($a['invitation'])) return $c;
+        $s = ga_db()->prepare('SELECT coins FROM invitations WHERE id = ?'); $s->execute([(int)$a['invitation']]);
+        $j = json_decode((string)$s->fetchColumn(), true);
+        if (is_array($j) && $j) { $l = ga_coins_liste(); $c = array_values(array_filter($j, fn($k) => is_string($k) && isset($l[$k]))); if (!$c) $c = ['aucun']; }
+    } catch (Throwable $e) { $c = null; }
+    return $c;
+}
+function ga_coin_page(array $coins, string $chemin): bool {
+    $l = ga_coins_liste();
+    foreach ($coins as $k) foreach (($l[$k][2] ?? []) as $pre) if ($chemin === $pre || (substr($pre, -1) === '/' && strpos($chemin, $pre) === 0)) return true;
+    return false;
+}
+function ga_coin_api(array $coins): bool {   // mur.php (les photos du mur) seulement si le mur est ouvert ; le reste des API comme avant
+    $f = basename((string)($_SERVER['SCRIPT_FILENAME'] ?? ''));
+    if ($f !== 'mur.php') return true;
+    return in_array('mur', $coins, true);
+}
+
 function ga_garde_api(): void {
-    if (ga_peut_entrer()) return;
+    if (ga_peut_entrer()) { $c = ga_coins(); if ($c === null || ga_coin_api($c)) return; http_response_code(401); header('Content-Type: application/json; charset=utf-8'); echo json_encode(['error' => 'acces', 'message' => "Ce coin n'est pas ouvert pour toi."], JSON_UNESCAPED_UNICODE); exit; }
     $p = ga_passe(); if ($p && ga_passe_api($p)) return;
     ga_note_refus((string)($_SERVER['REQUEST_URI'] ?? ''));
     http_response_code(401); header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store');

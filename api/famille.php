@@ -198,7 +198,20 @@ function ecran_etat(string $p): array {
     $n = (int)(new DateTime('now', new DateTimeZone('Europe/Paris')))->format('N'); $we = in_array($n, [6, 7], true);
     $nuit = in_array($n, [5, 6], true) && !empty($r['nuit_we']) ? $r['nuit_we'] : $r['nuit'];      // ce soir : demain, pas d'école ?
     $matin = $we && !empty($r['matin_we']) ? $r['matin_we'] : $r['matin'];                          // ce matin : samedi ou dimanche ?
-    return ['libre' => empty($r['on']), 'jour' => $j, 'limite' => (int)($we ? $r['weekend'] : $r['semaine']) * 60 + $bonus, 'bonus' => $bonus, 'utilise' => $u, 'nuit' => $nuit, 'matin' => $matin, 'weekend' => $we, 'demande' => demande_du_jour($p), 'now' => time()];
+    $x = ecran_jour($p); $t = time(); $base = (int)($we ? $r['weekend'] : $r['semaine']);
+    $lim = isset($x['limite']) ? (int)$x['limite'] : $base;   // 24/11 : la limite d'aujourd'hui choisie dans le tableau de bord
+    return ['libre' => empty($r['on']), 'jour' => $j, 'limite' => $lim * 60 + $bonus, 'limite_base' => $base * 60, 'limite_jour' => isset($x['limite']), 'bonus' => $bonus, 'utilise' => $u, 'nuit' => $nuit, 'matin' => $matin, 'weekend' => $we, 'demande' => demande_du_jour($p),
+            'coupe' => !empty($x['coupe']), 'ouvert_reste' => max(0, (int)($x['ouvert'] ?? 0) - $t), 'now' => $t];
+}
+/* 24/11 (demandé par le papa) : le tableau de bord de l'administration agit sur le temps de jeu d'AUJOURD'HUI.
+   reglages.ecran_jour = {Amine:{jour, coupe, ouvert (jusqu'à quand les jeux sont ouverts même la nuit ou après la limite), limite (minutes)}}.
+   « Couper » met les jeux en pause tout de suite (la tablette le voit en moins de 20 s), même si un parent avait débloqué du temps. */
+function ecran_jour(string $p): array { $a = reglage_get('ecran_jour', []); $x = is_array($a[$p] ?? null) ? $a[$p] : []; return ($x['jour'] ?? '') === jour_paris() ? $x : []; }
+function ecran_jour_set(string $p, array $ch): void { $a = reglage_get('ecran_jour', []); if (!is_array($a)) $a = [];
+    $x = ecran_jour($p); $x['jour'] = jour_paris(); foreach ($ch as $k => $v) { if ($v === null) unset($x[$k]); else $x[$k] = $v; } $a[$p] = $x; reglage_set('ecran_jour', $a); }
+function ecran_donne(string $p, int $m): void {   // du temps en plus : retiré du temps joué, et les jeux s'ouvrent pendant ces minutes (même la nuit) ; la coupure est levée
+    db()->prepare('UPDATE ecran SET sec = MAX(0, sec - ?) WHERE player = ? AND jour = ?')->execute([$m * 60, $p, jour_paris()]);
+    $x = ecran_jour($p); ecran_jour_set($p, ['coupe' => null, 'ouvert' => max(time(), (int)($x['ouvert'] ?? 0)) + $m * 60]);
 }
 
 /* ---------- « Je demande plus de temps » (14/11, demandé par le papa) ----------
@@ -234,7 +247,7 @@ function demande_repond(int $id, int $m): array {
     if ($d['statut'] !== 'attente') return ['ok' => false, 'msg' => 'Déjà répondu : ' . ($d['statut'] === 'oui' ? '+' . $d['min'] . ' min.' : 'non.'), 'player' => $d['player']];
     $m = max(0, min(120, $m)); $t = time();
     db()->prepare('UPDATE demandes SET statut = ?, min = ?, maj = ? WHERE id = ? AND statut = \'attente\'')->execute([$m > 0 ? 'oui' : 'non', $m, $t, $id]);
-    if ($m > 0) db()->prepare('UPDATE ecran SET sec = MAX(0, sec - ?) WHERE player = ? AND jour = ?')->execute([$m * 60, $d['player'], $d['jour']]);
+    if ($m > 0) { db()->prepare('UPDATE ecran SET sec = MAX(0, sec - ?) WHERE player = ? AND jour = ?')->execute([$m * 60, $d['player'], $d['jour']]); if ($d['jour'] === jour_paris()) ecran_jour_set($d['player'], ['coupe' => null]); }
     return ['ok' => true, 'msg' => $m > 0 ? $d['player'] . ' a ' . $m . ' minutes de jeu en plus.' : 'C’est noté : pas de temps en plus pour ' . $d['player'] . '.', 'player' => $d['player']];
 }
 
@@ -343,6 +356,33 @@ try {
     // le tableau de bord de l'accueil : le temps de jeu des trois enfants
     if ($method === 'GET' && $action === 'ecran_tous') {
         out(200, ['enfants' => array_combine(ENFANTS, array_map('ecran_etat', ENFANTS)), 'now' => time()]);
+    }
+    /* 24/11 : le tableau de bord de l'administration (Anis : session administrateur, session « Anis » ou son appareil) */
+    if ($action === 'tb' || $action === 'tb_ecran') {
+        if (!function_exists('ga_passe_autorise') || !ga_passe_autorise()) fail(403, 'Réservé à l’administration.');
+        if ($action === 'tb_ecran') {
+            if ($method !== 'POST' || ($_SERVER['HTTP_X_GARDE'] ?? '') !== '1') fail(400, 'Requête refusée.');
+            $p = clean_player($_POST['player'] ?? ''); if (!in_array($p, ENFANTS, true)) fail(400, 'Enfant inconnu.');
+            $f = (string)($_POST['faire'] ?? ''); $m = (int)($_POST['min'] ?? 0); $j = jour_paris();
+            db()->prepare('INSERT OR IGNORE INTO ecran (player, jour, sec) VALUES (?, ?, 0)')->execute([$p, $j]);
+            if ($f === 'coupe') ecran_jour_set($p, ['coupe' => true, 'ouvert' => null]);
+            elseif ($f === 'rend') ecran_jour_set($p, ['coupe' => null]);
+            elseif ($f === 'plus') ecran_donne($p, max(5, min(240, $m)));
+            elseif ($f === 'moins') { db()->prepare('UPDATE ecran SET sec = sec + ? WHERE player = ? AND jour = ?')->execute([max(5, min(240, $m)) * 60, $p, $j]); ecran_jour_set($p, ['ouvert' => null]); }
+            elseif ($f === 'demande') { $r = demande_repond((int)($_POST['id'] ?? 0), max(0, $m)); if (empty($r['ok'])) fail(400, $r['msg'] ?? 'Demande introuvable.'); }
+            elseif ($f === 'limite') ecran_jour_set($p, ['limite' => $m > 0 ? max(5, min(600, $m)) : null]);
+            elseif ($f === 'regles') {   // les réglages habituels (comme Progression › Réglages)
+                $r = ecran_regles(); $hh = fn($v, $d) => preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string)$v) ? (string)$v : $d;
+                $r[$p]['on'] = !empty($_POST['on']); $r[$p]['semaine'] = max(5, min(600, (int)($_POST['semaine'] ?? $r[$p]['semaine']))); $r[$p]['weekend'] = max(5, min(600, (int)($_POST['weekend'] ?? $r[$p]['weekend'])));
+                $r[$p]['nuit'] = $hh($_POST['nuit'] ?? '', $r[$p]['nuit']); $r[$p]['matin'] = $hh($_POST['matin'] ?? '', $r[$p]['matin']);
+                reglage_set('ecran', $r);
+            } else fail(400, 'Action inconnue.');
+        }
+        $vu = []; $s = db()->prepare('SELECT MAX(ts) FROM visits WHERE player = ?');
+        foreach (['Anis', 'Imen', 'Essil', 'Salma', 'Amine'] as $n) { $s->execute([$n]); $vu[$n] = (int)$s->fetchColumn(); }
+        $d = db()->prepare("SELECT page, MAX(ts) AS ts FROM visits WHERE player = ? AND ts > ? GROUP BY page ORDER BY ts DESC LIMIT 1"); $der = [];
+        foreach (array_keys($vu) as $n) { $d->execute([$n, time() - 30 * 86400]); $der[$n] = (string)($d->fetch(PDO::FETCH_ASSOC)['page'] ?? ''); }
+        out(200, ['enfants' => array_combine(ENFANTS, array_map('ecran_etat', ENFANTS)), 'regles' => ecran_regles(), 'vu' => $vu, 'page' => $der, 'now' => time()]);
     }
     if ($method !== 'POST') fail(405, 'Action inconnue.');
 
@@ -523,7 +563,7 @@ try {
     if ($action === 'ecran_plus') {
         check_pass();
         $p = clean_player($_POST['player'] ?? ''); $m = max(5, min(120, (int)($_POST['min'] ?? 15)));
-        if (in_array($p, ENFANTS, true)) db()->prepare('UPDATE ecran SET sec = MAX(0, sec - ?) WHERE player = ? AND jour = ?')->execute([$m * 60, $p, jour_paris()]);
+        if (in_array($p, ENFANTS, true)) { db()->prepare('UPDATE ecran SET sec = MAX(0, sec - ?) WHERE player = ? AND jour = ?')->execute([$m * 60, $p, jour_paris()]); ecran_jour_set($p, ['coupe' => null]); }
         $e = ecran_etat($p); $e['nuit_levee'] = true; out(200, $e);
     }
     // « 🙋 Demander plus de temps » (écran de pause) : une notification au papa
