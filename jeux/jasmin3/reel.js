@@ -15,8 +15,32 @@ window.R3 = (() => {
     TEX.forEach(k => L('t_' + k, `jasmin3/${d}/t_${k}.webp`)); L('fond', `jasmin3/${d}/fond.webp`); L('porte', 'maison/porte_bleue.webp');
     return R; }
   const de = g => g && MONDES[g.lv.n] ? charge(g.lv.n) : null;
-  function motif(R, k, taille, dx = 0){ const im = R.im['t_' + k]; if(!im) return null; let p = R.pat[k]; if(!p) p = R.pat[k] = ctx.createPattern(im, 'repeat');
-    p.setTransform(new DOMMatrix().translate(dx, 0).scale(taille / im.naturalWidth)); return p; }
+  /* 24/11 (demande du papa) : « Scène de course » = la luminosité du sol, des murs et des plateformes où court le héros (window.__j3scene).
+     'auto' (par défaut) : seules les matières trop claires (les murs blancs de Sidi Bou Saïd…) sont ramenées à un éclat de 165 sur 255 ; '100', '90', '80', '70' = en %.
+     Fait une seule fois par matière, par multiplication (marche aussi sur un Safari sans ctx.filter). */
+  const ECLAT_MAX = 165;
+  function eclat(im){ if(im.__lum != null) return im.__lum; let L = 128;
+    try { const c = document.createElement('canvas'); c.width = c.height = 24; const x = c.getContext('2d'); x.drawImage(im, 0, 0, 24, 24); const d = x.getImageData(0, 0, 24, 24).data; let s = 0, n = 0;
+      for(let i = 0; i < d.length; i += 4){ if(d[i + 3] < 128) continue; s += .2126 * d[i] + .7152 * d[i + 1] + .0722 * d[i + 2]; n++; } if(n) L = s / n; } catch(e){}
+    return im.__lum = L; }
+  function assombrit(src, w, h, f){ const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.drawImage(src, 0, 0, w, h);
+    const v = Math.round(255 * Math.min(1, f)); x.globalCompositeOperation = 'multiply'; x.fillStyle = `rgb(${v},${v},${v})`; x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'destination-in'; x.drawImage(src, 0, 0, w, h); return c; }
+  function matiere(R, k){ const im = R.im['t_' + k]; if(!im) return null; const v = window.__j3scene || 'auto';
+    const f = v === 'auto' ? Math.min(1, ECLAT_MAX / eclat(im)) : Math.min(1, (+v || 100) / 100); if(f > .99) return im;
+    const cle = f.toFixed(2); R.tx = R.tx || {}; if(R.tx[k] && R.tx[k].cle === cle) return R.tx[k].c;
+    const c = assombrit(im, im.naturalWidth, im.naturalHeight, f); R.tx[k] = { c, cle }; return c; }
+  function motif(R, k, taille, dx = 0){ const src = matiere(R, k); if(!src) return null; let o = R.pat[k]; if(!o || o.src !== src) o = R.pat[k] = { src, p:ctx.createPattern(src, 'repeat') };
+    const p = o.p; p.setTransform(new DOMMatrix().translate(dx, 0).scale(taille / (src.naturalWidth || src.width))); return p; }
+  /* 24/11 : les piques bien visibles (window.__j3pics, oui par défaut) : un contour sombre autour de l'image (fait une fois par monde)
+     et une lueur rouge au sol qui bat doucement. Au Cap Bon (tessons sur sol orange) et à l'Ichkeul (chardons dans les roseaux) on ne les voyait pas. */
+  function picsVus(R){ const im = R.im.oursins; if(!im) return null; if(R.pv) return R.pv; const w = im.naturalWidth, h = im.naturalHeight, s = Math.max(3, Math.round(h / 16)), s2 = s * 2;
+    const sil = coul => { const c = document.createElement('canvas'); c.width = w; c.height = h; const y = c.getContext('2d'); y.drawImage(im, 0, 0); y.globalCompositeOperation = 'source-in'; y.fillStyle = coul; y.fillRect(0, 0, w, h); return c; };
+    const autour = (src, r, c) => { const x = c.getContext('2d'); for(let a = 0; a < 16; a++) x.drawImage(src, s2 + Math.cos(a * Math.PI / 8) * r, s2 + Math.sin(a * Math.PI / 8) * r); };
+    const neuf = () => { const c = document.createElement('canvas'); c.width = w + 2 * s2; c.height = h + 2 * s2; return c; };
+    const halo = neuf(); autour(sil('#ffe24a'), s2, halo);   // le halo jaune qui bat (se voit sur le sol rouge comme sur l'herbe)
+    const c = neuf(); autour(sil('#1a0c06'), s, c); c.getContext('2d').drawImage(im, s2, s2);   // contour sombre + l'image
+    return R.pv = { c, halo, s:s2, w, h }; }
   const img = (R, k, x, y, w, h) => { const im = R.im[k]; if(!im) return false; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(im, x, y, w, h); return true; };
   const haut = (R, k, h) => { const im = R.im[k]; return im ? h * im.naturalWidth / im.naturalHeight : 0; };   // largeur pour une hauteur donnée
 
@@ -28,6 +52,8 @@ window.R3 = (() => {
     const w = h * im.naturalWidth / im.naturalHeight, W = Math.max(1, Math.round(w * S)), H = Math.max(1, Math.round(h * S)), c = document.createElement('canvas'); c.width = W * 2; c.height = H;
     const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; if(filtre) x.filter = filtre; x.globalAlpha = alpha || 1;
     x.drawImage(im, 0, 0, W, H); x.save(); x.translate(W * 2, 0); x.scale(-1, 1); x.drawImage(im, 0, 0, W, H); x.restore();
+    const lum = filtre && /brightness\(([\d.]+)\)/.exec(filtre);   // vieux Safari sans ctx.filter : au moins la luminosité, par multiplication
+    if(lum && !('filter' in x) && +lum[1] < 1){ const v = Math.round(255 * +lum[1]); x.globalAlpha = 1; x.globalCompositeOperation = 'multiply'; x.fillStyle = `rgb(${v},${v},${v})`; x.fillRect(0, 0, W * 2, H); x.globalCompositeOperation = 'source-over'; }
     (R.bd = R.bd || {})[k] = b = { c, cle, w: W * 2 / S, h: H / S }; return b; }
   /* 24/11 (demande du papa et de ses amis : « ça fait mal aux yeux ») : le fond seul est adouci (moins lumineux, moins de couleurs, moins de contraste),
      pour que le sol où court le héros ressorte. Réglages › L'image › « Fond du décor » (window.__j3fond) ; par défaut « doux ». Le sol, le héros et les objets ne changent pas. */
@@ -62,7 +88,12 @@ window.R3 = (() => {
     if(c === 'b'){ return img(R, 'brique', x, y, T + .5, T + .5); }
     if(c === '~'){ const top = tileAt(cx, cy - 1) !== '~', p = motif(R, 'mer', 128, t * 18); if(!p) return false; const dy = top ? 8 + Math.sin(t * 3 + cx) * 3 : 0;
       ctx.globalAlpha = .93; ctx.fillStyle = p; ctx.fillRect(x, y + dy, T + .5, T - dy + .5); ctx.globalAlpha = 1; if(top){ ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fillRect(x, y + dy, T + .5, 2.5); } return true; }
-    if(c === '^'){ const w = T + 10, h = haut(R, 'oursins', 1) ? w * R.im.oursins.naturalHeight / R.im.oursins.naturalWidth : 0; return h ? img(R, 'oursins', x - 5, y + T - h, w, h) : false; }
+    if(c === '^'){ const w = T + 10, h = haut(R, 'oursins', 1) ? w * R.im.oursins.naturalHeight / R.im.oursins.naturalWidth : 0; if(!h) return false;
+      if(window.__j3pics === false) return img(R, 'oursins', x - 5, y + T - h, w, h);
+      const P = picsVus(R), H = Math.max(h, T * .62), k = H / P.h, a = .55 + .35 * Math.sin(t * 4 + cx);   // trop plats (tessons, chardons…) : on les grandit, et on garde le milieu de l'image
+      ctx.save(); ctx.beginPath(); ctx.rect(x - 6, y + T - H - P.s * k - 2, T + 12, H + 2 * P.s * k + 4); ctx.clip();
+      const X = x + T / 2 - P.c.width * k / 2, Y = y + T - H - P.s * k;
+      ctx.globalAlpha = a; ctx.drawImage(P.halo, X, Y, P.c.width * k, P.c.height * k); ctx.globalAlpha = 1; ctx.drawImage(P.c, X, Y, P.c.width * k, P.c.height * k); ctx.restore(); return true; }
     return false; }
 
   // un objet (le contexte est déjà placé sur l'objet, le bas au point 0)

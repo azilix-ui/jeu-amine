@@ -713,7 +713,7 @@ function question(){ const k = (player || '').toLowerCase(); if(adulte()) return
    ===================================================================== */
 const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
-const prefs = Object.assign({ sound:true, music:true, amb:true, quiz:true, savoir:'quiz', bs:1, snd:{}, net:'auto', mvt:'fluide', cam:'pixel', ctr:100, sat:100, lum:100, acc:false, bflou:true, fond:'doux' }, store.get('jasmin-prefs', {}));   // 23/11 : réglages de l'image (net…bflou), par défaut comme avant
+const prefs = Object.assign({ sound:true, music:true, amb:true, quiz:true, savoir:'quiz', bs:1, snd:{}, net:'auto', mvt:'fluide', cam:'pixel', ctr:100, sat:100, lum:100, acc:false, bflou:true, fond:'doux', scene:'auto', pics:true }, store.get('jasmin-prefs', {}));   // 23/11 : réglages de l'image (net…bflou), par défaut comme avant
 const fresh = () => ({ unlocked:1, best:{}, gems:{}, tickets:0, answers:{ ok:0, ko:0 }, games:0, t:0 });
 let player = null, save = fresh(), avatarImg = null, avatarProf = null, avatarSigh = null;   // avatarSigh : la tête qui soupire   // avatarProf : la tête de profil, quand le héros marche
 const skey = () => 'jasmin:' + player;
@@ -856,7 +856,7 @@ function netVeille(dt){ if(prefs.net !== 'auto' || !PC_NET || NET_MAX <= (device
   netT += dt; netN++; if(netT >= 2){ if(netT / netN > .024){ NET_MAX = NET_MAX > 1.5 ? 1.5 : 1; netAttente = 3; resize(); } netT = 0; netN = 0; } }
 /* 23/11 (demande du papa) : régler l'image sur son écran. Contraste, couleurs, luminosité et contours accentués = filtre CSS posé sur le canvas
    (calculé par la carte graphique) ; netteté = taille de calcul (DPR) ; mouvement et caméra = la façon de placer le décor entre deux pas. */
-function imageReg(){ window.__j3flou = prefs.bflou !== false; window.__j3fond = prefs.fond || 'doux';
+function imageReg(){ window.__j3flou = prefs.bflou !== false; window.__j3fond = prefs.fond || 'doux'; window.__j3scene = String(prefs.scene || 'auto'); window.__j3pics = prefs.pics !== false;
   if(prefs.acc && !document.getElementById('j3acc')){ const d = document.createElement('div'); d.innerHTML = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="j3acc" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" kernelMatrix="0 -.35 0 -.35 2.4 -.35 0 -.35 0" preserveAlpha="true"/></filter></svg>'; document.body.appendChild(d.firstChild); }
   const f = []; if(prefs.ctr !== 100) f.push(`contrast(${prefs.ctr}%)`); if(prefs.sat !== 100) f.push(`saturate(${prefs.sat}%)`); if(prefs.lum !== 100) f.push(`brightness(${prefs.lum}%)`); if(prefs.acc) f.push('url(#j3acc)');
   if(typeof cv !== 'undefined') cv.style.filter = f.join(' '); }
@@ -867,6 +867,8 @@ const IMGREG = [['net', '🔍 Netteté', 'calculer l\'image plus grand : plus ne
   ['sat', '🎨 Couleurs', '', [[100, '100 %'], [115, '115 %'], [130, '130 %']]],
   ['lum', '☀️ Luminosité', '', [[90, '90 %'], [100, '100 %'], [110, '110 %'], [120, '120 %']]],
   ['acc', '✏️ Contours accentués', 'plus piqué ; peut ralentir un vieil ordinateur', [[false, 'Non'], [true, 'Oui']]],
+  ['scene', '🏃 Scène de course', 'le sol, les murs et les plateformes où court le héros ; Auto = seulement les murs trop blancs', [['auto', 'Auto'], ['100', '100 %'], ['90', '90 %'], ['80', '80 %'], ['70', '70 %']]],
+  ['pics', '⚠️ Piques bien visibles', 'un contour sombre et une lueur rouge autour des piques à sauter', [[true, 'Oui'], [false, 'Non']]],
   ['fond', '🏞️ Fond du décor', 'seulement la photo du fond et les maisons : le sol et le héros ressortent mieux', [['avant', 'Lumineux'], ['doux', 'Doux'], ['tresdoux', 'Très doux']]],
   ['bflou', '🌫️ Maisons du fond floutées', 'Non = le décor lointain net aussi', [[true, 'Oui'], [false, 'Non']]]];
 let imgFrom = 'opts';
@@ -1787,7 +1789,7 @@ $('jImg').onclick = () => { sfx.tap(); openImg('jopts'); };
 $('imgRows').onclick = e => { const b = e.target.closest('[data-ik]'); if(!b) return; const k = b.dataset.ik, v = b.dataset.iv;
   prefs[k] = v === 'true' ? true : v === 'false' ? false : /^\d+$/.test(v) && k !== 'net' ? +v : v; if(k === 'net'){ NET_MAX = 2; netAttente = 3; }
   store.set('jasmin-prefs', prefs); sfx.tap(); resize(); renderImg(); };
-$('imgReset').onclick = () => { Object.assign(prefs, { net:'auto', mvt:'fluide', cam:'pixel', ctr:100, sat:100, lum:100, acc:false, bflou:true, fond:'doux' }); NET_MAX = 2; store.set('jasmin-prefs', prefs); sfx.tap(); resize(); renderImg(); };
+$('imgReset').onclick = () => { Object.assign(prefs, { net:'auto', mvt:'fluide', cam:'pixel', ctr:100, sat:100, lum:100, acc:false, bflou:true, fond:'doux', scene:'auto', pics:true }); NET_MAX = 2; store.set('jasmin-prefs', prefs); sfx.tap(); resize(); renderImg(); };
 $('imgBack').onclick = () => { sfx.tap(); renderOpts(); show(imgFrom); };
 $('sndBack').onclick = () => { sfx.tap(); if(sndFrom === 'jopts'){ renderOpts(); show('jopts'); } else { renderOpts(); show('opts'); } };
 $('openHelp').onclick = () => { audio(); sfx.tap(); show('help'); };
