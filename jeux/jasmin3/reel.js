@@ -29,12 +29,17 @@ window.R3 = (() => {
     const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; if(filtre) x.filter = filtre; x.globalAlpha = alpha || 1;
     x.drawImage(im, 0, 0, W, H); x.save(); x.translate(W * 2, 0); x.scale(-1, 1); x.drawImage(im, 0, 0, W, H); x.restore();
     (R.bd = R.bd || {})[k] = b = { c, cle, w: W * 2 / S, h: H / S }; return b; }
-  function fond(g){ const R = de(g); if(!R || !R.im.fond) return false;
-    const f = bande(R, 'fond', VHL * 1.04); if(!f) return false;
+  /* 24/11 (demande du papa et de ses amis : « ça fait mal aux yeux ») : le fond seul est adouci (moins lumineux, moins de couleurs, moins de contraste),
+     pour que le sol où court le héros ressorte. Réglages › L'image › « Fond du décor » (window.__j3fond) ; par défaut « doux ». Le sol, le héros et les objets ne changent pas. */
+  const FONDS = { avant:{ f:'', m:'saturate(.8) brightness(1.04)', v:'rgba(230,242,255,' + .35 + ')' },
+    doux:{ f:'brightness(.8) saturate(.78) contrast(.9)', m:'saturate(.68) brightness(.84) contrast(.9)', v:'rgba(24,40,70,.22)' },
+    tresdoux:{ f:'brightness(.64) saturate(.62) contrast(.85)', m:'saturate(.55) brightness(.7) contrast(.88)', v:'rgba(16,28,54,.32)' } };
+  function fond(g){ const R = de(g); if(!R || !R.im.fond) return false; const FD = FONDS[window.__j3fond] || FONDS.doux;
+    const f = bande(R, 'fond', VHL * 1.04, FD.f); if(!f) return false;
     const sc = g.camX * .15; for(let k = Math.floor(sc / f.w); k * f.w - sc < VW; k++) ctx.drawImage(f.c, k * f.w - sc, -8, f.w, f.h);
-    const m = bande(R, 'maisons', 112, (window.__j3flou === false ? '' : 'blur(.7px) ') + 'saturate(.8) brightness(1.04)', .9);   /* 23/11 : le flou se coupe dans Réglages › L'image (Jasmin 3) */ if(m){ const p = g.camX * .45, y = GY * T + 10 - m.h;
+    const m = bande(R, 'maisons', 112, (window.__j3flou === false ? '' : 'blur(.7px) ') + FD.m, .9);   /* 23/11 : le flou se coupe dans Réglages › L'image (Jasmin 3) */ if(m){ const p = g.camX * .45, y = GY * T + 10 - m.h;
       for(let k = Math.floor(p / m.w); k * m.w - p < VW; k++) ctx.drawImage(m.c, k * m.w - p, y, m.w, m.h);
-      const gr = ctx.createLinearGradient(0, y - 20, 0, y + m.h); gr.addColorStop(0, 'rgba(230,242,255,0)'); gr.addColorStop(1, 'rgba(230,242,255,.35)'); ctx.fillStyle = gr; ctx.fillRect(0, y - 20, VW + 2, m.h + 20); }   // un voile de lointain
+      const gr = ctx.createLinearGradient(0, y - 20, 0, y + m.h); gr.addColorStop(0, FD.v.replace(/[\d.]+\)$/, '0)')); gr.addColorStop(1, FD.v); ctx.fillStyle = gr; ctx.fillRect(0, y - 20, VW + 2, m.h + 20); }   // un voile de lointain
     return true; }
 
   // une case du décor
