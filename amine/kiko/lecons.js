@@ -1,5 +1,5 @@
 /* « Amine & Kiko » (21/11) : l'anglais d'Amine (5 ans) depuis zéro, tout à l'oral et en images (il ne lit pas encore).
-   Kiko est un bébé chameau du Sahara, à la chéchia rouge, qui ne parle qu'anglais. Leçons 1 à 10 (A1 « tout petit »).
+   Kiko est un bébé chameau du Sahara, à la chéchia rouge, qui ne parle qu'anglais. Leçons 1 à 10 (A1 « tout petit »), puis 11 à 20 (24/11, la saison 2 : manger, s'habiller, le temps, les émotions, la maison, les formes, les transports, la plage, la journée, le grand spectacle).
    Chaque leçon : un dessin animé de 3 scènes (p : la demande à ComfyUI ; txt : ce que dit Lulu, l'anglais par Alice),
    les mots [anglais, image, français, autres façons d'entendre le mot], des petites phrases à répéter [anglais, français, image],
    un modèle de question oui / non (oui : « Is it a {w}? »), et « Kiko dit » : [consigne anglaise, mot attendu, français]. */
@@ -133,4 +133,135 @@ window.LECONS_KIKO = [
   phrases:[['Jump!', 'Saute !', '🦘'], ['Clap your hands!', 'Tape dans tes mains !', '👏'], ['Goodnight!', 'Bonne nuit !', '😴']],
   oui:'', ouiMots:['jump', 'run', 'clap', 'dance', 'sleep', 'swim'], ouiTpl:{ jump:'Is he jumping?', run:'Is he running?', clap:'Is he clapping?', dance:'Is she dancing?', sleep:'Is he sleeping?', swim:'Is he swimming?' },
   dit:[['Jump!', 'jump', 'Saute'], ['Run!', 'run', 'Cours'], ['Clap your hands!', 'clap', 'Tape dans tes mains'], ['Dance!', 'dance', 'Danse'], ['Swim!', 'swim', 'Nage'], ['Go to sleep!', 'sleep', 'Va dormir']] },
+
+/* ---------- Saison 2 (24/11) : leçons 11 à 20 ---------- */
+{ n:11, icon:'🍞', titre:'I\'m hungry!', sous:'Manger et boire : bread, milk, water, egg…', histoire:'Breakfast at Grandma\'s',
+  scenes:[
+    { p:'In a sunny traditional Tunisian kitchen with blue and white tiles, a kind smiling grandmother puts bread, eggs and a glass of milk on the table, the little boy and the baby camel sit waiting with big hungry eyes.',
+      txt:'Ce matin, Amine et Kiko vont chez mamie. Kiko dit : « <i lang="en">I\'m hungry!</i> » Ça veut dire : j\'ai faim ! Mamie apporte du pain : « <i lang="en">Bread!</i> » et du lait : « <i lang="en">Milk!</i> »' },
+    { p:'The baby camel drinks a big glass of milk and gets a funny white milk moustache, the little boy laughs holding a boiled egg.',
+      txt:'Kiko boit son lait… il a une moustache blanche ! Amine prend un œuf : « <i lang="en">An egg, please!</i> » Please, ça veut dire s\'il te plaît.' },
+    { p:'The grandmother brings a big round cake with candles to the table, the little boy and the baby camel clap their hands, warm cosy kitchen.',
+      txt:'Et pour finir, mamie apporte un gâteau ! « <i lang="en">Cake! Yummy!</i> » Kiko dit : « <i lang="en">Thank you, Grandma!</i> » Thank you, c\'est merci !' } ],
+  mots:[['bread', '🍞', 'pain', ['bred', 'breads']], ['milk', '🥛', 'lait', ['milks', 'melk']], ['water', '💧', 'eau', ['waters', 'wata']], ['egg', '🥚', 'œuf', ['eggs', 'ag']], ['cheese', '🧀', 'fromage', ['chis', 'cheeses']], ['cake', '🎂', 'gâteau', ['cakes', 'kek']]],
+  phrases:[['I\'m hungry!', 'J\'ai faim !', '😋'], ['Milk, please!', 'Du lait, s\'il te plaît !', '🥛'], ['Thank you!', 'Merci !', '🙏']],
+  oui:'Is it {w}?', ouiMots:['bread', 'milk', 'water', 'egg', 'cheese', 'cake'], ouiTpl:{ egg:'Is it an egg?', cake:'Is it a cake?' },
+  dit:[['Give me the bread!', 'bread', 'Donne-moi le pain'], ['Give me the milk!', 'milk', 'Donne-moi le lait'], ['I want water!', 'water', 'Je veux de l\'eau'], ['Give me an egg!', 'egg', 'Donne-moi un œuf'], ['I want cheese!', 'cheese', 'Je veux du fromage'], ['Where is the cake?', 'cake', 'Où est le gâteau ?']] },
+
+{ n:12, icon:'👕', titre:'Get dressed!', sous:'Les vêtements : hat, shoes, socks, coat…', histoire:'A cold morning',
+  scenes:[
+    { p:'Early winter morning in a child bedroom, through the window a snowy mountain village, the little boy in pyjamas opens a wardrobe full of clothes, the baby camel shivers next to him.',
+      txt:'Brr ! Ce matin il fait très froid. Kiko tremble ! Amine ouvre l\'armoire : « <i lang="en">Get dressed, Kiko!</i> » Ça veut dire : habille-toi !' },
+    { p:'The baby camel is dressed in a funny way: socks on his ears, a big scarf around his long neck and a little red hat, the little boy laughs while putting on his shoes.',
+      txt:'Kiko met des chaussettes… sur ses oreilles ! « <i lang="en">No, Kiko! Socks on your feet!</i> » Amine met ses chaussures : « <i lang="en">My shoes!</i> »' },
+    { p:'The little boy in a warm coat and woolly hat and the baby camel in a long striped scarf walk proudly outside in the light snow, happy.',
+      txt:'Voilà ! Amine a son manteau : « <i lang="en">My coat!</i> » et Kiko son écharpe : « <i lang="en">My scarf!</i> » Ils sont prêts !' } ],
+  mots:[['hat', '🧢', 'chapeau / bonnet', ['hats', 'at']], ['shoes', '👟', 'chaussures', ['shoe', 'choose']], ['socks', '🧦', 'chaussettes', ['sock', 'sucks']], ['coat', '🧥', 'manteau', ['coats', 'code']], ['scarf', '🧣', 'écharpe', ['scarves']], ['T-shirt', '👕', 'tee-shirt', ['t shirt', 'tshirt', 'tee shirt', 'shirt']]],
+  phrases:[['Get dressed!', 'Habille-toi !', '👕'], ['Put on your hat!', 'Mets ton bonnet !', '🧢'], ['My shoes!', 'Mes chaussures !', '👟']],
+  oui:'Is it a {w}?', ouiMots:['hat', 'coat', 'scarf', 'T-shirt', 'shoes', 'socks'], ouiTpl:{ shoes:'Are they shoes?', socks:'Are they socks?' },
+  dit:[['Put on your hat!', 'hat', 'Mets ton bonnet'], ['Put on your shoes!', 'shoes', 'Mets tes chaussures'], ['Put on your socks!', 'socks', 'Mets tes chaussettes'], ['Put on your coat!', 'coat', 'Mets ton manteau'], ['Where is the scarf?', 'scarf', 'Où est l\'écharpe ?'], ['Where is the T-shirt?', 'T-shirt', 'Où est le tee-shirt ?']] },
+
+{ n:13, icon:'☀️', titre:'Sunny or rainy?', sous:'Le temps qu\'il fait : sun, rain, wind, cloud…', histoire:'The weather at Tabarka',
+  scenes:[
+    { p:'On a cliff above the sea at Tabarka with pine trees, bright sunshine, the little boy and the baby camel wear sunglasses and smile at the sun.',
+      txt:'À Tabarka, le soleil brille ! « <i lang="en">The sun! It\'s sunny!</i> » Il fait chaud : « <i lang="en">I\'m hot!</i> »' },
+    { p:'Suddenly dark grey clouds and rain, the little boy opens a big yellow umbrella and the baby camel hides under it, raindrops everywhere, funny.',
+      txt:'Oh ! Des nuages : « <i lang="en">Clouds!</i> » Et la pluie : « <i lang="en">It\'s raining!</i> » Vite, sous le parapluie, Kiko !' },
+    { p:'After the rain, a huge colourful rainbow over the sea, the wind blows the baby camel\'s scarf, the little boy points at the rainbow, amazed.',
+      txt:'Le vent souffle : « <i lang="en">Wind!</i> » Et regarde dans le ciel… « <i lang="en">A rainbow!</i> » Un arc-en-ciel ! Quelle belle journée !' } ],
+  mots:[['sun', '☀️', 'soleil', ['son', 'sunny']], ['rain', '🌧️', 'pluie', ['raining', 'rainy', 'ren']], ['cloud', '☁️', 'nuage', ['clouds', 'cloudy']], ['wind', '🌬️', 'vent', ['windy', 'win']], ['snow', '❄️', 'neige', ['snowy', 'no']], ['rainbow', '🌈', 'arc-en-ciel', ['rain bow', 'rainbows']]],
+  phrases:[['It\'s sunny!', 'Il fait soleil !', '☀️'], ['It\'s raining!', 'Il pleut !', '🌧️'], ['I\'m cold!', 'J\'ai froid !', '🥶']],
+  oui:'Is it the {w}?', ouiMots:['sun', 'rain', 'cloud', 'wind', 'snow', 'rainbow'], ouiTpl:{ cloud:'Is it a cloud?', rainbow:'Is it a rainbow?', snow:'Is it snow?', rain:'Is it rain?', wind:'Is it the wind?', sun:'Is it the sun?' },
+  dit:[['Where is the sun?', 'sun', 'Où est le soleil ?'], ['Where is the rain?', 'rain', 'Où est la pluie ?'], ['Find the cloud!', 'cloud', 'Trouve le nuage'], ['Find the snow!', 'snow', 'Trouve la neige'], ['Where is the rainbow?', 'rainbow', 'Où est l\'arc-en-ciel ?'], ['Find the wind!', 'wind', 'Trouve le vent']] },
+
+{ n:14, icon:'😊', titre:'Happy Kiko', sous:'Les émotions : happy, sad, angry, scared…', histoire:'Kiko\'s lost hat',
+  scenes:[
+    { p:'In a garden with orange trees, the baby camel without his red hat cries big tears, very sad, the little boy comes to comfort him, gentle.',
+      txt:'Oh non ! Kiko a perdu sa chéchia. Il pleure : « <i lang="en">I\'m sad.</i> » Sad, ça veut dire triste.' },
+    { p:'In the garden at dusk, a funny little owl hoots in a tree, the baby camel jumps back scared with big round eyes, the little boy holds a flashlight.',
+      txt:'Ils cherchent partout. Hou hou ! Un hibou ! Kiko a peur : « <i lang="en">I\'m scared!</i> » Amine dit : « <i lang="en">It\'s OK, Kiko!</i> »' },
+    { p:'The little boy finds the little red hat hanging on a branch of an orange tree and puts it on the baby camel\'s head, the camel smiles very happily, joyful.',
+      txt:'La voilà ! La chéchia était dans l\'arbre ! Kiko saute de joie : « <i lang="en">I\'m happy!</i> » Happy, ça veut dire content !' } ],
+  mots:[['happy', '😀', 'content', ['heppy', 'hapi']], ['sad', '😢', 'triste', ['said', 'sat']], ['angry', '😠', 'fâché', ['hungry', 'angri']], ['scared', '😱', 'avoir peur', ['scare', 'skared']], ['tired', '🥱', 'fatigué', ['tire', 'tied']], ['hungry', '😋', 'avoir faim', ['angry', 'hungri']]],
+  phrases:[['I\'m happy!', 'Je suis content !', '😀'], ['I\'m sad.', 'Je suis triste.', '😢'], ['It\'s OK!', 'Ça va aller !', '🤗']],
+  oui:'Is he {w}?', ouiMots:['happy', 'sad', 'angry', 'scared', 'tired', 'hungry'],
+  dit:[['Show me happy!', 'happy', 'Montre-moi content'], ['Show me sad!', 'sad', 'Montre-moi triste'], ['Show me angry!', 'angry', 'Montre-moi fâché'], ['Show me scared!', 'scared', 'Montre-moi la peur'], ['Who is tired?', 'tired', 'Qui est fatigué ?'], ['Who is hungry?', 'hungry', 'Qui a faim ?']] },
+
+{ n:15, icon:'🏠', titre:'My house', sous:'La maison : door, window, bed, chair…', histoire:'Hide and seek',
+  scenes:[
+    { p:'In the white courtyard of a traditional Tunisian house with a big blue studded door, the little boy covers his eyes and counts, the baby camel tiptoes away to hide, funny.',
+      txt:'Amine et Kiko jouent à cache-cache dans la maison ! Amine compte : « <i lang="en">One, two, three…</i> » Kiko passe la porte : « <i lang="en">The door!</i> »' },
+    { p:'The little boy looks behind a window with blue shutters and under a table, the long neck of the baby camel sticks out from behind a curtain, very funny.',
+      txt:'Amine cherche : « <i lang="en">Where is Kiko?</i> » Derrière la fenêtre ? « <i lang="en">The window!</i> » Non ! Sous la chaise ? « <i lang="en">The chair!</i> » Non !' },
+    { p:'In a child bedroom, the baby camel is badly hidden under a blanket on the bed, his legs and red hat sticking out, the little boy laughs and finds him.',
+      txt:'Ah ! Une grosse bosse dans le lit : « <i lang="en">The bed!</i> » « <i lang="en">I found you, Kiko!</i> » Je t\'ai trouvé !' } ],
+  mots:[['door', '🚪', 'porte', ['doors', 'dor']], ['window', '🪟', 'fenêtre', ['windows', 'windo']], ['bed', '🛏️', 'lit', ['bad', 'bet']], ['chair', '🪑', 'chaise', ['chairs', 'share']], ['bath', '🛁', 'baignoire', ['bat', 'bass']], ['lamp', '💡', 'lampe', ['lamps', 'lump']]],
+  phrases:[['Where is Kiko?', 'Où est Kiko ?', '🐫'], ['Open the door!', 'Ouvre la porte !', '🚪'], ['I found you!', 'Je t\'ai trouvé !', '🙌']],
+  oui:'Is it a {w}?', ouiMots:['door', 'window', 'bed', 'chair', 'bath', 'lamp'],
+  dit:[['Open the door!', 'door', 'Ouvre la porte'], ['Look at the window!', 'window', 'Regarde la fenêtre'], ['Go to bed!', 'bed', 'Va au lit'], ['Sit on the chair!', 'chair', 'Assieds-toi sur la chaise'], ['Where is the lamp?', 'lamp', 'Où est la lampe ?'], ['Where is the bath?', 'bath', 'Où est la baignoire ?']] },
+
+{ n:16, icon:'🔺', titre:'Shapes', sous:'Les formes : circle, square, triangle, star…', histoire:'The magic tiles',
+  scenes:[
+    { p:'In a beautiful old courtyard of Kairouan covered with colourful zellige tiles, the little boy and the baby camel look at the patterns on the wall, amazed.',
+      txt:'À Kairouan, les murs sont couverts de carreaux de toutes les couleurs ! Kiko montre un rond : « <i lang="en">A circle!</i> » Et un carré : « <i lang="en">A square!</i> »' },
+    { p:'The little boy draws shapes with chalk on the ground of a sunny square, a triangle, a star and a heart, the baby camel holds a piece of chalk in his mouth.',
+      txt:'Amine dessine avec une craie : « <i lang="en">A triangle!</i> » Kiko dessine aussi : « <i lang="en">A star! A heart!</i> »' },
+    { p:'At night on a rooftop, the little boy and the baby camel look at the sky full of stars and a thin crescent moon, magical.',
+      txt:'Le soir, sur la terrasse, ils regardent le ciel : « <i lang="en">Look! Stars!</i> » Une étoile, deux étoiles… plein d\'étoiles !' } ],
+  mots:[['circle', '⚪', 'rond', ['circles', 'sircle']], ['square', '🟥', 'carré', ['squares', 'sware']], ['triangle', '🔺', 'triangle', ['triangles', 'try angle']], ['star', '⭐', 'étoile', ['stars', 'stair']], ['heart', '❤️', 'cœur', ['hearts', 'hart', 'art']], ['diamond', '🔷', 'losange', ['diamonds', 'dimond']]],
+  phrases:[['A big circle!', 'Un grand rond !', '⚪'], ['I like stars.', 'J\'aime les étoiles.', '⭐'], ['A red heart!', 'Un cœur rouge !', '❤️']],
+  oui:'Is it a {w}?', ouiMots:['circle', 'square', 'triangle', 'star', 'heart', 'diamond'],
+  dit:[['Touch the circle!', 'circle', 'Touche le rond'], ['Touch the square!', 'square', 'Touche le carré'], ['Touch the triangle!', 'triangle', 'Touche le triangle'], ['Find the star!', 'star', 'Trouve l\'étoile'], ['Find the heart!', 'heart', 'Trouve le cœur'], ['Touch the diamond!', 'diamond', 'Touche le losange']] },
+
+{ n:17, icon:'🚌', titre:'Beep beep!', sous:'Les transports : <i lang="en">car, bus, train, boat, plane</i>…', histoire:'A trip to Sidi Bou Saïd',
+  scenes:[
+    { p:'At a small sunny train station by the sea, a white and blue suburban train arrives, the little boy and the baby camel wave happily on the platform.',
+      txt:'Aujourd\'hui, on va à Sidi Bou Saïd ! Voici le train : « <i lang="en">The train! Choo choo!</i> » Amine et Kiko montent dedans.' },
+    { p:'Through the train window, a sailing boat on the blue sea and a plane in the sky, the little boy and the baby camel point at them with their noses against the glass.',
+      txt:'Par la fenêtre, on voit la mer : « <i lang="en">A boat!</i> » Et dans le ciel : « <i lang="en">A plane!</i> » Il vole très haut !' },
+    { p:'In the white and blue streets of Sidi Bou Saïd, a little yellow bus goes by, the little boy rides a small bicycle and the baby camel trots behind him, joyful.',
+      txt:'À Sidi Bou Saïd, un bus passe : « <i lang="en">Beep beep! A bus!</i> » Amine fait du vélo : « <i lang="en">My bike!</i> » Kiko court derrière !' } ],
+  mots:[['car', '🚗', 'voiture', ['cars', 'ca']], ['bus', '🚌', 'bus', ['buses', 'boss']], ['train', '🚆', 'train', ['trains', 'tren']], ['boat', '⛵', 'bateau', ['boats', 'bot', 'both']], ['plane', '✈️', 'avion', ['planes', 'plain']], ['bike', '🚲', 'vélo', ['bikes', 'bicycle']]],
+  phrases:[['Beep beep!', 'Tut tut !', '🚗'], ['I like trains.', 'J\'aime les trains.', '🚆'], ['A big boat!', 'Un grand bateau !', '⛵']],
+  oui:'Is it a {w}?', ouiMots:['car', 'bus', 'train', 'boat', 'plane', 'bike'],
+  dit:[['Where is the bus?', 'bus', 'Où est le bus ?'], ['Find the train!', 'train', 'Trouve le train'], ['Find the boat!', 'boat', 'Trouve le bateau'], ['Where is the plane?', 'plane', 'Où est l\'avion ?'], ['Give me the bike!', 'bike', 'Donne-moi le vélo'], ['Where is the car?', 'car', 'Où est la voiture ?']] },
+
+{ n:18, icon:'🏖️', titre:'At the beach', sous:'La plage : sea, sand, shell, crab…', histoire:'A day in Djerba',
+  scenes:[
+    { p:'On a beautiful white sand beach of Djerba with turquoise sea and palm trees, the little boy runs towards the water, the baby camel follows with a bucket and spade in his mouth.',
+      txt:'Vive les vacances à Djerba ! « <i lang="en">The sea!</i> » La mer est toute bleue. Kiko apporte un seau : « <i lang="en">A bucket!</i> »' },
+    { p:'The little boy and the baby camel build a big sandcastle, a little crab walks out of the sand and pinches the camel\'s tail, very funny.',
+      txt:'Ils font un château de sable : « <i lang="en">Sand!</i> » Oh ! Un crabe pince la queue de Kiko : « <i lang="en">A crab! Ouch!</i> »' },
+    { p:'The little boy finds a pretty seashell and holds it to his ear, the baby camel licks a big ice cream cone, sunset on the sea.',
+      txt:'Amine trouve un coquillage : « <i lang="en">A shell!</i> » Et Kiko mange une glace : « <i lang="en">Ice cream! Yummy!</i> »' } ],
+  mots:[['sea', '🌊', 'mer', ['see', 'si']], ['sand', '🏖️', 'sable', ['sent', 'send']], ['shell', '🐚', 'coquillage', ['shells', 'shall']], ['crab', '🦀', 'crabe', ['crabs', 'grab']], ['bucket', '🪣', 'seau', ['buckets', 'bucked']], ['ice cream', '🍦', 'glace', ['icecream', 'ice-cream', 'i scream']]],
+  phrases:[['I love the sea!', 'J\'adore la mer !', '🌊'], ['A little crab!', 'Un petit crabe !', '🦀'], ['Ice cream, please!', 'Une glace, s\'il te plaît !', '🍦']],
+  oui:'Is it {a}{w}?', ouiMots:['shell', 'crab', 'bucket', 'ice cream'], ouiTpl:{ sea:'Is it the sea?', sand:'Is it sand?' },
+  dit:[['Where is the sea?', 'sea', 'Où est la mer ?'], ['Find the crab!', 'crab', 'Trouve le crabe'], ['Give me the shell!', 'shell', 'Donne-moi le coquillage'], ['Give me the bucket!', 'bucket', 'Donne-moi le seau'], ['I want ice cream!', 'ice cream', 'Je veux une glace'], ['Touch the sand!', 'sand', 'Touche le sable']] },
+
+{ n:19, icon:'🪥', titre:'Good morning!', sous:'Ma journée : wake up, wash, brush, eat, sleep…', histoire:'Kiko\'s day',
+  scenes:[
+    { p:'Early morning in a child bedroom, sunlight through the window, the little boy stretches in his bed, the baby camel yawns very wide next to the bed, alarm clock ringing.',
+      txt:'Dring ! Le réveil sonne. « <i lang="en">Good morning, Kiko! Wake up!</i> » Kiko bâille… il est encore fatigué !' },
+    { p:'In a bathroom with blue tiles, the little boy brushes his teeth in front of the mirror, the baby camel has foam all around his mouth with a toothbrush, very funny.',
+      txt:'Dans la salle de bain : « <i lang="en">Wash your face! Brush your teeth!</i> » Kiko a de la mousse partout ! Ha ha !' },
+    { p:'At night, the little boy in pyjamas drinks a glass of milk at the kitchen table, then the baby camel and the boy go to bed, moon through the window, cosy.',
+      txt:'Le soir, on mange, on boit son lait : « <i lang="en">Eat! Drink!</i> » Et au lit : « <i lang="en">Goodnight, Kiko! Sleep well!</i> »' } ],
+  mots:[['wake up', '⏰', 'se réveiller', ['wakeup', 'wake', 'woke up']], ['wash', '🧼', 'se laver', ['washing', 'watch']], ['brush', '🪥', 'brosser (les dents)', ['brushing', 'brash']], ['eat', '🥣', 'manger', ['eating', 'it']], ['drink', '🥛', 'boire', ['drinking', 'drink milk']], ['sleep', '😴', 'dormir', ['sleeping', 'slip']]],
+  phrases:[['Good morning!', 'Bonjour ! (le matin)', '🌅'], ['Brush your teeth!', 'Brosse-toi les dents !', '🪥'], ['Sleep well!', 'Dors bien !', '😴']],
+  oui:'', ouiMots:['wake up', 'wash', 'brush', 'eat', 'drink', 'sleep'], ouiTpl:{ 'wake up':'Is he waking up?', wash:'Is he washing?', brush:'Is he brushing his teeth?', eat:'Is he eating?', drink:'Is he drinking?', sleep:'Is he sleeping?' },
+  dit:[['Wake up!', 'wake up', 'Réveille-toi'], ['Wash your hands!', 'wash', 'Lave-toi les mains'], ['Brush your teeth!', 'brush', 'Brosse-toi les dents'], ['Eat your breakfast!', 'eat', 'Mange ton petit-déjeuner'], ['Drink your milk!', 'drink', 'Bois ton lait'], ['Go to sleep!', 'sleep', 'Va dormir']] },
+
+{ n:20, icon:'🎪', titre:'The big show', sous:'Le grand spectacle : on revoit tout !', histoire:'Kiko\'s big show',
+  scenes:[
+    { p:'In the ancient Roman amphitheatre of El Jem decorated with lanterns at sunset, the little boy and the baby camel stand on a small stage, an audience of happy children claps.',
+      txt:'C\'est le grand spectacle de Kiko, dans l\'amphithéâtre d\'El Jem ! Amine dit : « <i lang="en">Hello, everybody!</i> » Tout le monde applaudit !' },
+    { p:'On the stage, the baby camel juggles with colourful fruits and balls while the little boy shows big cards with shapes and colours, festive lights, fun.',
+      txt:'Kiko jongle : « <i lang="en">An apple, a ball, a star!</i> » Amine montre les couleurs : « <i lang="en">Red, blue, yellow!</i> » Bravo !' },
+    { p:'Fireworks above the amphitheatre of El Jem at night, the little boy and the baby camel bow together on the stage, confetti everywhere, very joyful.',
+      txt:'Pour finir, un feu d\'artifice ! Kiko et Amine saluent : « <i lang="en">Thank you! Goodbye!</i> » Bravo Amine, tu parles anglais !' } ],
+  mots:[['hello', '👋', 'bonjour', ['hallo', 'hi']], ['happy', '😀', 'content', ['heppy']], ['sun', '☀️', 'soleil', ['son']], ['bus', '🚌', 'bus', ['boss']], ['star', '⭐', 'étoile', ['stars']], ['cake', '🎂', 'gâteau', ['cakes']], ['shell', '🐚', 'coquillage', ['shells']], ['bed', '🛏️', 'lit', ['bad']]],
+  phrases:[['Hello, everybody!', 'Bonjour tout le monde !', '👋'], ['I\'m happy!', 'Je suis content !', '😀'], ['Thank you! Goodbye!', 'Merci ! Au revoir !', '🎉']],
+  oui:'Is it {a}{w}?', ouiMots:['star', 'cake', 'shell', 'bed', 'bus', 'sun'], ouiTpl:{ sun:'Is it the sun?', happy:'Is he happy?' },
+  dit:[['Say hello!', 'hello', 'Dis bonjour'], ['Show me happy!', 'happy', 'Montre-moi content'], ['Where is the sun?', 'sun', 'Où est le soleil ?'], ['Find the bus!', 'bus', 'Trouve le bus'], ['Find the star!', 'star', 'Trouve l\'étoile'], ['Give me the cake!', 'cake', 'Donne-moi le gâteau'], ['Give me the shell!', 'shell', 'Donne-moi le coquillage'], ['Go to bed!', 'bed', 'Va au lit']] },
 ];

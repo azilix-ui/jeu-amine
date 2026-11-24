@@ -394,7 +394,7 @@ function nhCard(S, qui){   // 21/11 : Je lis les nombres et l'heure (défis réu
 const FR5T = ['Les déterminants possessifs et démonstratifs','Les pronoms compléments','Imparfait et passé simple','L\'accord du participe passé','Les relatives','Les figures de style'];
 const PIPT = ['Hello, Pip!','Pip counts the stars','In my school bag','This is my family','Animals of Tunisia','Doctor Salma','Yummy!','Where is Pip?','Sunny Tunisia','Pip can fly!'];
 const FILT = ['Le carnet de voyage','Les souvenirs de Mamie Fennec','Le souk des mots','Le marché de Djerba','Les lettres caméléons'];
-const KIKOT = ['Hello, Kiko!','Colours','One, two, three!','Animals','Six, seven… ten!','Yummy fruit','Touch your nose!','My family','My toys','Jump, Kiko!'];
+const KIKOT = ['Hello, Kiko!','Colours','One, two, three!','Animals','Six, seven… ten!','Yummy fruit','Touch your nose!','My family','My toys','Jump, Kiko!','I\'m hungry!','Get dressed!','Sunny or rainy?','Happy Kiko','My house','Shapes','Beep beep!','At the beach','Good morning!','The big show'];
 function a1Card(S, qui, cle, titres, nb, titre){
   let tot = 0, faits = 0; const rows = titres.map((t, i) => { const c = cle + (i + 1), p = prog(S, qui, c), d = p && p.data ? p.data[c] : null, st = d && d.stars ? Object.values(d.stars).reduce((a, b) => a + b, 0) : 0, n = d && d.stars ? Object.keys(d.stars).filter(k => d.stars[k] > 0).length : 0;
     tot += st; if(n >= nb) faits++; const err = d && d.items ? Object.entries(d.items).filter(([, v]) => v.ko > 0).map(([k]) => k.replace(/^[a-z]-/, '')).slice(0, 4) : [];
