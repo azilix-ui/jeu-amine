@@ -109,6 +109,83 @@ if ($a === 'invitations') {
     mc_ok('Invitation créée.', ['code' => $code, 'lien' => '/reseau/inscription/?code=' . $code], 201);
 }
 
+/* ---------- recopier l'ancien mur de la famille (26/11) : photos, dessins et vidéos, avec leurs commentaires ---------- */
+if ($a === 'migrer-mur') {
+    $seulAdmin();
+    $src = ga_donnees() . '/mur.sqlite'; $dos = ga_donnees() . '/mur';
+    if (!is_file($src)) mc_json(200, ['success' => true, 'total' => 0, 'faits' => 0, 'restants' => 0, 'textes' => 0, 'absent' => true]);
+    $mur = new PDO('sqlite:' . $src); $mur->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); $mur->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $mur->exec('PRAGMA busy_timeout = 4000');
+    $cols = array_column($mur->query('PRAGMA table_info(messages)')->fetchAll(), 'name');
+    $g = in_array('genre', $cols, true) ? 'genre' : "''"; $md = in_array('media', $cols, true) ? 'media' : "''";
+    $tous = $mur->query("SELECT id, auteur, texte, img, cree, $g AS genre, $md AS media FROM messages ORDER BY id")->fetchAll();
+    $avecMedia = array_values(array_filter($tous, fn($x) => $x['genre'] === 'video' || (int)$x['img'] === 1));
+    $deja = array_flip(array_map('intval', $db->query('SELECT mur FROM import_mur')->fetchAll(PDO::FETCH_COLUMN)));
+    $aFaire = array_values(array_filter($avecMedia, fn($x) => !isset($deja[(int)$x['id']])));
+    $etat = fn($faits = 0, $sautes = []) => mc_json(200, ['success' => true, 'total' => count($avecMedia), 'faits' => $faits, 'restants' => count($aFaire) - $faits - count($sautes),
+        'deja' => count($deja), 'textes' => count($tous) - count($avecMedia), 'sautes' => $sautes]);
+    if ($methode !== 'POST') $etat();
+
+    // qui a écrit sur le mur → quel compte de la famille (sinon le compte d'Anis, avec le prénom devant le texte)
+    $comptes = []; foreach ($db->query('SELECT id, famille FROM users WHERE famille IS NOT NULL')->fetchAll() as $u) $comptes[mb_strtolower($u['famille'])] = (int)$u['id'];
+    $alias = ['papa' => 'anis', 'maman' => 'imen'];
+    $qui = function (string $nom) use ($comptes, $alias): array {
+        $k = mb_strtolower(trim($nom)); $k = $alias[$k] ?? $k;
+        return isset($comptes[$k]) ? [$comptes[$k], ''] : [$comptes['anis'], trim($nom)];
+    };
+    $copie = function (string $fichier, int $owner, string $mime, string $ext) use ($db): ?string {
+        if (!is_file($fichier)) return null;
+        $cle = bin2hex(random_bytes(16)) . '.' . $ext;
+        if (!@copy($fichier, mc_dossier() . '/media/' . $cle)) return null;
+        $wh = $ext === 'webp' ? (@getimagesize($fichier) ?: [null, null]) : [null, null];
+        $db->prepare('INSERT INTO media (cle, owner, mime, taille, w, h, cree) VALUES (?, ?, ?, ?, ?, ?, ?)')->execute([$cle, $owner, $mime, filesize($fichier), $wh[0], $wh[1], time()]);
+        return $cle;
+    };
+    // la musique d'une vidéo « d'origine » (jouée par-dessus) : copiée une seule fois dans Mechmoum
+    $musiques = [];
+    $musique = function (string $id) use (&$musiques, $copie, $comptes): ?string {
+        if ($id === '' || !preg_match('/^[a-z0-9-]{1,40}$/', $id)) return null;
+        if (isset($musiques[$id])) return $musiques[$id];
+        $cle = mc_reglage('mur-musique-' . $id);
+        if ($cle && is_file(mc_dossier() . '/media/' . $cle)) return $musiques[$id] = $cle;
+        $f = str_starts_with($id, 'el-') ? ga_donnees() . '/mur-musique/' . $id . '.mp3' : ga_racine() . '/mur/musique/' . $id . '.mp3';
+        $cle = $copie($f, $comptes['anis'], 'audio/mpeg', 'mp3');
+        if ($cle) mc_reglage('mur-musique-' . $id, $cle);
+        return $musiques[$id] = $cle;
+    };
+
+    $faits = 0; $sautes = []; $debut = microtime(true);
+    foreach ($aFaire as $m) {
+        if ($faits >= 20 || microtime(true) - $debut > 20) break;   // par petits paquets : l'écran relance tout seul
+        [$auteur, $prenom] = $qui((string)$m['auteur']);
+        $texte = trim((string)$m['texte']); if ($prenom !== '') $texte = '📌 ' . $prenom . ($texte !== '' ? ' : ' . $texte : '');
+        $id = (int)$m['id']; $poster = (int)$m['img'] === 1 ? $copie("$dos/$id.webp", $auteur, 'image/webp', 'webp') : null;
+        if ($m['genre'] === 'video') {
+            $p = explode('|', (string)$m['media']); $ext = in_array($p[0] ?? '', ['mp4', 'webm'], true) ? $p[0] : 'mp4';
+            $video = $copie("$dos/$id.$ext", $auteur, $ext === 'webm' ? 'video/webm' : 'video/mp4', $ext);
+            if (!$video) { $sautes[] = $id; $db->prepare('INSERT OR IGNORE INTO import_mur (mur, post, cree) VALUES (?, NULL, ?)')->execute([$id, time()]); mc_efface_media($poster); continue; }
+            $mus = null; if (($p[2] ?? '') === 'o' && ($k = $musique((string)($p[1] ?? '')))) $mus = $k . '|' . round((float)($p[3] ?? 1), 2) . '|' . round((float)($p[4] ?? .7), 2);
+            $db->prepare('INSERT INTO posts (author, caption, type, media, poster, cree, musique) VALUES (?, ?, \'video\', ?, ?, ?, ?)')->execute([$auteur, mb_substr($texte, 0, 2200), $video, $poster, (int)$m['cree'], $mus]);
+        } else {
+            if (!$poster) { $sautes[] = $id; $db->prepare('INSERT OR IGNORE INTO import_mur (mur, post, cree) VALUES (?, NULL, ?)')->execute([$id, time()]); continue; }
+            $db->prepare('INSERT INTO posts (author, caption, type, media, cree) VALUES (?, ?, \'image\', ?, ?)')->execute([$auteur, mb_substr($texte, 0, 2200), $poster, (int)$m['cree']]);
+        }
+        $post = (int)$db->lastInsertId();
+        $db->prepare('INSERT OR REPLACE INTO import_mur (mur, post, cree) VALUES (?, ?, ?)')->execute([$id, $post, time()]);
+        try {
+            $c = $mur->prepare('SELECT id, auteur, texte, cree FROM commentaires WHERE message = ? ORDER BY id'); $c->execute([$id]);
+            foreach ($c->fetchAll() as $co) {
+                [$ca, $cp] = $qui((string)$co['auteur']);
+                $db->prepare('INSERT INTO comments (post, author, text, cree) VALUES (?, ?, ?, ?)')->execute([$post, $ca, mb_substr(($cp !== '' ? $cp . ' : ' : '') . $co['texte'], 0, 1000), (int)$co['cree']]);
+                $db->prepare('INSERT OR IGNORE INTO import_mur_com (com, comment) VALUES (?, ?)')->execute([(int)$co['id'], (int)$db->lastInsertId()]);
+            }
+        } catch (Throwable $e) { /* ancien mur sans commentaires */ }
+        $faits++;
+    }
+    mc_journal($moi['username'], 'mur recopié', $faits . ' publication(s)' . ($sautes ? ', ' . count($sautes) . ' fichier(s) manquant(s)' : ''));
+    $etat($faits, $sautes);
+}
+
 if ($a === 'reglages' && $methode === 'POST') {
     $seulAdmin();
     if (isset($c['prive'])) mc_reglage('prive', !empty($c['prive']) && $c['prive'] !== 'false' && $c['prive'] !== '0' ? '1' : '0');

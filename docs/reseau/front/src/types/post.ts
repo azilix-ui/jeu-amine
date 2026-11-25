@@ -6,6 +6,7 @@ export type Post = {
 	image: string
 	type?: "image" | "video"
 	video?: string | null
+	musique?: { src: string; volV: number; volM: number } | null
 	author: {
 		username: string
 		image?: string

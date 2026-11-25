@@ -315,6 +315,7 @@ if ($route === 'stories') {
         mc_ok('Story publiée', ['story' => mc_story($s->fetch(), $moi, $mid)], 201);
     }
     if ($a === '' && $methode === 'GET') {
+        mc_menage();
         $s = $db->prepare('SELECT * FROM stories WHERE expire > ? AND cache = 0 AND author NOT IN (' . mc_in($caches) . ') AND (author = ? OR author IN (SELECT followed FROM follows WHERE follower = ?)) ORDER BY cree');
         $s->execute([time(), $mid, $mid]); $l = $s->fetchAll(); $us = mc_users(array_column($l, 'author'));
         $g = [];
@@ -497,12 +498,24 @@ function mc_posts(array $l, int $moi, array $caches, bool $avecComments): array 
     $us = mc_users(array_column($l, 'author'));
     return array_values(array_filter(array_map(function ($po) use ($us, $likes, $nc, $nb, $mes, $coms, $avecComments) {
         $u = $us[(int)$po['author']] ?? null; if (!$u) return null; $id = (int)$po['id']; $video = $po['type'] === 'video';
-        $r = ['_id' => (string)$id, 'caption' => $po['caption'], 'type' => $po['type'], 'image' => mc_media_url($video ? ($po['poster'] ?: null) : $po['media']), 'video' => $video ? mc_media_url($po['media']) : null,
+        $r = ['_id' => (string)$id, 'caption' => $po['caption'], 'type' => $po['type'], 'image' => mc_media_url($video ? ($po['poster'] ?: null) : $po['media']), 'video' => $video ? mc_media_url($po['media']) : null, 'musique' => mc_musique($po['musique'] ?? ''),
             'author' => mc_mini($u, false) + ['_id' => (string)$u['id']], 'likes' => $likes[$id] ?? [], 'isBookmarked' => isset($mes[$id]), 'bookmarksCount' => $nb[$id] ?? 0,
             'commentsCount' => $nc[$id] ?? 0, 'createdAt' => mc_iso((int)$po['cree'])];
         if ($avecComments) $r['comments'] = $coms[$id] ?? [];
         return $r;
     }, $l)));
+}
+// « cle|volume vidéo|volume musique » → ce que l'interface joue par-dessus la vidéo
+function mc_musique(?string $m): ?array {
+    if (!$m) return null; $x = explode('|', $m);
+    return ['src' => mc_media_url($x[0]), 'volV' => (float)($x[1] ?? 1), 'volM' => (float)($x[2] ?? .7)];
+}
+// Le ménage (1 fois sur 20) : les stories finies depuis 2 jours (et leurs fichiers), les notifications lues de plus de 6 mois
+function mc_menage(): void {
+    if (random_int(1, 20) !== 1) return;
+    $db = mc_db(); $t = time();
+    foreach ($db->query('SELECT id, media, poster FROM stories WHERE expire < ' . ($t - 2 * 86400))->fetchAll() as $st) { mc_efface_media($st['media']); mc_efface_media($st['poster']); $db->prepare('DELETE FROM stories WHERE id = ?')->execute([$st['id']]); }
+    $db->exec('DELETE FROM notifications WHERE lu = 1 AND cree < ' . ($t - 180 * 86400));
 }
 function mc_supprime_post(array $po): void {
     mc_efface_media($po['media']); mc_efface_media($po['poster']);

@@ -68,6 +68,45 @@ function Apercu({ c }: { c: any }) {
 	)
 }
 
+function AncienMur() {
+	const qc = useQueryClient()
+	const { data, refetch } = useQuery({ queryKey: ["admin", "migrer-mur"], queryFn: () => lire("/admin/migrer-mur") })
+	const [encours, setEncours] = useState(false)
+	const [faits, setFaits] = useState(0)
+	if (!data || data.absent || data.total === 0) return null
+	const lancer = async () => {
+		setEncours(true)
+		let n = 0
+		for (let tour = 0; tour < 200; tour++) {
+			const { data: d } = await axios_instance.post("/admin/migrer-mur", {})
+			if (!d.success) { toast.error(d.message || "Ça n'a pas marché"); break }
+			n += d.faits
+			setFaits(n)
+			if (d.restants <= 0 || d.faits === 0) break
+		}
+		setEncours(false)
+		toast.success(`${n} publication(s) recopiée(s) du mur 🌼`)
+		refetch()
+		qc.invalidateQueries()
+	}
+	return (
+		<div className={carte + " space-y-2"}>
+			<h3 className="font-extrabold text-lg">🧱 L&apos;ancien mur de la famille</h3>
+			<p className="text-sm text-gray-600">
+				{data.total} photo(s), dessin(s) et vidéo(s) sur le mur, dont <b>{data.deja}</b> déjà dans Mechmoum. Elles gardent leur date, leur texte, leur auteur et leurs commentaires ; les vidéos gardent leur musique.
+				{data.textes > 0 && ` Les ${data.textes} message(s) sans image restent sur le mur.`} Le mur n&apos;est pas effacé.
+			</p>
+			{data.restants > 0 ? (
+				<button type="button" disabled={encours} onClick={lancer} className={btn + " mc-degrade text-white"}>
+					{encours ? `Copie en cours… ${faits}` : `Recopier les ${data.restants} dans Mechmoum`}
+				</button>
+			) : (
+				<p className="text-sm font-bold text-teal-700">✓ Tout est recopié.</p>
+			)}
+		</div>
+	)
+}
+
 function Tableau({ etat, recharger }: { etat: any; recharger: () => void }) {
 	const s = etat?.stats || {}
 	const r = etat?.reglages || {}
@@ -87,6 +126,7 @@ function Tableau({ etat, recharger }: { etat: any; recharger: () => void }) {
 					</div>
 				))}
 			</div>
+			{etat?.admin && <AncienMur />}
 			{etat?.admin && (
 				<div className={carte + " divide-y"}>
 					<h3 className="font-extrabold text-lg pb-2 flex items-center gap-2"><Settings className="w-5 h-5" /> Réglages</h3>

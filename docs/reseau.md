@@ -177,8 +177,30 @@ Anis (rôle admin, ou administrateur du site) voit tout. Un **modérateur** (rô
   5. Ouvrir `/reseau/` : on doit retrouver les publications. Si tout va bien, supprimer `.ancienne` et `.ancien` quelques jours plus tard.
 - **Perte totale du site** : le dépôt GitHub redonne tout le code. Il suffit de remettre `famille-data/reseau/` depuis la dernière sauvegarde.
 
-## 12. Ce qui reste possible
+## 12. L'ancien mur recopié (26/11)
 
-- Les anciennes publications du mur (`mur.html`) ne sont pas recopiées dans Mechmoum (proposé, pas fait).
+- **Administration › Tableau de bord › « 🧱 L'ancien mur de la famille »** : le bouton « Recopier les N dans Mechmoum » copie les photos, les dessins et les vidéos du mur (`famille-data/mur.sqlite` et `famille-data/mur/`) en publications de Mechmoum. Ce sont des **copies** : le mur n'est ni effacé ni changé.
+- **Ce qui est gardé** :
+  - la date d'origine, le texte et l'auteur ; « Papa » et « Maman » vont aux comptes d'Anis et d'Imen ;
+  - un invité du mur, qui n'a pas de compte, passe sur le compte d'Anis, avec « 📌 Prénom : » devant le texte ;
+  - les commentaires.
+- **La musique des vidéos** : celle d'une vidéo envoyée « d'origine » (jouée par-dessus) est copiée une fois dans Mechmoum et rejouée pendant la vidéo, avec les volumes choisis (colonne `posts.musique`). Les autres vidéos ont déjà la musique dedans.
+- **Ce qui n'est pas copié** :
+  - les réactions emoji du mur (elles étaient anonymes) ;
+  - les messages sans image (ils restent sur le mur).
+- On peut relancer sans risque : chaque message n'est copié qu'une fois (tables `import_mur`, `import_mur_com`). Le travail se fait par paquets de 20, et l'écran relance tout seul.
+- Route : `GET/POST /reseau/api/admin/migrer-mur` (Anis seulement).
+
+## 13. Combien de temps les choses restent
+
+- **Publications, reels, commentaires, messages privés, profils** : **sans limite de temps**, jusqu'à ce que l'auteur ou l'administration les supprime. La seule limite est la place de l'hébergement (voir « Photos et vidéos » dans le tableau de bord).
+- **Stories** : visibles 24 h. Leurs fichiers sont **effacés du serveur 2 jours après** (ménage fait de temps en temps, `mc_menage()`).
+- **Notifications** : celles qui sont lues partent après 6 mois.
+- **Sessions** : 30 jours sans revenir. Les essais de connexion ratés sont gardés 24 h, les événements du temps réel 1 h.
+- **Sauvegardes** : les 3 dernières restent sur le serveur.
+- **L'ancien mur** (`mur.html`) : ses photos, vidéos et messages restent aussi sans limite de temps, jusqu'à ce qu'on les efface.
+
+## 14. Ce qui reste possible
+
 - Pas encore de notifications « push » sur le téléphone : on voit les nouveautés en ouvrant l'application.
 - Le temps réel se fait par interrogation : 2,5 s quand la page est ouverte, 15 s quand l'onglet est caché.

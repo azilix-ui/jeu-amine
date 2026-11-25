@@ -50,6 +50,8 @@ CREATE TABLE IF NOT EXISTS blocks (blocker INTEGER NOT NULL REFERENCES users(id)
 CREATE TABLE IF NOT EXISTS media (cle TEXT PRIMARY KEY, owner INTEGER NOT NULL, mime TEXT NOT NULL, taille INTEGER NOT NULL, w INTEGER, h INTEGER, cree INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, author INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, caption TEXT NOT NULL DEFAULT '', type TEXT NOT NULL DEFAULT 'image', media TEXT NOT NULL, poster TEXT, cree INTEGER NOT NULL, cache INTEGER NOT NULL DEFAULT 0);
 CREATE INDEX IF NOT EXISTS posts_author ON posts(author, cree);
+CREATE TABLE IF NOT EXISTS import_mur (mur INTEGER PRIMARY KEY, post INTEGER, cree INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS import_mur_com (com INTEGER PRIMARY KEY, comment INTEGER);
 CREATE TABLE IF NOT EXISTS likes (post INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE, user INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, cree INTEGER NOT NULL, PRIMARY KEY (post, user));
 CREATE TABLE IF NOT EXISTS bookmarks (user INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, post INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE, cree INTEGER NOT NULL, PRIMARY KEY (user, post));
 CREATE TABLE IF NOT EXISTS comments (id INTEGER PRIMARY KEY, post INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE, author INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, text TEXT NOT NULL, cree INTEGER NOT NULL, cache INTEGER NOT NULL DEFAULT 0);
@@ -70,6 +72,8 @@ CREATE TABLE IF NOT EXISTS reglages (cle TEXT PRIMARY KEY, valeur TEXT NOT NULL)
 CREATE TABLE IF NOT EXISTS journal (id INTEGER PRIMARY KEY, qui TEXT NOT NULL, action TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '', ts INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS echecs (cle TEXT NOT NULL, ts INTEGER NOT NULL);
 SQL);
+    // 26/11 : la musique jouée par-dessus une vidéo (vidéos importées de l'ancien mur)
+    if (!in_array('musique', array_column($db->query('PRAGMA table_info(posts)')->fetchAll(), 'name'), true)) $db->exec('ALTER TABLE posts ADD COLUMN musique TEXT');
     mc_famille_comptes($db);
     return $db;
 }
@@ -230,7 +234,7 @@ function mc_efface_media(?string $cle): void {
 }
 // Servir un fichier : seulement à quelqu'un de connecté, avec les morceaux (Range) pour les vidéos sur iPhone.
 function mc_sert_media(string $cle): never {
-    if (!preg_match('/^[0-9a-f]{32}\.(webp|jpg|mp4|mov|webm)$/', $cle)) { http_response_code(404); exit; }
+    if (!preg_match('/^[0-9a-f]{32}\.(webp|jpg|mp4|mov|webm|mp3)$/', $cle)) { http_response_code(404); exit; }
     if (!mc_moi()) { http_response_code(401); exit; }
     $s = mc_db()->prepare('SELECT mime FROM media WHERE cle = ?'); $s->execute([$cle]); $mime = $s->fetchColumn();
     $f = mc_dossier() . '/media/' . $cle;

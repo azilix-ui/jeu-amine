@@ -64,7 +64,7 @@ const Post = ({ postData }: { postData: Post }) => {
 				className={`relative ${postData.video ? "aspect-[4/5]" : "aspect-square"} cursor-pointer bg-gray-100`}
 				onDoubleClick={handleDoubleClick}
 			>
-				<Media image={postData.image} video={postData.video} alt={`Publication de ${postData.author.username}`} />
+				<Media image={postData.image} video={postData.video} musique={postData.musique} alt={`Publication de ${postData.author.username}`} />
 
 				{/* Heart Pop Animation */}
 				<AnimatePresence>

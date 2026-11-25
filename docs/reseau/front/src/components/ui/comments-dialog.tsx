@@ -52,7 +52,7 @@ const CommentsDialog = ({ postData, children, isLiked, isBookmarked, setLiked, l
 				<DialogTitle className="sr-only">Publication de {postData.author.username}</DialogTitle>
 				<div className="flex flex-col md:flex-row h-full min-h-0">
 					<div className="relative bg-black shrink-0 h-[42dvh] md:h-full md:w-[55%]" onDoubleClick={handleDoubleClick}>
-						<Media image={postData.image} video={postData.video} alt={`Publication de ${postData.author.username}`} cover={false} />
+						<Media image={postData.image} video={postData.video} musique={postData.musique} alt={`Publication de ${postData.author.username}`} cover={false} />
 						<AnimatePresence>
 							{showHeartAnimation && (
 								<motion.div key="heart" className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
