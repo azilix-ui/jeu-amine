@@ -73,7 +73,9 @@ CREATE TABLE IF NOT EXISTS journal (id INTEGER PRIMARY KEY, qui TEXT NOT NULL, a
 CREATE TABLE IF NOT EXISTS echecs (cle TEXT NOT NULL, ts INTEGER NOT NULL);
 SQL);
     // 26/11 : la musique jouée par-dessus une vidéo (vidéos importées de l'ancien mur)
-    if (!in_array('musique', array_column($db->query('PRAGMA table_info(posts)')->fetchAll(), 'name'), true)) $db->exec('ALTER TABLE posts ADD COLUMN musique TEXT');
+    $cols = array_column($db->query('PRAGMA table_info(posts)')->fetchAll(), 'name');
+    if (!in_array('musique', $cols, true)) $db->exec('ALTER TABLE posts ADD COLUMN musique TEXT');
+    if (!in_array('filtre', $cols, true)) $db->exec("ALTER TABLE posts ADD COLUMN filtre TEXT NOT NULL DEFAULT ''");   // 26/11 : filtre de la photo ou de la vidéo
     mc_famille_comptes($db);
     return $db;
 }
@@ -227,14 +229,47 @@ function mc_recoit_video(array $f, int $owner): string {
     mc_db()->prepare('INSERT INTO media (cle, owner, mime, taille, cree) VALUES (?, ?, ?, ?, ?)')->execute([$cle, $owner, $mime === 'video/quicktime' ? 'video/mp4' : $mime, (int)$f['size'], time()]);
     return $cle;
 }
+// 26/11 : la musique d'une publication. Un morceau envoyé (mp3, m4a, wav, ogg ; 15 Mo au plus) …
+function mc_recoit_son(array $f, int $owner): string {
+    if (($f['error'] ?? 1) !== UPLOAD_ERR_OK || !is_uploaded_file($f['tmp_name'])) mc_err(400, 'Morceau de musique manquant.');
+    if ($f['size'] > 15 * 1024 * 1024) mc_err(413, 'Morceau trop lourd (15 Mo au plus).');
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']);
+    $ext = ['audio/mpeg' => 'mp3', 'audio/mp3' => 'mp3', 'audio/mp4' => 'm4a', 'audio/x-m4a' => 'm4a', 'audio/aac' => 'm4a', 'video/mp4' => 'm4a', 'audio/wav' => 'wav', 'audio/x-wav' => 'wav', 'audio/ogg' => 'ogg', 'application/ogg' => 'ogg'][$mime] ?? null;
+    if (!$ext) mc_err(415, 'Ce fichier n\'est pas une musique (MP3, M4A, WAV ou OGG).');
+    $cle = bin2hex(random_bytes(16)) . '.' . $ext;
+    if (!move_uploaded_file($f['tmp_name'], mc_dossier() . '/media/' . $cle)) mc_err(500, 'Envoi impossible.');
+    $m = ['mp3' => 'audio/mpeg', 'm4a' => 'audio/mp4', 'wav' => 'audio/wav', 'ogg' => 'audio/ogg'][$ext];
+    mc_db()->prepare('INSERT INTO media (cle, owner, mime, taille, cree) VALUES (?, ?, ?, ?, ?)')->execute([$cle, $owner, $m, (int)$f['size'], time()]);
+    return $cle;
+}
+// … ou un morceau de la musicothèque du mur (mur/musique/liste.js), copié une seule fois dans Mechmoum
+function mc_bibliotheque(): array {
+    $js = @file_get_contents(ga_racine() . '/mur/musique/liste.js') ?: ''; $l = [];
+    preg_match_all("/\\{\\s*id:'([a-z0-9-]+)',\\s*titre:'((?:[^'\\\\]|\\\\.)*)',\\s*emoji:'([^']*)'/u", $js, $m, PREG_SET_ORDER);
+    foreach ($m as $x) $l[$x[1]] = ['id' => $x[1], 'titre' => stripslashes($x[2]), 'emoji' => $x[3]];
+    return $l;
+}
+function mc_musique_biblio(string $id, int $owner): ?string {
+    if (!preg_match('/^[a-z0-9-]{1,40}$/', $id)) return null;
+    $cle = mc_reglage('mur-musique-' . $id);
+    if ($cle && is_file(mc_dossier() . '/media/' . $cle)) return $cle;
+    $f = str_starts_with($id, 'el-') ? ga_donnees() . '/mur-musique/' . $id . '.mp3' : ga_racine() . '/mur/musique/' . $id . '.mp3';
+    if (!is_file($f)) return null;
+    $cle = bin2hex(random_bytes(16)) . '.mp3';
+    if (!@copy($f, mc_dossier() . '/media/' . $cle)) return null;
+    mc_db()->prepare('INSERT INTO media (cle, owner, mime, taille, cree) VALUES (?, ?, ?, ?, ?)')->execute([$cle, $owner, 'audio/mpeg', filesize($f), time()]);
+    mc_reglage('mur-musique-' . $id, $cle);
+    return $cle;
+}
+const MC_FILTRES = ['', 'jasmin', 'sidibou', 'sahara', 'kairouan', 'vif', 'doux', 'vintage', 'nb'];
 function mc_efface_media(?string $cle): void {
-    if (!$cle || !preg_match('/^[0-9a-f]{32}\.(webp|jpg|mp4|mov|webm)$/', $cle)) return;
+    if (!$cle || !preg_match('/^[0-9a-f]{32}\.(webp|jpg|mp4|mov|webm|mp3|m4a|wav|ogg)$/', $cle)) return;
     @unlink(mc_dossier() . '/media/' . $cle);
     mc_db()->prepare('DELETE FROM media WHERE cle = ?')->execute([$cle]);
 }
 // Servir un fichier : seulement à quelqu'un de connecté, avec les morceaux (Range) pour les vidéos sur iPhone.
 function mc_sert_media(string $cle): never {
-    if (!preg_match('/^[0-9a-f]{32}\.(webp|jpg|mp4|mov|webm|mp3)$/', $cle)) { http_response_code(404); exit; }
+    if (!preg_match('/^[0-9a-f]{32}\.(webp|jpg|mp4|mov|webm|mp3|m4a|wav|ogg)$/', $cle)) { http_response_code(404); exit; }
     if (!mc_moi()) { http_response_code(401); exit; }
     $s = mc_db()->prepare('SELECT mime FROM media WHERE cle = ?'); $s->execute([$cle]); $mime = $s->fetchColumn();
     $f = mc_dossier() . '/media/' . $cle;

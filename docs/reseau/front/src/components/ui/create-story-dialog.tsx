@@ -33,7 +33,7 @@ const CreateStoryDialog = ({ children }: { children: React.ReactNode }) => {
 	return (
 		<Dialog open={isOpen} onOpenChange={(o) => (o ? setIsOpen(true) : fermer())}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="p-0 gap-0 max-w-md overflow-hidden">
+			<DialogContent className="p-0 gap-0 max-w-[calc(100%-1rem)] sm:max-w-md overflow-hidden">
 				<div className="flex items-center justify-center p-4 border-b">
 					<DialogTitle className="text-lg font-bold">Nouvelle story</DialogTitle>
 					<DialogDescription className="sr-only">Une photo ou une petite vidéo visible 24 heures par tes abonnés</DialogDescription>

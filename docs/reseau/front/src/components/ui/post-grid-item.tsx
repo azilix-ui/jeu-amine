@@ -1,6 +1,7 @@
 import React from "react"
 import CommentsDialog from "./comments-dialog"
-import { Heart, MessageCircle, Clapperboard } from "lucide-react"
+import { Heart, MessageCircle, Clapperboard, Music2 } from "lucide-react"
+import { filtreCss } from "@/lib/filtres"
 import { usePostLikes } from "@/hooks/usePostLikes"
 import { Post } from "@/types/post"
 
@@ -27,8 +28,9 @@ const PostGridItem = ({ post }: { post: Post }) => {
 		>
 			<button type="button" aria-label={`Ouvrir la publication de ${post.author.username}`} className="block w-full aspect-square relative cursor-pointer group">
 				{/* eslint-disable-next-line @next/next/no-img-element */}
-				<img src={post.image || "/reseau/avatar.svg"} alt={post.caption ? post.caption.slice(0, 80) : `Publication de ${post.author.username}`} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover bg-gray-100" />
+				<img src={post.image || "/reseau/avatar.svg"} alt={post.caption ? post.caption.slice(0, 80) : `Publication de ${post.author.username}`} loading="lazy" decoding="async" style={{ filter: filtreCss(post.filtre) }} className="absolute inset-0 w-full h-full object-cover bg-gray-100" />
 				{post.video && <Clapperboard className="absolute top-2 right-2 w-5 h-5 text-white drop-shadow" aria-label="Vidéo" />}
+				{!post.video && post.musique && <Music2 className="absolute top-2 right-2 w-5 h-5 text-white drop-shadow" aria-label="Avec musique" />}
 
 				{/* Hover overlay */}
 				<div className="absolute group inset-0 hover:bg-black/40 transition-all duration-200 flex items-center justify-center">

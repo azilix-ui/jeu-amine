@@ -177,6 +177,21 @@ Anis (rôle admin, ou administrateur du site) voit tout. Un **modérateur** (rô
   5. Ouvrir `/reseau/` : on doit retrouver les publications. Si tout va bien, supprimer `.ancienne` et `.ancien` quelques jours plus tard.
 - **Perte totale du site** : le dépôt GitHub redonne tout le code. Il suffit de remettre `famille-data/reseau/` depuis la dernière sauvegarde.
 
+## 11 bis. Filtres et musique (26/11)
+
+- **Filtres** (à la publication d'une photo ou d'une vidéo) : Normal, Jasmin, Sidi Bou, Sahara, Kairouan, Vif, Doux, Vintage, Noir et blanc (`docs/reseau/front/src/lib/filtres.ts`, liste aussi dans `MC_FILTRES` de `lib.php`).
+  - Le filtre est **gardé à part** (`posts.filtre`) et appliqué à l'affichage (CSS `filter`) : la photo ou la vidéo d'origine reste intacte.
+  - Il marche sur tous les navigateurs, même anciens.
+- **Musique** sur une photo ou une vidéo :
+  - **les 14 morceaux du mur** de la famille, écoutables avant de choisir ; un morceau est copié une seule fois dans Mechmoum (`mc_musique_biblio`, réglage `mur-musique-<id>`) ;
+  - ou **son propre morceau** (mp3, m4a, wav, ogg ; 15 Mo au plus ; `mc_recoit_son`), effacé avec la publication ;
+  - réglage des volumes : son de la vidéo et musique.
+  - La musique est jouée par-dessus : sur une vidéo, elle suit la lecture ; sur une photo, on touche 🔊 ; une étiquette « ♪ titre » s'affiche.
+  - Champ `posts.musique` = « clé|volume vidéo|volume musique|titre|p » (p = morceau envoyé).
+  - Route `GET /reseau/api/musiques` (la musicothèque, lue dans `mur/musique/liste.js`).
+- **Droits** : Mechmoum est privé, mais une chanson du commerce reste protégée. Mieux vaut des morceaux à soi ou libres.
+- Les stories n'ont pas encore de filtre ni de musique.
+
 ## 12. L'ancien mur recopié (26/11)
 
 - **Administration › Tableau de bord › « 🧱 L'ancien mur de la famille »** : le bouton « Recopier les N dans Mechmoum » copie les photos, les dessins et les vidéos du mur (`famille-data/mur.sqlite` et `famille-data/mur/`) en publications de Mechmoum. Ce sont des **copies** : le mur n'est ni effacé ni changé.

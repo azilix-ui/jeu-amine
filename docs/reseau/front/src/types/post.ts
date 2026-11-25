@@ -6,7 +6,8 @@ export type Post = {
 	image: string
 	type?: "image" | "video"
 	video?: string | null
-	musique?: { src: string; volV: number; volM: number } | null
+	musique?: { src: string; volV: number; volM: number; titre?: string } | null
+	filtre?: string
 	author: {
 		username: string
 		image?: string

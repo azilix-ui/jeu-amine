@@ -195,18 +195,32 @@ if ($route === 'users') {
         'postsCount' => mc_compte('posts', (int)$u['id']), 'famille' => (bool)$u['famille']]]);
 }
 
+/* ---------- la musicothèque (26/11) : les morceaux du mur, à mettre sur une publication ---------- */
+if ($route === 'musiques') mc_json(200, ['success' => true, 'data' => array_values(array_map(fn($m) => $m + ['ecoute' => str_starts_with($m['id'], 'el-') ? '/api/mur.php?mus=' . $m['id'] : '/mur/musique/' . $m['id'] . '.mp3'], mc_bibliotheque()))]);
+
 /* ---------- les publications ---------- */
 if ($route === 'posts') {
     $a = $p[1] ?? '';
     if ($a === 'create' && $methode === 'POST') {
         $cap = mc_txt('caption', 2200);
+        $filtre = mc_txt('filtre', 20); if (!in_array($filtre, MC_FILTRES, true)) $filtre = '';
+        // 26/11 : la musique (un morceau de la musicothèque du mur, ou un morceau envoyé), jouée par-dessus : « clé|volume vidéo|volume musique|titre|p (envoyé) »
+        $mus = null; $vv = max(0, min(1, (float)($_POST['volV'] ?? 1))); $vm = max(0, min(1, (float)($_POST['volM'] ?? .8)));
+        if (!empty($_FILES['son']['tmp_name'])) {
+            $k = mc_recoit_son($_FILES['son'], $mid); $t = str_replace('|', ' ', mc_txt('titreMusique', 60)) ?: 'Ma musique';
+            $mus = $k . '|' . round($vv, 2) . '|' . round($vm, 2) . '|' . $t . '|p';
+        } elseif (($id = mc_txt('musique', 40)) !== '') {
+            $bib = mc_bibliotheque(); if (!isset($bib[$id])) mc_err(400, 'Musique inconnue.');
+            $k = mc_musique_biblio($id, $mid); if (!$k) mc_err(404, 'Cette musique n\'est pas sur le serveur.');
+            $mus = $k . '|' . round($vv, 2) . '|' . round($vm, 2) . '|' . str_replace('|', ' ', $bib[$id]['emoji'] . ' ' . $bib[$id]['titre']);
+        }
         if (!empty($_FILES['video']['tmp_name'])) {   // un reel (vidéo) + son affiche (image prise par la tablette)
             $v = mc_recoit_video($_FILES['video'], $mid);
             $po = !empty($_FILES['image']['tmp_name']) ? mc_recoit_image($_FILES['image'], $mid, 1080) : null;
-            $db->prepare('INSERT INTO posts (author, caption, type, media, poster, cree) VALUES (?, ?, \'video\', ?, ?, ?)')->execute([$mid, $cap, $v, $po, time()]);
+            $db->prepare('INSERT INTO posts (author, caption, type, media, poster, cree, musique, filtre) VALUES (?, ?, \'video\', ?, ?, ?, ?, ?)')->execute([$mid, $cap, $v, $po, time(), $mus, $filtre]);
         } else {
             $cle = mc_recoit_image($_FILES['image'] ?? [], $mid);
-            $db->prepare('INSERT INTO posts (author, caption, media, cree) VALUES (?, ?, ?, ?)')->execute([$mid, $cap, $cle, time()]);
+            $db->prepare('INSERT INTO posts (author, caption, media, cree, musique, filtre) VALUES (?, ?, ?, ?, ?, ?)')->execute([$mid, $cap, $cle, time(), $mus, $filtre]);
         }
         mc_ok('C\'est publié !', ['data' => ['_id' => (string)$db->lastInsertId()]], 201);
     }
@@ -498,7 +512,7 @@ function mc_posts(array $l, int $moi, array $caches, bool $avecComments): array 
     $us = mc_users(array_column($l, 'author'));
     return array_values(array_filter(array_map(function ($po) use ($us, $likes, $nc, $nb, $mes, $coms, $avecComments) {
         $u = $us[(int)$po['author']] ?? null; if (!$u) return null; $id = (int)$po['id']; $video = $po['type'] === 'video';
-        $r = ['_id' => (string)$id, 'caption' => $po['caption'], 'type' => $po['type'], 'image' => mc_media_url($video ? ($po['poster'] ?: null) : $po['media']), 'video' => $video ? mc_media_url($po['media']) : null, 'musique' => mc_musique($po['musique'] ?? ''),
+        $r = ['_id' => (string)$id, 'caption' => $po['caption'], 'type' => $po['type'], 'image' => mc_media_url($video ? ($po['poster'] ?: null) : $po['media']), 'video' => $video ? mc_media_url($po['media']) : null, 'musique' => mc_musique($po['musique'] ?? ''), 'filtre' => (string)($po['filtre'] ?? ''),
             'author' => mc_mini($u, false) + ['_id' => (string)$u['id']], 'likes' => $likes[$id] ?? [], 'isBookmarked' => isset($mes[$id]), 'bookmarksCount' => $nb[$id] ?? 0,
             'commentsCount' => $nc[$id] ?? 0, 'createdAt' => mc_iso((int)$po['cree'])];
         if ($avecComments) $r['comments'] = $coms[$id] ?? [];
@@ -508,7 +522,7 @@ function mc_posts(array $l, int $moi, array $caches, bool $avecComments): array 
 // « cle|volume vidéo|volume musique » → ce que l'interface joue par-dessus la vidéo
 function mc_musique(?string $m): ?array {
     if (!$m) return null; $x = explode('|', $m);
-    return ['src' => mc_media_url($x[0]), 'volV' => (float)($x[1] ?? 1), 'volM' => (float)($x[2] ?? .7)];
+    return ['src' => mc_media_url($x[0]), 'volV' => (float)($x[1] ?? 1), 'volM' => (float)($x[2] ?? .7), 'titre' => $x[3] ?? ''];
 }
 // Le ménage (1 fois sur 20) : les stories finies depuis 2 jours (et leurs fichiers), les notifications lues de plus de 6 mois
 function mc_menage(): void {
@@ -519,6 +533,7 @@ function mc_menage(): void {
 }
 function mc_supprime_post(array $po): void {
     mc_efface_media($po['media']); mc_efface_media($po['poster']);
+    $x = explode('|', (string)($po['musique'] ?? '')); if (($x[4] ?? '') === 'p') mc_efface_media($x[0]);
     mc_db()->prepare('DELETE FROM posts WHERE id = ?')->execute([$po['id']]);
 }
 function mc_supprime_compte(int $uid): void {

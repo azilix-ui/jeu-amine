@@ -20,7 +20,7 @@ function Reel({ post }: { post: Post }) {
 	return (
 		<section className="mc-reel relative flex items-center justify-center bg-black" aria-label={`Reel de ${post.author.username}`}>
 			<div className="relative h-full w-full max-w-[min(100%,calc(100dvh*9/16))]">
-				<Media image={post.image} video={post.video} musique={post.musique} alt={post.caption || `Reel de ${post.author.username}`} cover={false} />
+				<Media image={post.image} video={post.video} musique={post.musique} filtre={post.filtre} alt={post.caption || `Reel de ${post.author.username}`} cover={false} />
 				<div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/70 to-transparent" />
 				<div className="absolute bottom-4 left-3 right-20 text-white">
 					<Link href={profil(post.author.username)} className="flex items-center gap-2 font-bold">
