@@ -1,0 +1,6 @@
+# Mechmoum : toutes les adresses /reseau/api/… vont à index.php ; lib.php et admin.php ne s'ouvrent pas seuls.
+Options -Indexes
+RewriteEngine On
+RewriteRule ^(lib|admin)\.php$ - [F,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L,QSA]

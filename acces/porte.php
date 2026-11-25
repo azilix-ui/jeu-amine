@@ -50,7 +50,8 @@ if ($ext === 'html') {
     $qui = '';
     if ($passe) $qui = '<script>window.FAMILLE_QUI=' . json_encode(['actif' => true, 'nom' => $passe['nom'], 'role' => 'invite', 'av' => '', 'v' => 'p' . $passe['id'], 'passe' => ['jeu' => $passe['jeu'], 'fin' => (int)$passe['expire']]], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';</script>';
     else try { if (ga_qui_actif()) $qui = '<script>window.FAMILLE_QUI=' . json_encode(ga_qui_public(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';</script>'; } catch (Throwable $e) {}
-    $html = preg_replace('/<head(\s[^>]*)?>/i', '$0' . str_replace('$', '\\$', $qui) . '<script src="/explorateur.js"></script>', $html, 1);
+    // 26/11 : Mechmoum (/reseau/) a sa propre interface (pas d'étiquette Explorateur ni de salon par-dessus) ; la porte reste la même
+    if (strpos($chemin, '/reseau/') !== 0) $html = preg_replace('/<head(\s[^>]*)?>/i', '$0' . str_replace('$', '\\$', $qui) . '<script src="/explorateur.js"></script>', $html, 1);
     header('Content-Length: ' . strlen($html));
     echo $html;
 } else {

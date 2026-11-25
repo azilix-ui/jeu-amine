@@ -261,7 +261,8 @@ function ga_passe_api(array $p): bool {
    pour les appareils déjà entrés avec ce lien). Une page fermée → la page « tes coins » (acces/coins.php) ; l'accueil aussi. */
 function ga_coins_liste(): array {
     $l = ['essil' => ["L'espace d'Essil", '🎒', ['/essil/'], []], 'salma' => ["L'espace de Salma", '📚', ['/salma/'], []], 'amine' => ["L'espace d'Amine", '⭐', ['/amine/'], []],
-          'eveil' => ['Éveil religieux', '🌙', ['/eveil/'], []], 'mur' => ['Le mur de la famille', '📌', ['/mur.html'], ['mur.php']]];
+          'eveil' => ['Éveil religieux', '🌙', ['/eveil/'], []], 'mur' => ['Le mur de la famille', '📌', ['/mur.html'], ['mur.php']],
+          'reseau' => ['Mechmoum, le réseau de la famille', '🌼', ['/reseau/'], []]];
     foreach (GA_PASSE_JEUX as $k => $j) $l['jeu-' . $k] = [$j[0], '🎮', [$j[1]], $j[2]];
     return $l;
 }
@@ -284,6 +285,7 @@ function ga_coin_page(array $coins, string $chemin): bool {
 }
 function ga_coin_api(array $coins): bool {   // mur.php (les photos du mur) seulement si le mur est ouvert ; le reste des API comme avant
     $f = basename((string)($_SERVER['SCRIPT_FILENAME'] ?? ''));
+    if (strpos(str_replace('\\', '/', (string)($_SERVER['SCRIPT_FILENAME'] ?? '')), '/reseau/api/') !== false) return in_array('reseau', $coins, true);   // 26/11 : Mechmoum
     if ($f !== 'mur.php') return true;
     return in_array('mur', $coins, true);
 }

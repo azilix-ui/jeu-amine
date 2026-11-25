@@ -1,0 +1,175 @@
+<?php
+/*
+ * Mechmoum — l'administration (/reseau/api/admin/…), incluse par index.php ($moi, $mid, $p, $methode, $db sont déjà là).
+ * Anis (rôle admin, ou session administrateur du site) : tout. Un « modérateur » : signalements et contenus seulement.
+ */
+declare(strict_types=1);
+
+$admin = mc_admin($moi);
+$modo = $admin || $moi['role'] === 'moderateur';
+if (!$modo) mc_err(403, 'Réservé à l\'administration.');
+$a = $p[1] ?? ''; $id = (int)($p[2] ?? 0); $c = mc_corps();
+$qui = $moi['username'];
+$seulAdmin = function () use ($admin) { if (!$admin) mc_err(403, 'Réservé à Anis.'); };
+
+if ($a === 'etat') {
+    $n = fn($sql) => (int)$db->query($sql)->fetchColumn(); $t = time();
+    mc_json(200, ['success' => true, 'admin' => $admin, 'stats' => [
+        'membres' => $n("SELECT COUNT(*) FROM users WHERE etat = 'actif'"), 'suspendus' => $n("SELECT COUNT(*) FROM users WHERE etat != 'actif'"),
+        'enLigne' => $n('SELECT COUNT(*) FROM users WHERE vu > ' . ($t - 60)), 'actifs7j' => $n('SELECT COUNT(*) FROM users WHERE vu > ' . ($t - 7 * 86400)),
+        'publications' => $n('SELECT COUNT(*) FROM posts'), 'reels' => $n("SELECT COUNT(*) FROM posts WHERE type = 'video'"), 'stories' => $n("SELECT COUNT(*) FROM stories WHERE expire > $t"),
+        'commentaires' => $n('SELECT COUNT(*) FROM comments'), 'messages' => $n('SELECT COUNT(*) FROM messages'), 'masques' => $n('SELECT (SELECT COUNT(*) FROM posts WHERE cache = 1) + (SELECT COUNT(*) FROM comments WHERE cache = 1)'),
+        'signalements' => $n("SELECT COUNT(*) FROM signalements WHERE etat = 'ouvert'"), 'invitations' => $n("SELECT COUNT(*) FROM invitations WHERE revoquee = 0 AND expire > $t AND usages < usages_max"),
+        'stockage' => (int)$db->query('SELECT IFNULL(SUM(taille), 0) FROM media')->fetchColumn(),
+        'parJour' => $db->query('SELECT date(cree, \'unixepoch\', \'localtime\') j, COUNT(*) n FROM posts WHERE cree > ' . ($t - 14 * 86400) . ' GROUP BY j ORDER BY j')->fetchAll()],
+        'reglages' => ['prive' => mc_reglage('prive', null, '1') === '1', 'inscriptions' => mc_reglage('inscriptions', null, '1') === '1', 'enfants_dm' => mc_reglage('enfants_dm', null, 'famille')]]);
+}
+
+if ($a === 'utilisateurs') {
+    if ($methode === 'GET') {
+        $l = $db->query('SELECT u.*, (SELECT COUNT(*) FROM posts WHERE author = u.id) np, (SELECT COUNT(*) FROM follows WHERE followed = u.id) nf,
+            (SELECT COUNT(*) FROM signalements s WHERE s.etat = \'ouvert\' AND ((s.genre = \'user\' AND s.cible = u.id) OR (s.genre = \'post\' AND s.cible IN (SELECT id FROM posts WHERE author = u.id)))) ns,
+            (SELECT nom FROM invitations i WHERE i.id = u.invitation) invit FROM users u ORDER BY (u.famille IS NULL), u.cree')->fetchAll();
+        mc_json(200, ['success' => true, 'data' => array_map(fn($u) => mc_mini($u) + ['name' => $u['name'], 'role' => $u['role'], 'etat' => $u['etat'], 'famille' => $u['famille'],
+            'posts' => (int)$u['np'], 'abonnes' => (int)$u['nf'], 'signalements' => (int)$u['ns'], 'invitation' => $u['invit'], 'aMotDePasse' => (bool)$u['pass'],
+            'vu' => (int)$u['vu'] ? mc_iso((int)$u['vu']) : null, 'createdAt' => mc_iso((int)$u['cree'])], $l)]);
+    }
+    $seulAdmin();
+    $u = mc_user_par((string)$id); if (!$u) mc_err(404, 'Compte introuvable.');
+    $f = (string)($c['faire'] ?? '');
+    if ($u['famille'] === 'Anis' && in_array($f, ['suspendre', 'role', 'supprimer'], true)) mc_err(400, 'On ne touche pas au compte d\'Anis.');
+    if ($f === 'suspendre' || $f === 'reactiver') {
+        $db->prepare('UPDATE users SET etat = ? WHERE id = ?')->execute([$f === 'suspendre' ? 'suspendu' : 'actif', $u['id']]);
+        if ($f === 'suspendre') $db->prepare('DELETE FROM sessions WHERE user = ?')->execute([$u['id']]);
+        mc_journal($qui, $f, '@' . $u['username']); mc_ok($f === 'suspendre' ? '@' . $u['username'] . ' est suspendu.' : '@' . $u['username'] . ' est réactivé.');
+    }
+    if ($f === 'role') {
+        $r = (string)($c['role'] ?? ''); if (!in_array($r, ['membre', 'moderateur', 'admin'], true)) mc_err(400, 'Rôle inconnu.');
+        $db->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$r, $u['id']]); mc_journal($qui, 'rôle', '@' . $u['username'] . ' → ' . $r); mc_ok('Rôle changé.');
+    }
+    if ($f === 'motdepasse') {   // un mot de passe provisoire, montré une seule fois à Anis
+        $mdp = substr(strtr(base64_encode(random_bytes(12)), '+/=', 'xyz'), 0, 14);
+        $db->prepare('UPDATE users SET pass = ? WHERE id = ?')->execute([password_hash($mdp, PASSWORD_DEFAULT), $u['id']]);
+        $db->prepare('DELETE FROM sessions WHERE user = ?')->execute([$u['id']]);
+        mc_journal($qui, 'mot de passe provisoire', '@' . $u['username']); mc_ok('Mot de passe provisoire créé.', ['motdepasse' => $mdp]);
+    }
+    if ($f === 'supprimer') {
+        if ($u['famille']) mc_err(400, 'Les comptes de la famille ne se suppriment pas (suspends-le plutôt).');
+        mc_supprime_compte((int)$u['id']); mc_journal($qui, 'compte supprimé', '@' . $u['username']); mc_ok('Compte supprimé.');
+    }
+    mc_err(400, 'Action inconnue.');
+}
+
+if ($a === 'signalements') {
+    if ($methode === 'GET') {
+        $etat = in_array($_GET['etat'] ?? 'ouvert', ['ouvert', 'traite', 'rejete', 'tous'], true) ? ($_GET['etat'] ?? 'ouvert') : 'ouvert';
+        $s = $db->query('SELECT * FROM signalements' . ($etat === 'tous' ? '' : " WHERE etat = '$etat'") . ' ORDER BY cree DESC LIMIT 200');
+        $l = $s->fetchAll(); $us = mc_users(array_column($l, 'par'));
+        mc_json(200, ['success' => true, 'data' => array_map(fn($x) => ['_id' => (string)$x['id'], 'genre' => $x['genre'], 'raison' => $x['raison'], 'detail' => $x['detail'], 'etat' => $x['etat'],
+            'decision' => $x['decision'], 'traitePar' => $x['traite_par'], 'par' => isset($us[(int)$x['par']]) ? mc_mini($us[(int)$x['par']]) : null,
+            'cible' => mc_apercu($x['genre'], (int)$x['cible']), 'createdAt' => mc_iso((int)$x['cree'])], $l)]);
+    }
+    $s = $db->prepare('SELECT * FROM signalements WHERE id = ?'); $s->execute([$id]); $sg = $s->fetch(); if (!$sg) mc_err(404, 'Signalement introuvable.');
+    $d = (string)($c['decision'] ?? '');
+    if (!in_array($d, ['masquer', 'supprimer', 'rejeter', 'suspendre'], true)) mc_err(400, 'Décision inconnue.');
+    if ($d === 'suspendre') { $seulAdmin(); $au = mc_apercu($sg['genre'], (int)$sg['cible'])['auteurId'] ?? null; if ($au) { $db->prepare("UPDATE users SET etat = 'suspendu' WHERE id = ? AND IFNULL(famille, '') != 'Anis'")->execute([$au]); $db->prepare('DELETE FROM sessions WHERE user = ?')->execute([$au]); } }
+    if ($d === 'masquer' || $d === 'supprimer') mc_modere($sg['genre'], (int)$sg['cible'], $d);
+    $db->prepare('UPDATE signalements SET etat = ?, decision = ?, traite_par = ?, traite_le = ? WHERE (id = ? OR (genre = ? AND cible = ? AND etat = \'ouvert\'))')
+       ->execute([$d === 'rejeter' ? 'rejete' : 'traite', $d, $qui, time(), $id, $sg['genre'], $sg['cible']]);
+    mc_journal($qui, 'signalement ' . $d, $sg['genre'] . ' #' . $sg['cible']);
+    mc_ok('Signalement traité.');
+}
+
+if ($a === 'contenus') {
+    if ($methode === 'GET') {
+        $genre = $_GET['genre'] ?? 'post';
+        if ($genre === 'comment') $l = $db->query('SELECT id FROM comments ORDER BY cree DESC LIMIT 100')->fetchAll(PDO::FETCH_COLUMN);
+        elseif ($genre === 'story') $l = $db->query('SELECT id FROM stories WHERE expire > ' . time() . ' ORDER BY cree DESC LIMIT 100')->fetchAll(PDO::FETCH_COLUMN);
+        else { $genre = 'post'; $l = $db->query('SELECT id FROM posts ORDER BY cree DESC LIMIT 100')->fetchAll(PDO::FETCH_COLUMN); }
+        mc_json(200, ['success' => true, 'data' => array_map(fn($i) => mc_apercu($genre, (int)$i), $l)]);
+    }
+    $genre = (string)($c['genre'] ?? ''); $f = (string)($c['faire'] ?? '');
+    if (!in_array($genre, ['post', 'comment', 'story', 'message'], true) || !in_array($f, ['masquer', 'afficher', 'supprimer'], true)) mc_err(400, 'Action inconnue.');
+    mc_modere($genre, $id, $f); mc_journal($qui, $f, $genre . ' #' . $id); mc_ok('C\'est fait.');
+}
+
+if ($a === 'invitations') {
+    $seulAdmin();
+    if ($methode === 'GET') {
+        $l = $db->query('SELECT i.*, (SELECT GROUP_CONCAT(username, \', \') FROM users WHERE invitation = i.id) comptes FROM invitations i ORDER BY cree DESC LIMIT 100')->fetchAll();
+        mc_json(200, ['success' => true, 'data' => array_map(fn($i) => ['_id' => (string)$i['id'], 'nom' => $i['nom'], 'creePar' => $i['cree_par'], 'usages' => (int)$i['usages'], 'usagesMax' => (int)$i['usages_max'],
+            'expire' => mc_iso((int)$i['expire']), 'valable' => !$i['revoquee'] && $i['expire'] > time() && $i['usages'] < $i['usages_max'], 'revoquee' => (bool)$i['revoquee'],
+            'comptes' => (string)$i['comptes'], 'createdAt' => mc_iso((int)$i['cree'])], $l)]);
+    }
+    if ($id && ($p[3] ?? '') === 'revoquer') { $db->prepare('UPDATE invitations SET revoquee = 1 WHERE id = ?')->execute([$id]); mc_journal($qui, 'invitation retirée', '#' . $id); mc_ok('Invitation retirée.'); }
+    $nom = mc_txt('nom', 40); $jours = max(1, min(30, (int)($c['jours'] ?? 7))); $max = max(1, min(20, (int)($c['usages'] ?? 1)));
+    $code = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');   // montré une seule fois : la base ne garde que son empreinte
+    $db->prepare('INSERT INTO invitations (hash, nom, cree_par, cree, expire, usages_max) VALUES (?, ?, ?, ?, ?, ?)')->execute([hash('sha256', $code), $nom, $qui, time(), time() + $jours * 86400, $max]);
+    mc_journal($qui, 'invitation créée', $nom . ' · ' . $jours . ' j · ' . $max);
+    mc_ok('Invitation créée.', ['code' => $code, 'lien' => '/reseau/inscription/?code=' . $code], 201);
+}
+
+if ($a === 'reglages' && $methode === 'POST') {
+    $seulAdmin();
+    if (isset($c['prive'])) mc_reglage('prive', !empty($c['prive']) && $c['prive'] !== 'false' && $c['prive'] !== '0' ? '1' : '0');
+    if (isset($c['inscriptions'])) mc_reglage('inscriptions', !empty($c['inscriptions']) && $c['inscriptions'] !== 'false' && $c['inscriptions'] !== '0' ? '1' : '0');
+    if (isset($c['enfants_dm'])) mc_reglage('enfants_dm', $c['enfants_dm'] === 'tous' ? 'tous' : 'famille');
+    mc_journal($qui, 'réglages', json_encode(array_intersect_key($c, array_flip(['prive', 'inscriptions', 'enfants_dm']))));
+    mc_ok('Réglages enregistrés.');
+}
+
+if ($a === 'journal') {
+    mc_json(200, ['success' => true, 'data' => array_map(fn($x) => ['qui' => $x['qui'], 'action' => $x['action'], 'detail' => $x['detail'], 'createdAt' => mc_iso((int)$x['ts'])],
+        $db->query('SELECT * FROM journal ORDER BY id DESC LIMIT 300')->fetchAll())]);
+}
+
+if ($a === 'sauvegarde' && $methode === 'POST') {   // une copie complète : la base (copie propre) + tous les fichiers, dans un zip
+    $seulAdmin();
+    if (!class_exists('ZipArchive')) mc_err(500, 'ZipArchive manque sur le serveur.');
+    $dos = mc_dossier(); $tmp = $dos . '/sauvegarde-' . date('Ymd-His') . '.sqlite'; @unlink($tmp);
+    $db->exec('VACUUM INTO ' . $db->quote($tmp));
+    $zip = $dos . '/mechmoum-sauvegarde-' . date('Y-m-d-His') . '.zip'; $z = new ZipArchive();
+    $z->open($zip, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+    $z->addFile($tmp, 'mechmoum.sqlite');
+    foreach (glob($dos . '/media/*') as $f) $z->addFile($f, 'media/' . basename($f));
+    $z->addFromString('LISEZMOI.txt', "Sauvegarde de Mechmoum du " . date('d/m/Y H:i') . ".\nRestauration : voir docs/reseau.md (section Sauvegarde et restauration).\n");
+    $z->close(); @unlink($tmp);
+    foreach (array_slice(array_reverse(glob($dos . '/mechmoum-sauvegarde-*.zip')), 3) as $vieux) @unlink($vieux);   // on garde les 3 dernières
+    mc_journal($qui, 'sauvegarde', basename($zip));
+    mc_ok('Sauvegarde prête.', ['fichier' => basename($zip), 'taille' => filesize($zip)]);
+}
+if ($a === 'sauvegarde' && $methode === 'GET') {
+    $seulAdmin();
+    $f = basename((string)($_GET['f'] ?? ''));
+    if (!preg_match('/^mechmoum-sauvegarde-[\d-]+\.zip$/', $f) || !is_file(mc_dossier() . '/' . $f)) {
+        mc_json(200, ['success' => true, 'data' => array_map(fn($x) => ['fichier' => basename($x), 'taille' => filesize($x), 'date' => mc_iso(filemtime($x))], array_reverse(glob(mc_dossier() . '/mechmoum-sauvegarde-*.zip')))]);
+    }
+    header('Content-Type: application/zip'); header('Content-Disposition: attachment; filename="' . $f . '"'); header('Content-Length: ' . filesize(mc_dossier() . '/' . $f));
+    readfile(mc_dossier() . '/' . $f); exit;
+}
+
+mc_err(404, 'Route inconnue');
+
+/* ---------- les aides de la modération ---------- */
+function mc_apercu(string $genre, int $id): array {
+    $db = mc_db(); $r = ['genre' => $genre, '_id' => (string)$id, 'existe' => false];
+    $one = function ($sql) use ($db, $id) { $s = $db->prepare($sql); $s->execute([$id]); return $s->fetch() ?: null; };
+    if ($genre === 'post' && ($x = $one('SELECT * FROM posts WHERE id = ?'))) $r = ['existe' => true, 'auteurId' => (int)$x['author'], 'texte' => $x['caption'], 'type' => $x['type'], 'cache' => (bool)$x['cache'],
+        'image' => mc_media_url($x['type'] === 'video' ? ($x['poster'] ?: null) : $x['media']), 'video' => $x['type'] === 'video' ? mc_media_url($x['media']) : null, 'createdAt' => mc_iso((int)$x['cree'])] + $r;
+    if ($genre === 'comment' && ($x = $one('SELECT * FROM comments WHERE id = ?'))) $r = ['existe' => true, 'auteurId' => (int)$x['author'], 'texte' => $x['text'], 'cache' => (bool)$x['cache'], 'postId' => (string)$x['post'], 'createdAt' => mc_iso((int)$x['cree'])] + $r;
+    if ($genre === 'story' && ($x = $one('SELECT * FROM stories WHERE id = ?'))) $r = ['existe' => true, 'auteurId' => (int)$x['author'], 'type' => $x['type'], 'cache' => (bool)$x['cache'],
+        'image' => mc_media_url($x['type'] === 'video' ? ($x['poster'] ?: null) : $x['media']), 'video' => $x['type'] === 'video' ? mc_media_url($x['media']) : null, 'createdAt' => mc_iso((int)$x['cree'])] + $r;
+    if ($genre === 'message' && ($x = $one('SELECT * FROM messages WHERE id = ?'))) $r = ['existe' => true, 'auteurId' => (int)$x['sender'], 'texte' => $x['message'], 'cache' => (bool)$x['cache'], 'createdAt' => mc_iso((int)$x['cree'])] + $r;
+    if ($genre === 'user' && ($x = $one('SELECT * FROM users WHERE id = ?'))) $r = ['existe' => true, 'auteurId' => (int)$x['id'], 'texte' => $x['bio'], 'image' => $x['image'], 'etat' => $x['etat']] + $r;
+    if (isset($r['auteurId'])) { $u = mc_users([$r['auteurId']])[$r['auteurId']] ?? null; $r['auteur'] = $u ? mc_mini($u) + ['name' => $u['name']] : null; }
+    return $r;
+}
+function mc_modere(string $genre, int $id, string $faire): void {
+    $db = mc_db();
+    $table = ['post' => 'posts', 'comment' => 'comments', 'story' => 'stories', 'message' => 'messages'][$genre] ?? null;
+    if (!$table) return;
+    if ($faire === 'supprimer') {
+        if ($genre === 'post' || $genre === 'story') { $s = $db->prepare("SELECT media, poster FROM $table WHERE id = ?"); $s->execute([$id]); if ($m = $s->fetch()) { mc_efface_media($m['media']); mc_efface_media($m['poster']); } }
+        $db->prepare("DELETE FROM $table WHERE id = ?")->execute([$id]);
+    } else $db->prepare("UPDATE $table SET cache = ? WHERE id = ?")->execute([$faire === 'masquer' ? 1 : 0, $id]);
+}
