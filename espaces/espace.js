@@ -19,6 +19,12 @@
     if(P && P.type === 'enfant' && r){ r.href = '/?profil'; r.textContent = '⇄ Changer d’avatar';
       // 20/11 (demande du papa) : l'enfant peut aussi aller sur l'accueil de toute la famille (sans être renvoyé ici)
       var m = document.createElement('a'); m.className = 'retour'; m.href = '/?accueil'; m.textContent = '🏠 Accueil de la famille'; r.parentNode.insertBefore(m, r.nextSibling); r.parentNode.style.display = 'flex'; r.parentNode.style.flexWrap = 'wrap'; r.parentNode.style.gap = '8px'; }
+    // 26/11 (demande du papa) : Mechmoum, le réseau de la famille, depuis le haut de chaque espace
+    if(r){ var mc = document.createElement('a'); mc.className = 'retour'; mc.href = '/reseau/'; mc.textContent = '🌼 Mechmoum';
+      mc.style.cssText = 'background:linear-gradient(135deg,#0f766e,#1f5fbf);color:#fff;border-color:transparent';
+      var apres = r.nextElementSibling && r.nextElementSibling.classList.contains('retour') ? r.nextElementSibling : r;
+      if(!(P && P.type === 'enfant')) mc.style.marginLeft = '8px';
+      r.parentNode.insertBefore(mc, apres.nextSibling); }
     if(moi){
       var dur = function(s){ var m = Math.max(0, Math.round(s / 60)); return m >= 60 ? Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') : m + ' min'; };
       var hm = function(s){ var p = String(s || '').split(':'); return (+p[0] || 0) * 60 + (+p[1] || 0); };

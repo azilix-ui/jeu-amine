@@ -112,6 +112,14 @@ Bouton 💬 (uniquement en ligne) : emojis, phrases toutes faites, message libre
 
 ## La Légende du Jasmin 2 — `jeux/legende-du-jasmin-2.html` (11/11)
 
+> **26/11 : le Jasmin 2 est refait sur le code du Jasmin 3** (demande du papa : « toutes les évolutions du Jasmin 3, en gardant le graphisme du Jasmin 2 »). `legende-du-jasmin-2.html` = copie de `legende-du-jasmin-3.html` **sans `<script src="jasmin3/reel.js">`**. Sans `R3`, le code du Jasmin 3 dessine le fond (`jasmin/mondeN.webp`), les cases et les objets comme le Jasmin 2 : c'est déjà ce qu'il faisait pour un monde sans images en vrai.
+> - **Ce qu'il récupère** : les 27 mondes, le héros au choix, la danse de la victoire, les tenues, « Régler l'image », la netteté sur PC, le savoir des adultes (Quiz / Info), la vie en plus, les liens Stage 2 et Stage 3.
+> - **Ce qui est retiré** : les réglages Scène de course, Piques bien visibles et Fond du décor, qui ne servent qu'au décor en vrai.
+> - **Les fonds des mondes 25 à 27** (`jasmin/monde25..27.webp`) sont les photos du Jasmin 3, remises à 1568 × 672.
+> - **Sauvegarde** : la même que le Jasmin 3 (`jasmin:<Prénom>`).
+> - **L'ancienne version figée** est gardée dans `legende-du-jasmin-2-ancien.html`.
+> - **À chaque amélioration du Jasmin 3** : refaire la copie, ou recopier la modification.
+
 **Depuis le 11/11 (demande du papa), « le Jasmin » désigne cette version.** Tous les liens du site (accueil, espaces des enfants, Serpent Légendes) mènent à `legende-du-jasmin-2.html`, qui s'appelle simplement « La Légende du Jasmin ». L'ancienne page `legende-du-jasmin.html` reste en ligne, marquée « ancienne version », et n'est liée que depuis le bas de la page Progression. Toute évolution du Jasmin se fait donc dans le fichier `-2` ; ne corriger l'ancienne que pour un bug.
 
 Demandé par le papa : reprendre les personnages « en vrai » de Médina Express dans le Jasmin, en gardant l'ancienne version. Le Jasmin 2 est une **copie du Jasmin** où seul le héros change : même aventure, mêmes 18 mondes, **même sauvegarde** (`jasmin:<Prénom>`) et mêmes records (`jasmin`), donc les progrès passent d'une version à l'autre. Un lien sur l'écran-titre de chacune mène à l'autre ; lien sur l'accueil.
