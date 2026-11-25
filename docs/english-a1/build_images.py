@@ -1,5 +1,6 @@
 """Anglais A1 (21/11) : images et films ComfyUI des dessins animés de « Salma & Pip » et « Amine & Kiko ».
 Usage : python3 docs/english-a1/build_images.py <dossier> [<dossier>…]
+Saison 2 de Kiko (25/11) : images engk2/ (refs toile_169, eng_amine, eng_kiko ; graines 7000 + 10 n + k) et films engk2v/ (__filmP, graine + 2000) : les passer comme engk/ et engkv/.
 Chaque dossier contient engs/ et engk/ (images) et/ou engsv/ et engkv/ (films Wan 2.2) :
 - engs/p<n>_<k>[b|c]_0000x_.png → salma/pip/img/p<n>_<k>.webp (960 px) ; la dernière lettre (b, puis c) remplace les précédentes ;
 - engk/k<n>_<k>…png → amine/kiko/img/k<n>_<k>.webp ;
@@ -8,7 +9,7 @@ import sys, os, re, subprocess
 from PIL import Image
 R = os.path.join(os.path.dirname(__file__), '..', '..')
 OUT = {'engs': 'salma/pip/img', 'engk': 'amine/kiko/img', 'engsv': 'salma/pip/img', 'engkv': 'amine/kiko/img'}
-COUPE = { 'k1_0':1.5, 'k5_1':2.4, 'k9_2':1.9 }   # Amine sort du cadre, le ciel reste vide, Kiko sort du cadre
+COUPE = { 'k1_0':1.5, 'k5_1':2.4, 'k9_2':1.9, 'k15_0':3.6 }   # Amine sort du cadre, le ciel reste vide, Kiko sort du cadre (k9_2, k15_0)
 for d in OUT.values(): os.makedirs(os.path.join(R, d), exist_ok=True)
 n_img = n_vid = 0
 for base in sys.argv[1:]:
