@@ -116,7 +116,7 @@
   </svg>`;
   window.COURS = { enfant:'Salma', prof:GHAZALA, key:'salma-ar' + L.n, track:'salma-ar' + L.n, retour:'Mon chemin', titre:`${L.icon} ${L.titre}`, sous:`Salma & Ghazala · épisode ${L.n} / 10 · ${L.sous}`, controle:true, reflexion:1200,
     bandeau:`<div class="arband"><span>${A(L.l, 'arb')} Salma & Ghazala · épisode ${L.n}</span><span class="liens"><a href="ardoise-arabe.html">✍️ L'ardoise</a><a href="arabe-ghazala.html">Les épisodes</a></span></div>`,
-    histoire:{ titre:L.histoire, scenes:L.scenes.map((s, k) => ({ img:`arabe/img/a${L.n}_${k}.webp`, vid:`arabe/img/a${L.n}_${k}.mp4`, txt:s.txt })) },
+    histoire:{ titre:L.histoire, scenes:L.scenes.map((s, k) => ({ img:`arabe/img/a${L.n}_${k}.webp`, vid:['a4_0'].includes(`a${L.n}_${k}`) ? '' : `arabe/img/a${L.n}_${k}.mp4`, txt:s.txt })) },
     bonjour:`${E('مَرْحَبًا يَا سَلْمَى')} ! C'est moi, Ghazala ! Aujourd'hui, la lettre <b>${nom}</b> ${A(L.l)}. On regarde d'abord le dessin animé, puis 8 étapes. Chaque bonne réponse te donne un ticket 🎟️ pour Serpent Légendes.`,
     confetti:['⭐', '🎟️', '🦌', L.icon, '🌙'], revoir:'Mes mots à revoir', CH,
     fiche:[{ h:`La lettre ${nom}`, tag:A(L.l), html:`<p>${FORME[L.id]}.</p>${formesL}${sonsL}`, lire:`La lettre ${nom} : ${E(NOMAR[L.id])}. C'est ${FORME[L.id]}. ${L.sons.map(s => E(s[0])).join(', ')}.` },

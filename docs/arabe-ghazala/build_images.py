@@ -9,6 +9,7 @@ import sys, os, re, subprocess
 from PIL import Image
 R = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'); OUT = os.path.join(R, 'salma/arabe/img'); os.makedirs(OUT, exist_ok=True)
 COUPE = {}
+SANS_FILM = {'a4_0'}   # 26/11 : un 2e renard apparaissait dans le film ; la scène reste en image
 for sous in ['arg', 'argv']:
     src = os.path.join(sys.argv[1], sous)
     if not os.path.isdir(src): continue
@@ -23,6 +24,7 @@ for sous in ['arg', 'argv']:
         p = os.path.join(src, f)
         if f.endswith('.png'):
             im = Image.open(p).convert('RGB'); im.thumbnail((960, 960)); im.save(os.path.join(OUT, k + '.webp'), quality=80, method=6)
+        elif k in SANS_FILM: continue
         else:
             t = ['-t', str(COUPE[k])] if k in COUPE else []
             subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', p, *t, '-an', '-vf', 'scale=832:-2', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', os.path.join(OUT, k + '.mp4')], check=True)

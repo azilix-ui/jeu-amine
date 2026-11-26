@@ -28,7 +28,7 @@ for n, l, ic, ti, so in L:
     h = re.sub(r'<link rel="stylesheet" href="https://fonts.googleapis.com/css2\?[^"]+">', FONT, h)
     h = re.sub(r'<style>.*?</style>', STYLE, h, flags=re.S)
     h = re.sub(r'<!-- Salma & Pip.*?-->', f'<!-- Salma & Ghazala, épisode {n}/10 (26/11) : données salma/arabe/lecons.js, code salma/arabe/arabe.js, moteur salma/ollie/cours.js ; page fabriquée par docs/arabe-ghazala/pages.py -->', h)
-    h = h.replace('<script>window.PIPN = 1;</script>', f'<script>window.ARN = {n};</script>').replace('<script src="pip/lecons.js?v=1"></script>', '<script src="arabe/lecons.js?v=1"></script>').replace('<script src="pip/pip.js?v=2"></script>', '<script src="arabe/arabe.js?v=1"></script>')
+    h = h.replace('<script>window.PIPN = 1;</script>', f'<script>window.ARN = {n};</script>').replace('<script src="pip/lecons.js?v=1"></script>', '<script src="arabe/lecons.js?v=1"></script>').replace('<script src="pip/pip.js?v=2"></script>', '<script src="arabe/arabe.js?v=2"></script>')
     assert 'arabe/arabe.js' in h and 'ARN' in h and 'Noto+Naskh' in h
     open(os.path.join(R, f'salma/arabe-ghazala-{n}.html'), 'w').write(h)
 ix = open(os.path.join(R, 'salma/english-pip.html')).read()
