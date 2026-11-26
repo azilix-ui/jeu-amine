@@ -6,18 +6,21 @@ import toast from "react-hot-toast"
 import { Dialog, DialogContent, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { useStories } from "@/hooks/useStories"
 import { vignetteVideo } from "@/components/ui/create-post-dialog"
+import ChoixEffets, { EFFETS0, type Effets } from "@/components/ui/choix-effets"
+import { filtreCss } from "@/lib/filtres"
 
 const CreateStoryDialog = ({ children }: { children: React.ReactNode }) => {
 	const [isOpen, setIsOpen] = useState(false)
 	const [fichier, setFichier] = useState<File | null>(null)
 	const [apercu, setApercu] = useState<string | null>(null)
 	const [envoi, setEnvoi] = useState(false)
+	const [effets, setEffets] = useState<Effets>(EFFETS0)
 	const ref = useRef<HTMLInputElement>(null)
 	const { createStory } = useStories()
 	const video = !!fichier && fichier.type.startsWith("video/")
 
 	const fermer = () => {
-		setIsOpen(false); setFichier(null)
+		setIsOpen(false); setFichier(null); setEffets(EFFETS0)
 		if (apercu) URL.revokeObjectURL(apercu)
 		setApercu(null)
 		if (ref.current) ref.current.value = ""
@@ -25,7 +28,7 @@ const CreateStoryDialog = ({ children }: { children: React.ReactNode }) => {
 	const partager = async () => {
 		if (!fichier) return
 		setEnvoi(true)
-		createStory(fichier, video ? await vignetteVideo(fichier) : null)
+		createStory(fichier, video ? await vignetteVideo(fichier) : null, effets)
 		setEnvoi(false)
 		fermer()
 	}
@@ -33,7 +36,7 @@ const CreateStoryDialog = ({ children }: { children: React.ReactNode }) => {
 	return (
 		<Dialog open={isOpen} onOpenChange={(o) => (o ? setIsOpen(true) : fermer())}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="p-0 gap-0 max-w-[calc(100%-1rem)] sm:max-w-md overflow-hidden">
+			<DialogContent className="p-0 gap-0 grid-cols-1 [&>*]:min-w-0 max-w-[calc(100%-1rem)] sm:max-w-md max-h-[92dvh] overflow-y-auto">
 				<div className="flex items-center justify-center p-4 border-b">
 					<DialogTitle className="text-lg font-bold">Nouvelle story</DialogTitle>
 					<DialogDescription className="sr-only">Une photo ou une petite vidéo visible 24 heures par tes abonnés</DialogDescription>
@@ -47,15 +50,16 @@ const CreateStoryDialog = ({ children }: { children: React.ReactNode }) => {
 							<span className="text-sm text-gray-500 px-6 text-center">Ta story restera visible 24 heures pour tes abonnés.</span>
 						</button>
 					) : (
-						<div className="space-y-4">
-							<div className="relative w-full aspect-[9/16] max-h-[60dvh] mx-auto rounded-2xl overflow-hidden bg-black">
+						<div className="space-y-4 min-w-0">
+							<div className="relative w-full aspect-[9/16] max-h-[42dvh] mx-auto rounded-2xl overflow-hidden bg-black">
 								{video ? (
-									<video src={apercu} className="absolute inset-0 w-full h-full object-contain" autoPlay muted loop playsInline />
+									<video src={apercu} className="absolute inset-0 w-full h-full object-contain" style={{ filter: filtreCss(effets.filtre) }} autoPlay muted loop playsInline />
 								) : (
 									// eslint-disable-next-line @next/next/no-img-element
-									<img src={apercu} alt="Aperçu de la story" className="absolute inset-0 w-full h-full object-contain" />
+									<img src={apercu} alt="Aperçu de la story" className="absolute inset-0 w-full h-full object-contain" style={{ filter: filtreCss(effets.filtre) }} />
 								)}
 							</div>
+							<ChoixEffets preview={apercu} estVideo={video} valeur={effets} change={setEffets} ouvert={isOpen} />
 							<div className="flex gap-3">
 								<button type="button" onClick={() => { if (apercu) URL.revokeObjectURL(apercu); setApercu(null); setFichier(null) }} className="flex-1 min-h-12 rounded-xl border border-gray-300 font-semibold cursor-pointer">Changer</button>
 								<button type="button" onClick={partager} disabled={envoi} className="flex-1 min-h-12 rounded-xl mc-degrade font-bold text-white cursor-pointer disabled:opacity-50">

@@ -10,6 +10,8 @@ import { useStories } from "@/hooks/useStories"
 import axios_instance from "@/config/axios"
 import Signaler from "@/components/ui/signaler"
 import { profil, ilya } from "@/lib/utils"
+import { filtreCss } from "@/lib/filtres"
+import { Music2 } from "lucide-react"
 
 interface StoryViewerProps {
 	stories: { [userId: string]: Story[] }
@@ -26,7 +28,7 @@ const StoryViewer = ({ stories, initialUserId, onClose, onStoryView }: StoryView
 	const [is, setIs] = useState(0)
 	const [pause, setPause] = useState(false)
 	const [progres, setProgres] = useState(0)
-	const [muet, setMuet] = useState(true)
+	const [muet, setMuet] = useState(false)
 	const [vus, setVus] = useState<any[] | null>(null)
 	const [signal, setSignal] = useState(false)
 	const moiId = useUserStore((s) => s._id)
@@ -36,6 +38,7 @@ const StoryViewer = ({ stories, initialUserId, onClose, onStoryView }: StoryView
 	const video = useRef<HTMLVideoElement>(null)
 	const appui = useRef<number>(0)
 	const progresRef = useRef(0)
+	const son = useRef<HTMLAudioElement>(null)
 
 	const liste = stories[userIds[iu]] || []
 	const story = liste[is]
@@ -92,6 +95,19 @@ const StoryViewer = ({ stories, initialUserId, onClose, onStoryView }: StoryView
 		return () => cancelAnimationFrame(id)
 	}, [story, arretee, suivante])
 
+	// la musique de la story (26/11) : elle joue tant que la story avance ; on l'entend après un premier toucher (règle des navigateurs)
+	useEffect(() => {
+		const a = son.current
+		if (!a || !story?.musique) return
+		a.volume = Math.max(0, Math.min(1, story.musique.volM))
+		a.muted = muet
+		if (arretee) a.pause()
+		else a.play().catch(() => {})
+	}, [story, arretee, muet])
+	useEffect(() => {
+		if (video.current && story?.musique) video.current.volume = Math.max(0, Math.min(1, story.musique.volV))
+	}, [story])
+
 	useEffect(() => {
 		if (story && onStoryView && !deja.current.has(story._id)) {
 			deja.current.add(story._id)
@@ -138,11 +154,12 @@ const StoryViewer = ({ stories, initialUserId, onClose, onStoryView }: StoryView
 	return (
 		<div className="fixed inset-0 z-50 bg-black flex items-center justify-center select-none" role="dialog" aria-label={`Story de ${story.author.username}`}>
 			<div className="relative w-full h-full sm:h-[94dvh] sm:w-auto sm:aspect-[9/16] sm:max-w-full sm:rounded-2xl overflow-hidden bg-neutral-900">
+				{story.musique && <audio key={"m" + story._id} ref={son} src={story.musique.src} loop preload="auto" />}
 				{story.video ? (
-					<video key={story._id} ref={video} src={story.video} poster={story.image || undefined} muted={muet} playsInline preload="auto" className="absolute inset-0 w-full h-full object-contain" />
+					<video key={story._id} ref={video} style={{ filter: filtreCss(story.filtre) }} src={story.video} poster={story.image || undefined} muted={muet} playsInline preload="auto" className="absolute inset-0 w-full h-full object-contain" />
 				) : (
 					// eslint-disable-next-line @next/next/no-img-element
-					<img key={story._id} src={story.image || ""} alt={`Story de ${story.author.username}`} className="absolute inset-0 w-full h-full object-contain" />
+					<img key={story._id} src={story.image || ""} alt={`Story de ${story.author.username}`} style={{ filter: filtreCss(story.filtre) }} className="absolute inset-0 w-full h-full object-contain" />
 				)}
 
 				{/* zones de toucher : un tiers à gauche = reculer, le reste = avancer ; appui long = pause */}
@@ -178,7 +195,8 @@ const StoryViewer = ({ stories, initialUserId, onClose, onStoryView }: StoryView
 							<span className="text-white font-bold text-sm truncate">{story.author.username}</span>
 							<span className="text-white/70 text-xs shrink-0">{ilya(story.createdAt)}</span>
 						</Link>
-						{story.video && (
+						{story.musique && <span className="hidden sm:flex max-w-[30%] items-center gap-1 truncate rounded-full bg-black/40 px-2 py-1 text-xs text-white"><Music2 className="w-3 h-3 shrink-0" /><span className="truncate">{story.musique.titre}</span></span>}
+						{(story.video || story.musique) && (
 							<button type="button" className={bouton} aria-label={muet ? "Mettre le son" : "Couper le son"} onClick={() => setMuet(!muet)}>
 								{muet ? <VolumeX size={20} /> : <Volume2 size={20} />}
 							</button>

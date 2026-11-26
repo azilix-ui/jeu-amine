@@ -63,7 +63,7 @@ const Stories = () => {
 	return (
 		<>
 			<div className="bg-white border border-gray-200 rounded-2xl py-3 mb-4">
-				<div className="flex gap-3 overflow-x-auto px-3 mc-sans-barre" role="list" aria-label="Stories">
+				<div className="flex gap-3 overflow-x-auto px-3 mc-sans-barre" aria-label="Stories">
 					{isLoading
 						? Array.from({ length: 6 }).map((_, i) => (
 								<div key={i} className="flex flex-col items-center gap-2 shrink-0">
@@ -73,7 +73,7 @@ const Stories = () => {
 							))
 						: null}
 					{!isLoading && (
-						<div className="flex flex-col items-center gap-1 shrink-0 w-[78px]" role="listitem">
+						<div className="flex flex-col items-center gap-1 shrink-0 w-[78px]">
 							<div className="relative">
 								{mesStories ? (
 									<button type="button" onClick={() => handleStoryClick(user._id)} aria-label="Voir ma story" className="cursor-pointer">
@@ -94,7 +94,7 @@ const Stories = () => {
 						</div>
 					)}
 					{autres.map((g) => (
-						<button type="button" key={g.userId} role="listitem" onClick={() => handleStoryClick(g.userId)}
+						<button type="button" key={g.userId} onClick={() => handleStoryClick(g.userId)}
 							className="flex flex-col items-center gap-1 shrink-0 w-[78px] cursor-pointer" aria-label={`Story de ${g.user.username}`}>
 							<Rond src={g.user.image} vu={g.hasViewed} />
 							<span className="text-xs text-gray-700 max-w-[76px] truncate">{g.user.username}</span>

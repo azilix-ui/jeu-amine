@@ -190,7 +190,7 @@ Anis (rôle admin, ou administrateur du site) voit tout. Un **modérateur** (rô
   - Champ `posts.musique` = « clé|volume vidéo|volume musique|titre|p » (p = morceau envoyé).
   - Route `GET /reseau/api/musiques` (la musicothèque, lue dans `mur/musique/liste.js`).
 - **Droits** : Mechmoum est privé, mais une chanson du commerce reste protégée. Mieux vaut des morceaux à soi ou libres.
-- Les stories n'ont pas encore de filtre ni de musique.
+- **Les stories aussi (26/11 après-midi)** : même choix à la création (composant `choix-effets.tsx`, colonnes `stories.filtre` et `stories.musique`). Dans le visionneur, la musique joue tant que la story avance (pause et son coupé compris), avec l'étiquette « ♪ titre ». Le morceau envoyé est effacé avec la story.
 
 ## 12. L'ancien mur recopié (26/11)
 

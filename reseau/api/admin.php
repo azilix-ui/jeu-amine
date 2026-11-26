@@ -246,7 +246,7 @@ function mc_modere(string $genre, int $id, string $faire): void {
     $table = ['post' => 'posts', 'comment' => 'comments', 'story' => 'stories', 'message' => 'messages'][$genre] ?? null;
     if (!$table) return;
     if ($faire === 'supprimer') {
-        if ($genre === 'post' || $genre === 'story') { $s = $db->prepare("SELECT media, poster FROM $table WHERE id = ?"); $s->execute([$id]); if ($m = $s->fetch()) { mc_efface_media($m['media']); mc_efface_media($m['poster']); } }
+        if ($genre === 'post' || $genre === 'story') { $s = $db->prepare("SELECT media, poster, musique FROM $table WHERE id = ?"); $s->execute([$id]); if ($m = $s->fetch()) { mc_efface_media($m['media']); mc_efface_media($m['poster']); mc_efface_musique($m['musique']); } }
         $db->prepare("DELETE FROM $table WHERE id = ?")->execute([$id]);
     } else $db->prepare("UPDATE $table SET cache = ? WHERE id = ?")->execute([$faire === 'masquer' ? 1 : 0, $id]);
 }

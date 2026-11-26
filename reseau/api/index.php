@@ -203,17 +203,7 @@ if ($route === 'posts') {
     $a = $p[1] ?? '';
     if ($a === 'create' && $methode === 'POST') {
         $cap = mc_txt('caption', 2200);
-        $filtre = mc_txt('filtre', 20); if (!in_array($filtre, MC_FILTRES, true)) $filtre = '';
-        // 26/11 : la musique (un morceau de la musicothèque du mur, ou un morceau envoyé), jouée par-dessus : « clé|volume vidéo|volume musique|titre|p (envoyé) »
-        $mus = null; $vv = max(0, min(1, (float)($_POST['volV'] ?? 1))); $vm = max(0, min(1, (float)($_POST['volM'] ?? .8)));
-        if (!empty($_FILES['son']['tmp_name'])) {
-            $k = mc_recoit_son($_FILES['son'], $mid); $t = str_replace('|', ' ', mc_txt('titreMusique', 60)) ?: 'Ma musique';
-            $mus = $k . '|' . round($vv, 2) . '|' . round($vm, 2) . '|' . $t . '|p';
-        } elseif (($id = mc_txt('musique', 40)) !== '') {
-            $bib = mc_bibliotheque(); if (!isset($bib[$id])) mc_err(400, 'Musique inconnue.');
-            $k = mc_musique_biblio($id, $mid); if (!$k) mc_err(404, 'Cette musique n\'est pas sur le serveur.');
-            $mus = $k . '|' . round($vv, 2) . '|' . round($vm, 2) . '|' . str_replace('|', ' ', $bib[$id]['emoji'] . ' ' . $bib[$id]['titre']);
-        }
+        [$filtre, $mus] = mc_filtre_musique($mid);
         if (!empty($_FILES['video']['tmp_name'])) {   // un reel (vidéo) + son affiche (image prise par la tablette)
             $v = mc_recoit_video($_FILES['video'], $mid);
             $po = !empty($_FILES['image']['tmp_name']) ? mc_recoit_image($_FILES['image'], $mid, 1080) : null;
@@ -323,8 +313,8 @@ if ($route === 'stories') {
         $v = !empty($_FILES['video']['tmp_name']);
         $cle = $v ? mc_recoit_video($_FILES['video'], $mid) : mc_recoit_image($_FILES['image'] ?? [], $mid, 1440);
         $po = $v && !empty($_FILES['image']['tmp_name']) ? mc_recoit_image($_FILES['image'], $mid, 1080) : null;
-        $t = time();
-        $db->prepare('INSERT INTO stories (author, type, media, poster, cree, expire) VALUES (?, ?, ?, ?, ?, ?)')->execute([$mid, $v ? 'video' : 'image', $cle, $po, $t, $t + 86400]);
+        $t = time(); [$filtre, $mus] = mc_filtre_musique($mid);
+        $db->prepare('INSERT INTO stories (author, type, media, poster, cree, expire, filtre, musique) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')->execute([$mid, $v ? 'video' : 'image', $cle, $po, $t, $t + 86400, $filtre, $mus]);
         $s = $db->prepare('SELECT * FROM stories WHERE id = ?'); $s->execute([$db->lastInsertId()]);
         mc_ok('Story publiée', ['story' => mc_story($s->fetch(), $moi, $mid)], 201);
     }
@@ -360,7 +350,7 @@ if ($route === 'stories') {
     }
     if ($methode === 'DELETE' || ($p[2] ?? '') === 'delete') {
         if ((int)$st['author'] !== $mid && !mc_admin($moi)) mc_err(403, 'Tu ne peux supprimer que tes stories.');
-        mc_efface_media($st['media']); mc_efface_media($st['poster']); $db->prepare('DELETE FROM stories WHERE id = ?')->execute([$st['id']]);
+        mc_efface_media($st['media']); mc_efface_media($st['poster']); mc_efface_musique($st['musique'] ?? null); $db->prepare('DELETE FROM stories WHERE id = ?')->execute([$st['id']]);
         mc_ok('Story supprimée');
     }
     if ($st['expire'] < time()) mc_err(404, 'Cette story a disparu (24 h).');
@@ -493,6 +483,7 @@ function mc_story(array $st, array $u, int $moi): array {
     return ['_id' => (string)$st['id'], 'type' => $st['type'], 'image' => mc_media_url($video ? ($st['poster'] ?: null) : $st['media']), 'video' => $video ? mc_media_url($st['media']) : null,
         'author' => ['_id' => (string)$u['id'], 'username' => $u['username'], 'image' => $u['image']],
         'viewers' => (int)$st['author'] === $moi ? $vus : [], 'viewersCount' => count($vus), 'isViewed' => (int)$st['author'] === $moi || in_array((string)$moi, $vus, true),
+        'filtre' => (string)($st['filtre'] ?? ''), 'musique' => mc_musique($st['musique'] ?? null),
         'expiresAt' => mc_iso((int)$st['expire']), 'createdAt' => mc_iso((int)$st['cree']), 'updatedAt' => mc_iso((int)$st['cree'])];
 }
 // Les publications, avec leurs « j'aime », commentaires et enregistrements (en peu de requêtes)
@@ -520,6 +511,23 @@ function mc_posts(array $l, int $moi, array $caches, bool $avecComments): array 
     }, $l)));
 }
 // « cle|volume vidéo|volume musique » → ce que l'interface joue par-dessus la vidéo
+// 26/11 : le filtre et la musique envoyés avec une publication ou une story
+function mc_filtre_musique(int $mid): array {
+    $filtre = mc_txt('filtre', 20); if (!in_array($filtre, MC_FILTRES, true)) $filtre = '';
+    // la musique (un morceau de la musicothèque du mur, ou un morceau envoyé), jouée par-dessus : « clé|volume vidéo|volume musique|titre|p (envoyé) »
+    $mus = null; $vv = max(0, min(1, (float)($_POST['volV'] ?? 1))); $vm = max(0, min(1, (float)($_POST['volM'] ?? .8)));
+    if (!empty($_FILES['son']['tmp_name'])) {
+        $k = mc_recoit_son($_FILES['son'], $mid); $t = str_replace('|', ' ', mc_txt('titreMusique', 60)) ?: 'Ma musique';
+        $mus = $k . '|' . round($vv, 2) . '|' . round($vm, 2) . '|' . $t . '|p';
+    } elseif (($id = mc_txt('musique', 40)) !== '') {
+        $bib = mc_bibliotheque(); if (!isset($bib[$id])) mc_err(400, 'Musique inconnue.');
+        $k = mc_musique_biblio($id, $mid); if (!$k) mc_err(404, 'Cette musique n\'est pas sur le serveur.');
+        $mus = $k . '|' . round($vv, 2) . '|' . round($vm, 2) . '|' . str_replace('|', ' ', $bib[$id]['emoji'] . ' ' . $bib[$id]['titre']);
+    }
+    return [$filtre, $mus];
+}
+// le morceau envoyé part avec ce qui le porte (pas ceux de la musicothèque, partagés)
+function mc_efface_musique(?string $m): void { $x = explode('|', (string)$m); if (($x[4] ?? '') === 'p') mc_efface_media($x[0]); }
 function mc_musique(?string $m): ?array {
     if (!$m) return null; $x = explode('|', $m);
     return ['src' => mc_media_url($x[0]), 'volV' => (float)($x[1] ?? 1), 'volM' => (float)($x[2] ?? .7), 'titre' => $x[3] ?? ''];
@@ -528,12 +536,12 @@ function mc_musique(?string $m): ?array {
 function mc_menage(): void {
     if (random_int(1, 20) !== 1) return;
     $db = mc_db(); $t = time();
-    foreach ($db->query('SELECT id, media, poster FROM stories WHERE expire < ' . ($t - 2 * 86400))->fetchAll() as $st) { mc_efface_media($st['media']); mc_efface_media($st['poster']); $db->prepare('DELETE FROM stories WHERE id = ?')->execute([$st['id']]); }
+    foreach ($db->query('SELECT id, media, poster, musique FROM stories WHERE expire < ' . ($t - 2 * 86400))->fetchAll() as $st) { mc_efface_media($st['media']); mc_efface_media($st['poster']); mc_efface_musique($st['musique']); $db->prepare('DELETE FROM stories WHERE id = ?')->execute([$st['id']]); }
     $db->exec('DELETE FROM notifications WHERE lu = 1 AND cree < ' . ($t - 180 * 86400));
 }
 function mc_supprime_post(array $po): void {
     mc_efface_media($po['media']); mc_efface_media($po['poster']);
-    $x = explode('|', (string)($po['musique'] ?? '')); if (($x[4] ?? '') === 'p') mc_efface_media($x[0]);
+    mc_efface_musique($po['musique'] ?? null);
     mc_db()->prepare('DELETE FROM posts WHERE id = ?')->execute([$po['id']]);
 }
 function mc_supprime_compte(int $uid): void {

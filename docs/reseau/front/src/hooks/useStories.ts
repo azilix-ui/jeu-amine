@@ -1,3 +1,4 @@
+import { ajouteEffets, type Effets } from "@/components/ui/choix-effets"
 import { useMemo, useCallback } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import axios_instance from "@/config/axios"
@@ -63,8 +64,9 @@ export const useStories = () => {
 	}, [stories])
 
 	const createStoryMutation = useMutation({
-		mutationFn: async ({ fichier, vignette }: { fichier: File; vignette?: Blob | null }) => {
+		mutationFn: async ({ fichier, vignette, effets }: { fichier: File; vignette?: Blob | null; effets?: Effets }) => {
 			const formData = new FormData()
+			if (effets) ajouteEffets(formData, effets, fichier.type.startsWith("video/"))
 			if (fichier.type.startsWith("video/")) {
 				formData.append("video", fichier)
 				if (vignette) formData.append("image", vignette, "vignette.jpg")
@@ -162,8 +164,8 @@ export const useStories = () => {
 		},
 	})
 
-	const createStory = useCallback((fichier: File, vignette?: Blob | null) => {
-		createStoryMutation.mutate({ fichier, vignette })
+	const createStory = useCallback((fichier: File, vignette?: Blob | null, effets?: Effets) => {
+		createStoryMutation.mutate({ fichier, vignette, effets })
 	}, [])
 
 	const deleteStory = useCallback((storyId: string) => {

@@ -75,6 +75,8 @@ SQL);
     // 26/11 : la musique jouée par-dessus une vidéo (vidéos importées de l'ancien mur)
     $cols = array_column($db->query('PRAGMA table_info(posts)')->fetchAll(), 'name');
     if (!in_array('musique', $cols, true)) $db->exec('ALTER TABLE posts ADD COLUMN musique TEXT');
+    $cs = array_column($db->query('PRAGMA table_info(stories)')->fetchAll(), 'name');
+    if (!in_array('filtre', $cs, true)) { $db->exec("ALTER TABLE stories ADD COLUMN filtre TEXT NOT NULL DEFAULT ''"); $db->exec('ALTER TABLE stories ADD COLUMN musique TEXT'); }
     if (!in_array('filtre', $cols, true)) $db->exec("ALTER TABLE posts ADD COLUMN filtre TEXT NOT NULL DEFAULT ''");   // 26/11 : filtre de la photo ou de la vidéo
     mc_famille_comptes($db);
     return $db;
