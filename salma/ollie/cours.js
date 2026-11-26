@@ -45,7 +45,8 @@ function voices(){ try{ const vs = speechSynthesis.getVoices(), nice = v => /goo
 let VD = null, VI = null;
 if('speechSynthesis' in window){ voices(); speechSynthesis.onvoiceschanged = voices; }
 const clean = t => String(t).replace(/<small>.*?<\/small>/g,'').replace(/<[^>]+>/g,'').replace(/_{2,}|…{1}(?=\s|$)/g,' ... ').replace(/«|»/g,'').replace(/🎟️|⭐|🔊|→/g,'').replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ').replace(/(\d) +\/ +(\d)/g,'$1 divisé par $2').replace(/(\d)\s*×\s*(\d)/g,'$1 fois $2').replace(/✔/g,'').trim();   // 20/11 : « 70 / 2 » se lit « 70 divisé par 2 »
-function segments(html){ const out = [], re = /<(\w+)[^>]*\blang="?(en|de|la)"?[^>]*>([\s\S]*?)<\/\1>/g; let m, last = 0; html = String(html);
+/* 26/11 : aussi l'arabe (lang="ar", Salma & Ghazala) */
+function segments(html){ const out = [], re = /<(\w+)[^>]*\blang="?(en|de|la|ar)"?[^>]*>([\s\S]*?)<\/\1>/g; let m, last = 0; html = String(html);
   while((m = re.exec(html))){ if(m.index > last) out.push([html.slice(last, m.index), 'fr']); out.push([m[3], m[2]]); last = re.lastIndex; }
   if(last < html.length) out.push([html.slice(last), 'fr']); return out.map(([t, l]) => [clean(t), l]).filter(([t]) => t && /[\p{L}\p{N}]/u.test(t)); }
 /* Les voix enregistrées (ElevenLabs) : C.voix = 'ollie' → sons famille-data/lire-voix/ollie/<clé>.mp3 (liste window.LIRE_VOIX, servis par
@@ -180,7 +181,7 @@ function speak(html){ html = marqueEN(html);
     LEC.i = LEC.saut ? LEC.saut.i : i + 1; } } finally { if(LEC.j === j){ LEC.mode = ''; barre(false); } } })();
 }
 function dire(t, l, j){ return new Promise(res => { if(!('speechSynthesis' in window) || j !== jeton) return res();
-  try{ const u = new SpeechSynthesisUtterance(t); if(l === 'en'){ u.lang = 'en-GB'; if(VE) u.voice = VE; u.rate = .82; } else if(l === 'de'){ u.lang = 'de-DE'; if(VD) u.voice = VD; u.rate = .85; } else if(l === 'la'){ u.lang = 'it-IT'; if(VI) u.voice = VI; u.rate = .85; } else { u.lang = 'fr-FR'; if(VF) u.voice = VF; u.rate = .95; } u.pitch = 1.1;
+  try{ const u = new SpeechSynthesisUtterance(t); if(l === 'en'){ u.lang = 'en-GB'; if(VE) u.voice = VE; u.rate = .82; } else if(l === 'de'){ u.lang = 'de-DE'; if(VD) u.voice = VD; u.rate = .85; } else if(l === 'la'){ u.lang = 'it-IT'; if(VI) u.voice = VI; u.rate = .85; } else if(l === 'ar'){ u.lang = 'ar-SA'; u.rate = .85; } else { u.lang = 'fr-FR'; if(VF) u.voice = VF; u.rate = .95; } u.pitch = 1.1;
     let fait = false; const fin = () => { if(!fait){ fait = true; res(); } }; u.onend = fin; u.onerror = fin; setTimeout(fin, 1500 + t.length * 120); speechSynthesis.speak(u); }catch(e){ res(); } }); }
 const en = (t, l = 'en') => speak(`<i lang="${l}">${t}</i>`);
 window.__lecture = { speak, hush, LEC, lecPause, lecSaute, lecVa };   // pour les tests
@@ -399,7 +400,7 @@ const ASK = {
       <div class="choices"><button class="btn" data-ecoute data-lock>🔊 Écouter</button><button class="btn go micro" id="mic" data-lock>🎤 À toi !</button></div><p class="entendu" aria-live="polite"></p>`, q.help, ecoute(q));
     const mic = card.querySelector('#mic'), ent = card.querySelector('.entendu'); let essais = 0, fini = false;
     card.querySelector('[data-ecoute]').onclick = () => en(q.en, lang);
-    const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+    const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f\u064B-\u065F\u0670\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/[^a-z0-9\u0621-\u064A ]/g, ' ').replace(/\s+/g, ' ').trim();   // 26/11 : l'arabe garde ses lettres (sans les voyelles)
     const dist = (a, b) => { const d = Array.from({ length:a.length + 1 }, (_, i) => [i]); for(let j = 1; j <= b.length; j++) d[0][j] = j;
       for(let i = 1; i <= a.length; i++) for(let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[a.length][b.length]; };
     const bon = alts => { if(C.indulgent && alts.some(t => norm(t))) return true;   // 21/11 (Amine, 5 ans) : avoir répété suffit
@@ -412,7 +413,7 @@ const ASK = {
     if(!SR){ mic.textContent = '✔ Je l\'ai dit'; mic.onclick = () => { if(fini) return; passe(true); }; attendre(card); return; }
     mic.onclick = async () => { if(fini) return; hush(); mic.disabled = true; mic.classList.add('ecoute'); mic.textContent = '👂 J\'écoute…'; ent.textContent = '';
       try{ if(window.FamilleSon) FamilleSon.avantMicro(); }catch(e){}
-      const r = new SR(); r.lang = lang === 'en' ? 'en-GB' : lang; r.interimResults = false; r.maxAlternatives = 5; let eu = false;
+      const r = new SR(); r.lang = lang === 'en' ? 'en-GB' : lang === 'ar' ? 'ar-SA' : lang; r.interimResults = false; r.maxAlternatives = 5; let eu = false;
       const fin = async alts => { if(eu) return; eu = true; mic.classList.remove('ecoute'); mic.textContent = '🎤 À toi !'; try{ if(window.FamilleSon) await FamilleSon.apresMicro(); }catch(e){}
         if(alts === null){ mic.textContent = '✔ Je l\'ai dit'; mic.disabled = false; mic.onclick = () => { if(!fini) passe(true); }; say('Je n\'arrive pas à utiliser le micro. Répète à voix haute, puis touche « Je l\'ai dit ».'); return; }
         essais++; if(alts.length) ent.textContent = '👂 J\'ai entendu : « ' + alts[0] + ' »';
