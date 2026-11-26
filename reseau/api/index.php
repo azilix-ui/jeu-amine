@@ -221,7 +221,7 @@ function mc_shorts(bool $force = false): array {
     if ($x && preg_match_all('#<yt:videoId>([\w-]{11})</yt:videoId>\s*(?:<[^>]+>[^<]*</[^>]+>\s*)*?<title>([^<]*)</title>#', $x, $m, PREG_SET_ORDER))
         foreach ($m as $e) $v[$e[1]] = ($v[$e[1]] ?? '') !== '' ? $v[$e[1]] : html_entity_decode($e[2], ENT_QUOTES);
     $l = [];
-    foreach ($v as $id => $t) $l[] = ['id' => $id, 'titre' => $t];
+    foreach ($v as $id => $t) $l[] = ['id' => $id, 'titre' => trim(preg_replace(['/#[^\s#]+/u', '/\s+/u'], ['', ' '], $t))];   // sans les #mots-clés
     if (!$l && is_array($mem) && !empty($mem['v'])) return $mem['v'];   // YouTube ne répond pas : on garde l'ancienne liste
     if ($l) mc_reglage('shorts-cache', json_encode(['t' => time(), 'v' => $l]));
     return $l;
