@@ -4,7 +4,7 @@
 import React from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import toast from "react-hot-toast"
-import { LogOut, Compass, Heart, Home, MessageCircleMore, Search, Clapperboard, Shield, ArrowLeftToLine } from "lucide-react"
+import { LogOut, Compass, Heart, Home, MessageCircleMore, Search, Clapperboard, Shield, ArrowLeftToLine, Youtube } from "lucide-react"
 import { useUserStore } from "@/store/store"
 import InstagramLogo from "@/components/ui/instagram-logo"
 import SidebarItem from "@/components/ui/sidebar-item"
@@ -13,7 +13,7 @@ import { useLoadingStore } from "@/components/ui/loading-bar"
 import { authClient } from "@/auth/auth-client"
 import { profil } from "@/lib/utils"
 
-export type SidebarItemType = "Accueil" | "Rechercher" | "Découvrir" | "Reels" | "Messages" | "Notifications" | "Créer" | "Profil" | "Administration" | ""
+export type SidebarItemType = "Accueil" | "Rechercher" | "Découvrir" | "Reels" | "Shorts" | "Messages" | "Notifications" | "Créer" | "Profil" | "Administration" | ""
 
 const Avatar = ({ src, taille = 26, actif = false }: { src?: string | null; taille?: number; actif?: boolean }) => (
 	// eslint-disable-next-line @next/next/no-img-element
@@ -40,6 +40,7 @@ const Sidebar = () => {
 		if (pathname.startsWith("/search")) return "Rechercher"
 		if (pathname.startsWith("/explore")) return "Découvrir"
 		if (pathname.startsWith("/reels")) return "Reels"
+		if (pathname.startsWith("/shorts")) return "Shorts"
 		if (pathname.startsWith("/messages")) return "Messages"
 		if (pathname.startsWith("/notifications")) return "Notifications"
 		if (pathname.startsWith("/admin")) return "Administration"
@@ -50,7 +51,7 @@ const Sidebar = () => {
 
 	const va = (item: SidebarItemType) => {
 		const cibles: Record<string, string> = {
-			Accueil: "/", Rechercher: "/search/", Découvrir: "/explore/", Reels: "/reels/", Messages: "/messages/",
+			Accueil: "/", Rechercher: "/search/", Découvrir: "/explore/", Reels: "/reels/", Shorts: "/shorts/", Messages: "/messages/",
 			Notifications: "/notifications/", Profil: profil(currentUsername), Administration: "/admin/",
 		}
 		if (!cibles[item]) return
@@ -75,6 +76,7 @@ const Sidebar = () => {
 		{ label: "Rechercher", icon: <Search /> },
 		{ label: "Découvrir", icon: <Compass /> },
 		{ label: "Reels", icon: <Clapperboard /> },
+		{ label: "Shorts", icon: <Youtube /> },
 		{ label: "Messages", icon: <MessageCircleMore /> },
 		{ label: "Notifications", icon: <Heart /> },
 		{ label: "Créer", icon: null },
@@ -126,6 +128,7 @@ const Sidebar = () => {
 					<SidebarItem compact icon={<Compass />} label="Découvrir" onClick={() => va("Découvrir")} isActive={courant === "Découvrir" || courant === "Rechercher"} />
 					<CreatePostDialog compact />
 					<SidebarItem compact icon={<Clapperboard />} label="Reels" onClick={() => va("Reels")} isActive={courant === "Reels"} />
+					<SidebarItem compact icon={<Youtube />} label="Shorts" onClick={() => va("Shorts")} isActive={courant === "Shorts"} />
 					<SidebarItem compact icon={<Avatar src={image} taille={28} actif={courant === "Profil"} />} label="Profil" onClick={() => va("Profil")} isActive={courant === "Profil"} />
 				</div>
 			</nav>
