@@ -106,8 +106,12 @@ const Sidebar = () => {
 			</aside>
 
 			{/* Téléphone : barre du haut */}
-			<header className="md:hidden fixed top-0 inset-x-0 z-40 flex h-14 items-center justify-between border-b border-gray-200 bg-white/95 backdrop-blur px-3" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-				<button type="button" onClick={() => va("Accueil")} aria-label="Accueil de Mechmoum"><InstagramLogo /></button>
+			{/* 26/11 : hauteur = 56 px + l'encoche (avant, l'encoche mangeait les 56 px : barre écrasée et floue sous l'heure de l'iPhone) ; fond blanc plein, sans flou */}
+			<header className="md:hidden fixed top-0 inset-x-0 z-40 flex items-center justify-between border-b border-gray-200 bg-white px-2" style={{ paddingTop: "env(safe-area-inset-top)", height: "calc(3.5rem + env(safe-area-inset-top))" }}>
+				<div className="flex items-center gap-1">
+					<button type="button" onClick={() => (window.location.href = "/")} aria-label="Revenir au site de la famille" title="Le site de la famille" className="flex h-11 w-11 items-center justify-center rounded-full text-gray-700 active:bg-gray-100"><ArrowLeftToLine className="h-6 w-6" /></button>
+					<button type="button" onClick={() => va("Accueil")} aria-label="Accueil de Mechmoum"><InstagramLogo /></button>
+				</div>
 				<div className="flex items-center gap-1">
 					{estAdmin && <SidebarItem compact icon={<Shield />} label="Administration" onClick={() => va("Administration")} isActive={courant === "Administration"} />}
 					<SidebarItem compact icon={<Heart />} label="Notifications" onClick={() => va("Notifications")} isActive={courant === "Notifications"} />
@@ -116,7 +120,7 @@ const Sidebar = () => {
 			</header>
 
 			{/* Téléphone : barre du bas */}
-			<nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur mc-barre-bas" aria-label="Navigation">
+			<nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white mc-barre-bas" aria-label="Navigation">
 				<div className="flex h-14 items-center justify-around">
 					<SidebarItem compact icon={<Home />} label="Accueil" onClick={() => va("Accueil")} isActive={courant === "Accueil"} />
 					<SidebarItem compact icon={<Compass />} label="Découvrir" onClick={() => va("Découvrir")} isActive={courant === "Découvrir" || courant === "Rechercher"} />
@@ -125,7 +129,7 @@ const Sidebar = () => {
 					<SidebarItem compact icon={<Avatar src={image} taille={28} actif={courant === "Profil"} />} label="Profil" onClick={() => va("Profil")} isActive={courant === "Profil"} />
 				</div>
 			</nav>
-			<div className="md:hidden h-14 shrink-0 w-full" style={{ marginTop: "env(safe-area-inset-top)" }} aria-hidden="true" />
+			<div className="md:hidden shrink-0 w-full" style={{ height: "calc(3.5rem + env(safe-area-inset-top))" }} aria-hidden="true" />
 		</>
 	)
 }

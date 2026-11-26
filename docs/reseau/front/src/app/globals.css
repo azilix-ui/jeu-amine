@@ -193,3 +193,11 @@ body {
 .mc-anneau-fin { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #e0a100; }
 .mc-sans-barre { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .mc-sans-barre::-webkit-scrollbar { display: none; }
+
+/* 26/11 : iPad en application (écran entier) : la page passait sous l'heure et la batterie.
+   Une bande blanche fixe couvre la zone de l'encoche et le cadre commence en dessous. */
+@media (min-width: 768px) {
+	.mc-cadre { padding-top: env(safe-area-inset-top); }
+	body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top); background: #fff; z-index: 60; pointer-events: none; }
+	aside.sticky { height: calc(100dvh - env(safe-area-inset-top)); }
+}
