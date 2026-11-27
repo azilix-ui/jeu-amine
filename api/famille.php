@@ -200,8 +200,11 @@ function ecran_etat(string $p): array {
     $matin = $we && !empty($r['matin_we']) ? $r['matin_we'] : $r['matin'];                          // ce matin : samedi ou dimanche ?
     $x = ecran_jour($p); $t = time(); $base = (int)($we ? $r['weekend'] : $r['semaine']);
     $lim = isset($x['limite']) ? (int)$x['limite'] : $base;   // 24/11 : la limite d'aujourd'hui choisie dans le tableau de bord
-    return ['libre' => empty($r['on']), 'jour' => $j, 'limite' => $lim * 60 + $bonus, 'limite_base' => $base * 60, 'limite_jour' => isset($x['limite']), 'bonus' => $bonus, 'utilise' => $u, 'nuit' => $nuit, 'matin' => $matin, 'weekend' => $we, 'demande' => demande_du_jour($p),
-            'coupe' => !empty($x['coupe']), 'ouvert_reste' => max(0, (int)($x['ouvert'] ?? 0) - $t), 'now' => $t];
+    // 27/11 : un « oui » à « Je demande plus de temps » ouvre les jeux pendant ces minutes sur TOUTES les pages et tablettes
+    // (avant, seule la page ouverte au moment de la réponse le savait : la nuit, les autres jeux restaient fermés)
+    $dem = demande_du_jour($p); $finDem = ($dem && $dem['statut'] === 'oui' && $dem['min'] > 0) ? $dem['maj'] + $dem['min'] * 60 : 0;
+    return ['libre' => empty($r['on']), 'jour' => $j, 'limite' => $lim * 60 + $bonus, 'limite_base' => $base * 60, 'limite_jour' => isset($x['limite']), 'bonus' => $bonus, 'utilise' => $u, 'nuit' => $nuit, 'matin' => $matin, 'weekend' => $we, 'demande' => $dem,
+            'coupe' => !empty($x['coupe']), 'ouvert_reste' => max(0, max((int)($x['ouvert'] ?? 0), $finDem) - $t), 'now' => $t];
 }
 /* 24/11 (demandé par le papa) : le tableau de bord de l'administration agit sur le temps de jeu d'AUJOURD'HUI.
    reglages.ecran_jour = {Amine:{jour, coupe, ouvert (jusqu'à quand les jeux sont ouverts même la nuit ou après la limite), limite (minutes)}}.
