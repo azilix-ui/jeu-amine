@@ -97,8 +97,7 @@ package.json, build.js  copie le site dans dist/ si Hostinger lance un « build 
 
 ## Points ouverts
 
-- [ ] **https://missaoui-family.com (sans www)** : la page répond (vu le 02/11 dans le navigateur), mais le DNS `A` de `@` et le certificat SSL sans www restent à vérifier dans hPanel.
-- [ ] Redirection `http://` → `https://` non vérifiée (« Forcer HTTPS » dans hPanel › Sécurité › SSL).
+- [x] **www et sans www** (vérifié le 28/11 avec le connecteur Hostinger) : `@` = ALIAS et `www` = CNAME vers le CDN Hostinger (`*.cdn.hstgr.net`, CDN en marche depuis le 29/10), certificat SSL « à vie » actif (jusqu'au 27/01/2027, renouvelé tout seul), « Forcer HTTPS » en marche, cache serveur coupé. Le connecteur Hostinger (hPanel) est relié à Claude : `hosting_cache_clear` (scope `cdn`) vide le cache du CDN.
 - [ ] Deutsch Express affiche « Dijon-Ville » : à retirer si le papa le souhaite (pas encore décidé).
 - [ ] Le mot de passe parent (voix + Progression) doit avoir été créé par le papa.
 - [ ] Sauvegardes des bases (`famille-data/`) et des voix (`nahki-voix/`) : proposées, pas encore faites.
