@@ -300,9 +300,13 @@ function mc_sert_media(string $cle): never {
         if ($m[1] !== '') { $debut = (int)$m[1]; if ($m[2] !== '') $fin = min((int)$m[2], $taille - 1); }
         elseif ($m[2] !== '') { $debut = max(0, $taille - (int)$m[2]); }
         if ($debut > $fin) { http_response_code(416); header("Content-Range: bytes */$taille"); exit; }
+        // 28/11 : jamais plus de 2 Mo par réponse. Avant, « bytes=0- » envoyait tout le fichier dans une seule requête : une grosse vidéo
+        // gardait un processus PHP occupé plusieurs minutes, et quelques-unes à la fois bloquaient tout le site. Le navigateur redemande la suite tout seul.
+        $fin = min($fin, $debut + 2 * 1024 * 1024 - 1);
         http_response_code(206); header("Content-Range: bytes $debut-$fin/$taille");
     }
     header('Content-Length: ' . ($fin - $debut + 1));
+    if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
     $h = fopen($f, 'rb'); fseek($h, $debut); $reste = $fin - $debut + 1;
     while ($reste > 0 && !feof($h)) { $b = fread($h, min(65536, $reste)); echo $b; $reste -= strlen($b); flush(); }
     fclose($h); exit;
