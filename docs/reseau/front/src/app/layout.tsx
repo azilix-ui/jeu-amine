@@ -35,6 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 	return (
 		<html lang="fr">
 			<head>
+				<script src="/reseau/garde-erreurs.js" />
 				<script src="/reseau/enregistre-sw.js" defer />
 			</head>
 			<body className="antialiased">

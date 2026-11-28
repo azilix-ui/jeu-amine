@@ -17,6 +17,20 @@ $route = $p[0] ?? '';
 // Les fichiers (photos, vidéos) : GET /media/<clé>
 if ($route === 'media' && $methode === 'GET') mc_sert_media((string)($p[1] ?? ''));
 
+/* 28/11 : les plantages de l'interface (garde-erreurs.js) : notés pour comprendre (message, page, navigateur ; rien d'autre).
+   POST sans l'en-tête Mechmoum (sendBeacon ne peut pas l'ajouter) ; on garde les 40 derniers. GET : les relire (derrière la porte du site). */
+if ($route === 'erreur') {
+    $l = json_decode((string)mc_reglage('erreurs-client'), true); if (!is_array($l)) $l = [];
+    if ($methode === 'POST') {
+        $d = json_decode((string)file_get_contents('php://input', false, null, 0, 6000), true);
+        if (is_array($d)) { $c = fn($k, $n) => mb_substr(trim((string)($d[$k] ?? '')), 0, $n);
+            $l[] = ['t' => date('d/m H:i:s'), 'message' => $c('message', 500), 'pile' => $c('pile', 1500), 'page' => $c('page', 200), 'ua' => $c('ua', 200)];
+            mc_reglage('erreurs-client', json_encode(array_slice($l, -40), JSON_UNESCAPED_UNICODE)); }
+        http_response_code(204); exit;
+    }
+    mc_json(200, ['success' => true, 'data' => array_reverse($l)]);
+}
+
 // Toute écriture doit venir de l'interface (en-tête qu'un autre site ne peut pas envoyer) : pas de requête forgée.
 if ($methode !== 'GET' && ($_SERVER['HTTP_X_MECHMOUM'] ?? '') !== '1') mc_err(400, 'Requête refusée.');
 $db = mc_db();
