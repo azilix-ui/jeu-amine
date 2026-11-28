@@ -97,7 +97,7 @@ package.json, build.js  copie le site dans dist/ si Hostinger lance un « build 
 
 ## Points ouverts
 
-- [x] **www et sans www** (vérifié le 28/11 avec le connecteur Hostinger) : `@` = ALIAS et `www` = CNAME vers le CDN Hostinger (`*.cdn.hstgr.net`, CDN en marche depuis le 29/10), certificat SSL « à vie » actif (jusqu'au 27/01/2027, renouvelé tout seul), « Forcer HTTPS » en marche, cache serveur coupé. Le connecteur Hostinger (hPanel) est relié à Claude : `hosting_cache_clear` (scope `cdn`) vide le cache du CDN.
+- [x] **www et sans www** (vérifié le 28/11 avec le connecteur Hostinger) : **CDN Hostinger coupé le 28/11 à 15 h 30** (accord du papa : ses ordinateurs avaient des erreurs SSL, une ancienne version et des « failed to fetch » à travers le CDN) ; depuis, `@` = A `92.113.19.217` + AAAA, `www` = CNAME vers `@` (avant : CDN `*.cdn.hstgr.net`, en marche depuis le 29/10 ; pour le rallumer : `hosting_websites_update-settings` cdn true), certificat SSL « à vie » actif (jusqu'au 27/01/2027, renouvelé tout seul), « Forcer HTTPS » en marche, cache serveur coupé. Le connecteur Hostinger (hPanel) est relié à Claude : `hosting_cache_clear` (scope `cdn`) vide le cache du CDN.
 - [ ] Deutsch Express affiche « Dijon-Ville » : à retirer si le papa le souhaite (pas encore décidé).
 - [ ] Le mot de passe parent (voix + Progression) doit avoir été créé par le papa.
 - [ ] Sauvegardes des bases (`famille-data/`) et des voix (`nahki-voix/`) : proposées, pas encore faites.
