@@ -218,16 +218,33 @@ function mc_recoit_image(array $f, int $owner, int $max = 1440): string {
     mc_db()->prepare('INSERT INTO media (cle, owner, mime, taille, w, h, cree) VALUES (?, ?, ?, ?, ?, ?, ?)')->execute([$cle, $owner, str_ends_with($cle, '.webp') ? 'image/webp' : 'image/jpeg', filesize($chemin), $nw, $nh, time()]);
     return $cle;
 }
-// Une vidéo (reel, story) : vérifiée (vrai MP4, MOV ou WebM, 80 Mo au plus) et rangée sous un nom au hasard.
+// Une vidéo (reel, story) : vérifiée (vrai MP4, MOV ou WebM) et rangée sous un nom au hasard. 80 Mo au plus,
+// sauf pour Anis (administrateur, 28/11) : pas de limite (il efface lui-même les grosses vidéos s'il faut de la place).
 // Ses infos cachées (lieu, appareil) sont effacées par la tablette avant l'envoi (comme sur le mur de la famille).
+// Une grosse vidéo arrive par morceaux de 8 Mo (route « envoi », 28/11) ; la publication donne alors son numéro (champ « envoi »).
+function mc_vid_max(): int { return mc_admin() ? PHP_INT_MAX : MC_VID_MAX; }
+function mc_envoi_chemin(int $owner, string $id): string {
+    if (!preg_match('/^[a-f0-9]{32}$/', $id)) mc_err(400, 'Envoi inconnu.');
+    $d = mc_dossier() . '/envoi'; if (!is_dir($d)) mkdir($d, 0700, true);
+    return "$d/$owner-$id.part";
+}
+function mc_video_recue(int $owner): ?array {
+    if (!empty($_FILES['video']['tmp_name'])) return $_FILES['video'];
+    $id = (string)($_POST['envoi'] ?? ''); if ($id === '') return null;
+    $c = mc_envoi_chemin($owner, $id);
+    if (!is_file($c)) mc_err(400, 'La vidéo n\'est pas arrivée en entier. Réessaie.');
+    return ['error' => UPLOAD_ERR_OK, 'tmp_name' => $c, 'size' => filesize($c), 'envoi' => true];
+}
 function mc_recoit_video(array $f, int $owner): string {
-    if (($f['error'] ?? 1) !== UPLOAD_ERR_OK || !is_uploaded_file($f['tmp_name'])) mc_err(400, 'Vidéo manquante.');
-    if ($f['size'] > MC_VID_MAX) mc_err(413, 'Vidéo trop lourde (80 Mo au plus).');
+    $envoi = !empty($f['envoi']);
+    if (($f['error'] ?? 1) !== UPLOAD_ERR_OK || (!$envoi && !is_uploaded_file($f['tmp_name']))) mc_err(400, 'Vidéo manquante.');
+    if ($f['size'] > mc_vid_max()) { if ($envoi) @unlink($f['tmp_name']); mc_err(413, 'Vidéo trop lourde (80 Mo au plus).'); }
     $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']);
     $ext = ['video/mp4' => 'mp4', 'video/quicktime' => 'mov', 'video/webm' => 'webm', 'video/x-m4v' => 'mp4'][$mime] ?? null;
-    if (!$ext) mc_err(415, 'Ce fichier n\'est pas une vidéo (MP4, MOV ou WebM).');
+    if (!$ext) { if ($envoi) @unlink($f['tmp_name']); mc_err(415, 'Ce fichier n\'est pas une vidéo (MP4, MOV ou WebM).'); }
     $cle = bin2hex(random_bytes(16)) . '.' . $ext;
-    if (!move_uploaded_file($f['tmp_name'], mc_dossier() . '/media/' . $cle)) mc_err(500, 'Envoi impossible.');
+    $dest = mc_dossier() . '/media/' . $cle;
+    if (!($envoi ? rename($f['tmp_name'], $dest) : move_uploaded_file($f['tmp_name'], $dest))) mc_err(500, 'Envoi impossible.');
     mc_db()->prepare('INSERT INTO media (cle, owner, mime, taille, cree) VALUES (?, ?, ?, ?, ?)')->execute([$cle, $owner, $mime === 'video/quicktime' ? 'video/mp4' : $mime, (int)$f['size'], time()]);
     return $cle;
 }

@@ -6,10 +6,17 @@ import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Volume2, VolumeX, Youtube, ChevronDown } from "lucide-react"
 import Cadre from "@/components/Cadre"
+import { Vignette } from "@/components/VignetteSociale"
 import axios_instance from "@/config/axios"
 
-type Short = { id: string; titre: string; chaine?: string }
+type Short = { id: string; titre: string; chaine?: string; src?: "yt" | "fb" | "ig"; url?: string }
 const YT = "https://www.youtube-nocookie.com"
+
+// 28/11 : les vidéos Facebook et Instagram se lisent dans leur lecteur intégré officiel (on touche ▶ ; pas de passage automatique à la suivante : on glisse)
+const adresse = (s: Short, son: boolean) =>
+	s.src === "fb" ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(s.url || "")}&show_text=false&autoplay=true&width=360`
+	: s.src === "ig" ? `${(s.url || "").replace(/\/?$/, "/")}embed/`
+	: `${YT}/embed/${s.id}?autoplay=1&mute=${son ? 0 : 1}&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`
 
 function Lecteur({ s, chaine, actif, son, setSon, suivante }: { s: Short; chaine: string; actif: boolean; son: boolean; setSon: (b: boolean) => void; suivante: () => void }) {
 	const cadre = useRef<HTMLIFrameElement>(null)
@@ -49,17 +56,20 @@ function Lecteur({ s, chaine, actif, son, setSon, suivante }: { s: Short; chaine
 						ref={cadre}
 						key={s.id}
 						onLoad={charge}
-						src={`${YT}/embed/${s.id}?autoplay=1&mute=${son ? 0 : 1}&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`}
+						src={adresse(s, son)}
 						title={s.titre || "Short"}
-						allow="autoplay; encrypted-media; picture-in-picture"
+						allow="autoplay; encrypted-media; picture-in-picture; clipboard-write; web-share"
+						allowFullScreen
 						referrerPolicy="strict-origin-when-cross-origin"
 						className="absolute inset-0 h-full w-full border-0"
 					/>
 				) : (
 					// eslint-disable-next-line @next/next/no-img-element
-					<img src={`https://i.ytimg.com/vi/${s.id}/hqdefault.jpg`} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-70" />
+					(s.src || "yt") === "yt"
+						? <img src={`https://i.ytimg.com/vi/${s.id}/hqdefault.jpg`} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-70" />
+						: <Vignette src={s.src!} />
 				)}
-				{actif && (
+				{actif && (s.src || "yt") === "yt" && (
 					<button type="button" onClick={() => { setSon(!son); if (!son) ordre("playVideo") }} aria-label={son ? "Couper le son" : "Mettre le son"}
 						className="absolute top-3 right-3 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-black/45 text-white cursor-pointer">
 						{son ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}

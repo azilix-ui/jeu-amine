@@ -212,13 +212,39 @@ if ($route === 'users') {
 /* ---------- les Shorts (27/11 ; 28/11 : plusieurs sources réglées dans l'Administration) : des petites vidéos YouTube choisies par le papa,
    lues avec le lecteur officiel de YouTube. Les sources (« shorts-sources » dans les réglages) : des chaînes (leur page /shorts, sinon le flux RSS
    de leurs shorts, gardés 6 h par chaîne) et des vidéos ajoutées une par une ; on peut cacher un short. ---------- */
-function mc_web(string $url): string {
+function mc_web(string $url, ?string &$fin = null, ?string $ua = null): string {   // $fin : l'adresse d'arrivée après les redirections
     $c = curl_init($url);
-    curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_TIMEOUT => 12, CURLOPT_ENCODING => '',
-        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36',
+    curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 8, CURLOPT_TIMEOUT => 12, CURLOPT_ENCODING => '',
+        CURLOPT_USERAGENT => $ua ?? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36',
         CURLOPT_HTTPHEADER => ['Accept-Language: fr-FR,fr;q=0.9', 'Cookie: SOCS=CAI; CONSENT=YES+cb'] ]);
-    $r = curl_exec($c); $ok = curl_getinfo($c, CURLINFO_HTTP_CODE) === 200; curl_close($c);
+    $r = curl_exec($c); $ok = curl_getinfo($c, CURLINFO_HTTP_CODE) === 200; $fin = (string)curl_getinfo($c, CURLINFO_EFFECTIVE_URL); curl_close($c);
     return $ok && is_string($r) ? $r : '';
+}
+// 28/11 : une vidéo Facebook ou Instagram. Un lien de partage (facebook.com/share/v/…, fb.watch/…, instagram.com/share/…) est suivi
+// jusqu'à la vraie adresse (/reel/<numéro>, /videos/<numéro>, /reel/<code>) : seule celle-ci se lit dans le lecteur intégré.
+function mc_lien_social(string $u): ?array {
+    $u = html_entity_decode($u);
+    $fb = fn($x) => preg_match('#facebook\.com/(?:[^?\#]*/)?(?:reel|videos)/(?:[^/?\#]+/)?(\d{6,})#i', $x, $m) || preg_match('#facebook\.com/watch/?\?v=(\d{6,})#i', $x, $m) ? $m[1] : null;
+    $ig = fn($x) => preg_match('#instagram\.com/(?:[\w.]+/)?(reels?|p|tv)/([\w-]{5,40})#i', $x, $m) ? [$m[1] === 'p' ? 'p' : 'reel', $m[2]] : null;
+    $fait = function ($x) use ($fb, $ig) {
+        if ($id = $fb($x)) return ['src' => 'fb', 'id' => $id, 'url' => "https://www.facebook.com/reel/$id/"];
+        if ($g = $ig($x)) return ['src' => 'ig', 'id' => $g[1], 'url' => "https://www.instagram.com/{$g[0]}/{$g[1]}/"];
+        return null;
+    };
+    if (!preg_match('#(facebook\.com|fb\.watch|fb\.com|instagram\.com|instagr\.am)#i', $u)) return null;
+    if ($r = $fait($u)) return $r;
+    // un lien de partage : on le suit (navigateur, puis robot de Facebook qui reçoit les balises og:)
+    foreach ([null, 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)'] as $ua) {
+        $h = mc_web($u, $fin, $ua);
+        foreach ([$fin, preg_match('#[?&]next=([^&]+)#', (string)$fin, $m) ? rawurldecode($m[1]) : '',
+                  preg_match('#<meta property="og:url" content="([^"]+)"#', $h, $m) ? html_entity_decode($m[1]) : '',
+                  preg_match('#<link rel="canonical" href="([^"]+)"#', $h, $m) ? html_entity_decode($m[1]) : ''] as $x)
+            if ($x && ($r = $fait($x))) {
+                $t = preg_match('#<meta property="og:title" content="([^"]{1,200})"#', $h, $m) ? html_entity_decode($m[1], ENT_QUOTES) : '';
+                return $r + ['titre' => trim(preg_replace('/^[\d,. ]+[KkMm]? (vues|views|réactions|reactions)[^|]*\|\s*/u', '', $t))];
+            }
+    }
+    return ['src' => 'inconnu'];
 }
 function mc_shorts_sources(?array $nouv = null): array {
     if ($nouv !== null) { mc_reglage('shorts-sources', json_encode($nouv, JSON_UNESCAPED_UNICODE)); return $nouv; }
@@ -253,7 +279,7 @@ function mc_shorts(bool $force = false, bool $tout = false): array {
     $s = mc_shorts_sources(); $cache = array_flip($s['caches']); $vu = []; $l = [];
     $met = function (array $x, string $chaine) use (&$l, &$vu, $cache, $tout) {
         if (isset($vu[$x['id']]) || (!$tout && isset($cache[$x['id']]))) return;
-        $vu[$x['id']] = 1; $l[] = ['id' => $x['id'], 'titre' => $x['titre'] ?? '', 'chaine' => $chaine] + ($tout ? ['cache' => isset($cache[$x['id']])] : []);
+        $vu[$x['id']] = 1; $l[] = ['id' => $x['id'], 'titre' => $x['titre'] ?? '', 'chaine' => $chaine, 'src' => $x['src'] ?? 'yt'] + (isset($x['url']) ? ['url' => $x['url']] : []) + ($tout ? ['cache' => isset($cache[$x['id']])] : []);
     };
     foreach (array_reverse($s['videos']) as $x) $met($x, $x['chaine'] ?? 'YouTube');
     $par = []; foreach ($s['chaines'] as $ch) $par[] = [$ch['nom'], mc_shorts_chaine($ch, $force)];
@@ -272,14 +298,30 @@ if ($route === 'shorts') {
 /* ---------- la musicothèque (26/11) : les morceaux du mur, à mettre sur une publication ---------- */
 if ($route === 'musiques') mc_json(200, ['success' => true, 'data' => array_values(array_map(fn($m) => $m + ['ecoute' => str_starts_with($m['id'], 'el-') ? '/api/mur.php?mus=' . $m['id'] : '/mur/musique/' . $m['id'] . '.mp3'], mc_bibliotheque()))]);
 
+/* ---------- l'envoi d'une grosse vidéo par morceaux de 8 Mo (28/11) : la tablette envoie id, début et le morceau ; on recolle dans l'ordre ---------- */
+if ($route === 'envoi' && $methode === 'POST') {
+    $c = mc_envoi_chemin($mid, (string)($_POST['id'] ?? ''));
+    $debut = (int)($_POST['debut'] ?? -1); $f = $_FILES['morceau'] ?? null;
+    if (!$f || ($f['error'] ?? 1) !== UPLOAD_ERR_OK || !is_uploaded_file($f['tmp_name'])) mc_err(400, 'Morceau manquant.');
+    if ($f['size'] > 16 * 1024 * 1024) mc_err(413, 'Morceau trop gros.');
+    clearstatcache(); $deja = is_file($c) ? filesize($c) : 0;
+    if ($debut === 0 && $deja) { unlink($c); $deja = 0; }
+    if ($debut !== $deja) mc_json(409, ['success' => false, 'message' => 'Morceau hors d\'ordre', 'recu' => $deja]);
+    if ($deja + $f['size'] > mc_vid_max()) { @unlink($c); mc_err(413, 'Vidéo trop lourde (80 Mo au plus).'); }
+    $in = fopen($f['tmp_name'], 'rb'); $out = fopen($c, 'ab');
+    if (!$in || !$out || !flock($out, LOCK_EX)) mc_err(500, 'Envoi impossible.');
+    stream_copy_to_stream($in, $out); fflush($out); flock($out, LOCK_UN); fclose($out); fclose($in);
+    clearstatcache(); mc_json(200, ['success' => true, 'recu' => filesize($c)]);
+}
+
 /* ---------- les publications ---------- */
 if ($route === 'posts') {
     $a = $p[1] ?? '';
     if ($a === 'create' && $methode === 'POST') {
         $cap = mc_txt('caption', 2200);
         [$filtre, $mus] = mc_filtre_musique($mid);
-        if (!empty($_FILES['video']['tmp_name'])) {   // un reel (vidéo) + son affiche (image prise par la tablette)
-            $v = mc_recoit_video($_FILES['video'], $mid);
+        if ($fv = mc_video_recue($mid)) {   // un reel (vidéo) + son affiche (image prise par la tablette)
+            $v = mc_recoit_video($fv, $mid);
             $po = !empty($_FILES['image']['tmp_name']) ? mc_recoit_image($_FILES['image'], $mid, 1080) : null;
             $db->prepare('INSERT INTO posts (author, caption, type, media, poster, cree, musique, filtre) VALUES (?, ?, \'video\', ?, ?, ?, ?, ?)')->execute([$mid, $cap, $v, $po, time(), $mus, $filtre]);
         } else {
@@ -384,8 +426,8 @@ if ($route === 'comments') {
 if ($route === 'stories') {
     $a = $p[1] ?? '';
     if ($a === '' && $methode === 'POST') {
-        $v = !empty($_FILES['video']['tmp_name']);
-        $cle = $v ? mc_recoit_video($_FILES['video'], $mid) : mc_recoit_image($_FILES['image'] ?? [], $mid, 1440);
+        $fv = mc_video_recue($mid); $v = $fv !== null;
+        $cle = $v ? mc_recoit_video($fv, $mid) : mc_recoit_image($_FILES['image'] ?? [], $mid, 1440);
         $po = $v && !empty($_FILES['image']['tmp_name']) ? mc_recoit_image($_FILES['image'], $mid, 1080) : null;
         $t = time(); [$filtre, $mus] = mc_filtre_musique($mid);
         $db->prepare('INSERT INTO stories (author, type, media, poster, cree, expire, filtre, musique) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')->execute([$mid, $v ? 'video' : 'image', $cle, $po, $t, $t + 86400, $filtre, $mus]);
@@ -612,6 +654,7 @@ function mc_menage(): void {
     $db = mc_db(); $t = time();
     foreach ($db->query('SELECT id, media, poster, musique FROM stories WHERE expire < ' . ($t - 2 * 86400))->fetchAll() as $st) { mc_efface_media($st['media']); mc_efface_media($st['poster']); mc_efface_musique($st['musique']); $db->prepare('DELETE FROM stories WHERE id = ?')->execute([$st['id']]); }
     $db->exec('DELETE FROM notifications WHERE lu = 1 AND cree < ' . ($t - 180 * 86400));
+    foreach (glob(mc_dossier() . '/envoi/*.part') ?: [] as $pa) if (filemtime($pa) < $t - 86400) @unlink($pa);   // envois abandonnés
 }
 function mc_supprime_post(array $po): void {
     mc_efface_media($po['media']); mc_efface_media($po['poster']);

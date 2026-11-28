@@ -1,6 +1,7 @@
 "use client"
 // Publier une photo ou une vidéo (reel). Pour une vidéo, on prend une image du début comme vignette.
 // 26/11 : un filtre (Jasmin, Sidi Bou, Sahara…) et une musique (celles du mur de la famille, ou son propre morceau mp3).
+import { ajouteVideo } from "@/lib/envoi"
 import React from "react"
 import toast from "react-hot-toast"
 import axios_instance from "@/config/axios"
@@ -51,7 +52,6 @@ const CreatePostDialog = ({ compact = false }: { compact?: boolean }) => {
 	const choisir = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const f = e.target.files?.[0]
 		if (!f) return
-		if (f.type.startsWith("video/") && f.size > 80 * 1024 * 1024) return toast.error("Cette vidéo est trop lourde (80 Mo au plus).")
 		if (f.type.startsWith("image/") && f.size > 15 * 1024 * 1024) return toast.error("Cette photo est trop lourde (15 Mo au plus).")
 		if (preview) URL.revokeObjectURL(preview)
 		setFichier(f)
@@ -66,8 +66,8 @@ const CreatePostDialog = ({ compact = false }: { compact?: boolean }) => {
 			fd.append("caption", caption)
 			ajouteEffets(fd, effets, estVideo)
 			if (estVideo) {
-				fd.append("video", fichier)
 				const v = await vignetteVideo(fichier)
+				await ajouteVideo(fd, fichier, (p) => toast.loading(`Envoi de la vidéo… ${p} %`, { id: "publier" }))
 				if (v) fd.append("image", v, "vignette.jpg")
 			} else fd.append("image", fichier)
 			const r = await axios_instance.post("/posts/create", fd)
@@ -80,7 +80,7 @@ const CreatePostDialog = ({ compact = false }: { compact?: boolean }) => {
 				loading: estVideo ? "Envoi de la vidéo…" : "Publication…",
 				success: estVideo ? "Ton reel est publié !" : "C'est publié !",
 				error: (err) => err.message || "Quelque chose n'a pas marché",
-			})
+			}, { id: "publier" })
 			.finally(() => setIsLoading(false))
 	}
 

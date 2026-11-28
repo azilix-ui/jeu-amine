@@ -39,7 +39,7 @@ if ($a === 'shorts') {
         // une vidéo : /shorts/ID, watch?v=ID, youtu.be/ID, /embed/ID, /live/ID, ou l'identifiant seul
         $vid = null;
         if (preg_match('/^[\w-]{11}$/', $u)) $vid = $u;
-        elseif (preg_match('#(?:youtu\.be/|/shorts/|/embed/|/live/|[?&]v=)([\w-]{11})#', $u, $m)) $vid = $m[1];
+        elseif (preg_match('#^https?://([\w-]+\.)*(youtube\.com|youtu\.be|youtube-nocookie\.com)/#i', $u) && preg_match('#(?:youtu\.be/|/shorts/|/embed/|/live/|[?&]v=)([\w-]{11})#', $u, $m)) $vid = $m[1];
         if ($vid) {
             foreach ($s['videos'] as $x) if ($x['id'] === $vid) mc_err(400, 'Cette vidéo est déjà dans le fil.');
             $o = json_decode(mc_web('https://www.youtube.com/oembed?format=json&url=' . rawurlencode('https://www.youtube.com/watch?v=' . $vid)), true);
@@ -48,12 +48,22 @@ if ($a === 'shorts') {
             mc_shorts_sources($s); mc_journal($qui, 'short ajouté', $vid);
             $rend(is_array($o) ? '« ' . ($o['title'] ?? 'La vidéo') . ' » est en tête du fil.' : 'Vidéo ajoutée (YouTube n\'a pas donné son titre).');
         }
+        // une vidéo Facebook ou Instagram (28/11)
+        if ($so = mc_lien_social($u)) {
+            $nomr = $so['src'] === 'ig' ? 'Instagram' : 'Facebook';
+            if ($so['src'] === 'inconnu') mc_err(400, 'Je n\'arrive pas à ouvrir ce lien de partage depuis le serveur. Ouvre-le dans ton navigateur, puis copie l\'adresse de la barre (elle contient /reel/…) et colle-la ici.');
+            foreach ($s['videos'] as $x) if ($x['id'] === $so['id']) mc_err(400, 'Cette vidéo est déjà dans le fil.');
+            $s['videos'][] = ['id' => $so['id'], 'src' => $so['src'], 'url' => $so['url'], 'titre' => mc_titre_propre(mb_substr($so['titre'] ?? '', 0, 200)), 'chaine' => $nomr, 'ajout' => time()];
+            $s['caches'] = array_values(array_diff($s['caches'], [$so['id']]));
+            mc_shorts_sources($s); mc_journal($qui, 'short ajouté', $nomr . ' ' . $so['id']);
+            $rend("La vidéo $nomr est en tête du fil.");
+        }
         // une chaîne : @nom, /channel/UC…, /c/nom, /user/nom
         $chemin = null;
         if (preg_match('#^@([\w.-]{2,100})$#u', $u, $m) || preg_match('#youtube\.com/@([\w.%-]{2,100})#iu', $u, $m)) $chemin = '@' . rawurldecode($m[1]);
         elseif (preg_match('#youtube\.com/channel/(UC[\w-]{22})#', $u, $m)) $chemin = 'channel/' . $m[1];
         elseif (preg_match('#youtube\.com/(c|user)/([\w.-]{2,100})#', $u, $m)) $chemin = $m[1] . '/' . $m[2];
-        if (!$chemin) mc_err(400, 'Je ne reconnais pas ce lien. Colle le lien d\'une vidéo (youtube.com/shorts/…, youtu.be/…) ou d\'une chaîne (youtube.com/@…).');
+        if (!$chemin) mc_err(400, 'Je ne reconnais pas ce lien. Colle le lien d\'une vidéo YouTube, Facebook ou Instagram, ou d\'une chaîne YouTube (youtube.com/@…).');
         $h = mc_web('https://www.youtube.com/' . $chemin . '?hl=fr');
         $cid = str_starts_with($chemin, 'channel/') ? substr($chemin, 8) : null;
         if ($h && preg_match('/"externalId":"(UC[\w-]{22})"/', $h, $m)) $cid = $m[1];
@@ -76,7 +86,7 @@ if ($a === 'shorts') {
         $s['videos'] = array_values(array_filter($s['videos'], fn($x) => $x['id'] !== $vid)); mc_shorts_sources($s); mc_journal($qui, 'short retiré', $vid); $rend('Vidéo retirée du fil.');
     }
     if ($f === 'cacher' || $f === 'montrer') {
-        if (!preg_match('/^[\w-]{11}$/', $vid)) mc_err(400, 'Vidéo inconnue.');
+        if (!preg_match('/^[\w-]{5,40}$/', $vid)) mc_err(400, 'Vidéo inconnue.');
         $s['caches'] = array_values(array_diff($s['caches'], [$vid])); if ($f === 'cacher') $s['caches'][] = $vid;
         mc_shorts_sources($s); mc_journal($qui, $f === 'cacher' ? 'short caché' : 'short remontré', $vid); $rend($f === 'cacher' ? 'Ce short est caché.' : 'Ce short est de nouveau dans le fil.');
     }

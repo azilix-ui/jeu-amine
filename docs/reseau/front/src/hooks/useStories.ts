@@ -1,4 +1,5 @@
 import { ajouteEffets, type Effets } from "@/components/ui/choix-effets"
+import { ajouteVideo } from "@/lib/envoi"
 import { useMemo, useCallback } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import axios_instance from "@/config/axios"
@@ -68,7 +69,8 @@ export const useStories = () => {
 			const formData = new FormData()
 			if (effets) ajouteEffets(formData, effets, fichier.type.startsWith("video/"))
 			if (fichier.type.startsWith("video/")) {
-				formData.append("video", fichier)
+				await ajouteVideo(formData, fichier, (p) => toast.loading(`Envoi de la vidéo… ${p} %`, { id: "story" }))
+				toast.dismiss("story")
 				if (vignette) formData.append("image", vignette, "vignette.jpg")
 			} else formData.append("image", fichier)
 			const response = await axios_instance.post("/stories", formData)
@@ -84,6 +86,7 @@ export const useStories = () => {
 			toast.success("Ta story est publiée (24 h) !")
 		},
 		onError: (error: any) => {
+			toast.dismiss("story")
 			toast.error(error.message || "La story n'est pas partie")
 		},
 	})

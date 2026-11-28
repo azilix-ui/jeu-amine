@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
 import { Shield, Users, Flag, Images, Ticket, Settings, ScrollText, HardDriveDownload, Copy, Youtube, Eye, EyeOff, Trash2, RefreshCw } from "lucide-react"
 import Cadre from "@/components/Cadre"
+import { Vignette } from "@/components/VignetteSociale"
 import axios_instance from "@/config/axios"
 import { profil, ilya } from "@/lib/utils"
 import { API } from "@/config/axios"
@@ -400,9 +401,9 @@ function Shorts() {
 		<div className="space-y-4">
 			<div className={carte + " space-y-3"}>
 				<h3 className="font-extrabold text-lg flex items-center gap-2"><Youtube className="w-5 h-5 text-red-600" /> Ajouter au fil des Shorts</h3>
-				<p className="text-sm text-gray-600">Colle le lien d&apos;une <b>vidéo</b> (youtube.com/shorts/…, youtu.be/…, watch?v=…) : elle passe en tête du fil. Ou le lien d&apos;une <b>chaîne</b> (youtube.com/@…) : ses shorts arrivent tout seuls, et les nouveaux aussi (relus toutes les 6 heures).</p>
+				<p className="text-sm text-gray-600">Colle le lien d&apos;une <b>vidéo</b> YouTube (youtube.com/shorts/…, youtu.be/…), <b>Facebook</b> (facebook.com/share/v/…, /reel/…) ou <b>Instagram</b> (instagram.com/reel/…) : elle passe en tête du fil. Ou le lien d&apos;une <b>chaîne YouTube</b> (youtube.com/@…) : ses shorts arrivent tout seuls, et les nouveaux aussi (relus toutes les 6 heures). Les vidéos Facebook et Instagram doivent être publiques.</p>
 				<form className="flex flex-col sm:flex-row gap-2" onSubmit={(e) => { e.preventDefault(); if (url.trim()) fais({ faire: "ajouter", url: url.trim() }) }}>
-					<input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.youtube.com/@… ou https://youtube.com/shorts/…" inputMode="url" autoCapitalize="off" autoCorrect="off"
+					<input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Lien YouTube, Facebook ou Instagram" inputMode="url" autoCapitalize="off" autoCorrect="off"
 						className="flex-1 min-h-11 rounded-xl border border-gray-300 px-3 text-base" />
 					<button type="submit" disabled={encours || !url.trim()} className={btn + " mc-degrade text-white"}>{encours ? "Un instant…" : "Ajouter"}</button>
 				</form>
@@ -429,7 +430,8 @@ function Shorts() {
 				{[...videos].reverse().map((v) => (
 					<div key={v.id} className="flex items-center gap-3 rounded-xl bg-gray-50 p-2">
 						{/* eslint-disable-next-line @next/next/no-img-element */}
-						<img src={`https://i.ytimg.com/vi/${v.id}/default.jpg`} alt="" className="w-16 h-12 rounded-lg object-cover shrink-0" />
+						{(v.src || "yt") === "yt" ? <img src={`https://i.ytimg.com/vi/${v.id}/default.jpg`} alt="" className="w-16 h-12 rounded-lg object-cover shrink-0" />
+							: <div className="relative w-16 h-12 rounded-lg overflow-hidden shrink-0"><Vignette src={v.src} /></div>}
 						<div className="flex-1 min-w-0">
 							<p className="font-bold text-sm line-clamp-2">{v.titre || v.id}</p>
 							<p className="text-xs text-gray-500">{v.chaine} · ajoutée {ilya(new Date(v.ajout * 1000).toISOString())}</p>
@@ -446,9 +448,11 @@ function Shorts() {
 				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
 					{liste.slice(0, voir).map((x) => (
 						<div key={x.id} className={"rounded-xl border overflow-hidden " + (x.cache ? "border-gray-200 opacity-50" : "border-gray-200")}>
-							<a href={`https://www.youtube.com/shorts/${x.id}`} target="_blank" rel="noreferrer" className="block aspect-video bg-black">
-								{/* eslint-disable-next-line @next/next/no-img-element */}
-								<img src={`https://i.ytimg.com/vi/${x.id}/mqdefault.jpg`} alt="" loading="lazy" className="w-full h-full object-cover" />
+							<a href={x.url || `https://www.youtube.com/shorts/${x.id}`} target="_blank" rel="noreferrer" className="relative block aspect-video bg-black">
+								{(x.src || "yt") === "yt"
+									// eslint-disable-next-line @next/next/no-img-element
+									? <img src={`https://i.ytimg.com/vi/${x.id}/mqdefault.jpg`} alt="" loading="lazy" className="w-full h-full object-cover" />
+									: <Vignette src={x.src} />}
 							</a>
 							<div className="p-2 space-y-1">
 								<p className="text-xs font-bold line-clamp-2 min-h-8">{x.titre || "Sans titre"}</p>

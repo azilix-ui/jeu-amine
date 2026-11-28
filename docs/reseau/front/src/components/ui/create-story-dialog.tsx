@@ -72,7 +72,7 @@ const CreateStoryDialog = ({ children }: { children: React.ReactNode }) => {
 						onChange={(e) => {
 							const f = e.target.files?.[0]
 							if (!f) return
-							if (f.size > (f.type.startsWith("video/") ? 80 : 15) * 1024 * 1024) return toast.error("Fichier trop lourd")
+							if (!f.type.startsWith("video/") && f.size > 15 * 1024 * 1024) return toast.error("Photo trop lourde (15 Mo au plus)")
 							setFichier(f); setApercu(URL.createObjectURL(f))
 						}} />
 				</div>
