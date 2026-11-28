@@ -7,6 +7,8 @@ import { authClient, lireSession } from "@/auth/auth-client"
 import { useSessionExpiredStore } from "@/store/store"
 import { Fleur } from "@/components/ui/instagram-logo"
 import { lien } from "@/lib/utils"
+import { ArrowLeftToLine } from "lucide-react"
+import Licences from "@/components/Licences"
 
 interface LoginFormData {
 	username: string
@@ -69,6 +71,10 @@ export function LoginForm() {
 			<p className="mt-6 text-center text-xs text-gray-500">
 				Pas de compte ? Mechmoum est privé : il faut un lien d&apos;invitation de la famille.<br />Mot de passe oublié ? Demande à Anis.
 			</p>
+			<a href="/" className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50">
+				<ArrowLeftToLine className="w-5 h-5" /> L&apos;accueil du site de la famille
+			</a>
+			<p className="mt-3 text-center text-xs text-gray-400"><Licences /> · © 2026 Anis Missaoui</p>
 		</div>
 	)
 }

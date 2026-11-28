@@ -1,5 +1,6 @@
 "use client"
 // La colonne de droite sur grand écran : qui je suis, et les membres que je pourrais suivre.
+import Licences from "@/components/Licences"
 import { BadgeCheck } from "lucide-react"
 import { useUserStore } from "@/store/store"
 import { useSuggestedUsers } from "@/hooks/useSuggestedUsers"
@@ -54,7 +55,7 @@ const Suggestions = () => {
 				<p>Mechmoum · le réseau privé de la famille Missaoui</p>
 				<p>
 					<a href="/" className="hover:underline">Le site de la famille</a> ·{" "}
-					<a href="/reseau/LICENCES.txt" className="hover:underline">Licences</a>
+					<Licences />
 				</p>
 				<p>© 2026 Anis Missaoui</p>
 			</div>
