@@ -219,3 +219,14 @@ Anis (rôle admin, ou administrateur du site) voit tout. Un **modérateur** (rô
 
 - Pas encore de notifications « push » sur le téléphone : on voit les nouveautés en ouvrant l'application.
 - Le temps réel se fait par interrogation : 2,5 s quand la page est ouverte, 15 s quand l'onglet est caché.
+
+## Les Shorts (27/11, réglables depuis le 28/11)
+
+- Onglet **Shorts** (icône YouTube) : les petites vidéos YouTube choisies par le papa, en plein écran l'une après l'autre (lecteur officiel `youtube-nocookie`, une seule vidéo chargée à la fois, la suivante part toute seule à la fin).
+- **Administration → Shorts** (Anis seulement) :
+  - coller le lien d'une **chaîne** (`youtube.com/@nom`, `youtube.com/channel/UC…`, `/c/…`, `/user/…`) : ses shorts arrivent tout seuls, relus toutes les 6 heures ;
+  - coller le lien d'une **vidéo** (`youtube.com/shorts/ID`, `youtu.be/ID`, `watch?v=ID`, ou l'identifiant seul) : elle passe en tête du fil, avec son titre (oEmbed de YouTube) ;
+  - **Retirer** une chaîne ou une vidéo ; **Cacher / Remontrer** un short précis ; **Actualiser** relit les chaînes tout de suite.
+- Stockage : réglage `shorts-sources` = `{chaines:[{id, chemin, nom, ajout}], videos:[{id, titre, chaine, ajout}], caches:[id…]}` ; par défaut la chaîne Quelle Histoire (`@QuelleHistoireParis`). Cache par chaîne : `shorts-cache-<id>` (page `/shorts` de la chaîne lue par le serveur, sinon le flux RSS `UUSH…`). Si YouTube ne répond pas, l'ancienne liste est gardée.
+- Ordre du fil : les vidéos ajoutées à la main (la plus récente d'abord), puis les chaînes mélangées une vidéo chacune à son tour. Les shorts cachés n'apparaissent jamais aux enfants.
+- API : `GET /reseau/api/shorts` (le fil) ; `GET/POST /reseau/api/admin/shorts` avec `faire` = `ajouter` (url), `retirer-chaine` (id), `retirer-video` (id), `cacher` / `montrer` (id), `actualiser`.

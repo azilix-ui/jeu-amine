@@ -6,13 +6,13 @@ import { useState } from "react"
 import Link from "next/link"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
-import { Shield, Users, Flag, Images, Ticket, Settings, ScrollText, HardDriveDownload, Copy } from "lucide-react"
+import { Shield, Users, Flag, Images, Ticket, Settings, ScrollText, HardDriveDownload, Copy, Youtube, Eye, EyeOff, Trash2, RefreshCw } from "lucide-react"
 import Cadre from "@/components/Cadre"
 import axios_instance from "@/config/axios"
 import { profil, ilya } from "@/lib/utils"
 import { API } from "@/config/axios"
 
-type Onglet = "tableau" | "membres" | "signalements" | "contenus" | "invitations" | "journal" | "sauvegardes"
+type Onglet = "tableau" | "membres" | "signalements" | "contenus" | "invitations" | "journal" | "sauvegardes" | "shorts"
 
 const RAISONS: Record<string, string> = { mechant: "Méchant ou moqueur", "fait-peur": "Fait peur / mal à l'aise", prive: "Montre quelque chose de privé", faux: "Faux ou arnaque", autre: "Autre chose" }
 const GENRES: Record<string, string> = { post: "Publication", comment: "Commentaire", story: "Story", user: "Profil", message: "Message" }
@@ -379,6 +379,94 @@ function Sauvegardes() {
 	)
 }
 
+// les Shorts (28/11) : les chaînes YouTube et les vidéos du fil, ajoutées par un lien ; on peut cacher un short
+function Shorts() {
+	const qc = useQueryClient()
+	const { data, refetch, isLoading } = useQuery({ queryKey: ["admin", "shorts"], queryFn: () => lire("/admin/shorts") })
+	const [url, setUrl] = useState("")
+	const [encours, setEncours] = useState(false)
+	const [voir, setVoir] = useState(24)
+	const fais = async (corps: any) => {
+		setEncours(true)
+		await agir("/admin/shorts", corps, () => { if (corps.faire === "ajouter") setUrl(""); qc.invalidateQueries({ queryKey: ["shorts"] }) })
+		await refetch()
+		setEncours(false)
+	}
+	const chaines: any[] = data?.sources?.chaines || []
+	const videos: any[] = data?.sources?.videos || []
+	const liste: any[] = data?.liste || []
+	const caches = liste.filter((x) => x.cache).length
+	return (
+		<div className="space-y-4">
+			<div className={carte + " space-y-3"}>
+				<h3 className="font-extrabold text-lg flex items-center gap-2"><Youtube className="w-5 h-5 text-red-600" /> Ajouter au fil des Shorts</h3>
+				<p className="text-sm text-gray-600">Colle le lien d&apos;une <b>vidéo</b> (youtube.com/shorts/…, youtu.be/…, watch?v=…) : elle passe en tête du fil. Ou le lien d&apos;une <b>chaîne</b> (youtube.com/@…) : ses shorts arrivent tout seuls, et les nouveaux aussi (relus toutes les 6 heures).</p>
+				<form className="flex flex-col sm:flex-row gap-2" onSubmit={(e) => { e.preventDefault(); if (url.trim()) fais({ faire: "ajouter", url: url.trim() }) }}>
+					<input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.youtube.com/@… ou https://youtube.com/shorts/…" inputMode="url" autoCapitalize="off" autoCorrect="off"
+						className="flex-1 min-h-11 rounded-xl border border-gray-300 px-3 text-base" />
+					<button type="submit" disabled={encours || !url.trim()} className={btn + " mc-degrade text-white"}>{encours ? "Un instant…" : "Ajouter"}</button>
+				</form>
+			</div>
+
+			<div className={carte + " space-y-2"}>
+				<div className="flex items-center justify-between gap-2 flex-wrap">
+					<h3 className="font-extrabold text-lg">Les chaînes ({chaines.length})</h3>
+					<button type="button" disabled={encours} onClick={() => fais({ faire: "actualiser" })} className={btn + " bg-gray-100 flex items-center gap-1"}><RefreshCw className="w-4 h-4" /> Actualiser</button>
+				</div>
+				{chaines.length === 0 && <p className="text-sm text-gray-500">Aucune chaîne.</p>}
+				{chaines.map((c) => (
+					<div key={c.id} className="flex items-center gap-3 rounded-xl bg-gray-50 p-2">
+						<Youtube className="w-6 h-6 text-red-600 shrink-0" />
+						<div className="flex-1 min-w-0">
+							<a href={`https://www.youtube.com/${c.chemin}/shorts`} target="_blank" rel="noreferrer" className="font-bold hover:underline">{c.nom}</a>
+							<p className="text-xs text-gray-500 truncate">{c.chemin} · {liste.filter((x) => x.chaine === c.nom).length} short(s)</p>
+						</div>
+						<button type="button" disabled={encours} onClick={() => confirm(`Retirer la chaîne « ${c.nom} » du fil ?`) && fais({ faire: "retirer-chaine", id: c.id })}
+							className={btn + " bg-red-50 text-red-700 flex items-center gap-1"}><Trash2 className="w-4 h-4" /> Retirer</button>
+					</div>
+				))}
+				{videos.length > 0 && <h3 className="font-extrabold text-lg pt-2">Les vidéos ajoutées une par une ({videos.length})</h3>}
+				{[...videos].reverse().map((v) => (
+					<div key={v.id} className="flex items-center gap-3 rounded-xl bg-gray-50 p-2">
+						{/* eslint-disable-next-line @next/next/no-img-element */}
+						<img src={`https://i.ytimg.com/vi/${v.id}/default.jpg`} alt="" className="w-16 h-12 rounded-lg object-cover shrink-0" />
+						<div className="flex-1 min-w-0">
+							<p className="font-bold text-sm line-clamp-2">{v.titre || v.id}</p>
+							<p className="text-xs text-gray-500">{v.chaine} · ajoutée {ilya(new Date(v.ajout * 1000).toISOString())}</p>
+						</div>
+						<button type="button" disabled={encours} onClick={() => fais({ faire: "retirer-video", id: v.id })} className={btn + " bg-red-50 text-red-700 flex items-center gap-1"}><Trash2 className="w-4 h-4" /> Retirer</button>
+					</div>
+				))}
+			</div>
+
+			<div className={carte + " space-y-2"}>
+				<h3 className="font-extrabold text-lg">Le fil, dans l&apos;ordre ({liste.length - caches} visibles{caches ? `, ${caches} caché(s)` : ""})</h3>
+				<p className="text-sm text-gray-600">Un short qui ne convient pas ? « Cacher » le retire du fil des enfants, sans toucher au reste de la chaîne.</p>
+				{isLoading && <p className="text-2xl">🌼</p>}
+				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+					{liste.slice(0, voir).map((x) => (
+						<div key={x.id} className={"rounded-xl border overflow-hidden " + (x.cache ? "border-gray-200 opacity-50" : "border-gray-200")}>
+							<a href={`https://www.youtube.com/shorts/${x.id}`} target="_blank" rel="noreferrer" className="block aspect-video bg-black">
+								{/* eslint-disable-next-line @next/next/no-img-element */}
+								<img src={`https://i.ytimg.com/vi/${x.id}/mqdefault.jpg`} alt="" loading="lazy" className="w-full h-full object-cover" />
+							</a>
+							<div className="p-2 space-y-1">
+								<p className="text-xs font-bold line-clamp-2 min-h-8">{x.titre || "Sans titre"}</p>
+								<p className="text-[11px] text-gray-500 truncate">{x.chaine}</p>
+								<button type="button" disabled={encours} onClick={() => fais({ faire: x.cache ? "montrer" : "cacher", id: x.id })}
+									className={btn + " w-full flex items-center justify-center gap-1 " + (x.cache ? "bg-teal-50 text-teal-800" : "bg-gray-100")}>
+									{x.cache ? <><Eye className="w-4 h-4" /> Remontrer</> : <><EyeOff className="w-4 h-4" /> Cacher</>}
+								</button>
+							</div>
+						</div>
+					))}
+				</div>
+				{liste.length > voir && <button type="button" onClick={() => setVoir(voir + 24)} className={btn + " bg-gray-100 w-full"}>Voir les suivants ({liste.length - voir})</button>}
+			</div>
+		</div>
+	)
+}
+
 export default function AdminPage() {
 	const [onglet, setOnglet] = useState<Onglet>("tableau")
 	const { data: etat, error, refetch } = useQuery({ queryKey: ["admin", "etat"], queryFn: () => lire("/admin/etat"), retry: false })
@@ -390,6 +478,7 @@ export default function AdminPage() {
 		["membres", "Membres", <Users key="d" className="w-4 h-4" />, admin],
 		["invitations", "Invitations", <Ticket key="e" className="w-4 h-4" />, admin],
 		["journal", "Journal", <ScrollText key="f" className="w-4 h-4" />, true],
+		["shorts", "Shorts", <Youtube key="h" className="w-4 h-4" />, admin],
 		["sauvegardes", "Sauvegardes", <HardDriveDownload key="g" className="w-4 h-4" />, admin],
 	]
 	return (
@@ -413,6 +502,7 @@ export default function AdminPage() {
 							{onglet === "contenus" && <Contenus />}
 							{onglet === "invitations" && <Invitations />}
 							{onglet === "journal" && <Journal />}
+							{onglet === "shorts" && <Shorts />}
 							{onglet === "sauvegardes" && <Sauvegardes />}
 						</>
 					)}

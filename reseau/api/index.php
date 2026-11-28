@@ -209,9 +209,9 @@ if ($route === 'users') {
         'postsCount' => mc_compte('posts', (int)$u['id']), 'famille' => (bool)$u['famille']]]);
 }
 
-/* ---------- les Shorts (27/11) : les petites vidéos d'une chaîne YouTube choisie par le papa, lues avec le lecteur officiel de YouTube.
-   Liste lue sur le serveur (page /shorts de la chaîne, sinon le flux RSS de ses shorts), gardée 6 h dans les réglages. ---------- */
-const MC_SHORTS = ['nom' => 'Quelle Histoire', 'handle' => 'QuelleHistoireParis', 'id' => 'UCoejzfiaEjCusdpdX9W8jBQ'];
+/* ---------- les Shorts (27/11 ; 28/11 : plusieurs sources réglées dans l'Administration) : des petites vidéos YouTube choisies par le papa,
+   lues avec le lecteur officiel de YouTube. Les sources (« shorts-sources » dans les réglages) : des chaînes (leur page /shorts, sinon le flux RSS
+   de leurs shorts, gardés 6 h par chaîne) et des vidéos ajoutées une par une ; on peut cacher un short. ---------- */
 function mc_web(string $url): string {
     $c = curl_init($url);
     curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_TIMEOUT => 12, CURLOPT_ENCODING => '',
@@ -220,29 +220,53 @@ function mc_web(string $url): string {
     $r = curl_exec($c); $ok = curl_getinfo($c, CURLINFO_HTTP_CODE) === 200; curl_close($c);
     return $ok && is_string($r) ? $r : '';
 }
-function mc_shorts(bool $force = false): array {
-    $mem = json_decode(mc_reglage('shorts-cache'), true);
+function mc_shorts_sources(?array $nouv = null): array {
+    if ($nouv !== null) { mc_reglage('shorts-sources', json_encode($nouv, JSON_UNESCAPED_UNICODE)); return $nouv; }
+    $s = json_decode(mc_reglage('shorts-sources'), true);
+    if (!is_array($s)) $s = ['chaines' => [['id' => 'UCoejzfiaEjCusdpdX9W8jBQ', 'chemin' => '@QuelleHistoireParis', 'nom' => 'Quelle Histoire', 'ajout' => 1764201600]], 'videos' => [], 'caches' => []];
+    return $s + ['chaines' => [], 'videos' => [], 'caches' => []];
+}
+function mc_titre_propre(string $t): string { return trim(preg_replace(['/#[^\s#]+/u', '/\s+/u'], ['', ' '], $t)); }   // sans les #mots-clés
+function mc_shorts_chaine(array $ch, bool $force = false): array {
+    $cle = 'shorts-cache-' . $ch['id'];
+    $mem = json_decode(mc_reglage($cle), true);
     if (!$force && is_array($mem) && ($mem['t'] ?? 0) > time() - 6 * 3600 && !empty($mem['v'])) return $mem['v'];
     $v = [];
     // 1) la page des shorts de la chaîne (environ 48 vidéos, les plus récentes d'abord)
-    $h = mc_web('https://www.youtube.com/@' . MC_SHORTS['handle'] . '/shorts?hl=fr');
+    $h = mc_web('https://www.youtube.com/' . $ch['chemin'] . '/shorts?hl=fr');
     if ($h && preg_match_all('/"reelWatchEndpoint":\{"videoId":"([\w-]{11})"/', $h, $m)) foreach ($m[1] as $id) $v[$id] = $v[$id] ?? '';
     if ($h && preg_match_all('/"shortsLockupViewModel".{0,4000}?"videoId":"([\w-]{11})"/s', $h, $m)) foreach ($m[1] as $id) $v[$id] = $v[$id] ?? '';
     if ($h && preg_match_all('/"accessibilityText":"([^"]{3,200}?)(?:, \d|\s*-\s*lire)[^"]*".{0,1500}?"videoId":"([\w-]{11})"/s', $h, $m, PREG_SET_ORDER))
         foreach ($m as $x) if (isset($v[$x[2]]) && $v[$x[2]] === '') $v[$x[2]] = json_decode('"' . $x[1] . '"') ?? $x[1];
     // 2) le flux RSS des shorts de la chaîne (les 15 derniers, avec leur titre)
-    $x = mc_web('https://www.youtube.com/feeds/videos.xml?playlist_id=UUSH' . substr(MC_SHORTS['id'], 2));
+    $x = mc_web('https://www.youtube.com/feeds/videos.xml?playlist_id=UUSH' . substr($ch['id'], 2));
     if ($x && preg_match_all('#<yt:videoId>([\w-]{11})</yt:videoId>\s*(?:<[^>]+>[^<]*</[^>]+>\s*)*?<title>([^<]*)</title>#', $x, $m, PREG_SET_ORDER))
         foreach ($m as $e) $v[$e[1]] = ($v[$e[1]] ?? '') !== '' ? $v[$e[1]] : html_entity_decode($e[2], ENT_QUOTES);
     $l = [];
-    foreach ($v as $id => $t) $l[] = ['id' => $id, 'titre' => trim(preg_replace(['/#[^\s#]+/u', '/\s+/u'], ['', ' '], $t))];   // sans les #mots-clés
+    foreach ($v as $id => $t) $l[] = ['id' => $id, 'titre' => mc_titre_propre((string)$t)];
     if (!$l && is_array($mem) && !empty($mem['v'])) return $mem['v'];   // YouTube ne répond pas : on garde l'ancienne liste
-    if ($l) mc_reglage('shorts-cache', json_encode(['t' => time(), 'v' => $l]));
+    if ($l) mc_reglage($cle, json_encode(['t' => time(), 'v' => $l], JSON_UNESCAPED_UNICODE));
+    return $l;
+}
+// toute la liste : d'abord les vidéos ajoutées à la main (la plus récente d'abord), puis les chaînes mélangées une à une ; $tout = avec les cachées (pour l'Administration)
+function mc_shorts(bool $force = false, bool $tout = false): array {
+    $s = mc_shorts_sources(); $cache = array_flip($s['caches']); $vu = []; $l = [];
+    $met = function (array $x, string $chaine) use (&$l, &$vu, $cache, $tout) {
+        if (isset($vu[$x['id']]) || (!$tout && isset($cache[$x['id']]))) return;
+        $vu[$x['id']] = 1; $l[] = ['id' => $x['id'], 'titre' => $x['titre'] ?? '', 'chaine' => $chaine] + ($tout ? ['cache' => isset($cache[$x['id']])] : []);
+    };
+    foreach (array_reverse($s['videos']) as $x) $met($x, $x['chaine'] ?? 'YouTube');
+    $par = []; foreach ($s['chaines'] as $ch) $par[] = [$ch['nom'], mc_shorts_chaine($ch, $force)];
+    for ($i = 0, $fin = max([0, ...array_map(fn($p) => count($p[1]), $par)]); $i < $fin; $i++)
+        foreach ($par as [$nom, $vs]) if (isset($vs[$i])) $met($vs[$i], $nom);
     return $l;
 }
 if ($route === 'shorts') {
+    $s = mc_shorts_sources();
     $l = mc_shorts(($_GET['frais'] ?? '') === '1' && mc_admin());
-    mc_json(200, ['success' => true, 'chaine' => MC_SHORTS['nom'], 'lien' => 'https://www.youtube.com/@' . MC_SHORTS['handle'] . '/shorts', 'data' => $l]);
+    $ch = $s['chaines'][0] ?? null;
+    mc_json(200, ['success' => true, 'chaine' => count($s['chaines']) === 1 && !$s['videos'] ? $ch['nom'] : 'Shorts',
+        'lien' => $ch ? 'https://www.youtube.com/' . $ch['chemin'] . '/shorts' : 'https://www.youtube.com/shorts', 'data' => $l]);
 }
 
 /* ---------- la musicothèque (26/11) : les morceaux du mur, à mettre sur une publication ---------- */

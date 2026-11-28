@@ -25,6 +25,65 @@ if ($a === 'etat') {
         'reglages' => ['prive' => mc_reglage('prive', null, '1') === '1', 'inscriptions' => mc_reglage('inscriptions', null, '1') === '1', 'enfants_dm' => mc_reglage('enfants_dm', null, 'famille')]]);
 }
 
+/* les Shorts (28/11) : Anis choisit les chaînes YouTube et les vidéos du fil des Shorts, et peut cacher un short */
+if ($a === 'shorts') {
+    $seulAdmin();
+    $s = mc_shorts_sources();
+    $rend = fn(string $msg = '') => mc_json(200, ['success' => true, 'message' => $msg, 'sources' => mc_shorts_sources(), 'liste' => mc_shorts(false, true)]);
+    if ($methode === 'GET') $rend();
+    $f = (string)($c['faire'] ?? '');
+    if ($f === 'ajouter') {
+        $u = trim((string)($c['url'] ?? ''));
+        if ($u === '') mc_err(400, 'Colle d\'abord le lien d\'une vidéo ou d\'une chaîne YouTube.');
+        if (!preg_match('#^https?://#i', $u) && !preg_match('/^@|^[\w-]{11}$/', $u)) $u = 'https://' . $u;
+        // une vidéo : /shorts/ID, watch?v=ID, youtu.be/ID, /embed/ID, /live/ID, ou l'identifiant seul
+        $vid = null;
+        if (preg_match('/^[\w-]{11}$/', $u)) $vid = $u;
+        elseif (preg_match('#(?:youtu\.be/|/shorts/|/embed/|/live/|[?&]v=)([\w-]{11})#', $u, $m)) $vid = $m[1];
+        if ($vid) {
+            foreach ($s['videos'] as $x) if ($x['id'] === $vid) mc_err(400, 'Cette vidéo est déjà dans le fil.');
+            $o = json_decode(mc_web('https://www.youtube.com/oembed?format=json&url=' . rawurlencode('https://www.youtube.com/watch?v=' . $vid)), true);
+            $s['videos'][] = ['id' => $vid, 'titre' => mc_titre_propre(mb_substr((string)($o['title'] ?? ''), 0, 200)), 'chaine' => mb_substr((string)($o['author_name'] ?? 'YouTube'), 0, 80) ?: 'YouTube', 'ajout' => time()];
+            $s['caches'] = array_values(array_diff($s['caches'], [$vid]));
+            mc_shorts_sources($s); mc_journal($qui, 'short ajouté', $vid);
+            $rend(is_array($o) ? '« ' . ($o['title'] ?? 'La vidéo') . ' » est en tête du fil.' : 'Vidéo ajoutée (YouTube n\'a pas donné son titre).');
+        }
+        // une chaîne : @nom, /channel/UC…, /c/nom, /user/nom
+        $chemin = null;
+        if (preg_match('#^@([\w.-]{2,100})$#u', $u, $m) || preg_match('#youtube\.com/@([\w.%-]{2,100})#iu', $u, $m)) $chemin = '@' . rawurldecode($m[1]);
+        elseif (preg_match('#youtube\.com/channel/(UC[\w-]{22})#', $u, $m)) $chemin = 'channel/' . $m[1];
+        elseif (preg_match('#youtube\.com/(c|user)/([\w.-]{2,100})#', $u, $m)) $chemin = $m[1] . '/' . $m[2];
+        if (!$chemin) mc_err(400, 'Je ne reconnais pas ce lien. Colle le lien d\'une vidéo (youtube.com/shorts/…, youtu.be/…) ou d\'une chaîne (youtube.com/@…).');
+        $h = mc_web('https://www.youtube.com/' . $chemin . '?hl=fr');
+        $cid = str_starts_with($chemin, 'channel/') ? substr($chemin, 8) : null;
+        if ($h && preg_match('/"externalId":"(UC[\w-]{22})"/', $h, $m)) $cid = $m[1];
+        elseif (!$cid && $h && preg_match('#<meta itemprop="identifier" content="(UC[\w-]{22})"#', $h, $m)) $cid = $m[1];
+        if (!$cid) mc_err(400, $h ? 'Je n\'ai pas trouvé cette chaîne sur YouTube. Vérifie le lien.' : 'YouTube n\'a pas répondu. Réessaie dans un moment.');
+        foreach ($s['chaines'] as $x) if ($x['id'] === $cid) mc_err(400, 'Cette chaîne est déjà dans le fil.');
+        $nom = $h && preg_match('#<meta property="og:title" content="([^"]{1,120})"#', $h, $m) ? html_entity_decode($m[1], ENT_QUOTES) : ltrim($chemin, '@');
+        $ch = ['id' => $cid, 'chemin' => $chemin, 'nom' => $nom, 'ajout' => time()];
+        $s['chaines'][] = $ch; mc_shorts_sources($s); mc_journal($qui, 'chaîne de shorts ajoutée', $nom);
+        $n = count(mc_shorts_chaine($ch, true));
+        $rend($n ? "La chaîne « $nom » est ajoutée : $n short(s)." : "La chaîne « $nom » est ajoutée, mais YouTube n'a pas encore donné ses shorts. Réessaie avec « Actualiser ».");
+    }
+    $vid = (string)($c['id'] ?? '');
+    if ($f === 'retirer-chaine') {
+        $avant = count($s['chaines']); $s['chaines'] = array_values(array_filter($s['chaines'], fn($x) => $x['id'] !== $vid));
+        if (count($s['chaines']) === $avant) mc_err(404, 'Chaîne introuvable.');
+        mc_reglage('shorts-cache-' . $vid, ''); mc_shorts_sources($s); mc_journal($qui, 'chaîne de shorts retirée', $vid); $rend('Chaîne retirée du fil.');
+    }
+    if ($f === 'retirer-video') {
+        $s['videos'] = array_values(array_filter($s['videos'], fn($x) => $x['id'] !== $vid)); mc_shorts_sources($s); mc_journal($qui, 'short retiré', $vid); $rend('Vidéo retirée du fil.');
+    }
+    if ($f === 'cacher' || $f === 'montrer') {
+        if (!preg_match('/^[\w-]{11}$/', $vid)) mc_err(400, 'Vidéo inconnue.');
+        $s['caches'] = array_values(array_diff($s['caches'], [$vid])); if ($f === 'cacher') $s['caches'][] = $vid;
+        mc_shorts_sources($s); mc_journal($qui, $f === 'cacher' ? 'short caché' : 'short remontré', $vid); $rend($f === 'cacher' ? 'Ce short est caché.' : 'Ce short est de nouveau dans le fil.');
+    }
+    if ($f === 'actualiser') { mc_shorts(true); $rend('Les chaînes sont relues sur YouTube.'); }
+    mc_err(400, 'Action inconnue.');
+}
+
 if ($a === 'utilisateurs') {
     if ($methode === 'GET') {
         $l = $db->query('SELECT u.*, (SELECT COUNT(*) FROM posts WHERE author = u.id) np, (SELECT COUNT(*) FROM follows WHERE followed = u.id) nf,

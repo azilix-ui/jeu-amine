@@ -1,5 +1,5 @@
 "use client"
-// Les Shorts (27/11) : les petites vidéos de la chaîne YouTube choisie par le papa (Quelle Histoire), l'une après l'autre en plein écran,
+// Les Shorts (27/11) : les petites vidéos YouTube choisies par le papa dans l'Administration (chaînes et vidéos), l'une après l'autre en plein écran,
 // comme les reels. Une seule vidéo YouTube est chargée à la fois (lecteur officiel youtube-nocookie) ; les autres sont des vignettes.
 // Quand une vidéo finit, on passe à la suivante toute seule.
 import { useEffect, useRef, useState } from "react"
@@ -8,7 +8,7 @@ import { Volume2, VolumeX, Youtube, ChevronDown } from "lucide-react"
 import Cadre from "@/components/Cadre"
 import axios_instance from "@/config/axios"
 
-type Short = { id: string; titre: string }
+type Short = { id: string; titre: string; chaine?: string }
 const YT = "https://www.youtube-nocookie.com"
 
 function Lecteur({ s, chaine, actif, son, setSon, suivante }: { s: Short; chaine: string; actif: boolean; son: boolean; setSon: (b: boolean) => void; suivante: () => void }) {
@@ -105,7 +105,7 @@ export default function ShortsPage() {
 				)}
 				{liste.map((s, i) => (
 					<div key={s.id} data-i={i} className="h-full">
-						<Lecteur s={s} chaine={data?.chaine || "YouTube"} actif={i === actif} son={son} setSon={setSon} suivante={suivante} />
+						<Lecteur s={s} chaine={s.chaine || data?.chaine || "YouTube"} actif={i === actif} son={son} setSon={setSon} suivante={suivante} />
 					</div>
 				))}
 				{liste.length > 0 && actif === 0 && (

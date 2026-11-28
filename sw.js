@@ -10,6 +10,7 @@ self.addEventListener('fetch', e => {
   const r = e.request; if(r.method !== 'GET') return;
   const u = new URL(r.url); if(u.origin !== location.origin) return;
   if(u.pathname.startsWith('/reseau/')) return;   // Mechmoum a son propre service worker (/reseau/sw.js)
+  if(u.searchParams.has('ping')) return;   // 28/11 : la vérification « le site répond-il ? » de site.js, jamais gardée
   if(u.pathname.startsWith('/api/') || u.pathname.includes('/voix/') || u.pathname.endsWith('.php')) return;
   if(r.headers.has('range') || /\.(mp4|webm|mp3|m4a|wav)$/i.test(u.pathname)) return;
   if(/\.(webp|png|jpe?g|gif|svg|ico|woff2?)$/i.test(u.pathname) || u.pathname.startsWith('/lib/')){

@@ -7,6 +7,23 @@
   var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   if('serviceWorker' in navigator && location.protocol === 'https:'){
     addEventListener('load', function(){ navigator.serviceWorker.register('/sw.js').catch(function(){}); });
+    // 28/11 : si le site ne répond pas (coupure, souci de certificat, CDN), la page vient de la copie gardée sur l'appareil.
+    // On le dit au lieu de montrer en silence une ancienne version : un bandeau « version gardée » avec « Réessayer ».
+    addEventListener('load', function(){
+      if(!navigator.serviceWorker.controller) return;
+      setTimeout(function(){
+        fetch('/version.js?ping=' + Date.now(), { cache: 'no-store' }).then(function(r){ if(!r.ok) throw 0; }).catch(function(){
+          if(document.getElementById('famille-hors-ligne')) return;
+          var b = document.createElement('div'); b.id = 'famille-hors-ligne'; b.setAttribute('role', 'status');
+          b.style.cssText = 'position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147483000;max-width:min(94vw,560px);display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;border-radius:16px;background:#1f2937;color:#fff;font:600 15px/1.35 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.3)';
+          b.innerHTML = '<span>📶 Le site ne répond pas : tu vois peut-être une <b>ancienne version</b> gardée sur cet appareil.</span>';
+          var k = document.createElement('button'); k.type = 'button'; k.textContent = 'Réessayer';
+          k.style.cssText = 'min-height:48px;padding:0 16px;border:0;border-radius:12px;background:#0f766e;color:#fff;font:700 15px system-ui,sans-serif;cursor:pointer;flex:none';
+          k.onclick = function(){ location.reload(); };
+          b.appendChild(k); (document.body || document.documentElement).appendChild(b);
+        });
+      }, 1500);
+    });
   }
   var deferred = null;
   addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferred = e; document.dispatchEvent(new Event('famille-installable')); });
